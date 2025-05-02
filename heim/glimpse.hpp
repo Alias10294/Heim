@@ -11,14 +11,16 @@ namespace heim
      * @brief A glimpse of the current state of the components of given type of the world. 
      * @tparam ...components The types of the components of the glimpse. 
      */
-    template<typename... components>
+    template<typename... comps>
     class basic_glimpse
     {
     public:
+        using compositions_tuple = std::tuple<composition<std::remove_cvref_t<comps>>&...>;
+
         class iterator
         {
         public:
-            constexpr iterator(std::tuple<composition<components>&...>& compositions, const std::size_t ref_index = 0ULL) : 
+            constexpr iterator(compositions_tuple& compositions, const std::size_t ref_index = 0ULL) : 
                 compositions_{compositions}, 
                 ref_index_{ref_index}, 
                 ref_size_{std::get<0>(compositions_).size()}
@@ -51,7 +53,7 @@ namespace heim
             }
 
         private:
-            std::tuple<composition<components>&...>& compositions_;
+            compositions_tuple& compositions_;
 
             std::size_t ref_index_;
             std::size_t ref_size_;
@@ -80,7 +82,7 @@ namespace heim
 
 
 
-        constexpr basic_glimpse(composition<components>&... compositions) noexcept : 
+        constexpr basic_glimpse(composition<std::remove_cvref_t<comps>>&... compositions) noexcept : 
             compositions_{compositions...}
         { }
 
@@ -105,7 +107,7 @@ namespace heim
         */
 
     private:
-        std::tuple<composition<components>&...> compositions_;
+        compositions_tuple compositions_;
     
     };
 }

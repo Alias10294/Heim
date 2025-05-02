@@ -9,7 +9,7 @@
 namespace heim
 {
     /**
-     * @brief An optimised associative container for the storing and access of components.
+     * @brief An optimised associative container for the storing and access of components. 
      * 
      * Bases its implementation off of sparse sets, providing great cache-friendliness and 
      * promising O(1) insertion, deletion and access to components. 

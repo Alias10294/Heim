@@ -24,9 +24,11 @@ namespace heim
          * @param e The entity to compose. 
          * @param a ...a The arguments for the new component.
          */
-        template<typename component, typename... args>
+        template<typename comp, typename... args>
         constexpr void compose(const entity e, args&&... a)
         { 
+            using component = std::remove_cvref_t<comp>;
+
             if (!composes<component>())
             {
                 indexes_[type_index<component>()] = compositions_.size();
@@ -43,10 +45,10 @@ namespace heim
          * @tparam ...components The types of the components to erase. 
          * @param e The entity to erase components of. 
          */
-        template<typename... components>
+        template<typename... comps>
         constexpr void erase(const entity e)
         { 
-            (erase_one<components>(e), ...);
+            (erase_one<std::remove_cvref_t<comps>>(e), ...);
         }
 
         /**
@@ -68,10 +70,10 @@ namespace heim
          * @tparam ...components The components to catch a glimpse at. 
          * @return The glimpse of the components. 
          */
-        template<typename... components>
-        [[nodiscard]] basic_glimpse<components...> glimpse() noexcept
+        template<typename... comps>
+        [[nodiscard]] basic_glimpse<comps...> glimpse() noexcept
         { 
-            return basic_glimpse<components...>(get_composition<components>()...);
+            return basic_glimpse<comps...>(get_composition<std::remove_cvref_t<comps>>()...);
         } 
 
         /**
@@ -81,9 +83,11 @@ namespace heim
          * @param e The entity to retrieve the component of.
          * @return The component of the entity. 
          */
-        template<typename component>
-        [[nodiscard]] component& get(const entity e) noexcept
+        template<typename comp>
+        [[nodiscard]] comp& get(const entity e) noexcept
         { 
+            using component = std::remove_cvref_t<comp>;
+
             composition_erased& ce = compositions_[index<component>()];
             return *static_cast<component*>(ce.get(ce.self, e));
         }
@@ -94,9 +98,11 @@ namespace heim
          * @param e The entity to retrieve the component of.
          * @return The component of the entity. 
          */
-        template<typename component>
-        [[nodiscard]] const component& get(const entity e) const noexcept
+        template<typename comp>
+        [[nodiscard]] const comp& get(const entity e) const noexcept
         { 
+            using component = std::remove_cvref_t<comp>;
+
             composition_erased& ce = compositions_[index<component>()];
             return *static_cast<component*>(ce.get(ce.self, e));
         }
@@ -110,10 +116,10 @@ namespace heim
          * @param e The entity to check. 
          * @return true if the entity has all of the components, false otherwise. 
          */
-        template<typename... components>
+        template<typename... comps>
         constexpr bool has(const entity e) const noexcept
         { 
-            return (has_one<components>(e) && ...);
+            return (has_one<std::remove_cvref_t<comps>>(e) && ...);
         }
 
     private:
