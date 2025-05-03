@@ -91,21 +91,6 @@ namespace heim
             composition_erased& ce = compositions_[index<component>()];
             return *static_cast<component*>(ce.get(ce.self, e));
         }
-        /**
-         * @brief Retrieves the component of given type of the given entity. 
-         * 
-         * @tparam component The type of the component to get. 
-         * @param e The entity to retrieve the component of.
-         * @return The component of the entity. 
-         */
-        template<typename comp>
-        [[nodiscard]] const comp& get(const entity e) const noexcept
-        { 
-            using component = std::remove_cvref_t<comp>;
-
-            composition_erased& ce = compositions_[index<component>()];
-            return *static_cast<component*>(ce.get(ce.self, e));
-        }
 
 
 
