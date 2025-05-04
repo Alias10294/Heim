@@ -7,6 +7,9 @@
 
 namespace heim
 {
+    /**
+     * @brief The world.
+     */
     class world
     {
     public:
@@ -27,6 +30,22 @@ namespace heim
         {
             summoner_.banish(e);
             composer_.clear(e);
+        }
+
+
+
+        template<typename component>
+        using predicate = composer::predicate<component>;
+        /**
+         * @brief Compose an entity of a new component
+         * 
+         * @tparam component The type of the component to compose with.
+         * @param predicate The predicate used to establish order in the composition. 
+         */
+        template<typename component>
+        constexpr void compose(predicate<component> cmp = nullptr) noexcept
+        {
+            composer_.compose<component>(cmp);
         }
 
 

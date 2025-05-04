@@ -3,6 +3,8 @@
 #include <vector>
 #include <limits>
 #include <cstddef>
+#include <algorithm>
+#include <numeric>
 
 #include "common.hpp"
 
@@ -152,6 +154,36 @@ namespace heim
         }
 
 
+
+        
+        template<typename predicate>
+        constexpr void sort(predicate cmp)
+        {
+            std::size_t n = components_.size();
+
+            std::vector<std::size_t> order{n};
+            std::iota(order.begin(), order.end(), 0ULL);
+            std::sort(order.begin(), order.end(), 
+                [&](std::size_t lhs, std::size_t rhs)
+                {
+                    return cmp(components_[lhs], components_[rhs]);
+                });
+            
+            std::vector<entity>    entities;   entities.reserve(n);
+            std::vector<component> components; components.reserve(n);
+            for (std::size_t idx : order)
+            {
+                entities  .push_back(entities_[idx]);
+                components.push_back(std::move(components_[idx]));
+            }
+
+            entities_   = std::move(entities);
+            components_ = std::move(components);
+
+            for (std::size_t i = 0ULL; i < n; ++i)
+                sparse_[entities_[i]] = i;
+        }
+        
     
     private:
         std::vector<std::size_t>    sparse_;
@@ -162,6 +194,8 @@ namespace heim
 
 
 
+    using predicate = bool (*) (const void* a, const void* b);
+
     /**
      * @brief The type-erased version of the compisition. 
      * 
@@ -170,10 +204,10 @@ namespace heim
      */
     struct composition_erased
     {
-        composition_erased(const composition_erased&) = delete;
-        composition_erased& operator=(const composition_erased&) = delete;
+        constexpr composition_erased(const composition_erased&) = delete;
+        constexpr composition_erased& operator=(const composition_erased&) = delete;
 
-        composition_erased(
+        constexpr composition_erased(
             void*       self_,
             void        (*destroy_)  (void*),
             void        (*erase_)    (void*, const entity),
@@ -182,7 +216,8 @@ namespace heim
             void*       (*get_)      (void*, const entity),
             std::size_t (*size_)     (void*),
             void        (*reserve_)  (void*, const std::size_t),
-            bool        (*contains_) (void*, const entity)
+            bool        (*contains_) (void*, const entity), 
+            void        (*sort_)     (void*, predicate)
         ) noexcept : 
             self(self_),
             destroy(destroy_),
@@ -192,10 +227,11 @@ namespace heim
             get(get_),
             size(size_),
             reserve(reserve_),
-            contains(contains_)
+            contains(contains_), 
+            sort(sort_)
         { }
 
-        composition_erased(composition_erased&& o) noexcept : 
+        constexpr composition_erased(composition_erased&& o) noexcept : 
             self(o.self), 
             destroy(o.destroy), 
             erase(o.erase), 
@@ -204,7 +240,8 @@ namespace heim
             get(o.get), 
             size(o.size), 
             reserve(o.reserve), 
-            contains(o.contains)
+            contains(o.contains), 
+            sort(o.sort)
         { 
             o.destroy = [](void*){ };
         }
@@ -230,8 +267,10 @@ namespace heim
 
         bool        (*contains) (void*, const entity);
 
-    };
+        void        (*sort)     (void*, predicate);
 
+    };
+    
     /**
      * @brief Returns a new type-erased composition. 
      * 
@@ -239,7 +278,7 @@ namespace heim
      * @return The new type-erased composition for the given component. 
      */
     template<typename component>
-    composition_erased make_erased()
+    constexpr composition_erased make_erased() noexcept
     {
         using comp = composition<component>;
         comp* c = new comp();
@@ -281,6 +320,13 @@ namespace heim
             +[](void* s, const entity e)
             {
                 return static_cast<comp*>(s)->contains(e);
+            }, 
+            +[](void* s, predicate srt)
+            {
+                static_cast<comp*>(s)->sort([srt](const component& lc, const component& rc)
+                {
+                    return srt(&lc, &rc);
+                });
             }
         };
     }

@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <typeindex>
+#include <functional>
 
 #include "common.hpp"
 #include "composition.hpp"
@@ -16,10 +17,57 @@ namespace heim
     class composer
     {
     public:
+        using composition_sorter = std::function<void()>;
+
+        template<typename comp>
+        using predicate = std::function<bool(const std::remove_cvref_t<comp>&, const std::remove_cvref_t<comp>&)>;
+
+        /**
+         * @brief Compose with a new type of component. 
+         * 
+         * Also allows component to be automatically sorted using a given predicate. 
+         * 
+         * @tparam comp The type of component to compose with. 
+         */
+        template<typename comp>
+        constexpr void compose(predicate<comp> cmp = nullptr) noexcept
+        {
+            using component = std::remove_cvref_t<comp>;
+
+            if (composes<component>())
+            {
+                std::size_t idx = index<component>();
+                composition_erased& ce = compositions_[idx];
+                composition_sorter sorter = cmp ? 
+                [cmp, &ce]()
+                {
+                    static_cast<composition<component>*>(ce.self)->sort(cmp);
+                }
+                : sorter;
+                sorters_[idx] = std::move(sorter);
+                return;
+            }
+
+            std::size_t idx = compositions_.size();
+            indexes_[type_index<component>()] = idx;
+            compositions_.push_back(make_erased<component>());
+
+            composition_erased& ce = compositions_[idx];
+            composition_sorter sorter = cmp ? 
+            [cmp, &ce]()
+            {
+                static_cast<composition<component>*>(ce.self)->sort(cmp);
+            }
+            : sorter;
+            sorters_.push_back(std::move(sorter));
+        }
+
+
+
         /**
          * @brief Compose an entity of a new component
          * 
-         * @tparam component The type of the new component. 
+         * @tparam comp The type of the new component. 
          * @tparam ...args The type of the arguments for the new component. 
          * @param e The entity to compose. 
          * @param a ...a The arguments for the new component.
@@ -30,19 +78,20 @@ namespace heim
             using component = std::remove_cvref_t<comp>;
 
             if (!composes<component>())
-            {
-                indexes_[type_index<component>()] = compositions_.size();
-                compositions_.push_back(make_erased<component>());
-            }
-            component c(std::forward<args>(a)...);
-            composition_erased& ce = compositions_[index<component>()];
-            static_cast<composition<component>*>(ce.self)->emplace(e, c);
+                return;
+            
+            std::size_t idx = index<component>();
+            composition_erased& ce = compositions_[idx];
+            static_cast<composition<component>*>(ce.self)->emplace(e, std::forward<args>(a)...);
+
+            if (sorters_[idx]) 
+                sorters_[idx]();
         }
 
         /**
          * @brief Erase the component(s) of given type(s) of the given entity.
          * 
-         * @tparam ...components The types of the components to erase. 
+         * @tparam ...comps The types of the components to erase. 
          * @param e The entity to erase components of. 
          */
         template<typename... comps>
@@ -67,7 +116,7 @@ namespace heim
         /**
          * @brief Returns a glimpse of the world concerning the given component types. 
          * 
-         * @tparam ...components The components to catch a glimpse at. 
+         * @tparam ...comps The components to catch a glimpse at. 
          * @return The glimpse of the components. 
          */
         template<typename... comps>
@@ -79,7 +128,7 @@ namespace heim
         /**
          * @brief Retrieves the component of given type of the given entity. 
          * 
-         * @tparam component The type of the component to get. 
+         * @tparam comp The type of the component to get. 
          * @param e The entity to retrieve the component of.
          * @return The component of the entity. 
          */
@@ -97,7 +146,7 @@ namespace heim
         /**
          * @brief Checks if the given entity has component(s) of given type(s). 
          * 
-         * @tparam ...components The type(s) of the component(s) to check. 
+         * @tparam ...comps The type(s) of the component(s) to check. 
          * @param e The entity to check. 
          * @return true if the entity has all of the components, false otherwise. 
          */
@@ -108,8 +157,10 @@ namespace heim
         }
 
     private:
-        std::vector<composition_erased> compositions_;
         std::unordered_map<std::type_index, std::size_t> indexes_;
+
+        std::vector<composition_erased> compositions_;
+        std::vector<composition_sorter> sorters_;
 
 
 
@@ -165,8 +216,12 @@ namespace heim
             if (!composes<component>())
                 return;
             
-            composition_erased& ce = compositions_[index<component>()];
+            std::size_t idx = index<component>();
+            composition_erased& ce = compositions_[idx];
             ce.erase(ce.self, e);
+
+            if (sorters_[idx]) 
+                sorters_[idx]();
         }
 
         /**
