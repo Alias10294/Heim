@@ -8,7 +8,9 @@
 namespace heim
 {
     /**
-     * @brief The world.
+     * @brief The central object of Heim.
+     * 
+     * Holds all of the data of your game world.
      */
     class world
     {

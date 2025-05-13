@@ -5,11 +5,15 @@
 #include <cstddef>
 #include <algorithm>
 #include <numeric>
+#include <memory>
+#include <functional>
 
 #include "common.hpp"
 
 namespace heim
 {
+    using predicate = std::function<bool(const void*, const void*)>;
+
     /**
      * @brief An optimised associative container for the storing and access of components. 
      * 
@@ -155,13 +159,16 @@ namespace heim
 
 
 
-        
-        template<typename predicate>
+        /**
+         * @brief Sorts the components of the composition using the given predicate. 
+         * 
+         * @param cmp The predicate given to order the components.
+         */
         constexpr void sort(predicate cmp)
         {
             std::size_t n = components_.size();
 
-            std::vector<std::size_t> order{n};
+            std::vector<std::size_t> order(n);
             std::iota(order.begin(), order.end(), 0ULL);
             std::sort(order.begin(), order.end(), 
                 [&](std::size_t lhs, std::size_t rhs)
@@ -194,80 +201,73 @@ namespace heim
 
 
 
-    using predicate = bool (*) (const void* a, const void* b);
-
     /**
-     * @brief The type-erased version of the compisition. 
+     * @brief The type-erased version of the composition. 
      * 
      * Allows for generalized and dynamic containment of all the compositions
      * in the composer. 
      */
-    struct composition_erased
+    struct composition_handle
     {
-        constexpr composition_erased(const composition_erased&) = delete;
-        constexpr composition_erased& operator=(const composition_erased&) = delete;
+        std::unique_ptr<void> ptr;
+        
+        /**
+         * @brief Erases the component of the given entity. 
+         * 
+         * Uses the swap-and-pop method, thus rearranging components in the composition. 
+         * 
+         * @param e The entity to erase a component to. 
+         */
+        std::function<void        (const entity     )> erase;
 
-        constexpr composition_erased(
-            void*       self_,
-            void        (*destroy_)  (void*),
-            void        (*erase_)    (void*, const entity),
-            std::size_t (*index_)    (void*, const entity),
-            entity      (*composed_) (void*, const std::size_t),
-            void*       (*get_)      (void*, const entity),
-            std::size_t (*size_)     (void*),
-            void        (*reserve_)  (void*, const std::size_t),
-            bool        (*contains_) (void*, const entity), 
-            void        (*sort_)     (void*, predicate)
-        ) noexcept : 
-            self(self_),
-            destroy(destroy_),
-            erase(erase_),
-            index(index_),
-            composed(composed_),
-            get(get_),
-            size(size_),
-            reserve(reserve_),
-            contains(contains_), 
-            sort(sort_)
-        { }
+        /**
+         * @brief Retrieves the index in the dense vector of the given entity. 
+         * 
+         * @param e The entity to retrieve the index of. 
+         * @return The index of the given entity. 
+         */
+        std::function<std::size_t (const entity     )> index;
+        /**
+         * @brief Retrieves the entity associated to the given index. 
+         * 
+         * @param idx The index to retrieve the corresponding entity of. 
+         * @return The entity corresponding to the given index. 
+         */
+        std::function<entity      (const std::size_t)> composed;
+        /**
+         * @brief Retrieves the component associated to the given entity. 
+         * 
+         * @param e The entity to retrieve the component of. 
+         * @return The componenet of the given entity. 
+         */
+        std::function<void*       (const entity     )> get;
+        /**
+         * @brief Returns the number of components in the composition.
+         */
+        std::function<std::size_t (                 )> size;
+        /**
+         * @brief Increases the capacity of the composition, allocating memory
+         * for a given amount of components. 
+         * 
+         * @param n The new capacity of the composition. 
+         */
+        std::function<void        (const std::size_t)> reserve;
 
-        constexpr composition_erased(composition_erased&& o) noexcept : 
-            self(o.self), 
-            destroy(o.destroy), 
-            erase(o.erase), 
-            index(o.index), 
-            composed(o.composed), 
-            get(o.get), 
-            size(o.size), 
-            reserve(o.reserve), 
-            contains(o.contains), 
-            sort(o.sort)
-        { 
-            o.destroy = [](void*){ };
-        }
+        /**
+         * @brief Checks if the entity has a component in the composition. 
+         * 
+         * @param e The entity to search for. 
+         * @return @c true if the entity has a component, @c false otherwise. 
+         */
+        std::function<bool        (const entity     )> contains;
 
-        ~composition_erased()
-        {
-            destroy(self);
-        }
-
-
-
-        /// @brief The composition to hold.
-        void*       self;
-        void        (*destroy)  (void*);
-
-        void        (*erase)    (void*, const entity);
-
-        std::size_t (*index)    (void*, const entity);
-        entity      (*composed) (void*, const std::size_t);
-        void*       (*get)      (void*, const entity);
-        std::size_t (*size)     (void*);
-        void        (*reserve)  (void*, const std::size_t);
-
-        bool        (*contains) (void*, const entity);
-
-        void        (*sort)     (void*, predicate);
+        /**
+         * @brief Sorts the components of the composition using the given predicate. 
+         * 
+         * @tparam predicate The type of predicate given to order the components.
+         * @param cmp The predicate given to order the components.
+         */
+        std::function<void        (predicate        )> sort;
 
     };
     
@@ -278,54 +278,50 @@ namespace heim
      * @return The new type-erased composition for the given component. 
      */
     template<typename component>
-    constexpr composition_erased make_erased() noexcept
+    constexpr composition_handle make_handle() noexcept
     {
         using comp = composition<component>;
-        comp* c = new comp();
 
-        return composition_erased
+        std::unique_ptr<comp> uptr = std::make_unique<comp>();
+        comp*                 rptr = uptr.get();
+
+        return composition_handle
         {
-            c, 
-            +[](void* s)
-            { 
-                delete static_cast<comp*>(s); 
-            }, 
-
-            +[](void* s, const entity e)
+            std::move(uptr), 
+            [rptr](const entity e)
             {
-                static_cast<comp*>(s)->erase(e);
+                rptr->erase(e);
             }, 
-
-            +[](void* s, const entity e)
+            [rptr](const entity e)
             {
-                return static_cast<comp*>(s)->index(e);
+                return rptr->index(e);
             }, 
-            +[](void* s, const std::size_t idx)
+            [rptr](const std::size_t idx)
             {
-                return static_cast<comp*>(s)->composed(idx);
+                return rptr->composed(idx);
             }, 
-            +[](void* s, const entity e)
+            [rptr](const entity e)
             {
-                return static_cast<void*>(&static_cast<comp*>(s)->get(e));
+                return static_cast<void*>(rptr->get(e));
             }, 
-            +[](void* s)
+            [rptr]()
             {
-                return static_cast<comp*>(s)->size();
+                return rptr->size();
             }, 
-            +[](void* s, const std::size_t n)
+            [rptr](const std::size_t n)
             {
-                static_cast<comp*>(s)->reserve(n);
+                rptr->reserve(n);
             }, 
             
-            +[](void* s, const entity e)
+            [rptr](const entity e)
             {
-                return static_cast<comp*>(s)->contains(e);
+                return rptr->contains(e);
             }, 
-            +[](void* s, predicate srt)
+            [rptr](predicate cmp)
             {
-                static_cast<comp*>(s)->sort([srt](const component& lc, const component& rc)
+                rptr->sort([cmp](const component& lc, const component& rc)
                 {
-                    return srt(&lc, &rc);
+                    return cmp(&lc, &rc);
                 });
             }
         };

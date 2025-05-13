@@ -30,36 +30,32 @@ namespace heim
          * @tparam comp The type of component to compose with. 
          */
         template<typename comp>
-        constexpr void compose(predicate<comp> cmp = nullptr) noexcept
+        constexpr void compose(predicate<comp> cmp = nullptr)
         {
             using component = std::remove_cvref_t<comp>;
 
             if (composes<component>())
             {
                 std::size_t idx = index<component>();
-                composition_erased& ce = compositions_[idx];
-                composition_sorter sorter = cmp ? 
-                [cmp, &ce]()
-                {
-                    static_cast<composition<component>*>(ce.self)->sort(cmp);
-                }
-                : sorter;
-                sorters_[idx] = std::move(sorter);
-                return;
+
+                sorters_[idx] = [cmp, idx, this]()
+                    {
+                        handles_[idx].sort(cmp);
+                    };
             }
-
-            std::size_t idx = compositions_.size();
-            indexes_[type_index<component>()] = idx;
-            compositions_.push_back(make_erased<component>());
-
-            composition_erased& ce = compositions_[idx];
-            composition_sorter sorter = cmp ? 
-            [cmp, &ce]()
+            else
             {
-                static_cast<composition<component>*>(ce.self)->sort(cmp);
+                std::size_t idx = handles_.size();
+
+                handles_.emplace_back(make_handle<component>());
+
+                sorters_.push_back(cmp ? 
+                    [cmp, idx, this]()
+                    {
+                    handles_[idx].sort(cmp);
+                    } : 
+                    nullptr);
             }
-            : sorter;
-            sorters_.push_back(std::move(sorter));
         }
 
 
@@ -81,8 +77,7 @@ namespace heim
                 return;
             
             std::size_t idx = index<component>();
-            composition_erased& ce = compositions_[idx];
-            static_cast<composition<component>*>(ce.self)->emplace(e, std::forward<args>(a)...);
+            get_composition<component>()->emplace(e, std::forward<args>(a)...);
 
             if (sorters_[idx]) 
                 sorters_[idx]();
@@ -107,8 +102,12 @@ namespace heim
          */
         constexpr void clear(const entity e)
         { 
-            for (composition_erased& ce : compositions_)
-                ce.erase(ce.self, e);
+            for (std::size_t idx = 0ULL; idx < handles_.size(); ++idx)
+            {
+                handles_[idx].erase(e);
+                if (sorters_[idx])
+                    sorters_[idx]();
+            }
         }
 
 
@@ -133,12 +132,12 @@ namespace heim
          * @return The component of the entity. 
          */
         template<typename comp>
-        [[nodiscard]] comp& get(const entity e) noexcept
+        [[nodiscard]] comp& get(const entity e)
         { 
             using component = std::remove_cvref_t<comp>;
 
-            composition_erased& ce = compositions_[index<component>()];
-            return *static_cast<component*>(ce.get(ce.self, e));
+            composition_handle& ch = handles_[index<component>()];
+            return *static_cast<component*>(ch.get(e));
         }
 
 
@@ -159,7 +158,7 @@ namespace heim
     private:
         std::unordered_map<std::type_index, std::size_t> indexes_;
 
-        std::vector<composition_erased> compositions_;
+        std::vector<composition_handle> handles_;
         std::vector<composition_sorter> sorters_;
 
 
@@ -185,7 +184,7 @@ namespace heim
         template<typename component>
         constexpr std::size_t index() const noexcept
         {
-            return indexes_.at(type_index<component>());
+            return indexes_[type_index<component>()];
         }
 
 
@@ -217,8 +216,7 @@ namespace heim
                 return;
             
             std::size_t idx = index<component>();
-            composition_erased& ce = compositions_[idx];
-            ce.erase(ce.self, e);
+            handles_[idx].erase(e);
 
             if (sorters_[idx]) 
                 sorters_[idx]();
@@ -233,8 +231,8 @@ namespace heim
         template<typename component>
         constexpr composition<component>& get_composition() noexcept
         {
-            composition_erased& ce = compositions_[index<component>()];
-            return *static_cast<composition<component>*>(ce.self);
+            composition_handle& ch = handles_[index<component>()];
+            return *static_cast<composition<component>*>(ch.ptr.get());
         }
 
         /**
@@ -247,8 +245,8 @@ namespace heim
         template<typename component>
         constexpr bool has_one(const entity e) const noexcept
         {
-            composition_erased& ce = compositions_[index<component>()];
-            return ce.contains(ce.self, e);
+            composition_handle& ch = handles_[index<component>()];
+            return ch.contains(e);
         }
 
     };

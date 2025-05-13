@@ -20,10 +20,10 @@ namespace heim
         class iterator
         {
         public:
-            constexpr iterator(compositions_tuple& compositions, const std::size_t ref_index = 0ULL) : 
-                compositions_{compositions}, 
-                ref_index_{ref_index}, 
-                ref_size_{std::get<0>(compositions_).size()}
+            constexpr iterator(compositions_tuple& compositions, const std::size_t ref_index = 0ULL) 
+                : compositions_{compositions}
+                , ref_index_{ref_index}
+                , ref_size_{std::get<0>(compositions_).size()}
             { 
                 advance_to_valid();
             }
