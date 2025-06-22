@@ -57,7 +57,7 @@ public:
     if (contains(e))
       return;
     if (e >= sparse_.size())
-      reserve(e + 1);
+      reserve(std::max(e + 1ULL, sparse_.size() * 2ULL + 1ULL));
 
     sparse_.at(e) = entities_.size();
     entities_.emplace_back(e);
