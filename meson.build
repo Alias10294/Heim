@@ -23,7 +23,8 @@ test_inc = include_directories('tests')
 test_sources = files(
     'tests/test_heim.cpp',
     'tests/test_summoner.cpp',
-    'tests/test_composition.cpp')
+    'tests/test_composition.cpp',
+    'tests/test_glimpse.cpp')
 
 test_exe = executable(
     'heim_test',
