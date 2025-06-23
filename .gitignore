@@ -1,3 +1,10 @@
 build/
+subprojects/packagecache/
+subprojects/*.wrap
+.meson-subproject-wrap-hash.txt
 
-.idea/
+.vscode
+.idea
+*.swp
+
+.DS_Store
