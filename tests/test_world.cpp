@@ -1,6 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "heim/world.hpp"
+#include "world.hpp"
 #include <vector>
 
 using heim::world;

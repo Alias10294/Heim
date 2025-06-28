@@ -19,6 +19,7 @@ using predicate = std::function<bool(
 
 using predicate_handle = std::function<bool(const void*, const void*)>;
 
+
 /**
  * @brief An optimised associative container for the storing and access of
  * components.

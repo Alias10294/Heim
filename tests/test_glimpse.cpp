@@ -1,6 +1,6 @@
 #include "doctest.h"
 
-#include "heim/glimpse.hpp"
+#include "glimpse.hpp"
 
 TEST_CASE("glimpse: single composition iteration")
 {

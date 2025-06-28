@@ -1,6 +1,6 @@
 #include "doctest.h"
 
-#include "heim/summoner.hpp"
+#include "summoner.hpp"
 
 TEST_CASE("summoner: creates entities")
 {

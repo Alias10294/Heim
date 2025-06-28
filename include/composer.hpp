@@ -6,9 +6,9 @@
 #include <functional>
 #include <cassert>
 
-#include "entity.hpp"
-#include "composition.hpp"
-#include "glimpse.hpp"
+#include "heim/entity.hpp"
+#include "heim/composition.hpp"
+#include "heim/glimpse.hpp"
 
 namespace heim
 {
@@ -83,7 +83,7 @@ public:
     if (!composes<Component>())
       return;
 
-    std::size_t idx = index<Component>();
+    const std::size_t idx = index<Component>();
     get_composition<Component>().emplace(e, std::forward<Args>(a)...);
 
     if (sorters_[idx])
@@ -240,7 +240,7 @@ private:
     if (!composes<Component>())
       return;
 
-    std::size_t idx = index<Component>();
+    const std::size_t idx = index<Component>();
     handles_[idx].erase(e);
 
     if (sorters_[idx])

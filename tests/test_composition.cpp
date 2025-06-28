@@ -1,6 +1,6 @@
 #include "doctest.h"
 
-#include "heim/composition.hpp"
+#include "composition.hpp"
 
 #include <string>
 
