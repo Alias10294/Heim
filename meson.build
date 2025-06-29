@@ -9,22 +9,19 @@ meson.override_dependency('heim', heim_dep)
 
 
 install_headers(
-    'include/heim/composer.hpp',
-    'include/heim/composition.hpp',
-    'include/heim/entity.hpp',
-    'include/heim/glimpse.hpp',
-    'include/heim/summoner.hpp',
-    'include/heim/world.hpp',
-    subdir: 'heim'
+    'include/composer.hpp',
+    'include/composition.hpp',
+    'include/entity.hpp',
+    'include/glimpse.hpp',
+    'include/summoner.hpp',
+    'include/world.hpp',
 )
 
 
 test_inc = include_directories('tests')
 test_sources = files(
     'tests/test_heim.cpp',
-    'tests/test_summoner.cpp',
-    'tests/test_composition.cpp',
-    'tests/test_glimpse.cpp')
+    'tests/test_composition.cpp')
 
 test_exe = executable(
     'heim_test',
