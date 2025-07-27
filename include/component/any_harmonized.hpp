@@ -1,9 +1,9 @@
-#ifndef HEIM_HARMONY_ANY_HARMONIZED_HPP
-#define HEIM_HARMONY_ANY_HARMONIZED_HPP
+#ifndef HEIM_COMPONENT_ANY_HARMONIZED_HPP
+#define HEIM_COMPONENT_ANY_HARMONIZED_HPP
 
 #include <concepts>
 #include <typeinfo>
-#include "component/composition.hpp"
+#include "composition.hpp"
 #include "harmonized.hpp"
 #include "utils/specialization_of.hpp"
 
@@ -219,4 +219,4 @@ noexcept
 
 }
 
-#endif // HEIM_HARMONY_ANY_HARMONIZED_HPP
+#endif // HEIM_COMPONENT_ANY_HARMONIZED_HPP

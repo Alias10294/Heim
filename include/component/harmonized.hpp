@@ -1,9 +1,9 @@
-#ifndef HEIM_HARMONY_HARMONIZED_HPP
-#define HEIM_HARMONY_HARMONIZED_HPP
+#ifndef HEIM_COMPONENT_HARMONIZED_HPP
+#define HEIM_COMPONENT_HARMONIZED_HPP
 
 #include <algorithm>
 #include <concepts>
-#include "component/composition.hpp"
+#include "composition.hpp"
 #include "utils/specialization_of.hpp"
 
 namespace heim
@@ -164,4 +164,4 @@ private:
 
 }
 
-#endif // HEIM_HARMONY_HARMONIZED_HPP
+#endif // HEIM_COMPONENT_HARMONIZED_HPP
