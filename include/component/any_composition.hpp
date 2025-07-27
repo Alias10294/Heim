@@ -55,8 +55,8 @@ private:
 
 
   /**
-   * @brief Constructs a composition_manager specific to a component_type,
-   *     and used in the constructor of the any_composition.
+   * @brief Constructs a manager specific to a type of composition, and used in
+   *     the constructor of the any_composition.
    *
    * @tparam Entity             The type of the entities of the composition.
    * @tparam Component          The type of the components of the composition.
@@ -75,7 +75,7 @@ private:
         && (PageSize > 0)
   [[nodiscard]]
   constexpr
-  composition_manager make_composition_manager() const
+  static composition_manager make_composition_manager()
   {
     return {
         [](void *ptr)
@@ -272,7 +272,7 @@ public:
   }
 
 private:
-  void*               ptr_;
+  void               *ptr_;
   composition_manager manager_;
 
 };
