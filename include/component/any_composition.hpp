@@ -46,21 +46,6 @@ private:
     }
 
   public:
-    /**
-     * @brief Swaps the contents of @code ths@endcode and @code rhs@endcode.
-     *
-     * @param lhs The first  composition_manager to swap the contents of.
-     * @param rhs The second composition_manager to swap the contents of.
-     */
-    friend
-    constexpr
-    void swap(composition_manager &lhs, composition_manager &rhs)
-    noexcept
-    {
-      lhs.swap(rhs);
-    }
-
-  public:
     do_destroy_type       do_destroy;
     do_erase_type         do_erase;
 
@@ -282,10 +267,8 @@ public:
   void swap(any_composition &other)
   noexcept
   {
-    using std::swap;
-
-    swap(ptr_    , other.ptr_    );
-    swap(manager_, other.manager_);
+    std::swap(ptr_, other.ptr_);
+    manager_.swap(other.manager_);
   }
 
 private:

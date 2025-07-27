@@ -15,7 +15,7 @@ requires  std::unsigned_integral<Entity>
 class harmonized
 {
 public:
-  using entity_type   = Entity;
+  using entity_type = Entity;
 
 private:
   template<typename Composition>
@@ -81,18 +81,7 @@ public:
     : observers_{compositions...},
       length_   {0}
   {
-    auto &pivot = min(compositions...);
-
-    if (pivot.empty())
-      return;
-
-    auto it = pivot.end();
-    while (--it >= pivot.begin() + length_)
-    {
-      entity_type const e = (*it).entity;
-      if ((compositions.contains(e) && ...))
-        include(e);
-    }
+    harmonize(compositions...);
   }
 
   constexpr
