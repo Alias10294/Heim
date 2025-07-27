@@ -11,6 +11,7 @@ namespace heim
 template<typename    Entity,
          typename ...Compositions>
 requires  std::unsigned_integral<Entity>
+      && (sizeof...(Compositions) > 1)
       && (specialization_of<Compositions, composition> && ...)
 class harmonized
 {
@@ -99,6 +100,16 @@ public:
   harmonized &operator=(harmonized &&)
   noexcept
   = default;
+
+
+
+  [[nodiscard]]
+  constexpr
+  std::ptrdiff_t length() const
+  noexcept
+  {
+    return length_;
+  }
 
 
 

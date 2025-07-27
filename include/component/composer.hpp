@@ -185,6 +185,7 @@ public:
         type_index<Component, PageSize, ComponentAllocator>())->second;
   }
 
+
   /**
    * @tparam Component          The type of component of the composition.
    * @tparam PageSize           The size of each page in the sparse container
