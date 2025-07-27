@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <memory>
 #include <numeric>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -363,21 +364,11 @@ private:
 
 
   template<bool IsConst>
-  class proxy
-  {
-  public:
-    using entity_type              = entity_type;
-    using component_reference_type = std::conditional_t<IsConst,
-        component_type const &,
-        component_type &>;
-
-  public:
-    entity_type const        entity;
-    component_reference_type component;
-
-  };
-
-
+  using proxy_type = std::tuple<
+      entity_type const,
+      std::conditional_t<IsConst,
+          component_type const &,
+          component_type &>>;
 
   /**
    * @brief The dense container of elements of the composition.
@@ -412,7 +403,7 @@ private:
           component_type *>;
 
     public:
-      using proxy_type = proxy<is_const>;
+      using proxy_type = proxy_type<IsConst>;
 
     public:
       constexpr
@@ -1088,7 +1079,7 @@ public:
   bool contains(entity_type const e) const
   {
     return sparse_.contains(e)
-        && dense_[sparse_[e]].entity == e;
+        && std::get<0>(dense_[sparse_[e]]) == e;
   }
 
 
@@ -1104,7 +1095,7 @@ public:
   component_type       &operator[](entity_type const e)
   noexcept
   {
-    return dense_[sparse_[e]].component;
+    return std::get<1>(dense_[sparse_[e]]);
   }
   /**
    * @param e The entity of the component to get.
@@ -1118,7 +1109,7 @@ public:
   component_type const &operator[](entity_type const e) const
   noexcept
   {
-    return dense_[sparse_[e]].component;
+    return std::get<1>(dense_[sparse_[e]]);
   }
 
   /**
@@ -1131,7 +1122,7 @@ public:
   constexpr
   component_type       &at(entity_type const e)
   {
-    return dense_.at(sparse_.at(e)).component;
+    return std::get<1>(dense_.at(sparse_.at(e)));
   }
   /**
    * @param e The entity of the component to get.
@@ -1143,7 +1134,7 @@ public:
   constexpr
   component_type const &at(entity_type const e) const
   {
-    return dense_.at(sparse_.at(e)).component;
+    return std::get<1>(dense_.at(sparse_.at(e)));
   }
 
 
@@ -1193,7 +1184,7 @@ public:
     if (!contains(e))
       return false;
 
-    entity_type const back_e = dense_.back().entity;
+    entity_type const back_e = std::get<0>(dense_.back());
 
     dense_.erase(sparse_[e]);
 
