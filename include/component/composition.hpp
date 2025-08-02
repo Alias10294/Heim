@@ -26,8 +26,9 @@ template<typename Entity,
          std::size_t PageSize = 4096,
          typename ComponentAllocator = std::allocator<Component>>
 requires  std::unsigned_integral<Entity>
-      &&  std::is_copy_constructible_v<Component>
-      &&  std::is_copy_assignable_v   <Component>
+      &&  std::is_move_constructible_v<Component>
+      &&  std::is_move_assignable_v   <Component>
+      &&  std::is_destructible_v      <Component>
       && (PageSize > 0)
 class composition
 {
@@ -60,6 +61,62 @@ private:
     static std::size_t null_idx = std::numeric_limits<std::size_t>::max();
 
   public:
+    constexpr
+    sparse_container()
+    noexcept
+    = default;
+    constexpr
+    sparse_container(sparse_container const &other)
+      : pages_{}
+    {
+      pages_.reserve(other.pages_.capacity());
+      for (auto const &page_uptr : other.pages_)
+      {
+        if (page_uptr)
+          pages_.emplace_back(std::make_unique<page_type>(*page_uptr));
+        else
+          pages_.emplace_back(nullptr);
+      }
+    }
+    constexpr
+    sparse_container(sparse_container &&)
+    noexcept
+    = default;
+
+    constexpr
+    ~sparse_container()
+    noexcept
+    = default;
+
+
+    [[nodiscard]]
+    constexpr
+    sparse_container &operator=(sparse_container const &other)
+    {
+      if (this == &other)
+        return *this;
+
+      page_container_type pages;
+
+      pages.reserve(other.pages_.capacity());
+      for (auto const &page_uptr : other.pages_)
+      {
+        if (page_uptr)
+          pages_.emplace_back(std::make_unique<page_type>(*page_uptr));
+        else
+          pages_.emplace_back(nullptr);
+      }
+      pages_ = std::move(pages);
+      return *this;
+    }
+    [[nodiscard]]
+    constexpr
+    sparse_container &operator=(sparse_container &&)
+    noexcept
+    = default;
+
+
+
     /**
      * @brief Tidies the sparse container by destroying its empty pages and
      *     reducing its size as much as possible.
@@ -83,7 +140,6 @@ private:
      */
     constexpr
     void shrink_to_fit()
-    noexcept
     {
       pages_.shrink_to_fit();
     }
@@ -447,6 +503,7 @@ private:
       [[nodiscard]]
       constexpr
       proxy_type operator*() const
+      noexcept
       {
         return proxy_type{*entities_, *components_};
       }
@@ -602,7 +659,6 @@ private:
      */
     constexpr
     void shrink_to_fit()
-    noexcept(std::declval<component_container_type>().shrink_to_fit())
     {
       entities_  .shrink_to_fit();
       components_.shrink_to_fit();
@@ -829,13 +885,24 @@ private:
      * @param args The arguments to construct the corresponding component in
      *     the container.
      * @return @c true if a new element has been emplaced, @c false otherwise.
-   */
+     *
+     * @note If an exception is thrown for any reason, this function has no
+     *     effect (strong exception safety guarantee).
+     */
     template<typename... Args>
     constexpr
     void emplace_back(entity_type const e, Args &&...args)
     {
       components_.emplace_back(std::forward<Args>(args)...);
-      entities_  .emplace_back(e);
+      try
+      {
+        entities_.emplace_back(e);
+      }
+      catch (...)
+      {
+        components_.pop_back();
+        throw;
+      }
     }
 
 
@@ -847,13 +914,15 @@ private:
      * @warning This method uses a @a swap-and-pop algorithm to induce
      *     constant-time complexity for the operation. This comes at the cost
      *     of breaking the current order of elements in the container.
+     * @note If an exception is thrown for any reason, this function has no
+     *     effect (strong exception safety guarantee).
      */
     constexpr
     void erase(std::size_t const idx)
-    noexcept
+    noexcept(std::is_nothrow_move_assignable_v<Component>)
     {
       components_[idx] = std::move(components_.back());
-      entities_  [idx] = std::move(entities_  .back());
+      entities_  [idx] = std::move(entities_.back());
 
       components_.pop_back();
       entities_  .pop_back();
@@ -970,7 +1039,6 @@ public:
    */
   constexpr
   void shrink_to_fit()
-  noexcept(std::declval<dense_container>().shrink_to_fit())
   {
     sparse_.tidy();
     sparse_.shrink_to_fit();
@@ -1077,6 +1145,7 @@ public:
   [[nodiscard]]
   constexpr
   bool contains(entity_type const e) const
+  noexcept
   {
     return sparse_.contains(e)
         && std::get<0>(dense_[sparse_[e]]) == e;
@@ -1149,6 +1218,9 @@ public:
    * @param args The arguments to construct the corresponding component in the
    *     container.
    * @return @c true if a new element has been emplaced, @c false otherwise.
+   *
+   * @note If an exception is thrown for any reason, this function has no
+   *     effect (strong exception safety guarantee).
    */
   template<typename ...Args>
   constexpr
@@ -1176,6 +1248,8 @@ public:
    * @warning This method uses a @a swap-and-pop algorithm to induce
    *     constant-time complexity for the operation. This comes at the cost of
    *     breaking the current order of the elements in the container.
+   * @note If an exception is thrown for any reason, this function has no
+   *     effect (strong exception safety guarantee).
    */
   constexpr
   bool erase(entity_type const e)
@@ -1254,8 +1328,9 @@ template<typename Entity,
          std::size_t PageSize = 4096,
          typename ComponentAllocator = std::allocator<Component>>
 requires  std::unsigned_integral<Entity>
-      &&  std::is_copy_constructible_v<Component>
-      &&  std::is_copy_assignable_v<Component>
+      &&  std::is_move_constructible_v<Component>
+      &&  std::is_move_assignable_v   <Component>
+      &&  std::is_destructible_v      <Component>
       && (PageSize > 0)
 constexpr
 void swap(

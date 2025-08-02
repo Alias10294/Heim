@@ -24,6 +24,7 @@ private:
   {
   public:
     using do_destroy_type = void (*)(void *) noexcept;
+    using do_clone_type   = void *(*)(void const *);
 
   public:
     /**
@@ -35,14 +36,14 @@ private:
     void swap(manager &other)
     noexcept
     {
-      using std::swap;
-
-      swap(do_destroy, other.do_destroy);
-      swap(type      , other.type      );
+      std::swap(do_destroy, other.do_destroy);
+      std::swap(do_clone  , other.do_clone  );
+      std::swap(type      , other.type      );
     }
 
   public:
     do_destroy_type       do_destroy;
+    do_clone_type         do_clone;
 
     std::type_info const *type;
 
@@ -59,7 +60,9 @@ private:
   template<typename    Entity,
            typename ...Compositions>
   requires  std::unsigned_integral<Entity>
-        && (specialization_of<Compositions, composition> && ...)
+        && (sizeof...(Compositions) > 1)
+        && (specialization_of<Compositions, composition>               && ...)
+        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   static manager make_manager()
   {
     return {
@@ -67,6 +70,12 @@ private:
         noexcept
         {
           delete static_cast<harmonized<Entity, Compositions ...> *>(ptr);
+        },
+        [](void const *ptr)
+        -> void *
+        {
+          return new harmonized<Entity, Compositions ...>{
+              *static_cast<harmonized<Entity, Compositions ...> *>(ptr)};
         },
         &typeid(harmonized<Entity, Compositions ...>)};
   }
@@ -76,10 +85,12 @@ private:
 public:
   constexpr
   any_harmonized()
-  = delete;
+  = default;
   constexpr
-  any_harmonized(any_harmonized const &)
-  = delete;
+  any_harmonized(any_harmonized const &other)
+    : ptr_    {other.ptr_ ? other.manager_.do_clone(other.ptr_) : nullptr},
+      manager_{other.manager_}
+  { }
   constexpr
   any_harmonized(any_harmonized &&other)
   noexcept
@@ -91,7 +102,9 @@ public:
   template<typename    Entity,
            typename ...Compositions>
   requires  std::unsigned_integral<Entity>
-        && (specialization_of<Compositions, composition> && ...)
+        && (sizeof...(Compositions) > 1)
+        && (specialization_of<Compositions, composition>               && ...)
+        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   any_harmonized(
       std::in_place_type_t<Entity>,
       Compositions const &...compositions)
@@ -109,8 +122,19 @@ public:
 
 
   constexpr
-  any_harmonized &operator=(any_harmonized const &)
-  = delete;
+  any_harmonized &operator=(any_harmonized const &other)
+  {
+    if (this == &other)
+      return *this;
+
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_       = other.ptr_ ? other.manager_.do_clone(other.ptr_) : nullptr;
+    manager_   = other.manager_;
+
+    return *this;
+  }
   constexpr
   any_harmonized &operator=(any_harmonized &&other)
   noexcept
@@ -142,6 +166,18 @@ public:
 
 
   /**
+   * @return @c true if @p *this contains a value, @c false otherwise.
+   */
+  [[nodiscard]]
+  constexpr
+  bool has_value() const
+  noexcept
+  {
+    return ptr_ != nullptr;
+  }
+
+
+  /**
    * @tparam Entity       The type of entities of the harmonized.
    * @tparam Compositions The type of compositions of the harmonized.
    * @return A reference to the contained harmonized, provided the given
@@ -153,7 +189,9 @@ public:
   template<typename    Entity,
            typename ...Compositions>
   requires  std::unsigned_integral<Entity>
-        && (specialization_of<Compositions, composition> && ...)
+        && (sizeof...(Compositions) > 1)
+        && (specialization_of<Compositions, composition>               && ...)
+        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   [[nodiscard]]
   constexpr
   harmonized<Entity, Compositions ...>       &get()
@@ -173,7 +211,9 @@ public:
   template<typename    Entity,
            typename ...Compositions>
   requires  std::unsigned_integral<Entity>
-        && (specialization_of<Compositions, composition> && ...)
+        && (sizeof...(Compositions) > 1)
+        && (specialization_of<Compositions, composition>               && ...)
+        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   [[nodiscard]]
   constexpr
   harmonized<Entity, Compositions ...> const &get() const
@@ -182,6 +222,56 @@ public:
     return *static_cast<harmonized<Entity, Compositions ...> *>(ptr_);
   }
 
+
+
+  /**
+   * @brief Changes the contained harmonized after destroying any currently
+   *     contained harmonized.
+   *
+   * @tparam Entity       The type of entities of the harmonized.
+   * @tparam Compositions The type of compositions of the harmonized.
+   * @tparam Args         The type of arguments to construct the harmonized.
+   * @return A reference to the newly contained harmonized.
+   *
+   * @note If an exception is thrown for any reason, this function has no
+   *     effect (strong exception safety guarantee).
+   */
+  template<typename    Entity,
+           typename ...Compositions,
+           typename ...Args>
+  requires  std::unsigned_integral<Entity>
+        && (sizeof...(Compositions) > 1)
+        && (specialization_of<Compositions, composition>               && ...)
+        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+  constexpr
+  harmonized<Entity, Compositions ...> &emplace(Args &&...args)
+  {
+    auto ptr = new harmonized<Entity, Compositions ...>(
+        std::forward<Args>(args)...);
+
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_     = ptr;
+    manager_ = make_manager<Entity, Compositions ...>();
+
+    return get<Entity, Compositions ...>();
+  }
+
+
+  /**
+   * @brief Destroys any contained harmonized.
+   */
+  constexpr
+  void reset()
+  noexcept
+  {
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_     = nullptr;
+    manager_ = manager{};
+  }
 
 
   /**

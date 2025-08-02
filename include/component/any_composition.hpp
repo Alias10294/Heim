@@ -22,31 +22,34 @@ private:
   /**
    * @brief The manager for the contained type-erased composition pointer.
    */
-  class composition_manager
+  class manager
   {
   public:
     using do_destroy_type = void (*)(void *) noexcept;
+    using do_clone_type   = void *(*)(void const *);
     using do_erase_type   = bool (*)(void *, std::uintmax_t const);
 
   public:
     /**
      * @brief Swaps the contents of @p *this and @code other@endcode.
      *
-     * @param other The other composition_manager to swap the contents of.
+     * @param other The other manager to swap the contents of.
      */
     constexpr
-    void swap(composition_manager &other)
+    void swap(manager &other)
     noexcept
     {
       using std::swap;
 
       swap(do_destroy, other.do_destroy);
+      swap(do_clone  , other.do_clone  );
       swap(do_erase  , other.do_erase  );
       swap(type      , other.type      );
     }
 
   public:
     do_destroy_type       do_destroy;
+    do_clone_type         do_clone;
     do_erase_type         do_erase;
 
     std::type_info const *type;
@@ -64,8 +67,7 @@ private:
    *     of the composition.
    * @tparam ComponentAllocator The allocator for the components of the
    *     composition.
-   * @return The composition_manager specific to the suggested composition to
-   *     contain.
+   * @return The manager specific to the suggested composition to contain.
    */
   template<typename    Entity,
            typename    Component,
@@ -75,7 +77,8 @@ private:
         && (PageSize > 0)
   [[nodiscard]]
   constexpr
-  static composition_manager make_composition_manager()
+  static manager make_manager()
+  noexcept
   {
     return {
         [](void *ptr)
@@ -84,6 +87,14 @@ private:
           delete static_cast<
               composition<Entity, Component, PageSize, ComponentAllocator> *>(
                   ptr);
+        },
+        [](void const *ptr)
+        -> void *
+        {
+          return new composition<
+            Entity, Component, PageSize, ComponentAllocator>{
+                *static_cast<composition<
+                      Entity, Component, PageSize, ComponentAllocator> *>(ptr)};
         },
         [](void *ptr, std::uintmax_t const e)
         -> bool
@@ -103,10 +114,12 @@ private:
 public:
   constexpr
   any_composition()
-  = delete;
+  = default;
   constexpr
-  any_composition(any_composition const &)
-  = delete;
+  any_composition(any_composition const &other)
+    : ptr_    {other.ptr_ ? other.manager_.do_clone(other.ptr_) : nullptr},
+      manager_{other.manager_}
+  { }
   constexpr
   any_composition(any_composition &&other)
   noexcept
@@ -121,8 +134,9 @@ public:
            typename    ComponentAllocator = std::allocator<Component>,
            typename ...Args>
   requires  std::unsigned_integral<Entity>
-        &&  std::is_copy_constructible_v<Component>
-        &&  std::is_copy_assignable_v   <Component>
+        &&  std::is_move_constructible_v<Component>
+        &&  std::is_move_assignable_v   <Component>
+        &&  std::is_destructible_v      <Component>
         && (PageSize > 0)
   explicit
   constexpr
@@ -133,8 +147,7 @@ public:
     : ptr_    {new composition<
           Entity, Component, PageSize, ComponentAllocator>(
               std::forward<Args>(args)...)},
-      manager_{make_composition_manager<
-          Entity, Component, PageSize, ComponentAllocator>()}
+      manager_{make_manager<Entity, Component, PageSize, ComponentAllocator>()}
   { }
 
   constexpr
@@ -147,8 +160,19 @@ public:
 
 
   constexpr
-  any_composition &operator=(any_composition const &)
-  = delete;
+  any_composition &operator=(any_composition const &other)
+  {
+    if (this == &other)
+      return *this;
+
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_     = other.ptr_ ? other.manager_.do_clone(other.ptr_) : nullptr;
+    manager_ = other.manager_;
+
+    return *this;
+  }
   constexpr
   any_composition &operator=(any_composition &&other)
   noexcept
@@ -180,6 +204,18 @@ public:
 
 
   /**
+   * @return @c true if @p *this contains a value, @c false otherwise.
+   */
+  [[nodiscard]]
+  constexpr
+  bool has_value() const
+  noexcept
+  {
+    return ptr_ != nullptr;
+  }
+
+
+  /**
    * @tparam Entity             The type of the entities of the composition.
    * @tparam Component          The type of the components of the composition.
    * @tparam PageSize           The size of each page for the sparse container
@@ -197,8 +233,9 @@ public:
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
   requires  std::unsigned_integral<Entity>
-        &&  std::is_copy_constructible_v<Component>
-        &&  std::is_copy_assignable_v   <Component>
+        &&  std::is_move_constructible_v<Component>
+        &&  std::is_move_assignable_v   <Component>
+        &&  std::is_destructible_v      <Component>
         && (PageSize > 0)
   [[nodiscard]]
   constexpr
@@ -227,8 +264,9 @@ public:
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
   requires  std::unsigned_integral<Entity>
-        &&  std::is_copy_constructible_v<Component>
-        &&  std::is_copy_assignable_v   <Component>
+        &&  std::is_move_constructible_v<Component>
+        &&  std::is_move_assignable_v   <Component>
+        &&  std::is_destructible_v      <Component>
         && (PageSize > 0)
   [[nodiscard]]
   constexpr
@@ -238,6 +276,66 @@ public:
   {
     return *static_cast<
         composition<Component, Entity, PageSize, ComponentAllocator> *>(ptr_);
+  }
+
+
+
+  /**
+   * @brief Changes the contained composition after destroying any currently
+   *     contained composition.
+   *
+   * @tparam Entity             The type of the entities of the composition.
+   * @tparam Component          The type of the components of the composition.
+   * @tparam PageSize           The size of each page for the sparse container
+   *     of the composition.
+   * @tparam ComponentAllocator The allocator for the components of the
+   *     composition.
+   * @tparam Args               The type of arguments to construct the
+   *     composition.
+   * @return A reference to the newly contained composition.
+   *
+   * @note If an exception is thrown for any reason, this function has no
+   *     effect (strong exception safety guarantee).
+   */
+  template<typename    Entity,
+           typename    Component,
+           std::size_t PageSize           = 4096,
+           typename    ComponentAllocator = std::allocator<Component>,
+           typename ...Args>
+  requires  std::unsigned_integral<Entity>
+        &&  std::is_move_constructible_v<Component>
+        &&  std::is_move_assignable_v   <Component>
+        &&  std::is_destructible_v      <Component>
+        && (PageSize > 0)
+  constexpr
+  composition<Entity, Component, PageSize, ComponentAllocator> &emplace(
+      Args &&...args)
+  {
+    auto ptr = new composition<Entity, Component, PageSize, ComponentAllocator>(
+        std::forward<Args>(args)...);
+
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_     = ptr;
+    manager_ = make_manager<Entity, Component, PageSize, ComponentAllocator>();
+
+    return get<Entity, Component, PageSize, ComponentAllocator>();
+  }
+
+
+  /**
+   * @brief Destroys any contained composition.
+   */
+  constexpr
+  void reset()
+  noexcept
+  {
+    if (ptr_)
+      manager_.do_destroy(ptr_);
+
+    ptr_     = nullptr;
+    manager_ = manager{};
   }
 
 
@@ -272,8 +370,8 @@ public:
   }
 
 private:
-  void               *ptr_;
-  composition_manager manager_;
+  void   *ptr_;
+  manager manager_;
 
 };
 
