@@ -464,7 +464,6 @@ private:
     public:
       constexpr
       generic_iterator()
-      noexcept
       = default;
       constexpr
       generic_iterator(generic_iterator const &other)
@@ -575,6 +574,25 @@ private:
       }
 
 
+      [[nodiscard]]
+      constexpr
+      generic_iterator &operator+=(std::ptrdiff_t const dist)
+      noexcept
+      {
+        *this = *this + dist;
+        return *this;
+      }
+
+      [[nodiscard]]
+      constexpr
+      generic_iterator &operator-=(std::ptrdiff_t const dist)
+      noexcept
+      {
+        *this = *this - dist;
+        return *this;
+      }
+
+
 
       [[nodiscard]]
       constexpr
@@ -590,6 +608,16 @@ private:
       noexcept
       {
         return entities_ <=> other.entities_;
+      }
+
+
+
+      constexpr
+      void swap(generic_iterator &other)
+      noexcept
+      {
+        std::swap(entities_  , other.entities_  );
+        std::swap(components_, other.components_);
       }
 
     private:
@@ -1343,6 +1371,21 @@ noexcept(noexcept(std::declval<
 {
   lhs.swap(rhs);
 }
+
+
+
+template<typename T>
+concept composition_iterator = requires(T it)
+{
+  typename T::proxy_type;
+
+  requires std::tuple_size_v<typename T::proxy_type> == 2;
+
+  requires std::is_const_v<
+      std::tuple_element_t<0, typename T::proxy_type>>;
+  requires std::unsigned_integral<
+      std::tuple_element_t<0, typename T::proxy_type>>;
+};
 
 }
 
