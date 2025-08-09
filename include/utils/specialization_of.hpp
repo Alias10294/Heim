@@ -7,11 +7,13 @@ namespace heim
 {
 template<typename                        T,
          template<typename ...> typename Generic>
-struct is_specialization_of : std::false_type;
+struct is_specialization_of : std::false_type
+{ };
 
 template<template<typename ...> typename Generic,
          typename                     ...Args>
-struct is_specialization_of<Generic<Args ...>, Generic> : std::true_type;
+struct is_specialization_of<Generic<Args ...>, Generic> : std::true_type
+{ };
 
 template<typename                        T,
          template<typename ...> typename Generic>

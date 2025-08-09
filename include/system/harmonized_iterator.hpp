@@ -1,8 +1,8 @@
-#ifndef HEIM_COMPONENT_HARMONIZED_ITERATOR_HPP
-#define HEIM_COMPONENT_HARMONIZED_ITERATOR_HPP
+#ifndef HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP
+#define HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP
 
 #include <utility>
-#include "harmonized.hpp"
+#include "component/harmonized.hpp"
 
 namespace heim
 {
@@ -17,15 +17,15 @@ requires (composition_iterator<Iterators>
       && (std::is_same_v<
              std::tuple_element_t<0, typename Iterators::proxy_type>,
              std::tuple_element_t<0, typename std::tuple_element_t<0,
-                 std::tuple<Iterators...>>::proxy_type>>
+                 std::tuple<Iterators ...>>::proxy_type>>
           && ...)
 class harmonized_iterator
 {
 public:
   using proxy_type = std::tuple<
       std::tuple_element_t<0, typename
-          std::tuple_element_t<0, std::tuple<Iterators...>>::proxy_type>,
-      std::tuple_element_t<1, typename Iterators::proxy_type>...>;
+          std::tuple_element_t<0, std::tuple<Iterators ...>>::proxy_type>,
+      std::tuple_element_t<1, typename Iterators::proxy_type> ...>;
 
 public:
   constexpr
@@ -39,6 +39,7 @@ public:
   noexcept
   = default;
   constexpr
+  explicit
   harmonized_iterator(Iterators &&...iterators)
     : iterators_{std::forward<Iterators>(iterators)...}
   { }
@@ -219,4 +220,4 @@ private:
 
 }
 
-#endif // HEIM_COMPONENT_HARMONIZED_ITERATOR_HPP
+#endif // HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP

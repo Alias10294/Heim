@@ -461,6 +461,14 @@ private:
     public:
       using proxy_type = proxy_type<IsConst>;
 
+
+      using difference_type   = std::ptrdiff_t;
+      using value_type        = proxy_type;
+      using pointer           = void;
+      using reference         = proxy_type;
+      using iterator_category = void;
+      using iterator_concept  = std::random_access_iterator_tag;
+
     public:
       constexpr
       generic_iterator()
@@ -487,11 +495,9 @@ private:
       = default;
 
 
-      [[nodiscard]]
       constexpr
       generic_iterator &operator=(generic_iterator const &other)
       = default;
-      [[nodiscard]]
       constexpr
       generic_iterator &operator=(generic_iterator &&other)
       noexcept
@@ -517,15 +523,6 @@ private:
         ++components_;
         return *this;
       }
-      [[nodiscard]]
-      constexpr
-      generic_iterator  operator++(int)
-      noexcept
-      {
-        auto tmp = *this;
-        ++*this;
-        return tmp;
-      }
 
       constexpr
       generic_iterator &operator--()
@@ -535,61 +532,16 @@ private:
         --components_;
         return *this;
       }
-      [[nodiscard]]
-      constexpr
-      generic_iterator  operator--(int)
-      noexcept
-      {
-        auto tmp = *this;
-        --*this;
-        return tmp;
-      }
 
 
       [[nodiscard]]
       constexpr
-      generic_iterator operator+(std::ptrdiff_t const dist)
+      generic_iterator operator+(std::ptrdiff_t const dist) const
       noexcept
       {
         return generic_iterator{
             entities_   + dist,
             components_ + dist};
-      }
-
-      [[nodiscard]]
-      constexpr
-      generic_iterator operator-(std::ptrdiff_t const dist)
-      noexcept
-      {
-        return generic_iterator{
-            entities_   - dist,
-            components_ - dist};
-      }
-      [[nodiscard]]
-      constexpr
-      std::ptrdiff_t   operator-(generic_iterator const &other)
-      noexcept
-      {
-        return entities_ - other.entities_;
-      }
-
-
-      [[nodiscard]]
-      constexpr
-      generic_iterator &operator+=(std::ptrdiff_t const dist)
-      noexcept
-      {
-        *this = *this + dist;
-        return *this;
-      }
-
-      [[nodiscard]]
-      constexpr
-      generic_iterator &operator-=(std::ptrdiff_t const dist)
-      noexcept
-      {
-        *this = *this - dist;
-        return *this;
       }
 
 
@@ -1371,21 +1323,6 @@ noexcept(noexcept(std::declval<
 {
   lhs.swap(rhs);
 }
-
-
-
-template<typename T>
-concept composition_iterator = requires(T it)
-{
-  typename T::proxy_type;
-
-  requires std::tuple_size_v<typename T::proxy_type> == 2;
-
-  requires std::is_const_v<
-      std::tuple_element_t<0, typename T::proxy_type>>;
-  requires std::unsigned_integral<
-      std::tuple_element_t<0, typename T::proxy_type>>;
-};
 
 }
 

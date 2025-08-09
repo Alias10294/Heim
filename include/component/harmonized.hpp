@@ -210,9 +210,9 @@ private:
       return;
 
     auto it = pivot.end();
-    while (--it >= pivot.begin() + length_)
+    while (it != pivot.begin() + length_)
     {
-      entity_type const e = (*it).entity;
+      entity_type const e = (*--it).entity;
       if ((compositions.contains(e) && ...))
         include(e);
     }
