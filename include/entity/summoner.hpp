@@ -1,10 +1,10 @@
 #ifndef HEIM_ENTITY_SUMMONER_HPP
 #define HEIM_ENTITY_SUMMONER_HPP
 
-#include <concepts>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
+#include "core/entity.hpp"
 
 namespace heim
 {
@@ -13,7 +13,7 @@ namespace heim
  *     world.
  */
 template<typename Entity>
-requires std::unsigned_integral<Entity>
+requires core::entity<Entity>
 class summoner
 {
 public:

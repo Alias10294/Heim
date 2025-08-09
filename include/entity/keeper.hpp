@@ -4,7 +4,7 @@
 #include <concepts>
 #include <cstddef>
 #include <unordered_map>
-
+#include "core/entity.hpp"
 #include "signature.hpp"
 
 namespace heim
@@ -14,7 +14,7 @@ namespace heim
  */
 template<typename    Entity,
          std::size_t SignatureChunkSize = 64>
-requires  std::unsigned_integral<Entity>
+requires  core::entity<Entity>
       && (SignatureChunkSize > 0)
 class keeper
 {
@@ -24,9 +24,9 @@ public:
   constexpr
   static std::size_t signature_chunk_size = SignatureChunkSize;
 
-  using signature_type           = signature<signature_chunk_size>;
+  using signature = signature<signature_chunk_size>;
   using signature_container_type =
-      std::unordered_map<entity_type, signature_type>;
+      std::unordered_map<Entity, signature>;
 
   using iterator       = typename signature_container_type::iterator;
   using const_iterator = typename signature_container_type::const_iterator;
@@ -217,7 +217,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  signature_type       &operator[](entity_type const e)
+  signature       &operator[](entity_type const e)
   noexcept
   {
     return find(e)->second;
@@ -228,7 +228,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  signature_type const &operator[](entity_type const e) const
+  signature const &operator[](entity_type const e) const
   noexcept
   {
     return find(e)->second;
@@ -241,7 +241,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  signature_type       &at(entity_type const e)
+  signature       &at(entity_type const e)
   noexcept
   {
     return signatures_.at(e);
@@ -253,7 +253,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  signature_type const &at(entity_type const e) const
+  signature const &at(entity_type const e) const
   noexcept
   {
     return signatures_.at(e);
@@ -322,7 +322,7 @@ private:
  */
 template<typename    Entity,
          std::size_t SignatureChunkSize = 64>
-requires  std::unsigned_integral<Entity>
+requires  core::entity<Entity>
       && (SignatureChunkSize > 0)
 constexpr
 void swap(

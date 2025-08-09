@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 #include "any_harmonized.hpp"
-#include "composition.hpp"
 
 namespace heim
 {
@@ -17,9 +16,15 @@ namespace heim
  * @tparam Entity The type of entities for each held harmonized.
  */
 template<typename Entity>
-requires std::unsigned_integral<Entity>
+requires core::entity<Entity>
 class harmonizer
 {
+public:
+  using entity_type = Entity;
+
+  using iterator       = std::vector<any_harmonized>::iterator;
+  using const_iterator = std::vector<any_harmonized>::const_iterator;
+
 public:
   /**
    * @return @c true if the harmonizer holds any harmonized, @c false otherwise.
@@ -50,7 +55,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::iterator       begin()
+  iterator       begin()
   noexcept
   {
     return harmonized_.begin();
@@ -61,7 +66,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::const_iterator begin() const
+  const_iterator begin() const
   noexcept
   {
     return harmonized_.begin();
@@ -76,7 +81,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::iterator       end()
+  iterator       end()
   noexcept
   {
     return harmonized_.end();
@@ -90,7 +95,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::const_iterator end() const
+  const_iterator end() const
   noexcept
   {
     return harmonized_.end();
@@ -103,7 +108,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::const_iterator cbegin() const
+  const_iterator cbegin() const
   noexcept
   {
     return harmonized_.cbegin();
@@ -118,7 +123,7 @@ public:
    */
   [[nodiscard]]
   constexpr
-  std::vector<any_harmonized>::const_iterator cend() const
+  const_iterator cend() const
   noexcept
   {
     return harmonized_.cend();
@@ -131,8 +136,8 @@ public:
    * @return The type index of the composition.
    */
   template<typename Composition>
-  requires specialization_of<Composition, composition>
-        && std::is_same_v<typename Composition::entity_type, Entity>
+  requires core::specialization_of<Composition, composition>
+        && std::is_same_v<typename Composition::entity_type, entity_type>
   [[nodiscard]]
   constexpr
   static std::type_index type()
@@ -146,8 +151,10 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   [[nodiscard]]
   constexpr
   static std::type_index type()
@@ -162,8 +169,8 @@ public:
    *     composition.
    */
   template<typename Composition>
-  requires specialization_of<Composition, composition>
-        && std::is_same_v<typename Composition::entity_type, Entity>
+  requires core::specialization_of<Composition, composition>
+        && std::is_same_v<typename Composition::entity_type, entity_type>
   [[nodiscard]]
   constexpr
   std::size_t index() const
@@ -177,8 +184,10 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   [[nodiscard]]
   constexpr
   std::size_t index() const
@@ -194,8 +203,8 @@ public:
    *     type of composition.
    */
   template<typename Composition>
-  requires specialization_of<Composition, composition>
-        && std::is_same_v<typename Composition::entity_type, Entity>
+  requires core::specialization_of<Composition, composition>
+        && std::is_same_v<typename Composition::entity_type, entity_type>
   [[nodiscard]]
   constexpr
   bool holds() const
@@ -209,8 +218,10 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   [[nodiscard]]
   constexpr
   bool holds() const
@@ -226,15 +237,17 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   [[nodiscard]]
   constexpr
-  harmonized<Entity, Compositions ...>       &get()
+  harmonized<entity_type, Compositions ...>       &get()
   noexcept
   {
     return harmonized_[index<Compositions ...>()].template
-        get<Entity, Compositions ...>();
+        get<entity_type, Compositions ...>();
   }
   /**
    * @tparam Compositions The types of compositions of the harmonized.
@@ -242,15 +255,17 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   [[nodiscard]]
   constexpr
-  harmonized<Entity, Compositions ...> const &get() const
+  harmonized<entity_type, Compositions ...> const &get() const
   noexcept
   {
     return harmonized_[index<Compositions ...>()].template
-        get<Entity, Compositions ...>();
+        get<entity_type, Compositions ...>();
   }
 
 
@@ -269,8 +284,10 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   constexpr
   bool harmonize(Compositions &...compositions)
   {
@@ -286,7 +303,7 @@ public:
     try
     {
       harmonized_.emplace_back(
-          std::in_place_type_t<Entity>{},
+          std::in_place_type_t<entity_type>{},
           compositions...);
     }
     catch (...)
@@ -313,8 +330,10 @@ public:
    */
   template<typename ...Compositions>
   requires (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
-        && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
+        && (core::specialization_of<Compositions, composition>
+            && ...)
+        && (std::is_same_v<typename Compositions::entity_type, entity_type>
+            && ...)
   constexpr
   bool separate()
   noexcept
@@ -374,7 +393,7 @@ private:
  * @param rhs The second harmonizer whose contents to swap.
  */
 template<typename Entity>
-requires std::unsigned_integral<Entity>
+requires core::entity<Entity>
 constexpr
 void swap(harmonizer<Entity> &lhs, harmonizer<Entity> &rhs)
 noexcept

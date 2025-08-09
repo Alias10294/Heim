@@ -1,5 +1,5 @@
-#ifndef HEIM_COMPONENT_COMPOSITION_HPP
-#define HEIM_COMPONENT_COMPOSITION_HPP
+#ifndef HEIM_COMPOSITION_COMPOSITION_HPP
+#define HEIM_COMPOSITION_COMPOSITION_HPP
 
 #include <array>
 #include <concepts>
@@ -9,6 +9,8 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include "core/component.hpp"
+#include "core/entity.hpp"
 
 namespace heim
 {
@@ -21,15 +23,16 @@ namespace heim
  * @tparam PageSize           The size of each page of the sparse container.
  * @tparam ComponentAllocator The type of the allocator for components.
  */
-template<typename Entity,
-         typename Component,
+template<typename    Entity,
+         typename    Component,
          std::size_t PageSize = 4096,
-         typename ComponentAllocator = std::allocator<Component>>
-requires  std::unsigned_integral<Entity>
-      &&  std::is_move_constructible_v<Component>
-      &&  std::is_move_assignable_v   <Component>
-      &&  std::is_destructible_v      <Component>
+         typename    ComponentAllocator = std::allocator<Component>>
+requires  core::entity<Entity>
+      &&  core::component<Component>
       && (PageSize > 0)
+      &&  std::same_as<
+              typename std::allocator_traits<ComponentAllocator>::value_type,
+              Component>
 class composition
 {
 public:
@@ -1326,4 +1329,4 @@ noexcept(noexcept(std::declval<
 
 }
 
-#endif // HEIM_COMPONENT_COMPOSITION_HPP
+#endif // HEIM_COMPOSITION_COMPOSITION_HPP

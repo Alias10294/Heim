@@ -1,10 +1,12 @@
-#ifndef HEIM_COMPONENT_COMPOSER_HPP
-#define HEIM_COMPONENT_COMPOSER_HPP
+#ifndef HEIM_COMPOSITION_COMPOSER_HPP
+#define HEIM_COMPOSITION_COMPOSER_HPP
 
 #include <cstddef>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include "core/component.hpp"
+#include "core/entity.hpp"
 #include "any_composition.hpp"
 
 namespace heim
@@ -133,11 +135,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   static std::type_index type()
@@ -161,11 +164,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   std::size_t index() const
@@ -190,11 +194,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   bool holds() const
@@ -218,11 +223,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   composition<Entity, Component, PageSize, ComponentAllocator>
@@ -247,11 +253,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   composition<Entity, Component, PageSize, ComponentAllocator> const
@@ -289,11 +296,12 @@ public:
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>,
            typename ...Args>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   constexpr
   bool compose(Args &&...args)
   {
@@ -340,11 +348,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   constexpr
   bool decompose()
   noexcept
@@ -401,4 +410,4 @@ noexcept
 
 }
 
-#endif // HEIM_COMPONENT_COMPOSER_HPP
+#endif // HEIM_COMPOSITION_COMPOSER_HPP

@@ -2,9 +2,8 @@
 #define HEIM_COMPONENT_HARMONIZED_HPP
 
 #include <algorithm>
-#include <concepts>
-#include "composition.hpp"
-#include "utils/specialization_of.hpp"
+#include "composition/composition.hpp"
+#include "core/specialization_of.hpp"
 
 namespace heim
 {
@@ -17,9 +16,9 @@ namespace heim
  */
 template<typename    Entity,
          typename ...Compositions>
-requires  std::unsigned_integral<Entity>
+requires  core::entity<Entity>
       && (sizeof...(Compositions) > 1)
-      && (specialization_of<Compositions, composition>               && ...)
+      && (core::specialization_of<Compositions, composition>         && ...)
       && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
 class harmonized
 {
@@ -35,8 +34,8 @@ private:
    * @tparam Composition The composition to adapt.
    */
   template<typename Composition>
-  requires specialization_of<Composition, composition>
-        && std::is_same_v<typename Composition::entity_type, Entity>
+  requires core::specialization_of<Composition, composition>
+        && std::is_same_v<typename Composition::entity_type, entity_type>
   class observer
   {
   public:
@@ -180,10 +179,10 @@ private:
    */
   template<typename    Head,
            typename ...Tail>
-  requires  specialization_of<Head, composition>
-        &&  std::is_same_v<typename Head::entity_type, Entity>
-        && (specialization_of<Tail, composition>               && ...)
-        && (std::is_same_v<typename Tail::entity_type, Entity> && ...)
+  requires  core::specialization_of<Head, composition>
+        &&  std::is_same_v<typename Head::entity_type, entity_type>
+        && (core::specialization_of<Tail, composition>              && ...)
+        && (std::is_same_v<typename Tail::entity_type, entity_type> && ...)
   constexpr
   auto &min(Head &head, Tail &...tail)
   noexcept

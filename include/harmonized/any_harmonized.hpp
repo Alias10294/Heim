@@ -1,11 +1,9 @@
 #ifndef HEIM_COMPONENT_ANY_HARMONIZED_HPP
 #define HEIM_COMPONENT_ANY_HARMONIZED_HPP
 
-#include <concepts>
 #include <typeinfo>
-#include "composition.hpp"
 #include "harmonized.hpp"
-#include "utils/specialization_of.hpp"
+#include "core/specialization_of.hpp"
 
 namespace heim
 {
@@ -23,7 +21,7 @@ private:
   class manager
   {
   public:
-    using do_destroy_type = void (*)(void *) noexcept;
+    using do_destroy_type = void  (*)(void *) noexcept;
     using do_clone_type   = void *(*)(void const *);
 
   public:
@@ -59,9 +57,9 @@ private:
    */
   template<typename    Entity,
            typename ...Compositions>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
         && (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
+        && (core::specialization_of<Compositions, composition>         && ...)
         && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   static manager make_manager()
   {
@@ -101,9 +99,9 @@ public:
   }
   template<typename    Entity,
            typename ...Compositions>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
         && (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
+        && (core::specialization_of<Compositions, composition>         && ...)
         && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   any_harmonized(
       std::in_place_type_t<Entity>,
@@ -188,9 +186,9 @@ public:
    */
   template<typename    Entity,
            typename ...Compositions>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
         && (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
+        && (core::specialization_of<Compositions, composition>         && ...)
         && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   [[nodiscard]]
   constexpr
@@ -210,9 +208,9 @@ public:
    */
   template<typename    Entity,
            typename ...Compositions>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
         && (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
+        && (core::specialization_of<Compositions, composition>         && ...)
         && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   [[nodiscard]]
   constexpr
@@ -239,9 +237,9 @@ public:
   template<typename    Entity,
            typename ...Compositions,
            typename ...Args>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
         && (sizeof...(Compositions) > 1)
-        && (specialization_of<Compositions, composition>               && ...)
+        && (core::specialization_of<Compositions, composition>         && ...)
         && (std::is_same_v<typename Compositions::entity_type, Entity> && ...)
   constexpr
   harmonized<Entity, Compositions ...> &emplace(Args &&...args)

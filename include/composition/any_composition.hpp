@@ -1,5 +1,5 @@
-#ifndef HEIM_COMPONENT_ANY_COMPOSITION_HPP
-#define HEIM_COMPONENT_ANY_COMPOSITION_HPP
+#ifndef HEIM_COMPOSITION_ANY_COMPOSITION_HPP
+#define HEIM_COMPOSITION_ANY_COMPOSITION_HPP
 
 #include <concepts>
 #include <cstddef>
@@ -7,6 +7,8 @@
 #include <memory>
 #include <typeinfo>
 #include <utility>
+#include "core/component.hpp"
+#include "core/entity.hpp"
 #include "composition.hpp"
 
 namespace heim
@@ -25,9 +27,9 @@ private:
   class manager
   {
   public:
-    using do_destroy_type = void (*)(void *) noexcept;
+    using do_destroy_type = void  (*)(void *) noexcept;
     using do_clone_type   = void *(*)(void const *);
-    using do_erase_type   = bool (*)(void *, std::uintmax_t const);
+    using do_erase_type   = bool  (*)(void *, std::uintmax_t const);
 
   public:
     /**
@@ -73,8 +75,12 @@ private:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   static manager make_manager()
@@ -133,11 +139,12 @@ public:
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>,
            typename ...Args>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   explicit
   constexpr
   any_composition(
@@ -232,11 +239,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   composition<Component, Entity, PageSize, ComponentAllocator>
@@ -263,11 +271,12 @@ public:
            typename    Component,
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   [[nodiscard]]
   constexpr
   composition<Component, Entity, PageSize, ComponentAllocator> const
@@ -302,11 +311,12 @@ public:
            std::size_t PageSize           = 4096,
            typename    ComponentAllocator = std::allocator<Component>,
            typename ...Args>
-  requires  std::unsigned_integral<Entity>
-        &&  std::is_move_constructible_v<Component>
-        &&  std::is_move_assignable_v   <Component>
-        &&  std::is_destructible_v      <Component>
+  requires  core::entity<Entity>
+        &&  core::component<Component>
         && (PageSize > 0)
+        &&  std::same_as<
+                typename std::allocator_traits<ComponentAllocator>::value_type,
+                Component>
   constexpr
   composition<Entity, Component, PageSize, ComponentAllocator> &emplace(
       Args &&...args)
@@ -348,7 +358,7 @@ public:
    * @return @c true if an element has been erased, @c false otherwise.
    */
   template<typename Entity>
-  requires std::unsigned_integral<Entity>
+  requires core::entity<Entity>
   constexpr
   bool do_erase(Entity const e)
   {
@@ -391,4 +401,4 @@ noexcept
 
 }
 
-#endif // HEIM_COMPONENT_ANY_COMPOSITION_HPP
+#endif // HEIM_COMPOSITION_ANY_COMPOSITION_HPP

@@ -1,9 +1,11 @@
-#ifndef HEIM_UTILS_SPECIALIZATION_OF_HPP
-#define HEIM_UTILS_SPECIALIZATION_OF_HPP
+#ifndef HEIM_CORE_SPECIALIZATION_OF_HPP
+#define HEIM_CORE_SPECIALIZATION_OF_HPP
 
 #include <type_traits>
 
 namespace heim
+{
+namespace core
 {
 template<typename                        T,
          template<typename ...> typename Generic>
@@ -26,5 +28,6 @@ template<typename                        T,
 concept specialization_of = is_specialization_of_v<T, Generic>;
 
 }
+}
 
-#endif // HEIM_UTILS_SPECIALIZATION_OF_HPP
+#endif // HEIM_CORE_SPECIALIZATION_OF_HPP

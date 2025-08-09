@@ -1,8 +1,9 @@
-#ifndef HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP
-#define HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP
+#ifndef HEIM_SYSTEM_HARMONIZED_ITERATOR_HPP
+#define HEIM_SYSTEM_HARMONIZED_ITERATOR_HPP
 
 #include <utility>
-#include "component/harmonized.hpp"
+#include "../harmonized/harmonized.hpp"
+#include "../component/iterator.hpp"
 
 namespace heim
 {
@@ -12,13 +13,7 @@ namespace heim
  * @tparam Iterators The type of iterators of each harmonized compositions.
  */
 template<typename ...Iterators>
-requires (composition_iterator<Iterators>
-          && ...)
-      && (std::is_same_v<
-             std::tuple_element_t<0, typename Iterators::proxy_type>,
-             std::tuple_element_t<0, typename std::tuple_element_t<0,
-                 std::tuple<Iterators ...>>::proxy_type>>
-          && ...)
+requires (iterator<Iterators> && ...)
 class harmonized_iterator
 {
 public:
@@ -50,11 +45,9 @@ public:
   = default;
 
 
-  [[nodiscard]]
   constexpr
   harmonized_iterator &operator=(harmonized_iterator const &)
   = default;
-  [[nodiscard]]
   constexpr
   harmonized_iterator &operator=(harmonized_iterator &&)
   noexcept
@@ -91,15 +84,6 @@ public:
         iterators_);
     return *this;
   }
-  [[nodiscard]]
-  constexpr
-  harmonized_iterator  operator++(int)
-  noexcept
-  {
-    auto tmp = *this;
-    ++*this;
-    return tmp;
-  }
 
   constexpr
   harmonized_iterator &operator--()
@@ -112,15 +96,6 @@ public:
         },
         iterators_);
     return *this;
-  }
-  [[nodiscard]]
-  constexpr
-  harmonized_iterator  operator--(int)
-  noexcept
-  {
-    auto tmp = *this;
-    --*this;
-    return tmp;
   }
 
 
@@ -137,55 +112,6 @@ public:
         iterators_);
   }
 
-  [[nodiscard]]
-  constexpr
-  harmonized_iterator operator-(std::ptrdiff_t const dist)
-  noexcept
-  {
-    return std::apply(
-        [dist](auto const &...iterators)
-        {
-          return harmonized_iterator{(iterators - dist)...};
-        },
-        iterators_);
-  }
-  [[nodiscard]]
-  constexpr
-  std::ptrdiff_t      operator-(harmonized_iterator const &other)
-  noexcept
-  {
-    return std::get<0>(iterators_) - std::get<0>(other.iterators_);
-  }
-
-
-  [[nodiscard]]
-  constexpr
-  harmonized_iterator &operator+=(std::ptrdiff_t const dist)
-  noexcept
-  {
-    std::apply(
-        [dist](auto &...iterators)
-        {
-          ((iterators += dist), ...);
-        },
-        iterators_);
-    return *this;
-  }
-
-  [[nodiscard]]
-  constexpr
-  harmonized_iterator &operator-=(std::ptrdiff_t const dist)
-  noexcept
-  {
-    std::apply(
-        [dist](auto &...iterators)
-        {
-          ((iterators -= dist), ...);
-        },
-        iterators_);
-    return *this;
-  }
-
 
 
   [[nodiscard]]
@@ -194,14 +120,6 @@ public:
   noexcept
   {
     return iterators_ == other.iterators_;
-  }
-
-  [[nodiscard]]
-  constexpr
-  auto operator<=>(harmonized_iterator const &other) const
-  noexcept
-  {
-    return iterators_ <=> other.iterators_;
   }
 
 
@@ -220,4 +138,4 @@ private:
 
 }
 
-#endif // HEIM_COMPONENT_HARMONIZER_HARMONIZED_ITERATOR_HPP
+#endif // HEIM_SYSTEM_HARMONIZED_ITERATOR_HPP
