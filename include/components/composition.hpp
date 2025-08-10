@@ -452,10 +452,11 @@ private:
     template<bool IsConst>
     class generic_iterator
     {
-    private:
+    public:
       constexpr
       static bool is_const = IsConst;
 
+    private:
       using entity_pointer_type    = entity_type const *;
       using component_pointer_type = std::conditional_t<is_const,
           component_type const *,

@@ -2,7 +2,7 @@
 #define HEIM_COMPONENT_HARMONIZED_HPP
 
 #include <algorithm>
-#include "composition/composition.hpp"
+#include "components/composition.hpp"
 #include "core/specialization_of.hpp"
 
 namespace heim

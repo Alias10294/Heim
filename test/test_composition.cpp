@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "doctest.h"
-#include "../include/composition/composition.hpp"
+#include "../include/components/composition.hpp"
 #include "../include/core/iterator.hpp"
 
 TEST_CASE("heim::component: capacity when empty")

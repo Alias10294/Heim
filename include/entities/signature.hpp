@@ -20,7 +20,7 @@ namespace heim
  * @tparam ChunkSize The size of the individual "chunk" bitsets in the
  *     signature.
  */
-template<std::size_t ChunkSize = 32>
+template<std::size_t ChunkSize = 64>
 requires (ChunkSize > 0)
 class signature
 {
