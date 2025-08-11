@@ -1,7 +1,6 @@
 #ifndef HEIM_COMPOSITION_COMPOSER_HPP
 #define HEIM_COMPOSITION_COMPOSER_HPP
 
-#include "core/specialization_of.hpp"
 #include "any_composition.hpp"
 #include "composition.hpp"
 
@@ -69,7 +68,7 @@ public:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   static std::size_t index()
@@ -81,7 +80,7 @@ public:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   bool composes() const
@@ -95,7 +94,7 @@ public:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   Composition       &get()
@@ -104,7 +103,7 @@ public:
     return compositions_[index<Composition>()].template get<Composition>();
   }
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   Composition const &get() const
@@ -116,7 +115,7 @@ public:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   constexpr
   bool compose(Composition &&composition)
   {

@@ -1,7 +1,11 @@
 #ifndef HEIM_CORE_ITERATOR_HPP
 #define HEIM_CORE_ITERATOR_HPP
 
+#include <concepts>
 #include <tuple>
+#include <utility>
+#include "entity.hpp"
+#include "component.hpp"
 #include "specialization_of.hpp"
 
 namespace heim

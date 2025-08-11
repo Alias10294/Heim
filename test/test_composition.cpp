@@ -1,11 +1,9 @@
 #include <chrono>
 #include <iostream>
-
 #include "doctest.h"
 #include "../include/composition/composition.hpp"
-#include "../include/core/iterator.hpp"
 
-TEST_CASE("heim::component: capacity when empty")
+TEST_CASE("heim::composition: capacity when empty")
 {
   heim::composition<std::uint32_t, int> c;
   CHECK(c.empty()    == true);
@@ -13,7 +11,7 @@ TEST_CASE("heim::component: capacity when empty")
   CHECK(c.capacity() == 0);
 }
 
-TEST_CASE("heim::component: capacity when modified with emplace & erase")
+TEST_CASE("heim::composition: capacity when modified with emplace & erase")
 {
   // Initial insertion
   heim::composition<std::uint32_t, int> c;
@@ -46,7 +44,7 @@ TEST_CASE("heim::component: capacity when modified with emplace & erase")
   CHECK(c.contains(1) == false);
 }
 
-TEST_CASE("heim::component: multiple emplace and iteration")
+TEST_CASE("heim::composition: multiple emplace and iteration")
 {
   heim::composition<std::uint32_t, int> c;
   for (std::size_t i = 0; i < 5; ++i)
@@ -70,7 +68,7 @@ TEST_CASE("heim::component: multiple emplace and iteration")
   }
 }
 
-TEST_CASE("heim::component: stress test (100'000'000, int) & quick benchmark")
+TEST_CASE("heim::composition: stress test (100'000'000, int) & quick benchmark")
 {
   heim::composition<std::uint32_t, int> c;
   const std::size_t test_size = 100'000'000;
@@ -111,7 +109,7 @@ TEST_CASE("heim::component: stress test (100'000'000, int) & quick benchmark")
   CHECK(c.size() == 0);
 }
 
-TEST_CASE("heim::component: stress test (100'000'000, int) with reserve")
+TEST_CASE("heim::composition: stress test (100'000'000, int) with reserve")
 {
   heim::composition<std::uint32_t, int> c;
   const std::size_t test_size = 100'000'000;

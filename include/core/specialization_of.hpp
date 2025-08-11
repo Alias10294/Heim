@@ -7,25 +7,19 @@ namespace heim
 {
 namespace core
 {
-template<typename                        T,
-         template<typename ...> typename Generic>
+template<typename                       T,
+         template<typename...> typename Generic>
 struct is_specialization_of : std::false_type
 { };
 
-template<template<typename ...> typename Generic,
-         typename                     ...Args>
+template<template<class ...> class Generic,
+         class                     ...Args>
 struct is_specialization_of<Generic<Args ...>, Generic> : std::true_type
 { };
 
-template<typename                        T,
-         template<typename ...> typename Generic>
-constexpr
-inline bool is_specialization_of_v = is_specialization_of<T, Generic>::value;
-
-
-template<typename                        T,
-         template<typename ...> typename Generic>
-concept specialization_of = is_specialization_of_v<T, Generic>;
+template<typename                       T,
+         template<typename...> typename Generic>
+concept specialization_of = is_specialization_of<T, Generic>::value;
 
 }
 }

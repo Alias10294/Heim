@@ -6,7 +6,6 @@
 #include <typeinfo>
 #include <utility>
 #include "core/entity.hpp"
-#include "core/specialization_of.hpp"
 #include "composition.hpp"
 
 namespace heim
@@ -50,7 +49,7 @@ private:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   static manager make_manager()
@@ -97,7 +96,7 @@ public:
   }
   template<typename    Composition,
            typename ...Args>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   explicit
   constexpr
   any_composition(std::in_place_type_t<Composition>, Args &&...args)
@@ -171,7 +170,7 @@ public:
 
 
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   Composition       &get()
@@ -180,7 +179,7 @@ public:
     return *static_cast<Composition *>(ptr_);
   }
   template<typename Composition>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   [[nodiscard]]
   constexpr
   Composition const &get() const
@@ -193,7 +192,7 @@ public:
 
   template<typename    Composition,
            typename ...Args>
-  requires core::specialization_of<Composition, composition>
+  requires composition_specialization<Composition>
   constexpr
   Composition &emplace(Args &&...args)
   {

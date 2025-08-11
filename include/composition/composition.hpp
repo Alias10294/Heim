@@ -105,9 +105,9 @@ private:
       for (auto const &page_uptr : other.pages_)
       {
         if (page_uptr)
-          pages_.emplace_back(std::make_unique<page_type>(*page_uptr));
+          pages.emplace_back(std::make_unique<page_type>(*page_uptr));
         else
-          pages_.emplace_back(nullptr);
+          pages.emplace_back(nullptr);
       }
       pages_ = std::move(pages);
       return *this;
@@ -1326,6 +1326,30 @@ noexcept(noexcept(std::declval<
 {
   lhs.swap(rhs);
 }
+
+
+
+template<typename T>
+struct is_composition_specialization : std::false_type
+{ };
+
+template<typename    Entity,
+         typename    Component,
+         std::size_t PageSize,
+         typename    ComponentAllocator>
+requires  core::entity<Entity>
+      &&  core::component<Component>
+      && (PageSize > 0)
+      &&  std::same_as<
+              typename std::allocator_traits<ComponentAllocator>::value_type,
+              Component>
+struct is_composition_specialization<
+    composition<Entity, Component, PageSize, ComponentAllocator>>
+  : std::true_type
+{ };
+
+template<typename T>
+concept composition_specialization = is_composition_specialization<T>::value;
 
 }
 
