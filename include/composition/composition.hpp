@@ -288,7 +288,6 @@ private:
     [[nodiscard]]
     constexpr
     std::size_t  at(entity_type const e) const
-    noexcept
     {
       if (!contains(e))
         throw std::out_of_range("heim::component::sparse_container::at");
@@ -366,9 +365,9 @@ private:
     void swap(entity_type const a, entity_type const b)
     noexcept
     {
-      std::size_t const tmp = sparse_[a];
-      sparse_[a]            = sparse_[b];
-      sparse_[b]            = tmp;
+      std::size_t const tmp = (*this)[a];
+      (*this)[a]            = (*this)[b];
+      (*this)[b]            = tmp;
     }
 
   private:
@@ -379,7 +378,7 @@ private:
      */
     [[nodiscard]]
     constexpr
-    bool is_blank(page_type const& page)
+    static bool is_blank(page_type const& page)
     noexcept
     {
       for (auto const idx : page)
@@ -1271,7 +1270,7 @@ public:
    * @param other The other composition whose contents to swap.
    */
   constexpr
-  void swap(composition& other)
+  void swap(composition &other)
   noexcept(noexcept(std::declval<dense_container>().swap(
       std::declval<dense_container>())))
   {
@@ -1318,8 +1317,8 @@ requires  std::unsigned_integral<Entity>
       && (PageSize > 0)
 constexpr
 void swap(
-    composition<Entity, Component, PageSize, ComponentAllocator>& lhs,
-    composition<Entity, Component, PageSize, ComponentAllocator>& rhs)
+    composition<Entity, Component, PageSize, ComponentAllocator> &lhs,
+    composition<Entity, Component, PageSize, ComponentAllocator> &rhs)
 noexcept(noexcept(std::declval<
     composition<Entity, Component, PageSize, ComponentAllocator>>().swap(
         std::declval<
