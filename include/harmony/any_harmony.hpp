@@ -3,7 +3,6 @@
 
 #include <typeinfo>
 #include "harmony.hpp"
-#include "core/specialization_of.hpp"
 
 namespace heim
 {
@@ -16,7 +15,7 @@ private:
   /// @cond INTERNAL
 
   /**
-   * @brief The manager for the contained type-erased harmony.
+   * @brief The manager for the contained harmony, stored as a void pointer.
    */
   class manager
   {
@@ -47,8 +46,12 @@ private:
 
   };
 
+  /**
+   * @tparam Harmony The type of harmony to male a manager for.
+   * @return The manager for the specific harmony type.
+   */
   template<typename Harmony>
-  requires core::specialization_of<Harmony, harmony>
+  requires harmony_specialization<Harmony>
   static manager make_manager()
   {
     return manager{
@@ -86,7 +89,7 @@ public:
   }
   template<typename    Harmony,
            typename ...Args>
-  requires core::specialization_of<Harmony, harmony>
+  requires harmony_specialization<Harmony>
   any_harmony(std::in_place_type_t<Harmony>, Args &&...args)
     : ptr_    {new Harmony{std::forward<Args>(args)...}},
       manager_{make_manager<Harmony>()}
@@ -157,8 +160,12 @@ public:
   }
 
 
+  /**
+   * @tparam Harmony The type of the contained harmony.
+   * @return A reference to the contained harmony.
+   */
   template<typename Harmony>
-  requires core::specialization_of<Harmony, harmony>
+  requires harmony_specialization<Harmony>
   [[nodiscard]]
   constexpr
   Harmony       &get()
@@ -166,8 +173,12 @@ public:
   {
     return *static_cast<Harmony *>(ptr_);
   }
+  /**
+   * @tparam Harmony The type of the contained harmony.
+   * @return A const reference to the contained harmony.
+   */
   template<typename Harmony>
-  requires core::specialization_of<Harmony, harmony>
+  requires harmony_specialization<Harmony>
   [[nodiscard]]
   constexpr
   Harmony const &get() const
@@ -178,9 +189,17 @@ public:
 
 
 
+  /**
+   * @brief Emplaces a new harmony, overwriting any previously contained
+   *     harmony of any type.
+   *
+   * @tparam Harmony The type of harmony to emplace.
+   * @tparam Args    The type of arguments to construct the harmony.
+   * @return A reference to the newly contained harmony.
+   */
   template<typename    Harmony,
            typename ...Args>
-  requires core::specialization_of<Harmony, harmony>
+  requires harmony_specialization<Harmony>
   constexpr
   Harmony &emplace(Args &&...args)
   {

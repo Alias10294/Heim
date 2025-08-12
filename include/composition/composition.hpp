@@ -932,8 +932,8 @@ private:
     constexpr
     void swap(dense_container &other)
     noexcept(noexcept(
-        std::declval<component_container_type>().swap(
-            std::declval<component_container_type>())))
+        std::declval<component_container_type &>().swap(
+            std::declval<component_container_type &>())))
     {
       components_.swap(other.components_);
       entities_  .swap(other.entities_);
@@ -949,8 +949,8 @@ private:
     constexpr
     void swap(std::size_t const idx_a, std::size_t const idx_b)
       noexcept(noexcept(std::swap(
-          std::declval<component_type>(),
-          std::declval<component_type>())))
+          std::declval<component_type &>(),
+          std::declval<component_type &>())))
     {
       std::swap(entities_  [idx_a], entities_  [idx_b]);
       std::swap(components_[idx_a], components_[idx_b]);
@@ -1271,13 +1271,12 @@ public:
    */
   constexpr
   void swap(composition &other)
-  noexcept(noexcept(std::declval<dense_container>().swap(
-      std::declval<dense_container>())))
+  noexcept(noexcept(std::declval<dense_container &>().swap(
+      std::declval<dense_container &>())))
   {
     dense_ .swap(other.dense_ );
     sparse_.swap(other.sparse_);
   }
-
   /**
    * @brief Swaps the elements corresponding @code a@endcode and
    *     @code b@endcode in the composition.
@@ -1287,7 +1286,7 @@ public:
    */
   constexpr
   void swap(entity_type const a, entity_type const b)
-  noexcept(noexcept(std::declval<dense_container>().swap(0, 0)))
+  noexcept(noexcept(std::declval<dense_container &>().swap(0, 0)))
   {
     dense_ .swap(sparse_[a], sparse_[b]);
     sparse_.swap(a, b);
@@ -1320,9 +1319,9 @@ void swap(
     composition<Entity, Component, PageSize, ComponentAllocator> &lhs,
     composition<Entity, Component, PageSize, ComponentAllocator> &rhs)
 noexcept(noexcept(std::declval<
-    composition<Entity, Component, PageSize, ComponentAllocator>>().swap(
+    composition<Entity, Component, PageSize, ComponentAllocator> &>().swap(
         std::declval<
-            composition<Entity, Component, PageSize, ComponentAllocator>>())))
+            composition<Entity, Component, PageSize, ComponentAllocator> &>())))
 {
   lhs.swap(rhs);
 }

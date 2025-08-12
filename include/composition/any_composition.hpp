@@ -18,6 +18,10 @@ class any_composition
 private:
   /// @cond INTERNAL
 
+  /**
+   * @brief The manager for the contained composition, stored as a void
+   *     pointer.
+   */
   class manager
   {
   public:
@@ -26,6 +30,11 @@ private:
     using do_erase_type   = bool  (*)(void *, std::uintmax_t const);
 
   public:
+    /**
+     * @brief Swaps the contents of @p *this and @code other@endcode.
+     *
+     * @param other The other manager whose contents to swap.
+     */
     constexpr
     void swap(manager &other)
     noexcept
@@ -47,7 +56,10 @@ private:
 
   };
 
-
+  /**
+   * @tparam Composition The type of composition to male a manager for.
+   * @return The manager for the specific composition type.
+   */
   template<typename Composition>
   requires composition_specialization<Composition>
   [[nodiscard]]
@@ -169,6 +181,10 @@ public:
   }
 
 
+  /**
+   * @tparam Composition The type of the contained composition.
+   * @return A reference to the contained composition.
+   */
   template<typename Composition>
   requires composition_specialization<Composition>
   [[nodiscard]]
@@ -178,6 +194,10 @@ public:
   {
     return *static_cast<Composition *>(ptr_);
   }
+  /**
+   * @tparam Composition The type of the contained composition.
+   * @return A const reference to the contained composition.
+   */
   template<typename Composition>
   requires composition_specialization<Composition>
   [[nodiscard]]
@@ -190,6 +210,14 @@ public:
 
 
 
+  /**
+   * @brief Emplaces a new composition, overwriting any previously contained
+   *     composition of any type.
+   *
+   * @tparam Composition The type of composition to emplace.
+   * @tparam Args        The type of arguments to construct the composition.
+   * @return A reference to the newly contained composition.
+   */
   template<typename    Composition,
            typename ...Args>
   requires composition_specialization<Composition>

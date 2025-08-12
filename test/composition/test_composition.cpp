@@ -1,7 +1,7 @@
 #include <chrono>
 #include <iostream>
-#include "doctest.h"
-#include "../include/composition/composition.hpp"
+#include "../doctest.h"
+#include "../../include/composition/composition.hpp"
 
 TEST_CASE("heim::composition: capacity when empty")
 {

@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include "entity.hpp"
 #include "component.hpp"
@@ -18,18 +19,19 @@ concept proxy = requires (T t)
   requires specialization_of<T, std::tuple>;
   std::tuple_size_v<T> == 2;
 
-  requires entity<std::tuple_element_t<0, T>>;
+  requires entity<std::remove_cvref_t<std::tuple_element_t<0, T>>>;
 
   requires []<std::size_t... Is>(std::index_sequence<Is ...>)
   {
-    return (component<std::tuple_element_t<Is + 1, T>> && ...);
+    return (component<std::remove_cvref_t<std::tuple_element_t<Is + 1, T>>>
+        && ...);
   }
   (std::make_index_sequence<std::tuple_size_v<T> - 1>{ });
 
 };
 
 template<typename T>
-concept iterator = requires (T t, std::ptrdiff_t dist, T u)
+concept iterator = requires (T t, std::ptrdiff_t const dist, T u)
 {
   requires proxy<typename T::proxy_type>;
 
@@ -38,16 +40,15 @@ concept iterator = requires (T t, std::ptrdiff_t dist, T u)
   std::is_move_constructible_v   <T>;
   std::is_copy_assignable_v<T>;
   std::is_move_assignable_v<T>;
-  std::is_swappable_v<T>;
 
-  { *t } -> std::same_as<typename T::proxy_type>;
+  { *t } noexcept -> std::same_as<typename T::proxy_type>;
 
-  { ++t } -> std::same_as<T&>;
-  { --t } -> std::same_as<T&>;
-  { t + dist } -> std::same_as<T>;
+  { ++t } noexcept -> std::same_as<T&>;
+  { --t } noexcept -> std::same_as<T&>;
+  { t + dist } noexcept -> std::same_as<T>;
 
-  { t == u } -> std::same_as<bool>;
-
+  { t == u } noexcept -> std::same_as<bool>;
+  { t <= u } noexcept;
 };
 
 }
