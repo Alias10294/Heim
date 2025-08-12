@@ -9,8 +9,8 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include "core/component.hpp"
-#include "core/entity.hpp"
+#include "component.hpp"
+#include "entity.hpp"
 
 namespace heim
 {

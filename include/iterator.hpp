@@ -1,13 +1,13 @@
-#ifndef HEIM_CORE_ITERATOR_HPP
-#define HEIM_CORE_ITERATOR_HPP
+#ifndef HEIM_ITERATOR_HPP
+#define HEIM_ITERATOR_HPP
 
 #include <concepts>
+#include <format>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include "entity.hpp"
 #include "component.hpp"
-#include "specialization_of.hpp"
 
 namespace heim
 {
@@ -16,7 +16,7 @@ namespace core
 template<typename T>
 concept proxy = requires (T t)
 {
-  requires specialization_of<T, std::tuple>;
+  requires std::__is_specialization_of<T, std::tuple>;
   std::tuple_size_v<T> == 2;
 
   requires entity<std::remove_cvref_t<std::tuple_element_t<0, T>>>;
@@ -54,4 +54,4 @@ concept iterator = requires (T t, std::ptrdiff_t const dist, T u)
 }
 }
 
-#endif // HEIM_CORE_ITERATOR_HPP
+#endif // HEIM_ITERATOR_HPP

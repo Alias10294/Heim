@@ -1,5 +1,5 @@
-#ifndef HEIM_CORE_COMPOSABLE_HPP
-#define HEIM_CORE_COMPOSABLE_HPP
+#ifndef HEIM_COMPONENT_HPP
+#define HEIM_COMPONENT_HPP
 
 #include <concepts>
 #include <type_traits>
@@ -8,8 +8,9 @@ namespace heim
 {
 namespace core
 {
+
 template<typename T>
-concept composable = requires(T t)
+concept component = requires
 {
   requires std::same_as<std::remove_cvref_t<T>, T>;
   std::is_move_constructible_v<T>;
@@ -21,4 +22,4 @@ concept composable = requires(T t)
 }
 }
 
-#endif // HEIM_CORE_COMPOSABLE_HPP
+#endif // HEIM_COMPONENT_HPP

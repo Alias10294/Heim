@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
-#include "core/entity.hpp"
+#include "entity.hpp"
 
 namespace heim
 {

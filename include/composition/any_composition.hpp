@@ -5,7 +5,7 @@
 #include <memory>
 #include <typeinfo>
 #include <utility>
-#include "core/entity.hpp"
+#include "entity.hpp"
 #include "composition.hpp"
 
 namespace heim

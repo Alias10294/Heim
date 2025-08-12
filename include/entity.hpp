@@ -1,5 +1,5 @@
-#ifndef HEIM_CORE_ENTITY_HPP
-#define HEIM_CORE_ENTITY_HPP
+#ifndef HEIM_ENTITY_HPP
+#define HEIM_ENTITY_HPP
 
 #include <concepts>
 
@@ -8,7 +8,7 @@ namespace heim
 namespace core
 {
 template<typename T>
-concept entity = requires(T t)
+concept entity = requires
 {
   requires std::unsigned_integral<T>;
 
@@ -17,4 +17,4 @@ concept entity = requires(T t)
 }
 }
 
-#endif // HEIM_CORE_ENTITY_HPP
+#endif // HEIM_ENTITY_HPP

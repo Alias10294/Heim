@@ -2,8 +2,8 @@
 #define HEIM_HARMONY_HARMONY_HPP
 
 #include <algorithm>
-#include "core/entity.hpp"
-#include "core/iterator.hpp"
+#include "entity.hpp"
+#include "iterator.hpp"
 
 namespace heim
 {
