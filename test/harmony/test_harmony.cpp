@@ -4,7 +4,7 @@
 #include "../../include/harmony/harmony.hpp"
 #include "../../include/composition/composition.hpp"
 
-TEST_CASE("heim::harmony: ...")
+TEST_CASE("heim::harmony")
 {
   heim::composition<std::uint32_t, int>   c1;
   heim::composition<std::uint32_t, float> c2;

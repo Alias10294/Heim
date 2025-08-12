@@ -267,9 +267,9 @@ private:
 
     std::size_t max_idx = index<std::tuple_element_t<0, arranged_tuple_type>>();
 
-    ((max_idx < index<std::tuple_element_t<Is, arranged_tuple_type>>()
-       ? max_idx = index<std::tuple_element_t<Is, arranged_tuple_type>>()
-       : void()),
+    ((max_idx = max_idx < index<std::tuple_element_t<Is, arranged_tuple_type>>()
+       ? index<std::tuple_element_t<Is, arranged_tuple_type>>()
+       : max_idx),
      ...);
 
     return max_idx;

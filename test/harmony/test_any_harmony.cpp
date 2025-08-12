@@ -3,7 +3,7 @@
 #include "../../include/harmony/any_harmony.hpp"
 #include "composition/composition.hpp"
 
-TEST_CASE("heim::any_harmony: ...")
+TEST_CASE("heim::any_harmony")
 {
   heim::any_harmony ah;
   CHECK      (ah.type() == typeid(void));

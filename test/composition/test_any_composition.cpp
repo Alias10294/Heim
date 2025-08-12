@@ -1,7 +1,7 @@
 #include "../doctest.h"
 #include "../../include/composition/any_composition.hpp"
 
-TEST_CASE("heim::any_composition: empty object")
+TEST_CASE("heim::any_composition")
 {
   heim::any_composition ac;
 
