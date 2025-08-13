@@ -5,8 +5,6 @@
 
 namespace heim
 {
-namespace core
-{
 template<typename T>
 concept entity = requires
 {
@@ -14,7 +12,6 @@ concept entity = requires
 
 };
 
-}
 }
 
 #endif // HEIM_ENTITY_HPP

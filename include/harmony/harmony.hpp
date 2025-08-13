@@ -8,16 +8,18 @@
 namespace heim
 {
 template<typename T>
-concept arrangeable = requires (
+concept observable = requires (
     T &t,
     T &u,
     typename T::entity_type a,
     typename T::entity_type b)
 {
-  requires core::iterator<typename T::iterator>;
-  requires core::iterator<typename T::const_iterator>;
+  requires iterator<typename T::iterator>;
+  requires iterator<typename T::const_iterator>;
   { t.begin() } noexcept;
   { t.end()   } noexcept;
+  { t.cbegin() } noexcept;
+  { t.cend()   } noexcept;
 
   { t.empty() } noexcept -> std::same_as<bool>;
   { t.size()  } noexcept -> std::same_as<std::size_t>;
@@ -36,25 +38,28 @@ concept arrangeable = requires (
  */
 template<typename    Entity,
          typename ...Ts>
-requires  core::entity<Entity>
+requires  entity<Entity>
       && (sizeof...(Ts) > 1)
-      && (arrangeable<Ts>                                  && ...)
+      && (observable<Ts>                                  && ...)
       && (std::is_same_v<typename Ts::entity_type, Entity> && ...)
 class harmony
 {
 public:
   using entity_type         = Entity;
-  using arranged_tuple_type = std::tuple<Ts ...>;
+  using container_tuple_type = std::tuple<Ts ...>;
 
 private:
   /// @cond INTERNAL
 
   /**
-   * @brief The arranger for a container of entities.
+   * @brief The observer of a container of entities.
+   *
+   * Inspired from the observer software design pattern, the harmony
+   *     representing the subject in the pattern.
    */
   template<typename T>
-  requires arrangeable<T>
-  class arranger
+  requires observable<T>
+  class observer
   {
   public:
     using entity_type   = typename T::entity_type;
@@ -62,39 +67,39 @@ private:
 
   public:
     constexpr
-    arranger()
+    observer()
     = default;
     constexpr
-    arranger(arranger const &)
+    observer(observer const &)
     = default;
     constexpr
-    arranger(arranger &&)
+    observer(observer &&)
     noexcept
     = default;
     explicit
     constexpr
-    arranger(T &arranged)
+    observer(T &arranged)
       : arranged_{&arranged}
     { }
 
     constexpr
-    ~arranger()
+    ~observer()
     noexcept
     = default;
 
 
     constexpr
-    arranger &operator=(arranger const &)
+    observer &operator=(observer const &)
     = default;
     constexpr
-    arranger &operator=(arranger &&)
+    observer &operator=(observer &&)
     noexcept
     = default;
 
 
 
     /**
-     * @return The number of entities contained in the underlying container.
+     * @return The number of entities contained in the observed container.
      */
     [[nodiscard]]
     constexpr
@@ -107,7 +112,7 @@ private:
 
 
     /**
-     * @The callback to arrange the underlying container.
+     * @The callback to the observed container.
      */
     constexpr
     void operator()(entity_type const lhs, std::ptrdiff_t const len)
@@ -120,10 +125,10 @@ private:
     /**
      * @brief Swaps the contents of @p *this and @code other@endcode.
      *
-     * @param other The other arranger whose contents to swap.
+     * @param other The other observer whose contents to swap.
      */
     constexpr
-    void swap(arranger &other)
+    void swap(observer &other)
     noexcept(noexcept(std::declval<T &>().swap(std::declval<T &>())))
     {
       arranged_->swap(*other.arranged_);
@@ -147,7 +152,7 @@ public:
   = default;
   constexpr
   harmony(Ts &...arranged)
-    : arrangers_{arranger<Ts>(arranged)...},
+    : observers_{observer<Ts>(arranged)...},
       length_      {0}
   { }
 
@@ -189,9 +194,9 @@ public:
    */
   constexpr
   void include(entity_type const e)
-  noexcept(noexcept(arrange(0, std::index_sequence_for<Ts...>{})))
+  noexcept(noexcept(notify(0, std::index_sequence_for<Ts...>{})))
   {
-    arrange(e, std::index_sequence_for<Ts...>{});
+    notify(e, std::index_sequence_for<Ts...>{});
     ++length_;
   }
 
@@ -202,10 +207,10 @@ public:
    */
   constexpr
   void exclude(entity_type const e)
-  noexcept(noexcept(arrange(0, std::index_sequence_for<Ts...>{})))
+  noexcept(noexcept(notify(0, std::index_sequence_for<Ts...>{})))
   {
     --length_;
-    arrange(e, std::index_sequence_for<Ts...>{});
+    notify(e, std::index_sequence_for<Ts...>{});
   }
 
 
@@ -218,7 +223,7 @@ public:
   void swap(harmony &other)
   noexcept
   {
-    arrangers_.swap(other.arrangers_);
+    observers_.swap(other.observers_);
     std::swap(length_, other.length_);
   }
 
@@ -226,26 +231,26 @@ private:
   /// @cond INTERNAL
 
   /**
-   * @brief Arranges the harmonized containers for the given entity.
+   * @brief Notifies all observers for the given entity.
    *
-   * @tparam Is The indexes of the tuple of arrangers.
-   * @param e The entity to arrange the containers for.
+   * @tparam Is The indexes of the tuple of observers.
+   * @param e The entity to notify the observers for.
    */
   template<std::size_t ...Is>
   constexpr
-  void arrange(entity_type const e, std::index_sequence<Is...>)
-  noexcept((noexcept(std::get<Is>(arrangers_)(
+  void notify(entity_type const e, std::index_sequence<Is...>)
+  noexcept((noexcept(std::get<Is>(observers_)(
       std::declval<entity_type>(),
       std::declval<std::ptrdiff_t>()))
    && ...))
   {
-    (std::get<Is>(arrangers_)(e, length_), ...);
+    (std::get<Is>(observers_)(e, length_), ...);
   }
 
   /// @endcond
 
 private:
-  std::tuple<arranger<Ts> ...> arrangers_;
+  std::tuple<observer<Ts> ...> observers_;
   std::ptrdiff_t               length_;
 
 };
@@ -259,9 +264,9 @@ private:
  */
 template<typename    Entity,
          typename ...Ts>
-requires  core::entity<Entity>
+requires  entity<Entity>
       && (sizeof...(Ts) > 1)
-      && (arrangeable<Ts>                                  && ...)
+      && (observable<Ts>                                  && ...)
       && (std::is_same_v<typename Ts::entity_type, Entity> && ...)
 constexpr
 void swap(harmony<Entity, Ts ...> &lhs, harmony<Entity, Ts ...> &rhs)
@@ -278,9 +283,9 @@ struct is_harmony_specialization : std::false_type
 
 template<typename    Entity,
          typename ...Ts>
-requires  core::entity<Entity>
+requires  entity<Entity>
       && (sizeof...(Ts) > 1)
-      && (arrangeable<Ts>                                  && ...)
+      && (observable<Ts>                                  && ...)
       && (std::is_same_v<typename Ts::entity_type, Entity> && ...)
 struct is_harmony_specialization<
     harmony<Entity, Ts ...>>

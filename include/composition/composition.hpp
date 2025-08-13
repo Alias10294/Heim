@@ -27,8 +27,8 @@ template<typename    Entity,
          typename    Component,
          std::size_t PageSize = 4096,
          typename    ComponentAllocator = std::allocator<Component>>
-requires  core::entity<Entity>
-      &&  core::component<Component>
+requires  entity<Entity>
+      &&  component<Component>
       && (PageSize > 0)
       &&  std::same_as<
               typename std::allocator_traits<ComponentAllocator>::value_type,
@@ -1336,8 +1336,8 @@ template<typename    Entity,
          typename    Component,
          std::size_t PageSize,
          typename    ComponentAllocator>
-requires  core::entity<Entity>
-      &&  core::component<Component>
+requires  entity<Entity>
+      &&  component<Component>
       && (PageSize > 0)
       &&  std::same_as<
               typename std::allocator_traits<ComponentAllocator>::value_type,

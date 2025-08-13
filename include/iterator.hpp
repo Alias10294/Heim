@@ -11,8 +11,6 @@
 
 namespace heim
 {
-namespace core
-{
 template<typename T>
 concept proxy = requires (T t)
 {
@@ -51,7 +49,6 @@ concept iterator = requires (T t, std::ptrdiff_t const dist, T u)
   { t <= u } noexcept;
 };
 
-}
 }
 
 #endif // HEIM_ITERATOR_HPP

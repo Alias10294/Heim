@@ -260,7 +260,7 @@ public:
    * @return @c true if an element has been erased, @c false otherwise.
    */
   template<typename Entity>
-  requires core::entity<Entity>
+  requires entity<Entity>
   constexpr
   bool do_erase(Entity const e)
   {

@@ -108,17 +108,17 @@ public:
     return idx;
   }
   /**
-   * @tparam T The type of arrangeable to get the index of.
-   * @return The index of the given arrangeable type.
+   * @tparam T The type of container to get the index of.
+   * @return The index of the given container type.
    */
   template<typename T>
-  requires arrangeable<T>
+  requires observable<T>
   [[nodiscard]]
   constexpr
   static std::size_t index()
   noexcept
   {
-    static std::size_t idx = next_arranged_index_++;
+    static std::size_t idx = next_container_index_++;
     return idx;
   }
 
@@ -141,12 +141,12 @@ public:
         && harmonies_[idx].has_value();
   }
   /**
-   * @tparam T The type of arrangeable to check for.
-   * @return @c true if any harmony harmonizes an arrangeable of this type,
+   * @tparam T The type of container to check for.
+   * @return @c true if any harmony harmonizes a container of this type,
    *    @c false otherwise.
    */
   template<typename T>
-  requires arrangeable<T>
+  requires observable<T>
   [[nodiscard]]
   constexpr
   bool harmonizes() const
@@ -154,8 +154,8 @@ public:
   {
     std::size_t const idx = index<T>();
 
-    return arranged_indexes_.size() > idx
-        && arranged_indexes_[idx] != null_idx_;
+    return container_indexes_.size() > idx
+        && container_indexes_[idx] != null_idx_;
   }
 
 
@@ -199,12 +199,12 @@ public:
   constexpr
   bool harmonize(Harmony &&harmony)
   {
-    using arranged_tuple_type = typename Harmony::arranged_tuple_type;
+    using container_tuple_type = typename Harmony::container_tuple_type;
 
     if (harmonizes<Harmony>())
       return false;
     if (harmonizes_for<Harmony>(
-        std::make_index_sequence<std::tuple_size_v<arranged_tuple_type>>{}))
+        std::make_index_sequence<std::tuple_size_v<container_tuple_type>>{}))
       return false;
 
     std::size_t const idx = index<Harmony>();
@@ -216,12 +216,12 @@ public:
     try
     {
       std::size_t const new_size = max_index<Harmony>(
-          std::make_index_sequence<std::tuple_size_v<arranged_tuple_type>>{});
-      if (arranged_indexes_.size() <= new_size)
-        arranged_indexes_.resize(new_size + 1, null_idx_);
+          std::make_index_sequence<std::tuple_size_v<container_tuple_type>>{});
+      if (container_indexes_.size() <= new_size)
+        container_indexes_.resize(new_size + 1, null_idx_);
 
       harmonize_for<Harmony>(
-          std::make_index_sequence<std::tuple_size_v<arranged_tuple_type>>{});
+          std::make_index_sequence<std::tuple_size_v<container_tuple_type>>{});
     }
     catch (...)
     {
@@ -243,17 +243,17 @@ public:
   noexcept
   {
     harmonies_       .swap(other.harmonies_);
-    arranged_indexes_.swap(other.arranged_indexes_);
+    container_indexes_.swap(other.container_indexes_);
   }
 
 private:
   /// @cond INTERNAL
 
   /**
-   * @tparam Harmony The type of harmony to get the max index of arrangeable.
+   * @tparam Harmony The type of harmony to get the max index of container.
    *     from.
-   * @tparam Is      The indexes of the tuple of arranged of the harmony.
-   * @return The largest index between each arranged of the harmony.
+   * @tparam Is      The indexes of the tuple of containers of the harmony.
+   * @return The largest index between each container of the harmony.
    */
   template<typename Harmony,
            std::size_t ...Is>
@@ -263,12 +263,14 @@ private:
   static std::size_t max_index(std::index_sequence<Is ...>)
   noexcept
   {
-    using arranged_tuple_type = typename Harmony::arranged_tuple_type;
+    using container_tuple_type = typename Harmony::container_tuple_type;
 
-    std::size_t max_idx = index<std::tuple_element_t<0, arranged_tuple_type>>();
+    std::size_t max_idx =
+        index<std::tuple_element_t<0, container_tuple_type>>();
 
-    ((max_idx = max_idx < index<std::tuple_element_t<Is, arranged_tuple_type>>()
-       ? index<std::tuple_element_t<Is, arranged_tuple_type>>()
+    ((max_idx =
+         max_idx < index<std::tuple_element_t<Is, container_tuple_type>>()
+       ? index<std::tuple_element_t<Is, container_tuple_type>>()
        : max_idx),
      ...);
 
@@ -278,10 +280,10 @@ private:
 
 
   /**
-   * @tparam Harmony The type of harmony to get the max index of arrangeable
+   * @tparam Harmony The type of harmony to get the max index of container
    *     from.
-   * @tparam Is      The indexes of the tuple of arranged of the harmony.
-   * @return @c true if any of the arranged's types are harmonized by any
+   * @tparam Is      The indexes of the tuple of containers of the harmony.
+   * @return @c true if any of the containers' type is harmonized by any
    *     harmony in the harmonizer, @c false otherwise.
    */
   template<typename    Harmony,
@@ -292,19 +294,19 @@ private:
   noexcept
   {
     return (harmonizes<
-        std::tuple_element_t<Is, typename Harmony::arranged_tuple_type>>()
+        std::tuple_element_t<Is, typename Harmony::container_tuple_type>>()
      || ...);
   }
 
 
 
   /**
-   * @brief Updates the indexes of each of the arranged's types to reflect
+   * @brief Updates the indexes of each of the container's types to reflect
    *     which harmony index they are linked to.
    *
-   * @tparam Harmony The type of harmony to get the max index of arrangeable.
+   * @tparam Harmony The type of harmony to get the max index of container.
    *     from.
-   * @tparam Is      The indexes of the tuple of arranged of the harmony.
+   * @tparam Is      The indexes of the tuple of containers of the harmony.
    */
   template<typename       Harmony,
            std::size_t ...Is>
@@ -313,19 +315,20 @@ private:
   void harmonize_for(std::index_sequence<Is ...>)
   noexcept
   {
-    using arranged_tuple_type = typename Harmony::arranged_tuple_type;
+    using container_tuple_type = typename Harmony::container_tuple_type;
 
-    ((arranged_indexes_[index<std::tuple_element_t<Is, arranged_tuple_type>>()]
-         = index<Harmony>()),
+    ((container_indexes_[
+         index<std::tuple_element_t<Is, container_tuple_type>>()] =
+             index<Harmony>()),
      ...);
   }
 
 private:
   inline static std::size_t next_harmony_index_  = 0;
-  inline static std::size_t next_arranged_index_ = 0;
+  inline static std::size_t next_container_index_ = 0;
 
   std::vector<any_harmony>  harmonies_;
-  std::vector<std::size_t>  arranged_indexes_;
+  std::vector<std::size_t>  container_indexes_;
 
 };
 

@@ -13,7 +13,7 @@ namespace heim
  *     world.
  */
 template<typename Entity>
-requires core::entity<Entity>
+requires entity<Entity>
 class summoner
 {
 public:

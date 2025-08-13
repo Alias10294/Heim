@@ -6,9 +6,6 @@
 
 namespace heim
 {
-namespace core
-{
-
 template<typename T>
 concept component = requires
 {
@@ -19,7 +16,6 @@ concept component = requires
 
 };
 
-}
 }
 
 #endif // HEIM_COMPONENT_HPP

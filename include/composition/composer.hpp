@@ -172,7 +172,7 @@ public:
 
     if (compositions_.size() <= idx)
       compositions_.resize(idx + 1);
-    compositions_[idx].template emplace<Composition>(
+    compositions_[idx].emplace<Composition>(
         std::forward<Composition>(composition));
 
     return true;
