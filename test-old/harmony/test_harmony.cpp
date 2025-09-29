@@ -1,8 +1,8 @@
 #include <cstdint>
 
 #include "../doctest.h"
-#include "../../include/harmony/harmony.hpp"
-#include "../../include/composition/composition.hpp"
+#include "../../include-old/harmony/harmony.hpp"
+#include "../../include-old/composition/composition.hpp"
 
 TEST_CASE("heim::harmony")
 {

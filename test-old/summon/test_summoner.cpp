@@ -1,6 +1,6 @@
 #include <cstdint>
 #include "../doctest.h"
-#include "../../include/summon/summoner.hpp"
+#include "../../include-old/summon/summoner.hpp"
 
 TEST_CASE("heim::summoner")
 {

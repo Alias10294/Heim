@@ -1,6 +1,6 @@
 #include <cstdint>
 #include "../doctest.h"
-#include "../../include/harmony/any_harmony.hpp"
+#include "../../include-old/harmony/any_harmony.hpp"
 #include "composition/composition.hpp"
 
 TEST_CASE("heim::any_harmony")

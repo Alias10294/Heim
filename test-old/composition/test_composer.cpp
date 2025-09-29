@@ -1,5 +1,5 @@
 #include "../doctest.h"
-#include "../../include/composition/composer.hpp"
+#include "../../include-old/composition/composer.hpp"
 
 TEST_CASE("heim::composer")
 {

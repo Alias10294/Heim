@@ -1,7 +1,7 @@
 #include <cstdint>
 #include "../doctest.h"
-#include "../../include/composition/composition.hpp"
-#include "../../include/harmony/harmonizer.hpp"
+#include "../../include-old/composition/composition.hpp"
+#include "../../include-old/harmony/harmonizer.hpp"
 
 TEST_CASE("heim::harmonizer")
 {
