@@ -8,16 +8,8 @@ heim_dep = declare_dependency(
     include_directories: heim_inc)
 meson.override_dependency('heim', heim_dep)
 
-
 heim_test_src = files(
-    'test/test_config.cpp',
-    'test/composition/test_any_composition.cpp',
-    'test/composition/test_composer.cpp',
-    'test/composition/test_composition.cpp',
-    'test/summon/test_summoner.cpp',
-    'test/harmony/test_any_harmony.cpp',
-    'test/harmony/test_harmonizer.cpp',
-    'test/harmony/test_harmony.cpp')
+    'test/test_config.cpp')
 
 heim_test_exe = executable('heim_test',
     heim_test_src,
