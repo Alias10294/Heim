@@ -81,11 +81,11 @@ inline bool index_map_is_value_allocator_v
 
 
 /*!
- * @brief The associative container for indexes and values of Heim.
+ * @brief An associative container specialized for unsigned integral keys.
  *
- * @tparam Index The type of indexes (indexes) to hold.
- * @tparam Value The type of values (values) to hold.
- * @tparam PageSize The size of each page of indexes.
+ * @tparam Index The type of indexes to hold.
+ * @tparam Value The type of values to hold.
+ * @tparam PageSize The size of each page for positions.
  * @tparam Allocator The type of allocator for values.
  *
  * @details Implements a customised sparse set, providing constant-time
@@ -108,6 +108,10 @@ class index_map
       "heim::index_map: Value must satisfy: "
           "internal::index_map_is_value_v<Value> ");
   static_assert(
+      PageSize > 0,
+      "heim::index_map: PageSize must satisfy: "
+          "PageSize > 0 ");
+  static_assert(
       internal::index_map_is_value_allocator_v<Allocator, Value>,
       "heim::index_map: Allocator must satisfy: "
           "internal::index_map_is_value_allocator_v<Allocator, Value> ");
@@ -127,7 +131,7 @@ public:
   using value_type
   = Value;
 
-  //! @brief The size of each page of indexes.
+  //! @brief The size of each page of positions.
   constexpr
   static size_type page_size
   = PageSize;
@@ -861,7 +865,7 @@ public:
   constexpr
   void swap(index_type const idxa, index_type const idxb)
   {
-    if (!contains(idxa) || !contains(idxb))
+    if (idxa == idxb || !contains(idxa) || !contains(idxb))
       return;
 
     std::swap(indexes_[position(idxa)], indexes_[position(idxb)]);
