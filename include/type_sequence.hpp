@@ -2,6 +2,7 @@
 #define HEIM_TYPE_SEQUENCE_HPP
 
 #include <cstddef>
+#include <tuple>
 #include <type_traits>
 
 namespace heim
@@ -11,7 +12,7 @@ struct type_sequence;
 
 
 
-namespace detail
+namespace internal
 {
 template<typename T, typename ...Ts>
 struct type_sequence_index;
@@ -481,7 +482,7 @@ public:
 
   template<typename T>
   using index
-  = detail::type_sequence_index<T, Ts...>;
+  = internal::type_sequence_index<T, Ts...>;
 
   template<typename T>
   constexpr
@@ -492,7 +493,7 @@ public:
 
   template<std::size_t I>
   using get
-  = detail::type_sequence_get<I, Ts ...>;
+  = internal::type_sequence_get<I, Ts ...>;
 
   template<std::size_t I>
   using get_t
@@ -532,7 +533,7 @@ public:
 
 
   using unique
-  = detail::type_sequence_unique<type_sequence<>, Ts ...>;
+  = internal::type_sequence_unique<type_sequence<>, Ts ...>;
 
   using unique_t
   = typename unique::type;
@@ -540,7 +541,7 @@ public:
 
 
   using flat
-  = detail::type_sequence_flat<Ts ...>;
+  = internal::type_sequence_flat<Ts ...>;
 
   using flat_t
   = typename flat::type;
@@ -549,7 +550,7 @@ public:
 
   template<template<typename> typename Pred>
   using filter
-  = detail::type_sequence_filter<Pred, Ts ...>;
+  = internal::type_sequence_filter<Pred, Ts ...>;
 
   template<template<typename> typename Pred>
   using filter_t
@@ -567,7 +568,7 @@ public:
 
   template<std::size_t I>
   using remove
-  = detail::type_sequence_remove<I, Ts ...>;
+  = internal::type_sequence_remove<I, Ts ...>;
 
   template<std::size_t I>
   using remove_t
@@ -577,7 +578,7 @@ public:
 
   template<typename T>
   using erase
-  = detail::type_sequence_erase<T, Ts ...>;
+  = internal::type_sequence_erase<T, Ts ...>;
 
   template<typename T>
   using erase_t
@@ -587,7 +588,7 @@ public:
 
   template<typename TypeSeq>
   using difference
-  = detail::type_sequence_difference<
+  = internal::type_sequence_difference<
       TypeSeq,
       type_sequence>;
 
@@ -599,7 +600,7 @@ public:
 
   template<typename TypeSeq>
   using intersect
-  = detail::type_sequence_intersect<
+  = internal::type_sequence_intersect<
       TypeSeq,
       type_sequence>;
 
@@ -625,7 +626,7 @@ public:
 
   template<std::size_t N>
   using subsequences
-  = detail::type_sequence_subsequences<N, type_sequence>;
+  = internal::type_sequence_subsequences<N, type_sequence>;
 
   template<std::size_t N>
   using subsequences_t
@@ -635,7 +636,7 @@ public:
 
   template<typename TypeSeq>
   using induce_order
-  = detail::type_sequence_induce_order<TypeSeq, Ts ...>;
+  = internal::type_sequence_induce_order<TypeSeq, Ts ...>;
 
   template<typename TypeSeq>
   using induce_order_t
