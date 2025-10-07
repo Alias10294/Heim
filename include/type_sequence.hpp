@@ -646,6 +646,40 @@ public:
 
 
 
+namespace internal
+{
+template<typename>
+struct is_type_sequence
+  : std::false_type
+{};
+
+template<typename ...Ts>
+struct is_type_sequence<
+    type_sequence<Ts...>>
+  : std::true_type
+{ };
+
+
+}
+
+
+template<typename T>
+struct is_type_sequence
+{
+  constexpr
+  static bool value
+  = internal::is_type_sequence<std::remove_cvref_t<T>>::value;
+
+};
+
+
+template<typename T>
+constexpr
+inline bool is_type_sequence_v
+= is_type_sequence<T>::value;
+
+
+
 template<typename Tuple>
 struct to_type_sequence;
 
@@ -660,6 +694,7 @@ struct to_type_sequence<std::tuple<Ts...>>
   = type_sequence<Ts ...>;
 
 };
+
 
 }
 
