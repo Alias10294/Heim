@@ -1,8 +1,10 @@
 #ifndef HEIM_INDEX_MAP_HPP
 #define HEIM_INDEX_MAP_HPP
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -72,6 +74,9 @@ private:
 
   using page_t
   = std::array<size_type, page_size>;
+
+  constexpr static size_type s_null_position
+  = std::numeric_limits<size_type>::max();
 
   using page_alloc_t
   = typename alloc_traits_t::template rebind_alloc<page_t>;
@@ -165,6 +170,82 @@ private:
     m_positions = std::move(other.m_positions);
     m_indexes   = std::move(other.m_indexes);
     m_mapped    = std::move(other.m_mapped);
+  }
+
+
+  constexpr static size_type
+  s_position_page_nb(index_type const i)
+  noexcept
+  requires (is_paged_v)
+  {
+    return static_cast<size_type>(i) / page_size;
+  }
+
+  constexpr static size_type
+  s_position_line_nb(index_type const i)
+  noexcept
+  requires (is_paged_v)
+  {
+    return static_cast<size_type>(i) % page_size;
+  }
+
+  constexpr size_type &
+  m_position_get(index_type const i)
+  noexcept
+  {
+    if constexpr (is_paged_v)
+      return (*m_positions[s_position_page_nb(i)])[s_position_line_nb(i)];
+    else
+      return m_positions[static_cast<size_type>(i)];
+  }
+
+  constexpr size_type
+  m_position_get(index_type const i) const
+  noexcept
+  {
+    if constexpr (is_paged_v)
+      return (*m_positions[s_position_page_nb(i)])[s_position_line_nb(i)];
+    else
+      return m_positions[static_cast<size_type>(i)];
+  }
+
+  constexpr bool
+  m_position_contains(index_type const i) const
+  noexcept
+  {
+    if constexpr (is_paged_v)
+    {
+      size_type page_nb = s_position_page_nb(i);
+
+      return page_nb < m_positions.size()
+          && static_cast<bool>(m_positions[page_nb])
+          && m_position_get(i) != s_null_position;
+    }
+    else
+    {
+      size_type const size_i = static_cast<size_type>(i);
+
+      return size_i < m_positions.size()
+          && m_positions[size_i] != s_null_position;
+    }
+  }
+
+
+  constexpr void
+  m_swap_at(index_type const i, index_type const j)
+  noexcept
+  {
+    if (i == j)
+      return;
+
+    size_type &pos_i = m_position_get(i);
+    size_type &pos_j = m_position_get(j);
+
+    using std::swap;
+
+    swap(m_indexes[pos_i], m_indexes[pos_j]);
+    swap(m_mapped [pos_i], m_mapped [pos_j]);
+    swap(pos_i, pos_j);
   }
 
 public:
@@ -358,8 +439,7 @@ public:
   begin()
   noexcept
   {
-    // TODO: implement
-    return iterator{};
+    return iterator{this, 0};
   }
 
   [[nodiscard]]
@@ -367,8 +447,7 @@ public:
   begin() const
   noexcept
   {
-    // TODO: implement
-    return const_iterator{};
+    return const_iterator{this, 0};
   }
 
 
@@ -377,8 +456,7 @@ public:
   end()
   noexcept
   {
-    // TODO: implement
-    return iterator{};
+    return iterator{this, size()};
   }
 
   [[nodiscard]]
@@ -386,8 +464,7 @@ public:
   end() const
   noexcept
   {
-    // TODO: implement
-    return const_iterator{};
+    return const_iterator{this, size()};
   }
 
 
@@ -396,8 +473,7 @@ public:
   cbegin() const
   noexcept
   {
-    // TODO: implement
-    return const_iterator{};
+    return const_iterator{this, 0};
   }
 
 
@@ -406,8 +482,7 @@ public:
   cend() const
   noexcept
   {
-    // TODO: implement
-    return const_iterator{};
+    return const_iterator{this, size()};
   }
 
 
@@ -417,8 +492,7 @@ public:
   size() const
   noexcept
   {
-    // TODO: implement
-    return size_type{};
+    return m_indexes.size();
   }
 
 
@@ -427,8 +501,20 @@ public:
   max_size() const
   noexcept
   {
-    // TODO: implement
-    return size_type{};
+    size_type const index_max  = m_indexes  .max_size();
+    size_type const mapped_max = m_mapped   .max_size();
+
+    size_type position_max = m_positions.max_size();
+    if constexpr (is_paged_v)
+    {
+      size_type max_pages = std::numeric_limits<size_type>::max() / page_size;
+      if (position_max > max_pages)
+        position_max = max_pages;
+
+      position_max *= page_size;
+    }
+
+    return std::min({position_max, index_max, mapped_max});
   }
 
 
@@ -437,7 +523,7 @@ public:
   empty() const
   noexcept
   {
-    return begin() == end();
+    return m_indexes.empty();
   }
 
 
@@ -452,11 +538,11 @@ public:
 
   [[nodiscard]]
   constexpr bool
-  contains(index_type const idx) const
+  contains(index_type const i) const
   noexcept
   {
-    // TODO: implement
-    return false;
+    return m_position_contains(i)
+        && m_indexes[m_position_get(i)] == i;
   }
 
 
@@ -515,9 +601,235 @@ public:
   constexpr static bool is_const
   = IsConst;
 
-  // TODO: implement
-};
+private:
+  template<typename U>
+  using maybe_const_t = std::conditional_t<
+      is_const,
+      U const,
+      U>;
 
+public:
+  using difference_type = std::ptrdiff_t;
+
+  using value_type = std::pair<index_type const, mapped_type>;
+  using reference  = std::pair<index_type const, maybe_const_t<mapped_type> &>;
+
+  using iterator_category = std::input_iterator_tag;
+  using iterator_concept  = std::random_access_iterator_tag;
+
+private:
+  maybe_const_t<index_map  > *m_map;
+
+  index_type const           *m_index;
+  maybe_const_t<mapped_type> *m_mapped;
+
+public:
+  constexpr
+  generic_iterator()
+  = default;
+
+  constexpr
+  generic_iterator(generic_iterator const &other)
+  = default;
+
+  constexpr
+  generic_iterator(generic_iterator &&other)
+  noexcept
+  = default;
+
+  constexpr
+  generic_iterator(maybe_const_t<index_map> * const map, size_type const pos)
+    : m_map{map},
+      m_index {map->m_indexes.data() + pos},
+      m_mapped{map->m_mapped .data() + pos}
+  { }
+
+
+  constexpr
+  ~generic_iterator()
+  noexcept
+  = default;
+
+
+  constexpr generic_iterator &
+  operator=(generic_iterator const &other)
+  = default;
+
+  constexpr generic_iterator &
+  operator=(generic_iterator &&other)
+  noexcept
+  = default;
+
+
+  constexpr void
+  swap(generic_iterator &other)
+  noexcept
+  {
+    using std::swap;
+
+    swap(m_map   , other.m_map);
+    swap(m_index , other.m_index);
+    swap(m_mapped, other.m_mapped);
+  }
+
+  friend constexpr void
+  swap(generic_iterator &lhs, generic_iterator &rhs)
+  noexcept(noexcept(lhs.swap(rhs)))
+  {
+    lhs.swap(rhs);
+  }
+
+
+
+  constexpr reference
+  operator*() const
+  noexcept
+  {
+    return reference{*m_index, *m_mapped};
+  }
+
+
+
+  constexpr generic_iterator &
+  operator++()
+  noexcept
+  {
+    ++m_index;
+    ++m_mapped;
+    return *this;
+  }
+
+  constexpr generic_iterator
+  operator++(int)
+  noexcept
+  {
+    auto tmp = *this;
+    ++*this;
+    return tmp;
+  }
+
+
+  constexpr generic_iterator &
+  operator--()
+  noexcept
+  {
+    --m_index;
+    --m_mapped;
+    return *this;
+  }
+
+  constexpr generic_iterator
+  operator--(int)
+  noexcept
+  {
+    auto tmp = *this;
+    --*this;
+    return tmp;
+  }
+
+
+  constexpr generic_iterator &
+  operator+=(difference_type const n)
+  noexcept
+  {
+    m_index  += n;
+    m_mapped += n;
+    return *this;
+  }
+
+
+  constexpr generic_iterator &
+  operator-=(difference_type const n)
+  noexcept
+  {
+    m_index  -= n;
+    m_mapped -= n;
+    return *this;
+  }
+
+
+  friend constexpr generic_iterator
+  operator+(generic_iterator const &it, difference_type const n)
+  noexcept
+  {
+    generic_iterator r{it};
+    r += n;
+    return r;
+  }
+
+  friend constexpr generic_iterator
+  operator+(difference_type const n, generic_iterator const &it)
+  noexcept
+  {
+    generic_iterator r{it};
+    r += n;
+    return r;
+  }
+
+
+  friend constexpr generic_iterator
+  operator-(generic_iterator const &it, difference_type const n)
+  noexcept
+  {
+    generic_iterator r{it};
+    r -= n;
+    return r;
+  }
+
+  friend constexpr difference_type
+  operator-(generic_iterator const &lhs, generic_iterator const &rhs)
+  noexcept
+  {
+    return lhs.m_index - rhs.m_index;
+  }
+
+
+
+  constexpr reference
+  operator[](difference_type const n) const
+  noexcept
+  {
+    return *(*this + n);
+  }
+
+
+
+  friend constexpr bool
+  operator==(generic_iterator const &lhs, generic_iterator const &rhs)
+  noexcept
+  {
+    return lhs.m_index == rhs.m_index;
+  }
+
+
+  friend constexpr auto
+  operator<=>(generic_iterator const &lhs, generic_iterator const &rhs)
+  noexcept
+  {
+    return lhs.m_index <=> rhs.m_index;
+  }
+
+
+
+  friend constexpr maybe_const_t<mapped_type> &&
+  iter_move(generic_iterator const &it)
+  noexcept
+  {
+    using std::move;
+
+    return move(*it.m_mapped);
+  }
+
+
+  friend constexpr void
+  iter_swap(generic_iterator &lhs, generic_iterator &rhs)
+  noexcept(noexcept(lhs.m_map->m_swap_at(*lhs.m_index, *rhs.m_index)))
+  requires (!is_const)
+  {
+    lhs.m_map->m_swap_at(*lhs.m_index, *rhs.m_index);
+  }
+
+};
 
 
 template<
@@ -556,6 +868,7 @@ public:
   }
 
 };
+
 
 }
 
