@@ -21,8 +21,7 @@ public:
   using index_type     = Index;
   using mapped_type    = T;
 
-  constexpr static std::size_t
-  page_size
+  constexpr static std::size_t page_size
   = PageSize;
 
   using allocator_type = Alloc;
@@ -44,55 +43,129 @@ public:
   using const_iterator = generic_iterator<true>;
 
 private:
-  using index_allocator_type
-  = typename std::allocator_traits<allocator_type>
-      ::template rebind_alloc<index_type>;
-
-  using index_container_type
-  = std::vector<index_type, index_allocator_type>;
+  using alloc_traits_t
+  = std::allocator_traits<allocator_type>;
 
 
-  using mapped_allocator_type
-  = typename std::allocator_traits<allocator_type>
-      ::template rebind_alloc<mapped_type>;
 
-  using mapped_container_type
-  = std::vector<mapped_type, mapped_allocator_type>;
+  using index_alloc_t
+  = typename alloc_traits_t::template rebind_alloc<index_type>;
+
+  using index_alloc_traits_t
+  = std::allocator_traits<index_alloc_t>;
+
+  using index_vector_t
+  = std::vector<index_type, index_alloc_t>;
 
 
-  constexpr
-  static bool is_paged_v
-  = PageSize > 0;
 
-  using page_type
+  using mapped_alloc_t
+  = typename alloc_traits_t::template rebind_alloc<mapped_type>;
+
+  using mapped_alloc_traits_t
+  = std::allocator_traits<mapped_alloc_t>;
+
+  using mapped_vector_t
+  = std::vector<mapped_type, mapped_alloc_t>;
+
+
+
+  using page_t
   = std::array<size_type, page_size>;
 
-  // TODO: create custom deleter for pages to use allocator_type
+  using page_alloc_t
+  = typename alloc_traits_t::template rebind_alloc<page_t>;
 
-  using position_allocator_type
-  = typename std::allocator_traits<allocator_type>
-      ::template rebind_alloc<std::conditional_t<
-          is_paged_v,
-          std::unique_ptr<page_type>,
-          size_type>>;
+  using page_alloc_traits_t
+  = std::allocator_traits<page_alloc_t>;
 
-  using position_container_type
+
+  class page_deleter;
+
+  using page_uptr_t
+  = std::unique_ptr<page_t, page_deleter>;
+
+
+  constexpr static bool is_paged_v
+  = PageSize > 0;
+
+  using position_alloc_t
+  = typename alloc_traits_t::template rebind_alloc<std::conditional_t<
+      is_paged_v,
+      page_uptr_t,
+      size_type>>;
+
+  using position_vector_t
   = std::conditional_t<
       is_paged_v,
-      std::vector<
-          std::unique_ptr<page_type>,
-          position_allocator_type>,
-      std::vector<
-          size_type,
-          position_allocator_type>>;
+      std::vector<page_uptr_t, position_alloc_t>,
+      std::vector<size_type  , position_alloc_t>>;
 
 private:
   [[no_unique_address]]
-  allocator_type allocator_;
+  allocator_type m_allocator;
 
-  position_container_type positions_;
-  index_container_type    indexes_;
-  mapped_container_type   mapped_;
+  position_vector_t m_positions;
+  index_vector_t    m_indexes;
+  mapped_vector_t   m_mapped;
+
+private:
+  [[nodiscard]]
+  constexpr page_uptr_t
+  m_clone_page_uptr(page_uptr_t const &page_uptr) const
+  {
+    page_alloc_t page_alloc{m_allocator};
+
+    if (!page_uptr)
+    {
+      return page_uptr_t{
+          nullptr,
+          page_deleter{std::move(page_alloc)}};
+    }
+
+    page_t *new_page_ptr{
+        page_alloc_traits_t::allocate(page_alloc, 1)};
+    try
+    {
+      page_alloc_traits_t::construct(
+          page_alloc,
+          new_page_ptr,
+          *page_uptr);
+    }
+    catch (...)
+    {
+      page_alloc_traits_t::deallocate(
+          page_alloc,
+          new_page_ptr,
+          1);
+      throw;
+    }
+
+    return page_uptr_t{
+        new_page_ptr,
+        page_deleter{std::move(page_alloc)}};
+  }
+
+  constexpr void
+  m_copy_position_vector(
+      position_vector_t       &pos,
+      position_vector_t const &other_pos)
+  {
+    pos.reserve(other_pos.size());
+    for (auto const &page_uptr : other_pos)
+      pos.emplace_back(m_clone_page_uptr(page_uptr));
+  }
+
+  constexpr void
+  m_move_assign(index_map &other)
+  noexcept(
+      alloc_traits_t::propagate_on_container_move_assignment::value
+   || alloc_traits_t::is_always_equal::value)
+  {
+    m_positions = std::move(other.m_positions);
+    m_indexes   = std::move(other.m_indexes);
+    m_mapped    = std::move(other.m_mapped);
+  }
 
 public:
   constexpr
@@ -104,39 +177,32 @@ public:
   constexpr explicit
   index_map(allocator_type const &alloc)
   noexcept
-    : allocator_{alloc},
-      positions_{position_allocator_type{alloc}},
-      indexes_  {index_allocator_type   {alloc}},
-      mapped_   {mapped_allocator_type  {alloc}}
+    : m_allocator{alloc},
+      m_positions{position_alloc_t{alloc}},
+      m_indexes  {index_alloc_t   {alloc}},
+      m_mapped   {mapped_alloc_t  {alloc}}
   { }
 
   constexpr
   index_map(index_map const &other)
   requires (is_paged_v)
-    : allocator_{std::allocator_traits<allocator_type>
-          ::select_on_container_copy_construction(other.get_allocator())},
-      positions_{position_allocator_type{allocator_}},
-      indexes_  {other.indexes_, index_allocator_type   {allocator_}},
-      mapped_   {other.mapped_ , mapped_allocator_type  {allocator_}}
+    : m_allocator{alloc_traits_t
+          ::select_on_container_copy_construction(other.m_allocator)},
+      m_positions{position_alloc_t{m_allocator}},
+      m_indexes  {other.m_indexes, index_alloc_t {m_allocator}},
+      m_mapped   {other.m_mapped , mapped_alloc_t{m_allocator}}
   {
-    positions_.reserve(other.positions_.capacity());
-    for (auto const &page_uptr : other.positions_)
-    {
-      if (page_uptr)
-        positions_.emplace_back(std::make_unique<page_type>(*page_uptr));
-      else
-        positions_.emplace_back(nullptr);
-    }
+    m_copy_position_vector(m_positions, other.m_positions);
   }
 
   constexpr
   index_map(index_map const &other)
   requires (!is_paged_v)
-    : allocator_{std::allocator_traits<allocator_type>
-          ::select_on_container_copy_construction(other.get_allocator())},
-      positions_{other.positions_, position_allocator_type{allocator_}},
-      indexes_  {other.indexes_  , index_allocator_type   {allocator_}},
-      mapped_   {other.mapped_   , mapped_allocator_type  {allocator_}}
+    : m_allocator{std::allocator_traits<allocator_type>
+          ::select_on_container_copy_construction(other.m_allocator)},
+      m_positions{other.m_positions, position_alloc_t{m_allocator}},
+      m_indexes  {other.m_indexes  , index_alloc_t   {m_allocator}},
+      m_mapped   {other.m_mapped   , mapped_alloc_t  {m_allocator}}
   { }
 
   constexpr
@@ -149,19 +215,12 @@ public:
       index_map                            const &other,
       std::type_identity_t<allocator_type> const &alloc)
   requires (is_paged_v)
-    : allocator_{alloc},
-      positions_{position_allocator_type{allocator_}},
-      indexes_  {other.indexes_  , index_allocator_type   {allocator_}},
-      mapped_   {other.mapped_   , mapped_allocator_type  {allocator_}}
+    : m_allocator{alloc},
+      m_positions{position_alloc_t{m_allocator}},
+      m_indexes  {other.m_indexes, index_alloc_t {m_allocator}},
+      m_mapped   {other.m_mapped , mapped_alloc_t{m_allocator}}
   {
-    positions_.reserve(other.positions_.capacity());
-    for (auto const &page_uptr : other.positions_)
-    {
-      if (page_uptr)
-        positions_.emplace_back(std::make_unique<page_type>(*page_uptr));
-      else
-        positions_.emplace_back(nullptr);
-    }
+    m_copy_position_vector(m_positions, other.m_positions);
   }
 
   constexpr
@@ -169,26 +228,20 @@ public:
       index_map                            const &other,
       std::type_identity_t<allocator_type> const &alloc)
   requires (!is_paged_v)
-    : allocator_{alloc},
-      positions_{other.positions_, position_allocator_type{allocator_}},
-      indexes_  {other.indexes_  , index_allocator_type   {allocator_}},
-      mapped_   {other.mapped_   , mapped_allocator_type  {allocator_}}
+    : m_allocator{alloc},
+      m_positions{other.m_positions, position_alloc_t{m_allocator}},
+      m_indexes  {other.m_indexes  , index_alloc_t   {m_allocator}},
+      m_mapped   {other.m_mapped   , mapped_alloc_t  {m_allocator}}
   { }
 
   constexpr
   index_map(
       index_map                                 &&other,
       std::type_identity_t<allocator_type> const &alloc)
-    : allocator_{alloc},
-      positions_{
-          std::move(other.positions_),
-          position_allocator_type{allocator_}},
-      indexes_  {
-          std::move(other.indexes_),
-          index_allocator_type   {allocator_}},
-      mapped_   {
-          std::move(other.mapped_),
-          mapped_allocator_type  {allocator_}}
+    : m_allocator{alloc},
+      m_positions{std::move(other.m_positions), position_alloc_t{m_allocator}},
+      m_indexes  {std::move(other.m_indexes)  , index_alloc_t   {m_allocator}},
+      m_mapped   {std::move(other.m_mapped)   , mapped_alloc_t  {m_allocator}}
   { }
 
   constexpr
@@ -213,38 +266,30 @@ public:
     if (this == &other)
       return *this;
 
-    using traits = std::allocator_traits<allocator_type>;
-    if constexpr (traits::propagate_on_container_copy_assignment::value)
+    if constexpr (alloc_traits_t::propagate_on_container_copy_assignment::value)
     {
-      if constexpr (!traits::is_always_equal::value)
+      if constexpr (!alloc_traits_t::is_always_equal::value)
       {
-        if (allocator_ != other.allocator_)
+        if (m_allocator != other.m_allocator)
         {
-          index_map tmp{other, other.allocator_};
+          index_map tmp{other, other.m_allocator};
           swap(tmp);
           return *this;
         }
       }
-      allocator_ = other.allocator_;
+      m_allocator = other.m_allocator;
     }
 
     if constexpr (!is_paged_v)
-      positions_ = other.positions_;
+      m_positions = other.m_positions;
     else
     {
-      position_container_type positions{position_allocator_type{allocator_}};
-      positions.reserve(other.positions_.capacity());
-      for (auto const &page_uptr : other.positions_)
-      {
-        if (page_uptr)
-          positions.emplace_back(std::make_unique<page_type>(*page_uptr));
-        else
-          positions.emplace_back(nullptr);
-      }
-      positions_.swap(positions);
+      position_vector_t positions{position_alloc_t{m_allocator}};
+      m_copy_position_vector(positions, other.m_positions);
+      m_positions.swap(positions);
     }
-    indexes_ = other.indexes_;
-    mapped_  = other.mapped_;
+    m_indexes = other.m_indexes;
+    m_mapped  = other.m_mapped;
 
     return *this;
   }
@@ -252,41 +297,15 @@ public:
   constexpr index_map &
   operator=(index_map &&other)
   noexcept(
-      std::allocator_traits<allocator_type>
-          ::propagate_on_container_copy_assignment::value
-   && std::allocator_traits<allocator_type>
-          ::is_always_equal::value)
+      alloc_traits_t::propagate_on_container_move_assignment::value
+   || alloc_traits_t::is_always_equal::value)
   {
+    m_move_assign(other);
+
     if constexpr (
-        std::allocator_traits<allocator_type>
-            ::propagate_on_container_copy_assignment::value
-     && std::allocator_traits<allocator_type>
-            ::is_always_equal::value)
-    {
-      index_map tmp{allocator_};
-      swap(other);
-      tmp.swap(other);
-
-      allocator_ = std::move(other.allocator_);
-    }
-    else
-    {
-      if (allocator_ == other.allocator_)
-      {
-        index_map tmp{allocator_};
-        swap(other);
-        tmp.swap(other);
-
-        allocator_ = std::move(other.allocator_);
-      }
-      else
-      {
-        // allocator cannot move, delegate move assign to each vector
-        positions_ = std::move(other.positions_);
-        indexes_   = std::move(other.indexes_);
-        mapped_    = std::move(other.mapped_);
-      }
-    }
+        alloc_traits_t::propagate_on_container_move_assignment::value
+     || alloc_traits_t::is_always_equal::value)
+      m_allocator = std::move(other.m_allocator);
 
     return *this;
   }
@@ -302,28 +321,39 @@ public:
 
   constexpr void
   swap(index_map &other)
-  noexcept(/* TODO: complete */false)
+  noexcept(
+      alloc_traits_t::propagate_on_container_swap::value
+   || alloc_traits_t::is_always_equal::value)
   {
-    // TODO: implement
+    using std::swap;
+
+    if constexpr (alloc_traits_t::propagate_on_container_swap::value)
+      swap(m_allocator, other.m_allocator);
+
+    swap(m_positions, other.m_positions);
+    swap(m_indexes  , other.m_indexes);
+    swap(m_mapped   , other.m_mapped);
   }
 
   friend constexpr void
   swap(index_map &lhs, index_map &rhs)
-  noexcept(/* TODO: complete */false)
+  noexcept(noexcept(lhs.swap(rhs)))
   {
     lhs.swap(rhs);
   }
 
 
+  [[nodiscard]]
   constexpr allocator_type
   get_allocator() const
   noexcept
   {
-    return allocator_;
+    return m_allocator;
   }
 
 
 
+  [[nodiscard]]
   constexpr iterator
   begin()
   noexcept
@@ -332,6 +362,7 @@ public:
     return iterator{};
   }
 
+  [[nodiscard]]
   constexpr const_iterator
   begin() const
   noexcept
@@ -341,6 +372,7 @@ public:
   }
 
 
+  [[nodiscard]]
   constexpr iterator
   end()
   noexcept
@@ -349,6 +381,7 @@ public:
     return iterator{};
   }
 
+  [[nodiscard]]
   constexpr const_iterator
   end() const
   noexcept
@@ -358,6 +391,7 @@ public:
   }
 
 
+  [[nodiscard]]
   constexpr const_iterator
   cbegin() const
   noexcept
@@ -367,6 +401,7 @@ public:
   }
 
 
+  [[nodiscard]]
   constexpr const_iterator
   cend() const
   noexcept
@@ -377,6 +412,7 @@ public:
 
 
 
+  [[nodiscard]]
   constexpr size_type
   size() const
   noexcept
@@ -386,6 +422,7 @@ public:
   }
 
 
+  [[nodiscard]]
   constexpr size_type
   max_size() const
   noexcept
@@ -395,6 +432,7 @@ public:
   }
 
 
+  [[nodiscard]]
   constexpr bool
   empty() const
   noexcept
@@ -407,11 +445,12 @@ public:
   shrink_to_fit()
   noexcept
   {
-
+    // TODO: implement
   }
 
 
 
+  [[nodiscard]]
   constexpr bool
   contains(index_type const idx) const
   noexcept
@@ -473,11 +512,49 @@ template<bool IsConst>
 class index_map<Index, T, PageSize, Alloc>::generic_iterator
 {
 public:
-  constexpr static bool
-  is_const
+  constexpr static bool is_const
   = IsConst;
 
   // TODO: implement
+};
+
+
+
+template<
+    typename    Index,
+    typename    T,
+    std::size_t PageSize,
+    typename    Alloc>
+class index_map<Index, T, PageSize, Alloc>::page_deleter
+{
+private:
+  [[no_unique_address]]
+  page_alloc_t m_allocator;
+
+public:
+  constexpr
+  page_deleter()
+    : page_deleter{page_alloc_t{}}
+  { }
+
+  constexpr
+  page_deleter(page_alloc_t alloc)
+    : m_allocator{std::move(alloc)}
+  { }
+
+
+
+  void
+  operator()(page_t *ptr)
+  noexcept
+  {
+    if (!ptr)
+      return;
+
+    page_alloc_traits_t::destroy   (m_allocator, ptr);
+    page_alloc_traits_t::deallocate(m_allocator, ptr, 1);
+  }
+
 };
 
 }
