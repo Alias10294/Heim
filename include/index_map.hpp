@@ -574,7 +574,9 @@ public:
     size_type position_max = m_positions.max_size();
     if constexpr (is_paged_v)
     {
-      size_type max_pages = std::numeric_limits<size_type>::max() / page_size;
+      size_type const
+      max_pages = std::numeric_limits<size_type>::max() / page_size;
+
       if (position_max > max_pages)
         position_max = max_pages;
 
@@ -610,10 +612,7 @@ public:
       return;
 
     if (new_cap > max_size())
-    {
-      throw std::length_error{
-          "index_map::reserve(size_type const): new_cap > max_size() "};
-    }
+      throw std::length_error{"heim::index_map::reserve(size_type const)"};
 
     m_set_capacity(new_cap);
   }
@@ -668,6 +667,67 @@ public:
   {
     return m_position_contains(i)
         && m_indexes[m_position_get(i)] == i;
+  }
+
+
+  [[nodiscard]]
+  constexpr iterator
+  find(index_type const i)
+  noexcept
+  {
+    if (!contains(i))
+      return end();
+
+    return iterator{this, m_position_get(i)};
+  }
+
+  [[nodiscard]]
+  constexpr const_iterator
+  find(index_type const i) const
+  noexcept
+  {
+    if (!contains(i))
+      return end();
+
+    return const_iterator{this, m_position_get(i)};
+  }
+
+
+  [[nodiscard]]
+  constexpr mapped_type &
+  operator[](index_type const i)
+  noexcept
+  {
+    return m_mapped[m_position_get(i)];
+  }
+
+  [[nodiscard]]
+  constexpr mapped_type const &
+  operator[](index_type const i) const
+  noexcept
+  {
+    return m_mapped[m_position_get(i)];
+  }
+
+
+  [[nodiscard]]
+  constexpr mapped_type &
+  at(index_type const i)
+  {
+    if (!contains(i))
+      throw std::out_of_range{"heim::index_map::at(index_type)"};
+
+    return operator[](i);
+  }
+
+  [[nodiscard]]
+  constexpr mapped_type const &
+  at(index_type const i) const
+  {
+    if (!contains(i))
+      throw std::out_of_range{"heim::index_map::at(index_type) const"};
+
+    return operator[](i);
   }
 
 
@@ -774,7 +834,7 @@ public:
   noexcept
   = default;
 
-  constexpr
+  constexpr explicit
   generic_iterator(generic_iterator<!is_const> other)
   requires (is_const)
     : m_map{other.m_map},
@@ -992,7 +1052,7 @@ public:
     : page_deleter{page_alloc_t{}}
   { }
 
-  constexpr
+  constexpr explicit
   page_deleter(page_alloc_t alloc)
     : m_allocator{std::move(alloc)}
   { }
