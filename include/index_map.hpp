@@ -12,6 +12,43 @@
 
 namespace heim
 {
+namespace detail
+{
+template<typename T>
+struct index_map_is_index
+{
+  constexpr static bool
+  value
+  =   std::is_same_v<T, std::remove_cvref_t<T>>
+   && std::is_integral_v <T>
+   && std::is_unsigned_v <T>;
+
+};
+
+template<typename T>
+constexpr inline bool
+index_map_is_index_v = index_map_is_index<T>::value;
+
+
+template<typename T>
+struct index_map_is_mapped
+{
+  constexpr static bool
+  value
+  =   std::is_same_v<T, std::remove_cv_t<T>>
+   && std::is_object_v              <T>
+   && std::is_nothrow_destructible_v<T>;
+
+};
+
+template<typename T>
+constexpr inline bool
+index_map_is_mapped_v = index_map_is_mapped<T>::value;
+
+
+}
+
+
 template<
     typename    Index,
     typename    T,
@@ -19,6 +56,14 @@ template<
     typename    Alloc    = std::allocator<std::pair<Index const, T>>>
 class index_map
 {
+private:
+  static_assert(
+      detail::index_map_is_index_v<Index>,
+      "heim::index_map: detail::index_map_is_index_v<Index>");
+  static_assert(
+      detail::index_map_is_mapped_v<T>,
+      "heim::index_map: detail::index_map_is_mapped_v<T>");
+
 public:
   using index_type     = Index;
   using mapped_type    = T;
@@ -233,7 +278,7 @@ private:
 
   constexpr void
   m_swap_at(index_type const i, index_type const j)
-  noexcept
+  noexcept(std::is_nothrow_swappable_v<mapped_type>)
   {
     if (i == j)
       return;
@@ -246,6 +291,28 @@ private:
     swap(m_indexes[pos_i], m_indexes[pos_j]);
     swap(m_mapped [pos_i], m_mapped [pos_j]);
     swap(pos_i, pos_j);
+  }
+
+
+  constexpr void
+  m_set_capacity(size_type const new_cap)
+  {
+    index_vector_t  new_indexes{index_alloc_t {m_allocator}};
+    mapped_vector_t new_mapped {mapped_alloc_t{m_allocator}};
+
+    new_indexes.reserve(new_cap);
+    new_mapped .reserve(new_cap);
+
+    new_indexes.assign(
+        std::make_move_iterator(m_indexes.begin()),
+        std::make_move_iterator(m_indexes.end  ()));
+    new_mapped .assign(
+        std::make_move_iterator(m_mapped.begin()),
+        std::make_move_iterator(m_mapped.end  ()));
+
+    using std::swap;
+    swap(m_indexes, new_indexes);
+    swap(m_mapped , new_mapped);
   }
 
 public:
@@ -501,8 +568,8 @@ public:
   max_size() const
   noexcept
   {
-    size_type const index_max  = m_indexes  .max_size();
-    size_type const mapped_max = m_mapped   .max_size();
+    size_type const index_max  = m_indexes.max_size();
+    size_type const mapped_max = m_mapped .max_size();
 
     size_type position_max = m_positions.max_size();
     if constexpr (is_paged_v)
@@ -527,11 +594,69 @@ public:
   }
 
 
-  constexpr void
-  shrink_to_fit()
+  [[nodiscard]]
+  constexpr size_type
+  capacity() const
   noexcept
   {
-    // TODO: implement
+    return m_indexes.capacity();
+  }
+
+
+  constexpr void
+  reserve(size_type const new_cap)
+  {
+    if (new_cap <= capacity())
+      return;
+
+    if (new_cap > max_size())
+    {
+      throw std::length_error{
+          "index_map::reserve(size_type const): new_cap > max_size() "};
+    }
+
+    m_set_capacity(new_cap);
+  }
+
+
+  constexpr void
+  shrink_to_fit()
+  {
+    m_set_capacity(size());
+
+    if constexpr (is_paged_v)
+    {
+      for (auto &page_uptr : m_positions)
+      {
+        if (page_uptr)
+        {
+          bool const is_blank = std::all_of(
+              page_uptr->begin(), page_uptr->end(),
+              [](size_type const pos)
+              {
+                return pos == s_null_position;
+              });
+
+          if (is_blank)
+            page_uptr.reset();
+        }
+      }
+      while (!m_positions.empty() && !m_positions.back())
+        m_positions.pop_back();
+    }
+    else
+    {
+      while (!m_positions.empty() && m_positions.back() == s_null_position)
+        m_positions.pop_back();
+    }
+    // shrinking the positions' vector is not a requirement, we prefer to just
+    // ignore failure here
+    try
+    {
+      m_positions.shrink_to_fit();
+    }
+    catch (...)
+    { }
   }
 
 
@@ -551,7 +676,19 @@ public:
   clear()
   noexcept
   {
-    // TODO: implement
+    if constexpr (is_paged_v)
+    {
+      for (auto &page_uptr : m_positions)
+      {
+        if (page_uptr)
+          std::fill(page_uptr->begin(), page_uptr->end(), s_null_position);
+      }
+    }
+    else
+      std::fill(m_positions.begin(), m_positions.end(), s_null_position);
+
+    m_indexes.clear();
+    m_mapped .clear();
   }
 
 
@@ -566,7 +703,7 @@ public:
     if (lhs.size() != rhs.size())
       return false;
 
-    for (auto [idx, val] : lhs)
+    for (auto &&[idx, val] : lhs)
     {
       if (!rhs.contains(idx))
         return false;
@@ -636,6 +773,14 @@ public:
   generic_iterator(generic_iterator &&other)
   noexcept
   = default;
+
+  constexpr
+  generic_iterator(generic_iterator<!is_const> other)
+  requires (is_const)
+    : m_map{other.m_map},
+      m_index {other.m_index},
+      m_mapped{other.m_mapped}
+  { }
 
   constexpr
   generic_iterator(maybe_const_t<index_map> * const map, size_type const pos)
@@ -813,11 +958,9 @@ public:
 
   friend constexpr maybe_const_t<mapped_type> &&
   iter_move(generic_iterator const &it)
-  noexcept
+  noexcept(noexcept(std::move(*it.m_mapped)))
   {
-    using std::move;
-
-    return move(*it.m_mapped);
+    return std::move(*it.m_mapped);
   }
 
 
