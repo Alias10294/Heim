@@ -79,8 +79,8 @@ public:
 
   using value_type = std::pair<index_type const, mapped_type>;
 
-  using reference       = std::pair<index_type const &, mapped_type &>;
-  using const_reference = std::pair<index_type const &, mapped_type const &>;
+  using reference       = std::pair<index_type const, mapped_type &>;
+  using const_reference = std::pair<index_type const, mapped_type const &>;
 
 
   template<bool IsConst>
@@ -88,6 +88,9 @@ public:
 
   using iterator       = generic_iterator<false>;
   using const_iterator = generic_iterator<true>;
+
+  using reverse_iterator       = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
   using alloc_traits_t
@@ -553,6 +556,58 @@ public:
   }
 
 
+  [[nodiscard]]
+  constexpr reverse_iterator
+  rbegin()
+  noexcept
+  {
+    return reverse_iterator{end()};
+  }
+
+  [[nodiscard]]
+  constexpr const_reverse_iterator
+  rbegin() const
+  noexcept
+  {
+    return const_reverse_iterator{end()};
+  }
+
+
+  [[nodiscard]]
+  constexpr reverse_iterator
+  rend()
+  noexcept
+  {
+    return reverse_iterator{begin()};
+  }
+
+  [[nodiscard]]
+  constexpr const_reverse_iterator
+  rend() const
+  noexcept
+  {
+    return const_reverse_iterator{begin()};
+  }
+
+
+  [[nodiscard]]
+  constexpr const_reverse_iterator
+  crbegin() const
+  noexcept
+  {
+    return const_reverse_iterator{cend()};
+  }
+
+
+  [[nodiscard]]
+  constexpr const_reverse_iterator
+  crend() const
+  noexcept
+  {
+    return const_reverse_iterator{cbegin()};
+  }
+
+
 
   [[nodiscard]]
   constexpr size_type
@@ -728,6 +783,40 @@ public:
       throw std::out_of_range{"heim::index_map::at(index_type) const"};
 
     return operator[](i);
+  }
+
+
+  [[nodiscard]]
+  constexpr reference
+  front()
+  noexcept
+  {
+    return reference{m_indexes.front(), m_mapped.front()};
+  }
+
+  [[nodiscard]]
+  constexpr const_reference
+  front() const
+  noexcept
+  {
+    return const_reference{m_indexes.front(), m_mapped.front()};
+  }
+
+
+  [[nodiscard]]
+  constexpr reference
+  back()
+  noexcept
+  {
+    return reference{m_indexes.back(), m_mapped.back()};
+  }
+
+  [[nodiscard]]
+  constexpr const_reference
+  back() const
+  noexcept
+  {
+    return const_reference{m_indexes.back(), m_mapped.back()};
   }
 
 
