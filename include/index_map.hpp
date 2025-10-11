@@ -821,6 +821,102 @@ public:
 
 
 
+  /*
+  constexpr iterator
+  insert(value_type const &value);
+
+  constexpr iterator
+  insert(value_type &&value);
+
+  constexpr iterator
+  insert(const_iterator pos, value_type const &value);
+
+  constexpr iterator
+  insert(const_iterator pos, value_type &&value);
+
+  template<typename InputIt>
+  constexpr iterator
+  insert(InputIt first, InputIt last);
+
+  constexpr iterator
+  insert(std::initializer_list<value_type> ilist);
+
+
+  template<typename R>
+  constexpr iterator
+  insert_range(R &&rg);
+
+
+  template<typename ...Args>
+  constexpr std::pair<iterator, bool>
+  emplace(index_type const i, Args &&...args);
+
+  constexpr std::pair<iterator, bool>
+  emplace(value_type &&value);
+  */
+
+
+  constexpr bool
+  erase(index_type const i)
+  noexcept(std::is_nothrow_move_assignable_v<mapped_type>)
+  {
+    if (!contains(i))
+      return false;
+
+    size_type &pos = m_position_get(i);
+
+    if (index_type const ilast = m_indexes.back(); i != ilast)
+    {
+      m_mapped [pos] = std::move(m_mapped.back());
+      m_indexes[pos] = ilast;
+
+      m_position_get(ilast) = pos;
+    }
+
+    m_indexes.pop_back();
+    m_mapped .pop_back();
+
+    pos = s_null_position;
+
+    return true;
+  }
+
+  constexpr iterator
+  erase(iterator pos)
+  noexcept(noexcept(erase(std::declval<index_type>())))
+  {
+    erase((*pos).first);
+    return pos;
+  }
+
+  constexpr iterator
+  erase(const_iterator pos)
+  noexcept(noexcept(erase(std::declval<iterator>())))
+  {
+    return erase(begin() + (pos - cbegin()));
+  }
+
+  constexpr iterator
+  erase(iterator first, iterator last)
+  noexcept(noexcept(erase(std::declval<iterator>())))
+  {
+    while (last != first)
+      last = erase(--last);
+
+    return last;
+  }
+
+  constexpr iterator
+  erase(const_iterator first, const_iterator last)
+  noexcept(noexcept(erase(std::declval<iterator>(), std::declval<iterator>())))
+  {
+    return erase(
+        begin() + (first - cbegin()),
+        begin() + (last  - cbegin()));
+  }
+
+
+
   constexpr void
   clear()
   noexcept
