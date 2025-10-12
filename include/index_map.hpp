@@ -3,9 +3,11 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -207,7 +209,7 @@ private:
     for (auto const &page_uptr : other_pos)
     {
       if (page_uptr)
-        pos.emplace_back(m_make_page_uptr(page_uptr));
+        pos.emplace_back(m_make_page_uptr(*page_uptr));
       else
         pos.emplace_back(m_make_page_uptr(nullptr));
     }
@@ -232,7 +234,10 @@ private:
   noexcept
   requires (is_paged_v)
   {
-    return static_cast<size_type>(i) / page_size;
+    if constexpr (std::has_single_bit(page_size))
+      return static_cast<size_type>(i) >> std::countr_zero(page_size);
+    else
+      return static_cast<size_type>(i) / page_size;
   }
 
 
@@ -241,7 +246,10 @@ private:
   noexcept
   requires (is_paged_v)
   {
-    return static_cast<size_type>(i) % page_size;
+    if constexpr (std::has_single_bit(page_size))
+      return static_cast<size_type>(i) & (page_size - 1);
+    else
+      return static_cast<size_type>(i) % page_size;
   }
 
 
@@ -848,10 +856,10 @@ public:
   emplace(index_type const i, Args &&...args)
   {
     if (contains(i))
-      return std::pair<iterator, bool>{find(i), false};
+      return {iterator{this, m_position_get(i)}, false};
 
     m_emplace(i, std::forward<Args>(args)...);
-    return std::pair<iterator, bool>{--end(), true};
+    return {--end(), true};
   }
 
 
@@ -862,11 +870,11 @@ public:
     if (contains(i))
     {
       m_mapped[m_position_get(i)] = mapped_type{std::forward<Args>(args)...};
-      return std::pair<iterator, bool>{find(i), false};
+      return {iterator{this, m_position_get(i)}, false};
     }
 
     m_emplace(i, std::forward<Args>(args)...);
-    return std::pair<iterator, bool>{--end(), true};
+    return {--end(), true};
   }
 
 
@@ -880,6 +888,14 @@ public:
   insert(index_type const i, mapped_type &&m)
   {
     return emplace(i, std::move(m));
+  }
+
+  template<typename M>
+  constexpr std::pair<iterator, bool>
+  insert(index_type const i, M &&m)
+  requires (std::convertible_to<M, mapped_type>)
+  {
+    return emplace(i, std::forward<M>(m));
   }
 
   constexpr std::pair<iterator, bool>
@@ -897,8 +913,17 @@ public:
   template<typename InputIt>
   constexpr void
   insert(InputIt first, InputIt last)
-  requires (std::input_iterator<InputIt>)
+  requires (
+      std::input_iterator<InputIt>
+   && std::convertible_to<
+          std::tuple_element_t<0, std::iter_reference_t<InputIt>>,
+          index_type>
+   && std::convertible_to<
+          std::tuple_element_t<1, std::iter_reference_t<InputIt>>,
+          mapped_type>)
   {
+    reserve(size() + static_cast<size_type>(std::distance(first, last)));
+
     for (; first != last; ++first)
     {
       auto &&value = *first;
@@ -909,14 +934,27 @@ public:
   constexpr void
   insert(std::initializer_list<value_type> ilist)
   {
+    reserve(size() + ilist.size());
+
     for (value_type const &value : ilist)
       insert(value);
   }
 
 
-  /*
-  TODO: insert range
-  */
+  template<typename R>
+  constexpr void
+  insert_range(R &&rg)
+  requires (
+      std::ranges::input_range<R>
+   && std::convertible_to<
+          std::tuple_element_t<0, std::ranges::range_reference_t<R>>,
+          index_type>
+   && std::convertible_to<
+          std::tuple_element_t<1, std::ranges::range_reference_t<R>>,
+          mapped_type>)
+  {
+    insert(rg.begin(), rg.end());
+  }
 
 
   constexpr bool
@@ -979,6 +1017,24 @@ public:
   }
 
 
+  template<typename Pred>
+  friend constexpr size_type
+  erase_if(index_map &c, Pred pred)
+  noexcept(
+      noexcept(pred(std::declval<reference>()))
+   && noexcept(c.erase(std::declval<index_type const>())))
+  {
+    size_type old_size = c.size();
+
+    for (auto it = c.rbegin(); it != c.rend(); ++it)
+    {
+      if (pred(*it))
+        c.erase(std::get<0>(*it));
+    }
+
+    return old_size - c.size();
+  }
+
 
   constexpr void
   clear()
@@ -1021,14 +1077,6 @@ public:
     }
 
     return true;
-  }
-
-
-  friend constexpr bool
-  operator!=(index_map const &lhs, index_map const &rhs)
-  noexcept
-  {
-    return !(lhs == rhs);
   }
 
 };
@@ -1304,6 +1352,12 @@ public:
   page_deleter(page_alloc_t alloc)
     : m_allocator{std::move(alloc)}
   { }
+
+
+  constexpr
+  ~page_deleter()
+  noexcept
+  = default;
 
 
 
