@@ -273,7 +273,7 @@ private:
   {
     if constexpr (is_paged_v)
     {
-      size_type page_nb = s_position_page_nb(i);
+      size_type const page_nb = s_position_page_nb(i);
 
       return page_nb < m_positions.size()
           && static_cast<bool>(m_positions[page_nb])
@@ -455,7 +455,8 @@ public:
       allocator_type const             &alloc = allocator_type{})
     : index_map{alloc}
   {
-    // TODO: implement
+    reserve(ilist.size());
+    insert(ilist);
   }
 
 
@@ -518,7 +519,8 @@ public:
   constexpr index_map &
   operator=(std::initializer_list<value_type> ilist)
   {
-    // TODO: implement
+    index_map tmp{ilist, m_allocator};
+    swap(tmp);
 
     return *this;
   }
@@ -840,40 +842,6 @@ public:
   }
 
 
-  [[nodiscard]]
-  constexpr reference
-  front()
-  noexcept
-  {
-    return reference{m_indexes.front(), m_mapped.front()};
-  }
-
-  [[nodiscard]]
-  constexpr const_reference
-  front() const
-  noexcept
-  {
-    return const_reference{m_indexes.front(), m_mapped.front()};
-  }
-
-
-  [[nodiscard]]
-  constexpr reference
-  back()
-  noexcept
-  {
-    return reference{m_indexes.back(), m_mapped.back()};
-  }
-
-  [[nodiscard]]
-  constexpr const_reference
-  back() const
-  noexcept
-  {
-    return const_reference{m_indexes.back(), m_mapped.back()};
-  }
-
-
 
   template<typename ...Args>
   constexpr std::pair<iterator, bool>
@@ -883,7 +851,7 @@ public:
       return std::pair<iterator, bool>{find(i), false};
 
     m_emplace(i, std::forward<Args>(args)...);
-    return std::pair<iterator, bool>{find(i), true};
+    return std::pair<iterator, bool>{--end(), true};
   }
 
 
@@ -898,8 +866,57 @@ public:
     }
 
     m_emplace(i, std::forward<Args>(args)...);
-    return std::pair<iterator, bool>{find(i), true};
+    return std::pair<iterator, bool>{--end(), true};
   }
+
+
+  constexpr std::pair<iterator, bool>
+  insert(index_type const i, mapped_type const &m)
+  {
+    return emplace(i, m);
+  }
+
+  constexpr std::pair<iterator, bool>
+  insert(index_type const i, mapped_type &&m)
+  {
+    return emplace(i, std::move(m));
+  }
+
+  constexpr std::pair<iterator, bool>
+  insert(value_type const &value)
+  {
+    return emplace(std::get<0>(value), std::get<1>(value));
+  }
+
+  constexpr std::pair<iterator, bool>
+  insert(value_type &&value)
+  {
+    return emplace(std::get<0>(value), std::get<1>(std::move(value)));
+  }
+
+  template<typename InputIt>
+  constexpr void
+  insert(InputIt first, InputIt last)
+  requires (std::input_iterator<InputIt>)
+  {
+    for (; first != last; ++first)
+    {
+      auto &&value = *first;
+      insert(std::get<0>(value), std::get<1>(std::move(value)));
+    }
+  }
+
+  constexpr void
+  insert(std::initializer_list<value_type> ilist)
+  {
+    for (value_type const &value : ilist)
+      insert(value);
+  }
+
+
+  /*
+  TODO: insert range
+  */
 
 
   constexpr bool
@@ -931,7 +948,7 @@ public:
   erase(iterator pos)
   noexcept(noexcept(erase(std::declval<index_type>())))
   {
-    erase((*pos).first);
+    erase(std::get<0>(*pos));
     return pos;
   }
 
@@ -1046,7 +1063,7 @@ public:
   using iterator_concept  = std::random_access_iterator_tag;
 
 private:
-  maybe_const_t<index_map  > *m_map;
+  maybe_const_t<index_map> *m_map;
 
   index_type const           *m_index;
   maybe_const_t<mapped_type> *m_mapped;
