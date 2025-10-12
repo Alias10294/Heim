@@ -163,41 +163,40 @@ private:
   mapped_vector_t   m_mapped;
 
 private:
+  template<typename ...Args>
   [[nodiscard]]
   constexpr page_uptr_t
-  m_clone_page_uptr(page_uptr_t const &page_uptr) const
+  m_make_page_uptr(Args &&...args) const
   {
     page_alloc_t page_alloc{m_allocator};
 
-    if (!page_uptr)
-    {
-      return page_uptr_t{
-          nullptr,
-          page_deleter{std::move(page_alloc)}};
-    }
+    page_t *new_page_ptr{page_alloc_traits_t::allocate(page_alloc, 1)};
 
-    page_t *new_page_ptr{
-        page_alloc_traits_t::allocate(page_alloc, 1)};
     try
     {
       page_alloc_traits_t::construct(
           page_alloc,
           new_page_ptr,
-          *page_uptr);
+          std::forward<Args>(args)...);
     }
     catch (...)
     {
-      page_alloc_traits_t::deallocate(
-          page_alloc,
-          new_page_ptr,
-          1);
+      page_alloc_traits_t::deallocate(page_alloc, new_page_ptr, 1);
       throw;
     }
 
-    return page_uptr_t{
-        new_page_ptr,
-        page_deleter{std::move(page_alloc)}};
+    return page_uptr_t{new_page_ptr, page_deleter{std::move(page_alloc)}};
   }
+
+  [[nodiscard]]
+  constexpr page_uptr_t
+  m_make_page_uptr(std::nullptr_t) const
+  {
+    page_alloc_t page_alloc{m_allocator};
+    return page_uptr_t{nullptr, page_deleter{std::move(page_alloc)}};
+  }
+
+
 
   constexpr void
   m_copy_position_vector(
@@ -206,8 +205,14 @@ private:
   {
     pos.reserve(other_pos.size());
     for (auto const &page_uptr : other_pos)
-      pos.emplace_back(m_clone_page_uptr(page_uptr));
+    {
+      if (page_uptr)
+        pos.emplace_back(m_make_page_uptr(page_uptr));
+      else
+        pos.emplace_back(m_make_page_uptr(nullptr));
+    }
   }
+
 
   constexpr void
   m_move_assign(index_map &other)
@@ -221,6 +226,7 @@ private:
   }
 
 
+
   constexpr static size_type
   s_position_page_nb(index_type const i)
   noexcept
@@ -229,6 +235,7 @@ private:
     return static_cast<size_type>(i) / page_size;
   }
 
+
   constexpr static size_type
   s_position_line_nb(index_type const i)
   noexcept
@@ -236,6 +243,7 @@ private:
   {
     return static_cast<size_type>(i) % page_size;
   }
+
 
   constexpr size_type &
   m_position_get(index_type const i)
@@ -247,6 +255,7 @@ private:
       return m_positions[static_cast<size_type>(i)];
   }
 
+
   constexpr size_type
   m_position_get(index_type const i) const
   noexcept
@@ -256,6 +265,7 @@ private:
     else
       return m_positions[static_cast<size_type>(i)];
   }
+
 
   constexpr bool
   m_position_contains(index_type const i) const
@@ -279,6 +289,7 @@ private:
   }
 
 
+
   constexpr void
   m_swap_at(index_type const i, index_type const j)
   noexcept(std::is_nothrow_swappable_v<mapped_type>)
@@ -295,6 +306,7 @@ private:
     swap(m_mapped [pos_i], m_mapped [pos_j]);
     swap(pos_i, pos_j);
   }
+
 
 
   constexpr void
@@ -316,6 +328,48 @@ private:
     using std::swap;
     swap(m_indexes, new_indexes);
     swap(m_mapped , new_mapped);
+  }
+
+
+
+  template<typename ...Args>
+  constexpr void
+  m_emplace(index_type const i, Args &&...args)
+  {
+    // ensure available slot for position
+    if constexpr (is_paged_v)
+    {
+      size_type const page_nb = s_position_page_nb(i);
+
+      if (page_nb >= m_positions.size())
+        m_positions.resize(page_nb + 1);
+
+      if (!m_positions[page_nb])
+      {
+        m_positions[page_nb] = m_make_page_uptr();
+        m_positions[page_nb] ->fill(s_null_position);
+      }
+    }
+    else
+    {
+      size_type const size_i = static_cast<size_type>(i);
+
+      if (size_i >= m_positions.size())
+        m_positions.resize(size_i + 1, s_null_position);
+    }
+
+    // strong exception guarantee with pop_back being fully noexcept
+    m_mapped.emplace_back(std::forward<Args>(args)...);
+    try
+    {
+      m_indexes.emplace_back(i);
+    }
+    catch (...)
+    {
+      m_mapped.pop_back();
+      throw;
+    }
+    m_position_get(i) = size() - 1;
   }
 
 public:
@@ -821,39 +875,31 @@ public:
 
 
 
-  /*
-  constexpr iterator
-  insert(value_type const &value);
+  template<typename ...Args>
+  constexpr std::pair<iterator, bool>
+  emplace(index_type const i, Args &&...args)
+  {
+    if (contains(i))
+      return std::pair<iterator, bool>{find(i), false};
 
-  constexpr iterator
-  insert(value_type &&value);
-
-  constexpr iterator
-  insert(const_iterator pos, value_type const &value);
-
-  constexpr iterator
-  insert(const_iterator pos, value_type &&value);
-
-  template<typename InputIt>
-  constexpr iterator
-  insert(InputIt first, InputIt last);
-
-  constexpr iterator
-  insert(std::initializer_list<value_type> ilist);
-
-
-  template<typename R>
-  constexpr iterator
-  insert_range(R &&rg);
+    m_emplace(i, std::forward<Args>(args)...);
+    return std::pair<iterator, bool>{find(i), true};
+  }
 
 
   template<typename ...Args>
   constexpr std::pair<iterator, bool>
-  emplace(index_type const i, Args &&...args);
+  emplace_or_assign(index_type const i, Args &&...args)
+  {
+    if (contains(i))
+    {
+      m_mapped[m_position_get(i)] = mapped_type{std::forward<Args>(args)...};
+      return std::pair<iterator, bool>{find(i), false};
+    }
 
-  constexpr std::pair<iterator, bool>
-  emplace(value_type &&value);
-  */
+    m_emplace(i, std::forward<Args>(args)...);
+    return std::pair<iterator, bool>{find(i), true};
+  }
 
 
   constexpr bool
