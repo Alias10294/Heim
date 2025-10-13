@@ -4,9 +4,15 @@
 #include <string>
 #include <iterator>
 
-TEST_CASE("heim::index_map")
+TEST_CASE("heim::index_map: construction")
 {
   heim::index_map<unsigned, std::string> map{};
+
+  static_assert(std::is_copy_constructible_v<decltype(map)>);
+  static_assert(std::is_copy_assignable_v   <decltype(map)>);
+  static_assert(std::is_move_constructible_v<decltype(map)>);
+  static_assert(std::is_move_assignable_v   <decltype(map)>);
+
   CHECK_EQ(map.empty(), true);
   CHECK_EQ(map.size() , 0);
   CHECK_EQ(map.begin(), map.end());
@@ -74,4 +80,81 @@ TEST_CASE("heim::index_map")
 
   CHECK_EQ(listed, map);
   CHECK_EQ(copied, map);
+
+
+  [[maybe_unused]] heim::index_map<unsigned, std::unique_ptr<int>> umap{};
+
+  static_assert(!std::is_copy_constructible_v<decltype(umap)>);
+  static_assert(!std::is_copy_assignable_v   <decltype(umap)>);
+  static_assert( std::is_move_constructible_v<decltype(umap)>);
+  static_assert( std::is_move_assignable_v   <decltype(umap)>);
+}
+
+TEST_CASE("heim::index_map: insertion & deletion")
+{
+  heim::index_map<unsigned, std::string> map{};
+
+  auto r1 = map.emplace(0, "0");
+  CHECK_EQ(r1.second, true);
+  CHECK_EQ(map[0], "0");
+
+  auto r2 = map.emplace(0, "1");
+  CHECK_EQ(r2.second, false);
+  CHECK_EQ(map[0], "0");
+
+  auto r3 = map.emplace_or_assign(0, "1");
+  CHECK_EQ(r3.second, false);
+  CHECK_EQ(map[0], "1");
+
+  auto r4 = map.insert(1, std::string{"1"});
+  CHECK_EQ(r4.second, true);
+  CHECK_EQ(map[1], "1");
+
+  std::string const str{"2"};
+  auto r5 = map.insert(2, str);
+  CHECK_EQ(r5.second, true);
+  CHECK_EQ(map[2], "2");
+
+  map.insert({{3, "3"}, {4, "4"}});
+  CHECK_EQ(map[3], "3");
+  CHECK_EQ(map[4], "4");
+
+  decltype(map) other{};
+  other.insert(map.begin(), map.end());
+  CHECK_EQ(map  .contains(0), true);
+  CHECK_EQ(other.contains(0), true);
+  CHECK_EQ(map  .size(), 5);
+  CHECK_EQ(other.size(), 5);
+
+  map.erase(4);
+  CHECK_EQ(map.size(), 4);
+  CHECK_EQ(map.contains(4), false);
+
+  map.erase(0);
+  CHECK_EQ(map.size(), 3);
+  CHECK_EQ(map.contains(0), false);
+  CHECK_EQ((*map.begin()).first , 3);
+  CHECK_EQ((*map.begin()).second, "3");
+
+  map.erase(map.begin());
+  CHECK_EQ(map.size(), 2);
+  CHECK_EQ(map.contains(3), false);
+  CHECK_EQ((*map.begin()).first , 2);
+  CHECK_EQ((*map.begin()).second, "2");
+
+  map.clear();
+  CHECK_EQ(map.size(), 0);
+  CHECK_EQ(map.contains(1), false);
+  CHECK_EQ(map.contains(2), false);
+
+  other.erase(other.begin() + 2, other.end());
+  CHECK_EQ(other.size(), 2);
+  CHECK_EQ(other.contains(0), true);
+  CHECK_EQ(other.contains(1), true);
+  CHECK_EQ(other.contains(2), false);
+  CHECK_EQ(other.contains(3), false);
+  CHECK_EQ(other.contains(4), false);
+
+  other.erase(other.begin(), other.end());
+  CHECK_EQ(other.size(), 0);
 }

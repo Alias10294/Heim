@@ -5,9 +5,12 @@
 #include <array>
 #include <bit>
 #include <cstddef>
+#include <iterator>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -81,8 +84,8 @@ public:
 
   using value_type = std::pair<index_type const, mapped_type>;
 
-  using reference       = std::pair<index_type const, mapped_type &>;
-  using const_reference = std::pair<index_type const, mapped_type const &>;
+  using reference       = std::pair<index_type const &, mapped_type &>;
+  using const_reference = std::pair<index_type const &, mapped_type const &>;
 
 
   template<bool IsConst>
@@ -204,6 +207,7 @@ private:
   m_copy_position_vector(
       position_vector_t       &pos,
       position_vector_t const &other_pos)
+  requires (is_paged_v)
   {
     pos.reserve(other_pos.size());
     for (auto const &page_uptr : other_pos)
@@ -301,6 +305,7 @@ private:
   constexpr void
   m_swap_at(index_type const i, index_type const j)
   noexcept(std::is_nothrow_swappable_v<mapped_type>)
+  requires (std::is_swappable_v<mapped_type>)
   {
     if (i == j)
       return;
@@ -343,6 +348,7 @@ private:
   template<typename ...Args>
   constexpr void
   m_emplace(index_type const i, Args &&...args)
+  requires (std::constructible_from<mapped_type, Args ...>)
   {
     // ensure available slot for position
     if constexpr (is_paged_v)
@@ -398,7 +404,9 @@ public:
 
   constexpr
   index_map(index_map const &other)
-  requires (is_paged_v)
+  requires (
+      is_paged_v
+   && std::is_copy_constructible_v<mapped_type>)
     : m_allocator{alloc_traits_t
           ::select_on_container_copy_construction(other.m_allocator)},
       m_positions{position_alloc_t{m_allocator}},
@@ -410,7 +418,9 @@ public:
 
   constexpr
   index_map(index_map const &other)
-  requires (!is_paged_v)
+  requires (
+     !is_paged_v
+   && std::is_copy_constructible_v<mapped_type>)
     : m_allocator{std::allocator_traits<allocator_type>
           ::select_on_container_copy_construction(other.m_allocator)},
       m_positions{other.m_positions, position_alloc_t{m_allocator}},
@@ -427,7 +437,9 @@ public:
   index_map(
       index_map                            const &other,
       std::type_identity_t<allocator_type> const &alloc)
-  requires (is_paged_v)
+  requires (
+      is_paged_v
+   && std::is_copy_constructible_v<mapped_type>)
     : m_allocator{alloc},
       m_positions{position_alloc_t{m_allocator}},
       m_indexes  {other.m_indexes, index_alloc_t {m_allocator}},
@@ -440,7 +452,9 @@ public:
   index_map(
       index_map                            const &other,
       std::type_identity_t<allocator_type> const &alloc)
-  requires (!is_paged_v)
+  requires (
+     !is_paged_v
+   && std::is_copy_constructible_v<mapped_type>)
     : m_allocator{alloc},
       m_positions{other.m_positions, position_alloc_t{m_allocator}},
       m_indexes  {other.m_indexes  , index_alloc_t   {m_allocator}},
@@ -451,6 +465,7 @@ public:
   index_map(
       index_map                                 &&other,
       std::type_identity_t<allocator_type> const &alloc)
+  noexcept
     : m_allocator{alloc},
       m_positions{std::move(other.m_positions), position_alloc_t{m_allocator}},
       m_indexes  {std::move(other.m_indexes)  , index_alloc_t   {m_allocator}},
@@ -461,6 +476,7 @@ public:
   index_map(
       std::initializer_list<value_type> ilist,
       allocator_type const             &alloc = allocator_type{})
+  requires (std::is_copy_constructible_v<mapped_type>)
     : index_map{alloc}
   {
     reserve(ilist.size());
@@ -476,6 +492,7 @@ public:
 
   constexpr index_map &
   operator=(index_map const &other)
+  requires (std::is_copy_assignable_v<mapped_type>)
   {
     if (this == &other)
       return *this;
@@ -494,14 +511,15 @@ public:
       m_allocator = other.m_allocator;
     }
 
-    if constexpr (!is_paged_v)
-      m_positions = other.m_positions;
-    else
+    if constexpr (is_paged_v)
     {
       position_vector_t positions{position_alloc_t{m_allocator}};
       m_copy_position_vector(positions, other.m_positions);
       m_positions.swap(positions);
     }
+    else
+      m_positions = other.m_positions;
+
     m_indexes = other.m_indexes;
     m_mapped  = other.m_mapped;
 
@@ -513,6 +531,7 @@ public:
   noexcept(
       alloc_traits_t::propagate_on_container_move_assignment::value
    || alloc_traits_t::is_always_equal::value)
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     m_move_assign(other);
 
@@ -526,6 +545,7 @@ public:
 
   constexpr index_map &
   operator=(std::initializer_list<value_type> ilist)
+  requires (std::is_copy_assignable_v<mapped_type>)
   {
     index_map tmp{ilist, m_allocator};
     swap(tmp);
@@ -854,6 +874,7 @@ public:
   template<typename ...Args>
   constexpr std::pair<iterator, bool>
   emplace(index_type const i, Args &&...args)
+  requires (std::constructible_from<mapped_type, Args ...>)
   {
     if (contains(i))
       return {iterator{this, m_position_get(i)}, false};
@@ -866,6 +887,9 @@ public:
   template<typename ...Args>
   constexpr std::pair<iterator, bool>
   emplace_or_assign(index_type const i, Args &&...args)
+  requires (
+      std::constructible_from<mapped_type, Args ...>
+   && std::is_move_assignable_v<mapped_type>)
   {
     if (contains(i))
     {
@@ -880,12 +904,14 @@ public:
 
   constexpr std::pair<iterator, bool>
   insert(index_type const i, mapped_type const &m)
+  requires (std::is_copy_constructible_v<mapped_type>)
   {
     return emplace(i, m);
   }
 
   constexpr std::pair<iterator, bool>
   insert(index_type const i, mapped_type &&m)
+  requires (std::is_move_constructible_v<mapped_type>)
   {
     return emplace(i, std::move(m));
   }
@@ -893,19 +919,21 @@ public:
   template<typename M>
   constexpr std::pair<iterator, bool>
   insert(index_type const i, M &&m)
-  requires (std::convertible_to<M, mapped_type>)
+  requires (std::constructible_from<mapped_type, M &&>)
   {
     return emplace(i, std::forward<M>(m));
   }
 
   constexpr std::pair<iterator, bool>
   insert(value_type const &value)
+  requires (std::is_copy_constructible_v<mapped_type>)
   {
     return emplace(std::get<0>(value), std::get<1>(value));
   }
 
   constexpr std::pair<iterator, bool>
   insert(value_type &&value)
+  requires (std::is_move_constructible_v<mapped_type>)
   {
     return emplace(std::get<0>(value), std::get<1>(std::move(value)));
   }
@@ -914,7 +942,8 @@ public:
   constexpr void
   insert(InputIt first, InputIt last)
   requires (
-      std::input_iterator<InputIt>
+      std::is_move_constructible_v<mapped_type>
+   && std::input_iterator<InputIt>
    && std::convertible_to<
           std::tuple_element_t<0, std::iter_reference_t<InputIt>>,
           index_type>
@@ -922,7 +951,8 @@ public:
           std::tuple_element_t<1, std::iter_reference_t<InputIt>>,
           mapped_type>)
   {
-    reserve(size() + static_cast<size_type>(std::distance(first, last)));
+    if constexpr (std::forward_iterator<InputIt>)
+      reserve(size() + static_cast<size_type>(std::distance(first, last)));
 
     for (; first != last; ++first)
     {
@@ -933,6 +963,7 @@ public:
 
   constexpr void
   insert(std::initializer_list<value_type> ilist)
+  requires (std::is_copy_constructible_v<mapped_type>)
   {
     reserve(size() + ilist.size());
 
@@ -945,7 +976,8 @@ public:
   constexpr void
   insert_range(R &&rg)
   requires (
-      std::ranges::input_range<R>
+      std::is_move_constructible_v<mapped_type>
+   && std::ranges::input_range<R>
    && std::convertible_to<
           std::tuple_element_t<0, std::ranges::range_reference_t<R>>,
           index_type>
@@ -960,6 +992,7 @@ public:
   constexpr bool
   erase(index_type const i)
   noexcept(std::is_nothrow_move_assignable_v<mapped_type>)
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     if (!contains(i))
       return false;
@@ -985,6 +1018,7 @@ public:
   constexpr iterator
   erase(iterator pos)
   noexcept(noexcept(erase(std::declval<index_type>())))
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     erase(std::get<0>(*pos));
     return pos;
@@ -993,6 +1027,7 @@ public:
   constexpr iterator
   erase(const_iterator pos)
   noexcept(noexcept(erase(std::declval<iterator>())))
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     return erase(begin() + (pos - cbegin()));
   }
@@ -1000,6 +1035,7 @@ public:
   constexpr iterator
   erase(iterator first, iterator last)
   noexcept(noexcept(erase(std::declval<iterator>())))
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     while (last != first)
       last = erase(--last);
@@ -1010,6 +1046,7 @@ public:
   constexpr iterator
   erase(const_iterator first, const_iterator last)
   noexcept(noexcept(erase(std::declval<iterator>(), std::declval<iterator>())))
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     return erase(
         begin() + (first - cbegin()),
@@ -1023,6 +1060,7 @@ public:
   noexcept(
       noexcept(pred(std::declval<reference>()))
    && noexcept(c.erase(std::declval<index_type const>())))
+  requires (std::is_move_assignable_v<mapped_type>)
   {
     size_type old_size = c.size();
 
@@ -1312,18 +1350,29 @@ public:
 
 
 
-  friend constexpr maybe_const_t<mapped_type> &&
+  friend constexpr auto
   iter_move(generic_iterator const &it)
   noexcept(noexcept(std::move(*it.m_mapped)))
   {
-    return std::move(*it.m_mapped);
+    if constexpr (is_const)
+    {
+      return std::pair<index_type const, mapped_type const &&>{
+          *it.m_index,
+          std::move(*it.m_mapped)};
+    }
+    else
+    {
+      return std::pair<index_type const, mapped_type &&>{
+          *it.m_index,
+          std::move(*it.m_mapped)};
+    }
   }
 
 
   friend constexpr void
   iter_swap(generic_iterator &lhs, generic_iterator &rhs)
   noexcept(noexcept(lhs.m_map->m_swap_at(*lhs.m_index, *rhs.m_index)))
-  requires (!is_const)
+  requires (!is_const && std::is_swappable_v<mapped_type>)
   {
     lhs.m_map->m_swap_at(*lhs.m_index, *rhs.m_index);
   }
