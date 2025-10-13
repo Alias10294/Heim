@@ -1,8 +1,9 @@
 #include "doctest.h"
 #include "index_map.hpp"
 
-#include <string>
 #include <iterator>
+#include <string>
+#include <type_traits>
 
 TEST_CASE("heim::index_map: construction")
 {
@@ -157,4 +158,38 @@ TEST_CASE("heim::index_map: insertion & deletion")
 
   other.erase(other.begin(), other.end());
   CHECK_EQ(other.size(), 0);
+}
+
+TEST_CASE("heim::index_map: iteration")
+{
+  heim::index_map<std::size_t, std::size_t> map{};
+
+  CHECK_EQ(std::random_access_iterator<decltype(map)::iterator>, true);
+
+  for (std::size_t i = 0; i < 10; ++i)
+    map.insert(i, i);
+
+  std::size_t cpt = 0;
+  for (auto [idx, val] : map)
+  {
+    CHECK_EQ(idx, cpt);
+    CHECK_EQ(val, cpt);
+    ++cpt;
+  }
+
+  for (auto [idx, val] : std::ranges::reverse_view{map})
+  {
+    --cpt;
+    CHECK_EQ(idx, cpt);
+    CHECK_EQ(val, cpt);
+  }
+
+  iter_swap(map.begin(), map.end() - 1);
+
+  auto first = map.begin();
+  auto last  = map.end() - 1;
+  CHECK_EQ((*first).first , 9);
+  CHECK_EQ((*first).second, 9);
+  CHECK_EQ((*last).first , 0);
+  CHECK_EQ((*last).second, 0);
 }

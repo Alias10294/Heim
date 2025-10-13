@@ -1370,7 +1370,7 @@ public:
 
 
   friend constexpr void
-  iter_swap(generic_iterator &lhs, generic_iterator &rhs)
+  iter_swap(generic_iterator lhs, generic_iterator rhs)
   noexcept(noexcept(lhs.m_map->m_swap_at(*lhs.m_index, *rhs.m_index)))
   requires (!is_const && std::is_swappable_v<mapped_type>)
   {
