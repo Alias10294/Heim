@@ -25,8 +25,8 @@ struct index_map_is_index
   constexpr static bool
   value
   =   std::is_same_v<T, std::remove_cvref_t<T>>
-   && std::is_integral_v <T>
-   && std::is_unsigned_v <T>;
+   && std::is_integral_v<T>
+   && std::is_unsigned_v<T>;
 
 };
 
@@ -54,6 +54,33 @@ index_map_is_mapped_v = index_map_is_mapped<T>::value;
 }
 
 
+/*!
+ * @brief An associative container specialized for unsigned integral keys,
+ *   providing constant time search, insertion and removal of elements, as well
+ *   as memory contiguity.
+ *
+ * @tparam Index    The type of the indexes.
+ * @tparam T        The type of the values.
+ * @tparam PageSize The size of each internal page of positions.
+ * @tparam Alloc    The type of allocator used in the container.
+ *
+ * @details Implements a customized sparse set. Both keys and values are stored
+ *   contiguously in their own dense dynamic array. Just like
+ *   @c std::ranges::zip_view, This structure forces its iterators to
+ *   dereference to a pair of references not a reference of a pair, limiting
+ *   compatibility with legacy STL algorithms (but not with the ranges
+ *   algorithms).
+ *   The position of each pair is kept track by a third sparse dynamic array,
+ *   which uses pagination to reduce memory overhead. This array allows for
+ *   strictly constant-time search, insertion and removal of elements.
+ *
+ * @note Although the container is on the surface unordered, internal order is
+ *   deterministic and can be manipulated through the iter_swap method.
+ * @note Using PageSize = 0 will cause the position array to not be paginated
+ *   at all. This has the advantage of slightly accelerating the operations of
+ *   the container, though at the cost of significant memory overhead. Consider
+ *   using this option if indexes stay low in value.
+ */
 template<
     typename    Index,
     typename    T,
@@ -70,8 +97,8 @@ private:
       "heim::index_map: detail::index_map_is_mapped_v<T>");
 
 public:
-  using index_type     = Index;
-  using mapped_type    = T;
+  using index_type  = Index;
+  using mapped_type = T;
 
   constexpr static std::size_t page_size
   = PageSize;
@@ -168,10 +195,21 @@ private:
   mapped_vector_t   m_mapped;
 
 private:
+
+  // @cond INTERNAL
+  /*!
+   * @brief Returns the pointer to a new page for the position vector.
+   *
+   * @tparam Args The types of the arguments to construct the page.
+   * @param args The arguments to construct the page.
+   * @returns The newly constructed page pointer.
+   * @pre @code PageSize > 0@endcode.
+   */
   template<typename ...Args>
   [[nodiscard]]
   constexpr page_uptr_t
   m_make_page_uptr(Args &&...args) const
+  requires (is_paged_v)
   {
     page_alloc_t page_alloc{m_allocator};
 
@@ -193,9 +231,16 @@ private:
     return page_uptr_t{new_page_ptr, page_deleter{std::move(page_alloc)}};
   }
 
+  /*!
+   * @brief Creates an empty page pointer.
+   *
+   * @returns The new empty page pointer.
+   * @pre @code PageSize > 0@endcode.
+   */
   [[nodiscard]]
   constexpr page_uptr_t
   m_make_page_uptr(std::nullptr_t) const
+  requires (is_paged_v)
   {
     page_alloc_t page_alloc{m_allocator};
     return page_uptr_t{nullptr, page_deleter{std::move(page_alloc)}};
@@ -203,13 +248,20 @@ private:
 
 
 
+  /*!
+   * @brief Copies the second position vector into the first.
+   *
+   * @param pos       The vector to copy into.
+   * @param other_pos The vector to copy from.
+   * @pre @code PageSize > 0@endcode.
+   */
   constexpr void
   m_copy_position_vector(
       position_vector_t       &pos,
       position_vector_t const &other_pos)
   requires (is_paged_v)
   {
-    pos.reserve(other_pos.size());
+    pos.reserve(pos.size() + other_pos.size());
     for (auto const &page_uptr : other_pos)
     {
       if (page_uptr)
@@ -220,6 +272,11 @@ private:
   }
 
 
+  /*!
+   * @brief The elementary move assignment operation of this object.
+   *
+   * @param other The index_map chose contents to move.
+   */
   constexpr void
   m_move_assign(index_map &other)
   noexcept(
@@ -233,6 +290,13 @@ private:
 
 
 
+  /*!
+   * @brief Returns the number of the page for a given index.
+   *
+   * @param i The index to get the page number of.
+   * @returns The number of the page for the given index.
+   * @pre @code PageSize > 0@endcode.
+   */
   constexpr static size_type
   s_position_page_nb(index_type const i)
   noexcept
@@ -245,6 +309,14 @@ private:
   }
 
 
+  /*!
+   * @brief Returns the page number (number of the slot in its page) for a
+   *   given index.
+   *
+   * @param i The index to get the line number of.
+   * @returns The line number for a given index.
+   * @pre @code PageSize > 0@endcode.
+   */
   constexpr static size_type
   s_position_line_nb(index_type const i)
   noexcept
@@ -257,6 +329,14 @@ private:
   }
 
 
+  /*!
+   * @brief Returns a reference to the position in the dense vectors of the
+   *   element with a given index.
+   *
+   * @param i The index of the element to get the position of.
+   * @returns The reference to the position in the dense vectors of the element
+   *   with the given index.
+   */
   constexpr size_type &
   m_position_get(index_type const i)
   noexcept
@@ -268,6 +348,14 @@ private:
   }
 
 
+  /*!
+   * @brief Returns the position in the dense vectors of the element with a
+   *   given index.
+   *
+   * @param i The index of the element to get the position of.
+   * @returns The position in the dense vectors of the element with the given
+   *   index.
+   */
   constexpr size_type
   m_position_get(index_type const i) const
   noexcept
@@ -279,6 +367,14 @@ private:
   }
 
 
+  /*!
+   * @brief Checks if the position vector has a position linked to the element
+   *   with a given index.
+   *
+   * @param i The index of the element to check for.
+   * @returns @c true if the position vector has a position linked to the
+   *   element, @c false otherwise.
+   */
   constexpr bool
   m_position_contains(index_type const i) const
   noexcept
@@ -302,6 +398,14 @@ private:
 
 
 
+  /*!
+   * @brief Swaps the position in the dense vectors of the elements with the
+   *   given indexes.
+   *
+   * @param i The index of the first  element to swap.
+   * @param j The index of the second element to swap.
+   * @pre @code std::is_swappable_v<mapped_type>@endcode.
+   */
   constexpr void
   m_swap_at(index_type const i, index_type const j)
   noexcept(std::is_nothrow_swappable_v<mapped_type>)
@@ -322,6 +426,11 @@ private:
 
 
 
+  /*!
+   * @brief Sets the capacity of the object to the given new capacity.
+   *
+   * @param new_cap The new capacity to reserve memory for.
+   */
   constexpr void
   m_set_capacity(size_type const new_cap)
   {
@@ -345,6 +454,16 @@ private:
 
 
 
+  /*!
+   * @brief Emplaces at the back of the dense containers the new element,
+   *   constructing it in-place.
+   *
+   * @tparam Args The type of the arguments to construct the mapped value of
+   *   the element.
+   * @param i    The index of the element.
+   * @param args The arguments to construct the mapped value of the element.
+   * @pre @code std::constructible_from<mapped_type, Args ...>@endcode.
+   */
   template<typename ...Args>
   constexpr void
   m_emplace(index_type const i, Args &&...args)
@@ -385,6 +504,8 @@ private:
     }
     m_position_get(i) = size() - 1;
   }
+
+  //! @endcond
 
 public:
   constexpr
