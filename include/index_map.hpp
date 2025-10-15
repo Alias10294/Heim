@@ -19,6 +19,13 @@ namespace heim
 {
 namespace detail
 {
+//! @cond INTERNAL
+/*!
+ * @brief Checks whether @code T@endcode is a valid index type an index map or
+ *   not.
+ *
+ * @tparam T The type to check the validity of.
+ */
 template<typename T>
 struct index_map_is_index
 {
@@ -35,6 +42,12 @@ constexpr inline bool
 index_map_is_index_v = index_map_is_index<T>::value;
 
 
+/*!
+ * @brief Checks whether @code T@endcode is a valid mapped type an index map or
+ *   not.
+ *
+ * @tparam T The type to check the validity of.
+ */
 template<typename T>
 struct index_map_is_mapped
 {
@@ -50,6 +63,7 @@ template<typename T>
 constexpr inline bool
 index_map_is_mapped_v = index_map_is_mapped<T>::value;
 
+//! @endcond
 
 }
 
@@ -510,7 +524,7 @@ private:
         m_positions.resize(size_i + 1, s_null_position);
     }
 
-    // strong exception guarantee with pop_back being fully noexcept
+    // strong exception safety guarantee with pop_back being fully noexcept
     m_mapped.emplace_back(std::forward<Args>(args)...);
     try
     {
