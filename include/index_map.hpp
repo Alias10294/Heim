@@ -1193,7 +1193,8 @@ public:
 
 
   /*!
-   * @brief Checks whether an element with the index @code i@endcode is contained in the index map.
+   * @brief Checks whether an element with the index @code i@endcode is
+   *   contained in the index map.
    *
    * @param i The index of the element to check for.
    * @returns @c true if the index map contains an element with the index
