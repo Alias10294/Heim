@@ -10,7 +10,8 @@ meson.override_dependency('heim', heim_dep)
 
 heim_test_src = files(
     'test/test_config.cpp',
-    'test/test_index_map.cpp')
+    'test/test_index_map.cpp',
+    'test/test_unsafe_any.cpp')
 
 heim_test_exe = executable('heim_test',
     heim_test_src,
