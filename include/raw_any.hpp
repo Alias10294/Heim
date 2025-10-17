@@ -1,19 +1,41 @@
-#ifndef HEIM_UNSAFE_ANY_HPP
-#define HEIM_UNSAFE_ANY_HPP
+#ifndef HEIM_RAW_ANY_HPP
+#define HEIM_RAW_ANY_HPP
 
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <new>
 #include <type_traits>
 #include <utility>
 
 namespace heim
 {
-class unsafe_any
+template<
+    std::size_t BufferSize  = sizeof (void *),
+    std::size_t BufferAlign = alignof(std::max_align_t)>
+class generic_raw_any
 {
 private:
-  using small_buffer_t = std::byte[sizeof(void *)];
+  static_assert(
+      BufferSize >= sizeof(void *),
+      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+          "BufferSize >= sizeof(void *).");
+  static_assert(
+      BufferAlign >= alignof(void*),
+      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+          "BufferAlign >= alignof(void*).");
+  static_assert(
+      (BufferAlign & (BufferAlign - 1)) == 0,
+      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+          "(BufferAlign & BufferAlign - 1) == 0.");
+
+public:
+  constexpr static std::size_t buffer_size  = BufferSize;
+  constexpr static std::size_t buffer_align = BufferAlign;
+
+private:
+  using buffer_t = std::byte[buffer_size];
 
   union storage_t
   {
@@ -30,8 +52,8 @@ private:
     operator=(storage_t const &other)
     = delete;
 
-    void          *value;
-    small_buffer_t buffer;
+    void                          *value;
+    alignas(buffer_align) buffer_t buffer;
 
   };
 
@@ -44,15 +66,11 @@ private:
     move
   };
 
-  union manager_arg_t
-  {
-    void       *arg;
-    unsafe_any *any;
-
-  };
-
   using manager_t
-  = const void *(*)(operation const, unsafe_any const *, manager_arg_t *);
+  = const void *(*)(
+      operation const,
+      generic_raw_any const *,
+      generic_raw_any *);
 
 private:
   storage_t m_storage;
@@ -62,19 +80,19 @@ private:
   template<typename T>
   constexpr static bool
   to_buffer_v
-  =   sizeof (T) <= sizeof (storage_t)
-   && alignof(T) <= alignof(storage_t)
+  =   sizeof (T) <= buffer_size
+   && alignof(T) <= buffer_align
    && std::is_nothrow_move_constructible_v<T>;
 
 
   template<typename T>
   constexpr static const void *
-  s_manage(operation const op, unsafe_any const *any, manager_arg_t *arg)
+  s_manage(operation const op, generic_raw_any const *any, generic_raw_any *arg)
   requires (std::is_same_v<T, std::decay_t<T>>)
   {
     T const *ptr = nullptr;
     if constexpr (to_buffer_v<T>)
-      ptr = reinterpret_cast<T const *>(&any->m_storage.buffer);
+      ptr = std::launder(reinterpret_cast<T const *>(&any->m_storage.buffer));
     else
       ptr = static_cast<T const *>(any->m_storage.value);
 
@@ -87,13 +105,13 @@ private:
       {
         if constexpr (to_buffer_v<T>)
         {
-          ::new(&arg->any->m_storage.buffer) T{*ptr};
-          arg->any->m_manager = any->m_manager;
+          ::new(&arg->m_storage.buffer) T{*ptr};
+          arg->m_manager = any->m_manager;
         }
         else
         {
-          arg->any->m_storage.value = new T{*ptr};
-          arg->any->m_manager       = any->m_manager;
+          arg->m_storage.value = new T{*ptr};
+          arg->m_manager       = any->m_manager;
         }
       }
       break;
@@ -106,18 +124,19 @@ private:
     case operation::move:
       if constexpr (to_buffer_v<T>)
       {
-        ::new(&arg->any->m_storage.buffer) T{std::move(*const_cast<T *>(ptr))};
-        arg->any->m_manager = any->m_manager;
+        ::new(&arg->m_storage.buffer) T{std::move(*const_cast<T *>(ptr))};
+        arg->m_manager = any->m_manager;
 
         ptr->~T();
-        const_cast<unsafe_any *>(any)->m_manager = nullptr;
+        const_cast<generic_raw_any *>(any)->m_manager = nullptr;
       }
       else
       {
-        arg->any->m_storage.value = any->m_storage.value;
-        arg->any->m_manager       = any->m_manager;
+        arg->m_storage.value = any->m_storage.value;
+        arg->m_manager       = any->m_manager;
 
-        const_cast<unsafe_any *>(any)->m_manager = nullptr;
+        const_cast<generic_raw_any *>(any)->m_storage.value = nullptr;
+        const_cast<generic_raw_any *>(any)->m_manager       = nullptr;
       }
       break;
     }
@@ -164,92 +183,86 @@ private:
 
 public:
   constexpr
-  unsafe_any()
+  generic_raw_any()
     : m_manager{nullptr}
   { }
 
   constexpr
-  unsafe_any(unsafe_any const &other)
+  generic_raw_any(generic_raw_any const &other)
+    : generic_raw_any{}
   {
     if (!other.has_value())
-      m_manager = nullptr;
-    else
-    {
-      manager_arg_t arg;
-      arg.any = this;
-      other.m_manager(operation::copy, &other, &arg);
-    }
+      return;
+
+    other.m_manager(operation::copy, &other, this);
   }
 
   constexpr
-  unsafe_any(unsafe_any &&other)
+  generic_raw_any(generic_raw_any &&other)
   noexcept
+    : generic_raw_any{}
   {
     if (!other.has_value())
-      m_manager = nullptr;
-    else
-    {
-      manager_arg_t arg;
-      arg.any = this;
-      other.m_manager(operation::move, &other, &arg);
-    }
+      return;
+
+    other.m_manager(operation::move, &other, this);
   }
 
   template<typename T, typename ...Args>
   explicit constexpr
-  unsafe_any(std::in_place_type_t<T>, Args &&...args)
+  generic_raw_any(std::in_place_type_t<T>, Args &&...args)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
-    : m_manager{nullptr}
+    : generic_raw_any{}
   {
     m_emplace<T>(std::forward<Args>(args)...);
   }
 
   template<typename T, typename U, typename ...Args>
   constexpr
-  unsafe_any(
+  generic_raw_any(
       std::in_place_type_t<T>,
       std::initializer_list<U> ilist,
       Args                &&...args)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, std::initializer_list<U>, Args...>)
-    : m_manager{nullptr}
+    : generic_raw_any{}
   {
     m_emplace<T>(ilist, std::forward<Args>(args)...);
   }
 
   template<typename T>
   explicit constexpr
-  unsafe_any(T &&value)
+  generic_raw_any(T &&value)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
-    : unsafe_any{std::in_place_type<T>, std::forward<T>(value)}
+    : generic_raw_any{std::in_place_type<T>, std::forward<T>(value)}
   { }
 
 
   constexpr
-  ~unsafe_any()
+  ~generic_raw_any()
   noexcept
   {
     reset();
   }
 
 
-  constexpr unsafe_any &
-  operator=(unsafe_any const &other)
+  constexpr generic_raw_any &
+  operator=(generic_raw_any const &other)
   {
     if (this == &other)
       return *this;
 
-    *this = unsafe_any{other};
+    *this = generic_raw_any{other};
     return *this;
   }
 
-  constexpr unsafe_any &
-  operator=(unsafe_any &&other)
+  constexpr generic_raw_any &
+  operator=(generic_raw_any &&other)
   noexcept
   {
     if (this == &other)
@@ -259,27 +272,25 @@ public:
     if (!other.has_value())
       return *this;
 
-    manager_arg_t arg;
-    arg.any = this;
-    other.m_manager(operation::move, &other, &arg);
+    other.m_manager(operation::move, &other, this);
 
     return *this;
   }
 
   template<typename T>
-  constexpr unsafe_any &
+  constexpr generic_raw_any &
   operator=(T &&value)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
   {
-    *this = unsafe_any{std::forward<T>(value)};
+    *this = generic_raw_any{std::forward<T>(value)};
     return *this;
   }
 
 
   constexpr void
-  swap(unsafe_any &other)
+  swap(generic_raw_any &other)
   noexcept
   {
     if (this == &other)
@@ -290,29 +301,23 @@ public:
 
     if (has_value() && other.has_value())
     {
-      unsafe_any tmp;
-      manager_arg_t arg;
+      generic_raw_any tmp;
 
-      arg.any = &tmp;
-      other.m_manager(operation::move, &other, &arg);
-      arg.any = &other;
-      m_manager      (operation::move, this  , &arg);
-      arg.any = this;
-      tmp.m_manager  (operation::move, &tmp  , &arg);
+      other.m_manager(operation::move, &other, &tmp);
+      m_manager      (operation::move, this  , &other);
+      tmp.m_manager  (operation::move, &tmp  , this);
     }
     else
     {
-      unsafe_any       *empty = !has_value() ? this : &other;
-      unsafe_any const *full  = !has_value() ? &other : this;
-      manager_arg_t arg;
+      generic_raw_any       *empty = !has_value() ? this : &other;
+      generic_raw_any const *full  = !has_value() ? &other : this;
 
-      arg.any = empty;
-      full->m_manager(operation::move, full, &arg);
+      full->m_manager(operation::move, full, empty);
     }
   }
 
   friend constexpr void
-  swap(unsafe_any &lhs, unsafe_any &rhs)
+  swap(generic_raw_any &lhs, generic_raw_any &rhs)
   noexcept(noexcept(lhs.swap(rhs)))
   {
     lhs.swap(rhs);
@@ -351,7 +356,7 @@ public:
   {
     reset();
     m_emplace<T>(std::forward<Args>(args)...);
-    return m_cast<T>();
+    return *m_cast<T>();
   }
 
   template<typename T, typename U, typename ...Args>
@@ -359,64 +364,70 @@ public:
   emplace(std::initializer_list<U> ilist, Args &&...args)
   requires (
       std::is_same_v<T, std::decay_t<T>>
-   && std::constructible_from<T, Args...>)
+   && std::constructible_from<T, std::initializer_list<U>, Args...>)
   {
     reset();
     m_emplace<T>(ilist, std::forward<Args>(args)...);
-    return m_cast<T>();
+    return *m_cast<T>();
   }
 
 
 
-  template<typename T>
+  template<typename T, std::size_t Size, std::size_t Align>
   friend constexpr T const *
-  unsafe_any_cast(unsafe_any const &any)
+  raw_any_cast(generic_raw_any<Size, Align> const &any)
+  noexcept
+  requires (std::is_same_v<T, std::decay_t<T>>);
+
+  template<typename T, std::size_t Size, std::size_t Align>
+  friend constexpr T *
+  raw_any_cast(generic_raw_any<Size, Align> &any)
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>);
 
 };
 
 
-template<typename T, typename ...Args>
+using raw_any = generic_raw_any<>;
+
+
+template<
+    typename    T,
+    std::size_t BufferSize,
+    std::size_t BufferAlign,
+    typename ...Args>
 [[nodiscard]]
-constexpr unsafe_any
-make_unsafe_any(Args &&...args)
+constexpr generic_raw_any<BufferSize, BufferAlign>
+make_raw_any(Args &&...args)
 requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
 {
-  return unsafe_any{std::in_place_type<T>, std::forward<Args>(args)...};
+  return generic_raw_any<BufferSize, BufferAlign>{
+      std::in_place_type<T>,
+      std::forward<Args>(args)...};
 }
 
-
-template<typename T>
+template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
 constexpr T const *
-unsafe_any_cast(unsafe_any const &any)
+raw_any_cast(generic_raw_any<BufferSize, BufferAlign> const &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {
-  if (!any.has_value())
-    return nullptr;
-
-  if (&unsafe_any::s_manage<T> != any.m_manager)
-    return nullptr;
-
-  return any.m_cast<T>();
+  return any.template m_cast<T>();
 }
 
-template<typename T>
+template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
 constexpr T *
-unsafe_any_cast(unsafe_any &any)
+raw_any_cast(generic_raw_any<BufferSize, BufferAlign> &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {
-  return const_cast<T *>(unsafe_any_cast<T>(std::as_const(any)));
+  return any.template m_cast<T>();
 }
 
 
-
-
 }
 
 
-#endif // HEIM_UNSAFE_ANY_HPP
+#endif // HEIM_RAW_ANY_HPP
