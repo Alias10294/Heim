@@ -2,6 +2,9 @@
 #define HEIM_UNSAFE_ANY_HPP
 
 #include <concepts>
+#include <cstddef>
+#include <cstdint>
+#include <new>
 #include <type_traits>
 #include <utility>
 
@@ -10,120 +13,218 @@ namespace heim
 class unsafe_any
 {
 private:
-  using destroy_func_t = void  (void *);
-  using copy_func_t    = void *(void const *);
+  using small_buffer_t = std::byte[sizeof(void *)];
+
+  union storage_t
+  {
+    constexpr
+    storage_t()
+      : value{nullptr}
+    { }
+
+    constexpr
+    storage_t(storage_t const &other)
+    = delete;
+
+    constexpr storage_t &
+    operator=(storage_t const &other)
+    = delete;
+
+    void          *value;
+    small_buffer_t buffer;
+
+  };
+
+
+  enum class operation : std::uint8_t
+  {
+    cast,
+    copy,
+    destroy,
+    move
+  };
+
+  union manager_arg_t
+  {
+    void       *arg;
+    unsafe_any *any;
+
+  };
+
+  using manager_t
+  = const void *(*)(operation const, unsafe_any const *, manager_arg_t *);
 
 private:
-  void *m_value;
-
-  destroy_func_t *m_destroy_f;
-  copy_func_t    *m_copy_f;
+  storage_t m_storage;
+  manager_t m_manager;
 
 private:
   template<typename T>
-  constexpr static destroy_func_t *
-  s_make_destroy_func()
-  noexcept
-  requires (std::is_same_v<T, std::remove_cvref_t<T>>)
-  {
-    return
-        [](void *ptr)
-        -> void
-        {
-          if constexpr (std::is_same_v<T, std::nullptr_t>)
-            return;
-
-          if constexpr (std::is_array_v<T>)
-            delete[] static_cast<T *>(ptr);
-          else
-            delete   static_cast<T *>(ptr);
-        };
-  }
+  constexpr static bool
+  to_buffer_v
+  =   sizeof (T) <= sizeof (storage_t)
+   && alignof(T) <= alignof(storage_t)
+   && std::is_nothrow_move_constructible_v<T>;
 
 
   template<typename T>
-  constexpr static copy_func_t *
-  s_make_copy_func()
-  noexcept
-  requires (std::is_same_v<T, std::remove_cvref_t<T>>)
+  constexpr static const void *
+  s_manage(operation const op, unsafe_any const *any, manager_arg_t *arg)
+  requires (std::is_same_v<T, std::decay_t<T>>)
   {
-    return
-        [](void const * const ptr)
-        -> void *
-        {
-          if constexpr (
-              std::is_same_v<T, std::nullptr_t>
-          || !std::is_copy_constructible_v<T>)
-            return nullptr;
-          else
-            return static_cast<void *>(new T{*static_cast<T const *>(ptr)});
-        };
-  }
-
-
-  constexpr void
-  m_copy(unsafe_any const &other)
-  noexcept(noexcept(other.m_copy_f(other.m_value)))
-  {
-    void *value = other.m_copy_f(other.m_value);
-
-    m_value     = value;
-
-    if (m_value)
-    {
-      m_destroy_f = other.m_destroy_f;
-      m_copy_f    = other.m_copy_f;
-    }
+    T const *ptr = nullptr;
+    if constexpr (to_buffer_v<T>)
+      ptr = reinterpret_cast<T const *>(&any->m_storage.buffer);
     else
+      ptr = static_cast<T const *>(any->m_storage.value);
+
+    switch (op)
     {
-      m_destroy_f = s_make_destroy_func<std::nullptr_t>();
-      m_copy_f    = s_make_copy_func   <std::nullptr_t>();
+    case operation::cast:
+      return static_cast<void const *>(ptr);
+    case operation::copy:
+      if constexpr (std::is_copy_constructible_v<T>)
+      {
+        if constexpr (to_buffer_v<T>)
+        {
+          ::new(&arg->any->m_storage.buffer) T{*ptr};
+          arg->any->m_manager = any->m_manager;
+        }
+        else
+        {
+          arg->any->m_storage.value = new T{*ptr};
+          arg->any->m_manager       = any->m_manager;
+        }
+      }
+      break;
+    case operation::destroy:
+      if constexpr (to_buffer_v<T>)
+        ptr->~T();
+      else
+        delete ptr;
+      break;
+    case operation::move:
+      if constexpr (to_buffer_v<T>)
+      {
+        ::new(&arg->any->m_storage.buffer) T{std::move(*const_cast<T *>(ptr))};
+        arg->any->m_manager = any->m_manager;
+
+        ptr->~T();
+        const_cast<unsafe_any *>(any)->m_manager = nullptr;
+      }
+      else
+      {
+        arg->any->m_storage.value = any->m_storage.value;
+        arg->any->m_manager       = any->m_manager;
+
+        const_cast<unsafe_any *>(any)->m_manager = nullptr;
+      }
+      break;
     }
+    return nullptr;
+  }
+
+
+  template<typename T, typename ...Args>
+  constexpr void
+  m_emplace(Args &&...args)
+  requires (
+      std::is_same_v<T, std::decay_t<T>>
+   && std::constructible_from<T, Args &&...>)
+  {
+    if constexpr (to_buffer_v<T>)
+      ::new(&m_storage.buffer) T{std::forward<Args>(args)...};
+    else
+      m_storage.value = new T{std::forward<Args>(args)...};
+
+    m_manager = &s_manage<T>;
+  }
+
+
+  template<typename T>
+  [[nodiscard]]
+  constexpr T *
+  m_cast()
+  noexcept
+  requires (std::is_same_v<T, std::decay_t<T>>)
+  {
+    return static_cast<T *>(const_cast<void *>(
+        s_manage<T>(operation::cast, this, nullptr)));
+  }
+
+  template<typename T>
+  [[nodiscard]]
+  constexpr T const *
+  m_cast() const
+  noexcept
+  requires (std::is_same_v<T, std::decay_t<T>>)
+  {
+    return static_cast<T const *>(s_manage<T>(operation::cast, this, nullptr));
   }
 
 public:
   constexpr
   unsafe_any()
-    : m_value    {nullptr},
-      m_destroy_f{s_make_destroy_func<std::nullptr_t>()},
-      m_copy_f   {s_make_copy_func   <std::nullptr_t>()}
+    : m_manager{nullptr}
   { }
 
   constexpr
   unsafe_any(unsafe_any const &other)
-    : unsafe_any{}
   {
-    m_copy(other);
+    if (!other.has_value())
+      m_manager = nullptr;
+    else
+    {
+      manager_arg_t arg;
+      arg.any = this;
+      other.m_manager(operation::copy, &other, &arg);
+    }
   }
 
   constexpr
   unsafe_any(unsafe_any &&other)
   noexcept
-    : m_value    {other.m_value},
-      m_destroy_f{other.m_destroy_f},
-      m_copy_f   {other.m_copy_f}
   {
-    other.m_value     = nullptr;
-    other.m_destroy_f = s_make_destroy_func<std::nullptr_t>();
-    other.m_copy_f    = s_make_copy_func   <std::nullptr_t>();
+    if (!other.has_value())
+      m_manager = nullptr;
+    else
+    {
+      manager_arg_t arg;
+      arg.any = this;
+      other.m_manager(operation::move, &other, &arg);
+    }
   }
 
   template<typename T, typename ...Args>
-  constexpr
+  explicit constexpr
   unsafe_any(std::in_place_type_t<T>, Args &&...args)
   requires (
-      std::is_same_v<T, std::remove_cvref_t<T>>
+      std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
-    : m_value    {new T{std::forward<Args>(args)...}},
-      m_destroy_f{s_make_destroy_func<T>()},
-      m_copy_f   {s_make_copy_func   <T>()}
-  { }
+    : m_manager{nullptr}
+  {
+    m_emplace<T>(std::forward<Args>(args)...);
+  }
+
+  template<typename T, typename U, typename ...Args>
+  constexpr
+  unsafe_any(
+      std::in_place_type_t<T>,
+      std::initializer_list<U> ilist,
+      Args                &&...args)
+  requires (
+      std::is_same_v<T, std::decay_t<T>>
+   && std::constructible_from<T, std::initializer_list<U>, Args...>)
+    : m_manager{nullptr}
+  {
+    m_emplace<T>(ilist, std::forward<Args>(args)...);
+  }
 
   template<typename T>
-  constexpr
+  explicit constexpr
   unsafe_any(T &&value)
   requires (
-      std::is_same_v<T, std::remove_cvref_t<T>>
+      std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
     : unsafe_any{std::in_place_type<T>, std::forward<T>(value)}
   { }
@@ -143,9 +244,7 @@ public:
     if (this == &other)
       return *this;
 
-    unsafe_any copy{other};
-    swap(copy);
-
+    *this = unsafe_any{other};
     return *this;
   }
 
@@ -157,13 +256,12 @@ public:
       return *this;
 
     reset();
-    m_value     = other.m_value;
-    m_destroy_f = other.m_destroy_f;
-    m_copy_f    = other.m_copy_f;
+    if (!other.has_value())
+      return *this;
 
-    other.m_value     = nullptr;
-    other.m_destroy_f = s_make_destroy_func<std::nullptr_t>();
-    other.m_copy_f    = s_make_copy_func   <std::nullptr_t>();
+    manager_arg_t arg;
+    arg.any = this;
+    other.m_manager(operation::move, &other, &arg);
 
     return *this;
   }
@@ -172,14 +270,10 @@ public:
   constexpr unsafe_any &
   operator=(T &&value)
   requires (
-      std::is_same_v<T, std::remove_cvref_t<T>>
+      std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
   {
-    reset();
-    m_value     = new T{std::forward<T>(value)};
-    m_destroy_f = s_make_destroy_func<T>();
-    m_copy_f    = s_make_copy_func   <T>();
-
+    *this = unsafe_any{std::forward<T>(value)};
     return *this;
   }
 
@@ -188,11 +282,33 @@ public:
   swap(unsafe_any &other)
   noexcept
   {
-    using std::swap;
+    if (this == &other)
+      return;
 
-    swap(m_value    , other.m_value);
-    swap(m_destroy_f, other.m_destroy_f);
-    swap(m_copy_f   , other.m_copy_f);
+    if (!has_value() && !other.has_value())
+      return;
+
+    if (has_value() && other.has_value())
+    {
+      unsafe_any tmp;
+      manager_arg_t arg;
+
+      arg.any = &tmp;
+      other.m_manager(operation::move, &other, &arg);
+      arg.any = &other;
+      m_manager      (operation::move, this  , &arg);
+      arg.any = this;
+      tmp.m_manager  (operation::move, &tmp  , &arg);
+    }
+    else
+    {
+      unsafe_any       *empty = !has_value() ? this : &other;
+      unsafe_any const *full  = !has_value() ? &other : this;
+      manager_arg_t arg;
+
+      arg.any = empty;
+      full->m_manager(operation::move, full, &arg);
+    }
   }
 
   friend constexpr void
@@ -209,26 +325,7 @@ public:
   has_value() const
   noexcept
   {
-    return m_value != nullptr;
-  }
-
-
-  template<typename T>
-  [[nodiscard]]
-  constexpr T &
-  get()
-  noexcept
-  {
-    return *static_cast<T *>(m_value);
-  }
-
-  template<typename T>
-  [[nodiscard]]
-  constexpr T const &
-  get() const
-  noexcept
-  {
-    return *static_cast<T const *>(m_value);
+    return m_manager != nullptr;
   }
 
 
@@ -237,39 +334,86 @@ public:
   reset()
   noexcept
   {
-    if (has_value())
-      m_destroy_f(m_value);
+    if (!has_value())
+      return;
 
-    m_value     = nullptr;
-    m_destroy_f = s_make_destroy_func<std::nullptr_t>();
-    m_copy_f    = s_make_copy_func   <std::nullptr_t>();
+    m_manager(operation::destroy, this, nullptr);
+    m_manager = nullptr;
   }
 
 
   template<typename T, typename ...Args>
   constexpr T &
-  emplace(std::in_place_type_t<T>, Args &&...args)
+  emplace(Args &&...args)
   requires (
-      std::is_same_v<T, std::remove_cvref_t<T>>
+      std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
   {
     reset();
-    m_value     = new T{std::forward<Args>(args)...};
-    m_destroy_f = s_make_destroy_func<T>();
-    m_copy_f    = s_make_copy_func   <T>();
-
-    return get<T>();
+    m_emplace<T>(std::forward<Args>(args)...);
+    return m_cast<T>();
   }
 
+  template<typename T, typename U, typename ...Args>
+  constexpr T &
+  emplace(std::initializer_list<U> ilist, Args &&...args)
+  requires (
+      std::is_same_v<T, std::decay_t<T>>
+   && std::constructible_from<T, Args...>)
+  {
+    reset();
+    m_emplace<T>(ilist, std::forward<Args>(args)...);
+    return m_cast<T>();
+  }
+
+
+
+  template<typename T>
+  friend constexpr T const *
+  unsafe_any_cast(unsafe_any const &any)
+  noexcept
+  requires (std::is_same_v<T, std::decay_t<T>>);
+
 };
+
 
 template<typename T, typename ...Args>
 [[nodiscard]]
 constexpr unsafe_any
-make_any(Args &&...args)
+make_unsafe_any(Args &&...args)
+requires (
+      std::is_same_v<T, std::decay_t<T>>
+   && std::constructible_from<T, Args...>)
 {
   return unsafe_any{std::in_place_type<T>, std::forward<Args>(args)...};
 }
+
+
+template<typename T>
+constexpr T const *
+unsafe_any_cast(unsafe_any const &any)
+noexcept
+requires (std::is_same_v<T, std::decay_t<T>>)
+{
+  if (!any.has_value())
+    return nullptr;
+
+  if (&unsafe_any::s_manage<T> != any.m_manager)
+    return nullptr;
+
+  return any.m_cast<T>();
+}
+
+template<typename T>
+constexpr T *
+unsafe_any_cast(unsafe_any &any)
+noexcept
+requires (std::is_same_v<T, std::decay_t<T>>)
+{
+  return const_cast<T *>(unsafe_any_cast<T>(std::as_const(any)));
+}
+
+
 
 
 }
