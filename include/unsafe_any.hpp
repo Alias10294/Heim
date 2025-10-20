@@ -1,5 +1,5 @@
-#ifndef HEIM_RAW_ANY_HPP
-#define HEIM_RAW_ANY_HPP
+#ifndef HEIM_UNSAFE_ANY_HPP
+#define HEIM_UNSAFE_ANY_HPP
 
 #include <concepts>
 #include <cstddef>
@@ -11,23 +11,37 @@
 
 namespace heim
 {
+/*!
+ * @brief A container for single values of any type.
+ *
+ * @tparam BufferSize  The size      of the internal buffer for the
+ *   small-buffer optimization.
+ * @tparam BufferAlign The alignment of the internal buffer for the
+ *   small-buffer optimization.
+ *
+ * @details Very similar to std::any, this container has the particularity of
+ *   not being type-safe. It is intended to be used in situations where type
+ *   identification does not come from the usual std::type_info.
+ *   It also implements a small-buffer optimization, for which the buffer is
+ *   customizable both in size and alignment.
+ */
 template<
     std::size_t BufferSize  = sizeof (void *),
     std::size_t BufferAlign = alignof(std::max_align_t)>
-class generic_raw_any
+class generic_unsafe_any
 {
 private:
   static_assert(
       BufferSize >= sizeof(void *),
-      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+      "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
           "BufferSize >= sizeof(void *).");
   static_assert(
-      BufferAlign >= alignof(void*),
-      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+      BufferAlign >= alignof(void *),
+      "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
           "BufferAlign >= alignof(void*).");
   static_assert(
       (BufferAlign & (BufferAlign - 1)) == 0,
-      "heim::generic_raw_any<BufferSize, BufferAlign>: "
+      "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
           "(BufferAlign & BufferAlign - 1) == 0.");
 
 public:
@@ -35,19 +49,36 @@ public:
   constexpr static std::size_t buffer_align = BufferAlign;
 
 private:
-  using buffer_t = std::byte[buffer_size];
+  //! @cond INTERNAL
 
+  /*!
+   * @brief The type used to contain the value, either internally or through
+   *   allocation if needed.
+   */
   union storage_t
   {
+    using buffer_t = std::byte[buffer_size];
+
+
+    /*!
+     * @brief The default constructor of the storage.
+     */
     constexpr
     storage_t()
       : value{nullptr}
     { }
 
+    /*!
+     * @brief Deleted copy constructor, preventing trivial copies of the type.
+     */
     constexpr
     storage_t(storage_t const &other)
     = delete;
 
+    /*!
+     * @brief Deleted copy assignment operator, preventing trivial copies of
+     *   the type.
+     */
     constexpr storage_t &
     operator=(storage_t const &other)
     = delete;
@@ -58,19 +89,22 @@ private:
   };
 
 
+  /*!
+   * @brief The class used to express what operations the manager can perform
+   *   on the contained value.
+   */
   enum class operation : std::uint8_t
   {
-    cast,
     copy,
     destroy,
     move
   };
 
   using manager_t
-  = const void *(*)(
+  = void(*)(
       operation const,
-      generic_raw_any const *,
-      generic_raw_any *);
+      generic_unsafe_any const *,
+      generic_unsafe_any *);
 
 private:
   storage_t m_storage;
@@ -85,9 +119,23 @@ private:
    && std::is_nothrow_move_constructible_v<T>;
 
 
+  /*!
+   * @brief The internal method used to perform given operations on the
+   *   contained value.
+   *
+   * @tparam T The type of the contained value.
+   * @param op  The kind of operation to perform on the contained value.
+   * @param any The pointer to the container that holds the value.
+   * @param arg The pointer to the optional other container on which the
+   *   operation has to be performed.
+   * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   */
   template<typename T>
-  constexpr static const void *
-  s_manage(operation const op, generic_raw_any const *any, generic_raw_any *arg)
+  constexpr static void
+  s_manage(
+      operation const           op,
+      generic_unsafe_any const *any,
+      generic_unsafe_any       *arg)
   requires (std::is_same_v<T, std::decay_t<T>>)
   {
     T const *ptr = nullptr;
@@ -98,8 +146,6 @@ private:
 
     switch (op)
     {
-    case operation::cast:
-      return static_cast<void const *>(ptr);
     case operation::copy:
       if constexpr (std::is_copy_constructible_v<T>)
       {
@@ -128,22 +174,30 @@ private:
         arg->m_manager = any->m_manager;
 
         ptr->~T();
-        const_cast<generic_raw_any *>(any)->m_manager = nullptr;
+        const_cast<generic_unsafe_any *>(any)->m_manager = nullptr;
       }
       else
       {
         arg->m_storage.value = any->m_storage.value;
         arg->m_manager       = any->m_manager;
 
-        const_cast<generic_raw_any *>(any)->m_storage.value = nullptr;
-        const_cast<generic_raw_any *>(any)->m_manager       = nullptr;
+        const_cast<generic_unsafe_any *>(any)->m_storage.value = nullptr;
+        const_cast<generic_unsafe_any *>(any)->m_manager       = nullptr;
       }
       break;
     }
-    return nullptr;
   }
 
 
+  /*!
+   * @brief Constructs the value to be contained using @code args@endcode.
+   *
+   * @tparam T    The type of the value to construct.
+   * @tparam Args The type of the arguments to construct the value.
+   * @param args The arguments to construct the value.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::constructible_from<T, Args &&...>@endcode.
+   */
   template<typename T, typename ...Args>
   constexpr void
   m_emplace(Args &&...args)
@@ -160,6 +214,14 @@ private:
   }
 
 
+  /*!
+   * @brief Casts the contained value to the given templated type, without any
+   *   type-safety exception or guarantee.
+   *
+   * @tparam T The type to cast the contained value to.
+   * @returns The cast pointer to the contained value.
+   * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   */
   template<typename T>
   [[nodiscard]]
   constexpr T *
@@ -167,10 +229,20 @@ private:
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>)
   {
-    return static_cast<T *>(const_cast<void *>(
-        s_manage<T>(operation::cast, this, nullptr)));
+    if constexpr (to_buffer_v<T>)
+      return reinterpret_cast<T *>(m_storage.buffer);
+    else
+      return static_cast<T *>(m_storage.value);
   }
 
+  /*!
+   * @brief Casts the const contained value to the given templated type,
+   *   without any type-safety exception or guarantee.
+   *
+   * @tparam T The type to cast the contained value to.
+   * @returns The cast pointer to the const contained value.
+   * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   */
   template<typename T>
   [[nodiscard]]
   constexpr T const *
@@ -178,18 +250,23 @@ private:
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>)
   {
-    return static_cast<T const *>(s_manage<T>(operation::cast, this, nullptr));
+    if constexpr (to_buffer_v<T>)
+      return reinterpret_cast<T const *>(&m_storage.buffer);
+    else
+      return static_cast<T const *>(m_storage.value);
   }
+
+  //! @endcond
 
 public:
   constexpr
-  generic_raw_any()
+  generic_unsafe_any()
     : m_manager{nullptr}
   { }
 
   constexpr
-  generic_raw_any(generic_raw_any const &other)
-    : generic_raw_any{}
+  generic_unsafe_any(generic_unsafe_any const &other)
+    : generic_unsafe_any{}
   {
     if (!other.has_value())
       return;
@@ -198,9 +275,9 @@ public:
   }
 
   constexpr
-  generic_raw_any(generic_raw_any &&other)
+  generic_unsafe_any(generic_unsafe_any &&other)
   noexcept
-    : generic_raw_any{}
+    : generic_unsafe_any{}
   {
     if (!other.has_value())
       return;
@@ -210,59 +287,59 @@ public:
 
   template<typename T, typename ...Args>
   explicit constexpr
-  generic_raw_any(std::in_place_type_t<T>, Args &&...args)
+  generic_unsafe_any(std::in_place_type_t<T>, Args &&...args)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
-    : generic_raw_any{}
+    : generic_unsafe_any{}
   {
     m_emplace<T>(std::forward<Args>(args)...);
   }
 
   template<typename T, typename U, typename ...Args>
   constexpr
-  generic_raw_any(
+  generic_unsafe_any(
       std::in_place_type_t<T>,
       std::initializer_list<U> ilist,
       Args                &&...args)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, std::initializer_list<U>, Args...>)
-    : generic_raw_any{}
+    : generic_unsafe_any{}
   {
     m_emplace<T>(ilist, std::forward<Args>(args)...);
   }
 
   template<typename T>
   explicit constexpr
-  generic_raw_any(T &&value)
+  generic_unsafe_any(T &&value)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
-    : generic_raw_any{std::in_place_type<T>, std::forward<T>(value)}
+    : generic_unsafe_any{std::in_place_type<T>, std::forward<T>(value)}
   { }
 
 
   constexpr
-  ~generic_raw_any()
+  ~generic_unsafe_any()
   noexcept
   {
     reset();
   }
 
 
-  constexpr generic_raw_any &
-  operator=(generic_raw_any const &other)
+  constexpr generic_unsafe_any &
+  operator=(generic_unsafe_any const &other)
   {
     if (this == &other)
       return *this;
 
-    *this = generic_raw_any{other};
+    *this = generic_unsafe_any{other};
     return *this;
   }
 
-  constexpr generic_raw_any &
-  operator=(generic_raw_any &&other)
+  constexpr generic_unsafe_any &
+  operator=(generic_unsafe_any &&other)
   noexcept
   {
     if (this == &other)
@@ -278,19 +355,19 @@ public:
   }
 
   template<typename T>
-  constexpr generic_raw_any &
+  constexpr generic_unsafe_any &
   operator=(T &&value)
   requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::is_move_constructible_v<T>)
   {
-    *this = generic_raw_any{std::forward<T>(value)};
+    *this = generic_unsafe_any{std::forward<T>(value)};
     return *this;
   }
 
 
   constexpr void
-  swap(generic_raw_any &other)
+  swap(generic_unsafe_any &other)
   noexcept
   {
     if (this == &other)
@@ -301,7 +378,7 @@ public:
 
     if (has_value() && other.has_value())
     {
-      generic_raw_any tmp;
+      generic_unsafe_any tmp;
 
       other.m_manager(operation::move, &other, &tmp);
       m_manager      (operation::move, this  , &other);
@@ -309,15 +386,15 @@ public:
     }
     else
     {
-      generic_raw_any       *empty = !has_value() ? this : &other;
-      generic_raw_any const *full  = !has_value() ? &other : this;
+      generic_unsafe_any       *empty = !has_value() ? this : &other;
+      generic_unsafe_any const *full  = !has_value() ? &other : this;
 
       full->m_manager(operation::move, full, empty);
     }
   }
 
   friend constexpr void
-  swap(generic_raw_any &lhs, generic_raw_any &rhs)
+  swap(generic_unsafe_any &lhs, generic_unsafe_any &rhs)
   noexcept(noexcept(lhs.swap(rhs)))
   {
     lhs.swap(rhs);
@@ -375,20 +452,20 @@ public:
 
   template<typename T, std::size_t Size, std::size_t Align>
   friend constexpr T const *
-  raw_any_cast(generic_raw_any<Size, Align> const &any)
+  unsafe_any_cast(generic_unsafe_any<Size, Align> const &any)
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>);
 
   template<typename T, std::size_t Size, std::size_t Align>
   friend constexpr T *
-  raw_any_cast(generic_raw_any<Size, Align> &any)
+  unsafe_any_cast(generic_unsafe_any<Size, Align> &any)
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>);
 
 };
 
 
-using raw_any = generic_raw_any<>;
+using unsafe_any = generic_unsafe_any<>;
 
 
 template<
@@ -397,20 +474,20 @@ template<
     std::size_t BufferAlign,
     typename ...Args>
 [[nodiscard]]
-constexpr generic_raw_any<BufferSize, BufferAlign>
-make_raw_any(Args &&...args)
+constexpr generic_unsafe_any<BufferSize, BufferAlign>
+make_unsafe_any(Args &&...args)
 requires (
       std::is_same_v<T, std::decay_t<T>>
    && std::constructible_from<T, Args...>)
 {
-  return generic_raw_any<BufferSize, BufferAlign>{
+  return generic_unsafe_any<BufferSize, BufferAlign>{
       std::in_place_type<T>,
       std::forward<Args>(args)...};
 }
 
 template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
 constexpr T const *
-raw_any_cast(generic_raw_any<BufferSize, BufferAlign> const &any)
+unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> const &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {
@@ -419,7 +496,7 @@ requires (std::is_same_v<T, std::decay_t<T>>)
 
 template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
 constexpr T *
-raw_any_cast(generic_raw_any<BufferSize, BufferAlign> &any)
+unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {
@@ -430,4 +507,4 @@ requires (std::is_same_v<T, std::decay_t<T>>)
 }
 
 
-#endif // HEIM_RAW_ANY_HPP
+#endif // HEIM_UNSAFE_ANY_HPP
