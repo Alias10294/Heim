@@ -14,8 +14,8 @@ namespace heim
 /*!
  * @brief A container for single values of any type.
  *
- * @tparam BufferSize  The size      of the internal buffer for the
- *   small-buffer optimization.
+ * @tparam BufferSize  The size of the internal buffer for the small-buffer
+ *   optimization.
  * @tparam BufferAlign The alignment of the internal buffer for the
  *   small-buffer optimization.
  *
@@ -61,7 +61,7 @@ private:
 
 
     /*!
-     * @brief The default constructor of the storage.
+     * @brief Default-constructs the storage.
      */
     constexpr
     storage_t()
@@ -82,6 +82,7 @@ private:
     constexpr storage_t &
     operator=(storage_t const &other)
     = delete;
+
 
     void                          *value;
     alignas(buffer_align) buffer_t buffer;
@@ -192,7 +193,7 @@ private:
   /*!
    * @brief Constructs the value to be contained using @code args@endcode.
    *
-   * @tparam T    The type of the value to construct.
+   * @tparam T    The type of the constructed value.
    * @tparam Args The type of the arguments to construct the value.
    * @param args The arguments to construct the value.
    * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
@@ -219,7 +220,7 @@ private:
    *   type-safety exception or guarantee.
    *
    * @tparam T The type to cast the contained value to.
-   * @returns The cast pointer to the contained value.
+   * @returns The cast pointer to the value.
    * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
    */
   template<typename T>
@@ -259,11 +260,19 @@ private:
   //! @endcond
 
 public:
+  /*!
+   * @brief Default-constructs the container.
+   */
   constexpr
   generic_unsafe_any()
     : m_manager{nullptr}
   { }
 
+  /*!
+   * @brief Constructs @c *this to be a copy of @code other@endcode.
+   *
+   * @param other The container to copy.
+   */
   constexpr
   generic_unsafe_any(generic_unsafe_any const &other)
     : generic_unsafe_any{}
@@ -274,6 +283,11 @@ public:
     other.m_manager(operation::copy, &other, this);
   }
 
+  /*!
+   * @brief Constructs @c *this to be the moved @code other@endcode.
+   *
+   * @param other The moved container.
+   */
   constexpr
   generic_unsafe_any(generic_unsafe_any &&other)
   noexcept
@@ -285,6 +299,15 @@ public:
     other.m_manager(operation::move, &other, this);
   }
 
+  /*!
+   * @brief Constructs @c *this along its value using @code args@endcode.
+   *
+   * @tparam T    The type of the object to contain.
+   * @tparam Args The type of the arguments to construct the value.
+   * @param args The arguments to construct the value.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::constructible_from<T, Args...>@endcode.
+   */
   template<typename T, typename ...Args>
   explicit constexpr
   generic_unsafe_any(std::in_place_type_t<T>, Args &&...args)
@@ -296,6 +319,20 @@ public:
     m_emplace<T>(std::forward<Args>(args)...);
   }
 
+  /*!
+   * @brief Constructs @c *this along its contained value with
+   *   @code ilist@endcode and @code args@endcode.
+   *
+   * @tparam T    The type of the object to contain.
+   * @tparam U    The type of the elements in the initializer list to construct
+   *   the value.
+   * @tparam Args The type of the arguments to construct the value.
+   * @param ilist The initializer list to construct the value.
+   * @param args  The arguments to construct the value.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::constructible_from<T, std::initializer_list<U>, Args...>
+   *   @endcode.
+   */
   template<typename T, typename U, typename ...Args>
   constexpr
   generic_unsafe_any(
@@ -310,6 +347,15 @@ public:
     m_emplace<T>(ilist, std::forward<Args>(args)...);
   }
 
+  /*!
+   * @brief Constructs @c *this and moves @code value@endcode to be the
+   *   contained value.
+   *
+   * @tparam T The type of the value to contain.
+   * @param value The value to contain.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::is_move_constructible_v<T>@endcode.
+   */
   template<typename T>
   explicit constexpr
   generic_unsafe_any(T &&value)
@@ -320,6 +366,9 @@ public:
   { }
 
 
+  /*!
+   * @brief Destroys the container.
+   */
   constexpr
   ~generic_unsafe_any()
   noexcept
@@ -328,6 +377,12 @@ public:
   }
 
 
+  /*!
+   * @brief Assigns @c *this to be a copy of @code other@endcode.
+   *
+   * @param other The container to copy.
+   * @returns @c *this .
+   */
   constexpr generic_unsafe_any &
   operator=(generic_unsafe_any const &other)
   {
@@ -338,6 +393,12 @@ public:
     return *this;
   }
 
+  /*!
+   * @brief Assigns @c *this to be the moved @code other@endcode.
+   *
+   * @param other The moved container.
+   * @returns @c *this .
+   */
   constexpr generic_unsafe_any &
   operator=(generic_unsafe_any &&other)
   noexcept
@@ -354,6 +415,15 @@ public:
     return *this;
   }
 
+  /*!
+   * @brief Assigns @code value@endcode to be the contained value of @c *this .
+   *
+   * @tparam T The type of the value to contain.
+   * @param value The value to contain.
+   * @returns @c *this .
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::is_move_constructible_v<T>@endcode.
+   */
   template<typename T>
   constexpr generic_unsafe_any &
   operator=(T &&value)
@@ -366,6 +436,11 @@ public:
   }
 
 
+  /*!
+   * @brief Swaps the contents of @c *this and @code other@endcode.
+   *
+   * @param other The other container whose contents to swap.
+   */
   constexpr void
   swap(generic_unsafe_any &other)
   noexcept
@@ -393,6 +468,12 @@ public:
     }
   }
 
+  /*!
+   * @brief Swaps the contents of @code lhs@endcode and @code rhs@endcode.
+   *
+   * @param lhs The first  container whose contents to swap.
+   * @param rhs The second container whose contents to swap.
+   */
   friend constexpr void
   swap(generic_unsafe_any &lhs, generic_unsafe_any &rhs)
   noexcept(noexcept(lhs.swap(rhs)))
@@ -402,6 +483,11 @@ public:
 
 
 
+  /*!
+   * @brief Checks whether @c *this contains a value.
+   *
+   * @returns @ true if @c *this contains a value, @c false otherwise.
+   */
   [[nodiscard]]
   constexpr bool
   has_value() const
@@ -412,6 +498,9 @@ public:
 
 
 
+  /*!
+   * @brief Destroys the contained value, leaving the container empty.
+   */
   constexpr void
   reset()
   noexcept
@@ -424,6 +513,17 @@ public:
   }
 
 
+  /*!
+   * @brief Emplaces a new value, destroying the currently contained value if
+   *   any.
+   *
+   * @tparam T    The type of the new value to contain.
+   * @tparam Args The type of the arguments to construct the new value.
+   * @param args The arguments to construct the new value.
+   * @returns A reference to the new value.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::constructible_from<T, Args &&...>@endcode.
+   */
   template<typename T, typename ...Args>
   constexpr T &
   emplace(Args &&...args)
@@ -436,6 +536,21 @@ public:
     return *m_cast<T>();
   }
 
+  /*!
+   * @brief Emplaces a new value, destroying the currently contained value if
+   *   any.
+   *
+   * @tparam T    The type of the new value to contain.
+   * @tparam U    The type of the elements in the initializer list to construct
+   *   the new value.
+   * @tparam Args The type of the arguments to construct the new value.
+   * @param ilist The initializer list to construct the new value.
+   * @param args  The arguments to construct the new value.
+   * @returns A reference to the new value.
+   * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   * @pre - @code std::constructible_from<T, std::initializer_list<U>, Args...>
+   *   @endcode.
+   */
   template<typename T, typename U, typename ...Args>
   constexpr T &
   emplace(std::initializer_list<U> ilist, Args &&...args)
@@ -450,24 +565,68 @@ public:
 
 
 
-  template<typename T, std::size_t Size, std::size_t Align>
-  friend constexpr T const *
-  unsafe_any_cast(generic_unsafe_any<Size, Align> const &any)
-  noexcept
-  requires (std::is_same_v<T, std::decay_t<T>>);
-
+  /*!
+   * @brief Performs access to the contained value without any type-safety
+   *   mechanism.
+   *
+   * @tparam T     The supposed type of the value to access.
+   * @tparam Size  The size of the internal buffer of the unsafe_any for the
+   *   small-buffer optimization.
+   * @tparam Align The alignment of the internal buffer of the unsafe_any for
+   *   the small-buffer optimization.
+   * @param any The container to access the value from.
+   * @returns The cast pointer to the contained value.
+   * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   */
   template<typename T, std::size_t Size, std::size_t Align>
   friend constexpr T *
   unsafe_any_cast(generic_unsafe_any<Size, Align> &any)
   noexcept
   requires (std::is_same_v<T, std::decay_t<T>>);
 
+  /*!
+   * @brief Performs access to the const contained value without any
+   *   type-safety mechanism.
+   *
+   * @tparam T     The supposed type of the const value to access.
+   * @tparam Size  The size of the internal buffer of the unsafe_any for the
+   *   small-buffer optimization.
+   * @tparam Align The alignment of the internal buffer of the unsafe_any for
+   *   the small-buffer optimization.
+   * @param any The container to access the const value from.
+   * @returns The cast pointer to the const contained value.
+   * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
+   */
+  template<typename T, std::size_t Size, std::size_t Align>
+  friend constexpr T const *
+  unsafe_any_cast(generic_unsafe_any<Size, Align> const &any)
+  noexcept
+  requires (std::is_same_v<T, std::decay_t<T>>);
+
 };
 
 
+/*!
+ * @brief The default generic_unsafe_any specialization.
+ */
 using unsafe_any = generic_unsafe_any<>;
 
 
+/*!
+ * @brief Returns a new unsafe_any containing a value constructed using
+ *   @code args@endcode.
+ *
+ * @tparam T           The type of the value for the unsafe_any to contain.
+ * @tparam BufferSize  The size of the internal buffer of the unsafe_any
+ *   for the small-buffer optimization.
+ * @tparam BufferAlign The alignment of the internal buffer of the unsafe_any
+ *   for the small-buffer optimization.
+ * @tparam Args        The type of the arguments to construct the value for the
+ *   object to contain.
+ * @param args The arguments to construct the value for the object to contain.
+ * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+ * @pre - @code std::constructible_from<T, Args...>@endcode.
+ */
 template<
     typename    T,
     std::size_t BufferSize,
@@ -485,9 +644,48 @@ requires (
       std::forward<Args>(args)...};
 }
 
+/*!
+ * @brief Returns a new unsafe_any containing a value constructed using
+ *   @code args@endcode.
+ *
+ * @tparam T           The type of the value for the unsafe_any to contain.
+ * @tparam BufferSize  The size of the internal buffer of the unsafe_any
+ *   for the small-buffer optimization.
+ * @tparam BufferAlign The alignment of the internal buffer of the unsafe_any
+ *   for the small-buffer optimization.
+ * @tparam U           The type of the elements in the initializer list to
+ *   construct the value for the object to contain.
+ * @tparam Args        The type of the arguments to construct the value for the
+ *   object to contain.
+ * @param ilist The initializer list to construct the value for the object to
+ *   contain.
+ * @param args  The arguments to construct the value for the object to contain.
+ * @pre - @code std::is_same_v<T, std::decay_t<T>>@endcode.
+ * @pre - @code std::constructible_from<T, Args...>@endcode.
+ */
+template<
+    typename    T,
+    std::size_t BufferSize,
+    std::size_t BufferAlign,
+    typename    U,
+    typename ...Args>
+[[nodiscard]]
+constexpr generic_unsafe_any<BufferSize, BufferAlign>
+make_unsafe_any(std::initializer_list<U> ilist, Args &&...args)
+requires (
+      std::is_same_v<T, std::decay_t<T>>
+   && std::constructible_from<T, std::initializer_list<U>, Args...>)
+{
+  return generic_unsafe_any<BufferSize, BufferAlign>{
+      std::in_place_type<T>,
+      ilist,
+      std::forward<Args>(args)...};
+}
+
+
 template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
-constexpr T const *
-unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> const &any)
+constexpr T *
+unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {
@@ -495,8 +693,8 @@ requires (std::is_same_v<T, std::decay_t<T>>)
 }
 
 template<typename T, std::size_t BufferSize, std::size_t BufferAlign>
-constexpr T *
-unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> &any)
+constexpr T const *
+unsafe_any_cast(generic_unsafe_any<BufferSize, BufferAlign> const &any)
 noexcept
 requires (std::is_same_v<T, std::decay_t<T>>)
 {

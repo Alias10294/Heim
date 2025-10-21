@@ -708,7 +708,7 @@ public:
 
 
   /*!
-   * @brief Assigns the index map to be a copy of @code other@endcode.
+   * @brief Assigns @c *this to be a copy of @code other@endcode.
    *
    * @param other The index map to copy.
    * @returns @c *this .
