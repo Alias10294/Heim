@@ -125,9 +125,9 @@ private:
    *   contained value.
    *
    * @tparam T The type of the contained value.
-   * @param op  The kind of operation to perform on the contained value.
-   * @param any The pointer to the container that holds the value.
-   * @param arg The pointer to the optional other container on which the
+   * @param op    The kind of operation to perform on the contained value.
+   * @param self  The pointer to the container that holds the value.
+   * @param other The pointer to the optional other container on which the
    *   operation has to be performed.
    * @pre @code std::is_same_v<T, std::decay_t<T>>@endcode.
    */
@@ -135,15 +135,15 @@ private:
   constexpr static void
   s_manage(
       operation const           op,
-      generic_unsafe_any const *any,
-      generic_unsafe_any       *arg)
+      generic_unsafe_any const *self,
+      generic_unsafe_any       *other)
   requires (std::is_same_v<T, std::decay_t<T>>)
   {
     T const *ptr = nullptr;
     if constexpr (to_buffer_v<T>)
-      ptr = std::launder(reinterpret_cast<T const *>(&any->m_storage.buffer));
+      ptr = std::launder(reinterpret_cast<T const *>(&self->m_storage.buffer));
     else
-      ptr = static_cast<T const *>(any->m_storage.value);
+      ptr = static_cast<T const *>(self->m_storage.value);
 
     switch (op)
     {
@@ -152,13 +152,13 @@ private:
       {
         if constexpr (to_buffer_v<T>)
         {
-          ::new(&arg->m_storage.buffer) T{*ptr};
-          arg->m_manager = any->m_manager;
+          ::new(&other->m_storage.buffer) T{*ptr};
+          other->m_manager = self->m_manager;
         }
         else
         {
-          arg->m_storage.value = new T{*ptr};
-          arg->m_manager       = any->m_manager;
+          other->m_storage.value = new T{*ptr};
+          other->m_manager       = self->m_manager;
         }
       }
       break;
@@ -171,19 +171,19 @@ private:
     case operation::move:
       if constexpr (to_buffer_v<T>)
       {
-        ::new(&arg->m_storage.buffer) T{std::move(*const_cast<T *>(ptr))};
-        arg->m_manager = any->m_manager;
+        ::new(&other->m_storage.buffer) T{std::move(*const_cast<T *>(ptr))};
+        other->m_manager = self->m_manager;
 
         ptr->~T();
-        const_cast<generic_unsafe_any *>(any)->m_manager = nullptr;
+        const_cast<generic_unsafe_any *>(self)->m_manager = nullptr;
       }
       else
       {
-        arg->m_storage.value = any->m_storage.value;
-        arg->m_manager       = any->m_manager;
+        other->m_storage.value = self->m_storage.value;
+        other->m_manager       = self->m_manager;
 
-        const_cast<generic_unsafe_any *>(any)->m_storage.value = nullptr;
-        const_cast<generic_unsafe_any *>(any)->m_manager       = nullptr;
+        const_cast<generic_unsafe_any *>(self)->m_storage.value = nullptr;
+        const_cast<generic_unsafe_any *>(self)->m_manager       = nullptr;
       }
       break;
     }

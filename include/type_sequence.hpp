@@ -7,12 +7,19 @@
 
 namespace heim
 {
+/*!
+ * @brief A type used to represent a sequence of types.
+ *
+ * @tparam Ts The types in the sequence.
+ *
+ * @details Makes most use of variadic templates and partial specialization to
+ *   provide compile-time logic and algorithms on types.
+ */
 template<typename ...Ts>
 struct type_sequence;
 
 
-
-namespace internal
+namespace detail
 {
 template<typename T, typename ...Ts>
 struct type_sequence_index;
@@ -294,10 +301,10 @@ template<
     std::size_t N,
     typename    Seq,
     bool        IsZero = (N == 0)>
-struct type_sequence_subsequences_internal;
+struct type_sequence_subsequences_detail;
 
 template<typename ...Ts>
-struct type_sequence_subsequences_internal<0, type_sequence<Ts ...>, true>
+struct type_sequence_subsequences_detail<0, type_sequence<Ts ...>, true>
 {
   using type
   = type_sequence<type_sequence<>>;
@@ -305,7 +312,7 @@ struct type_sequence_subsequences_internal<0, type_sequence<Ts ...>, true>
 };
 
 template<std::size_t N>
-struct type_sequence_subsequences_internal<N, type_sequence<>, false>
+struct type_sequence_subsequences_detail<N, type_sequence<>, false>
 {
   static_assert(N > 0, "heim::type_sequence::subsequences: incoherent type");
 
@@ -318,7 +325,7 @@ template<
     std::size_t N,
     typename    First,
     typename ...Rest>
-struct type_sequence_subsequences_internal<
+struct type_sequence_subsequences_detail<
     N,
     type_sequence<First, Rest ...>, false>
 {
@@ -335,13 +342,13 @@ private:
   };
 
   using first_t
-  = typename type_sequence_subsequences_internal<
+  = typename type_sequence_subsequences_detail<
       N - 1,
       type_sequence<Rest...>>::type::template
       map_t<prefix>;
 
   using rest_t
-  = typename type_sequence_subsequences_internal<
+  = typename type_sequence_subsequences_detail<
       N,
       type_sequence<Rest...>>::type;
 
@@ -355,7 +362,7 @@ template<std::size_t N, typename Seq>
 struct type_sequence_subsequences
 {
   using type
-  = typename type_sequence_subsequences_internal<N, Seq>::type;
+  = typename type_sequence_subsequences_detail<N, Seq>::type;
 
 };
 
@@ -403,6 +410,7 @@ struct type_sequence_induce_order<type_sequence<Us ...>, Ts ...>
 
 };
 
+
 }
 
 
@@ -411,6 +419,13 @@ template<typename ...Ts>
 struct type_sequence
 {
 private:
+  //! @cond INTERNAL
+
+  /*!
+   * @brief Determines whether @code T@endcode is not void.
+   *
+   * @tparam T The type to determine for.
+   */
   template<typename T>
   struct is_not_void
   {
@@ -421,6 +436,9 @@ private:
   };
 
 public:
+  /*!
+   * @brief Determines the size of the sequence.
+   */
   struct size
   {
     constexpr
@@ -432,8 +450,9 @@ public:
   static std::size_t size_v
   = size::value;
 
-
-
+  /*!
+   * @brief Determines whether the sequence is empty.
+   */
   struct empty
   {
     constexpr
@@ -447,7 +466,12 @@ public:
   = empty::value;
 
 
-
+  /*!
+   * @brief Determines the number of times @code T@endcode appears in the
+   *   sequence.
+   *
+   * @tparam T The type to count.
+   */
   template<typename T>
   struct count
   {
@@ -464,6 +488,11 @@ public:
 
 
 
+  /*!
+   * @brief Determines whether @code T@endcode is present in the sequence.
+   *
+   * @tparam T The type to check for.
+   */
   template<typename T>
   struct contains
   {
@@ -479,10 +508,14 @@ public:
   = contains<T>::value;
 
 
-
+  /*!
+   * @brief Determines the index in the sequence of @code T@endcode.
+   *
+   * @tparam T The type to get the index of.
+   */
   template<typename T>
   using index
-  = internal::type_sequence_index<T, Ts...>;
+  = detail::type_sequence_index<T, Ts...>;
 
   template<typename T>
   constexpr
@@ -490,10 +523,15 @@ public:
   = index<T>::value;
 
 
-
+  /*!
+   * @brief Determines the type located at index @code I@endcode in the
+   *   sequence.
+   *
+   * @tparam I The index to get the corresponding type of.
+   */
   template<std::size_t I>
   using get
-  = internal::type_sequence_get<I, Ts ...>;
+  = detail::type_sequence_get<I, Ts ...>;
 
   template<std::size_t I>
   using get_t
@@ -501,6 +539,12 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence produced by concatenation of this sequence
+   *   and @code TypeSeq@endcode.
+   *
+   * @tparam TypeSeq The type sequence to concatenate.
+   */
   template<typename TypeSeq>
   struct concat;
 
@@ -517,7 +561,10 @@ public:
   };
 
 
-
+  /*!
+   * @brief Determines the sequence produced by extending it with
+   *   @code Us ...@endcode.
+   */
   template<typename ...Us>
   struct extend
   {
@@ -532,32 +579,48 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence produced when filtering out duplicates of
+   *   the same types.
+   */
   using unique
-  = internal::type_sequence_unique<type_sequence<>, Ts ...>;
+  = detail::type_sequence_unique<type_sequence<>, Ts ...>;
 
   using unique_t
   = typename unique::type;
 
 
-
+  /*!
+   * @brief Determines the sequence produced by flattening once all
+   *   type_sequence types in its sequence.
+   */
   using flat
-  = internal::type_sequence_flat<Ts ...>;
+  = detail::type_sequence_flat<Ts ...>;
 
   using flat_t
   = typename flat::type;
 
 
-
+  /*!
+   * @brief Determines the sequence produced by filtering out types that verify
+   *   @code Pred@endcode.
+   *
+   * @tparam Pred The predicate type used to filter types.
+   * @pre @code Pred@endcode must expose a
+   *   @code constexpr static bool value@endcode attribute.
+   */
   template<template<typename> typename Pred>
   using filter
-  = internal::type_sequence_filter<Pred, Ts ...>;
+  = detail::type_sequence_filter<Pred, Ts ...>;
 
   template<template<typename> typename Pred>
   using filter_t
   = typename filter<Pred>::type;
 
 
-
+  /*!
+   * @brief Determines the sequence produced by filtering out all void types.
+   */
   using dense
   = filter<is_not_void>;
 
@@ -566,19 +629,30 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence produced after the type at index
+   *   @code I@endcode is removed.
+   *
+   * @tparam I The index of the type to remove.
+   */
   template<std::size_t I>
   using remove
-  = internal::type_sequence_remove<I, Ts ...>;
+  = detail::type_sequence_remove<I, Ts ...>;
 
   template<std::size_t I>
   using remove_t
   = typename remove<I>::type;
 
 
-
+  /*!
+   * @brief Determines the sequence produced after the first @code T@endcode is
+   *   erased from it.
+   *
+   * @tparam T The type to erase from the sequence.
+   */
   template<typename T>
   using erase
-  = internal::type_sequence_erase<T, Ts ...>;
+  = detail::type_sequence_erase<T, Ts ...>;
 
   template<typename T>
   using erase_t
@@ -586,9 +660,15 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence of the types only contained in this
+   *   sequence.
+   *
+   * @tparam TypeSeq The sequence to "subtract" to this sequence.
+   */
   template<typename TypeSeq>
   using difference
-  = internal::type_sequence_difference<
+  = detail::type_sequence_difference<
       TypeSeq,
       type_sequence>;
 
@@ -597,10 +677,15 @@ public:
   = typename difference<TypeSeq>::type;
 
 
-
+  /*!
+   * @brief Determines the sequence of types contained in both this sequence
+   *   and @code TypeSeq@endcode.
+   *
+   * @tparam TypeSeq The sequence to intersect with.
+   */
   template<typename TypeSeq>
   using intersect
-  = internal::type_sequence_intersect<
+  = detail::type_sequence_intersect<
       TypeSeq,
       type_sequence>;
 
@@ -610,6 +695,13 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence of types after each type is applied
+   *   @code Meta@endcode.
+   *
+   * @tparam Meta The type used to map the types.
+   * @pre @code Meta@endcode must expose a typename @code type@endcode.
+   */
   template<template<typename> typename Meta>
   struct map
   {
@@ -624,19 +716,31 @@ public:
 
 
 
+  /*!
+   * @brief Determines the sequence of all subsequences of size
+   *   @code N@endcode.
+   *
+   * @tparam N The size of the subsequences to produce.
+   */
   template<std::size_t N>
   using subsequences
-  = internal::type_sequence_subsequences<N, type_sequence>;
+  = detail::type_sequence_subsequences<N, type_sequence>;
 
   template<std::size_t N>
   using subsequences_t
   = typename subsequences<N>::type;
 
 
-
+  /*!
+   * @brief Determines the sequence produced by reordering it in the same order
+   *   as @code TypeSeq@endcode. All types not in @code TypeSeq@endcode are
+   *   erased.
+   *
+   * @tparam TypeSeq The sequence to follow the order of.
+   */
   template<typename TypeSeq>
   using induce_order
-  = internal::type_sequence_induce_order<TypeSeq, Ts ...>;
+  = detail::type_sequence_induce_order<TypeSeq, Ts ...>;
 
   template<typename TypeSeq>
   using induce_order_t
@@ -646,7 +750,7 @@ public:
 
 
 
-namespace internal
+namespace detail
 {
 template<typename>
 struct is_type_sequence
@@ -654,8 +758,7 @@ struct is_type_sequence
 {};
 
 template<typename ...Ts>
-struct is_type_sequence<
-    type_sequence<Ts...>>
+struct is_type_sequence<type_sequence<Ts...>>
   : std::true_type
 { };
 
@@ -663,12 +766,17 @@ struct is_type_sequence<
 }
 
 
+/*!
+ * @brief Determines whether @code T@endcode specializes type_sequence or not.
+ *
+ * @tparam T The type to determine for.
+ */
 template<typename T>
 struct is_type_sequence
 {
   constexpr
   static bool value
-  = internal::is_type_sequence<std::remove_cvref_t<T>>::value;
+  = detail::is_type_sequence<std::remove_cvref_t<T>>::value;
 
 };
 
@@ -680,6 +788,12 @@ inline bool is_type_sequence_v
 
 
 
+/*!
+ * @brief Determines the corresponding type_sequence specialization to the
+ *   tuple @code T@endcode.
+ *
+ * @tparam Tuple The tuple to extract the sequence of types of.
+ */
 template<typename Tuple>
 struct to_type_sequence;
 
