@@ -34,7 +34,7 @@ struct type_sequence_index<T>
 };
 
 template<typename T, typename First, typename ...Rest>
-struct type_sequence_index<T, First, Rest...>
+struct type_sequence_index<T, First, Rest ...>
 {
   constexpr
   static std::size_t value
@@ -50,7 +50,7 @@ template<std::size_t I, typename ...Ts>
 struct type_sequence_get;
 
 template<typename First, typename ...Rest>
-struct type_sequence_get<0, First, Rest...>
+struct type_sequence_get<0, First, Rest ...>
 {
   using type
   = First;
@@ -58,10 +58,17 @@ struct type_sequence_get<0, First, Rest...>
 };
 
 template<std::size_t I, typename First, typename ...Rest>
-struct type_sequence_get<I, First, Rest...>
+struct type_sequence_get<I, First, Rest ...>
 {
+private:
+  static_assert(
+      I < 1 + sizeof...(Rest),
+      "heim::detail::type_sequence_get<I, First, Rest ...>: "
+          "I < 1 + sizeof...(Rest).");
+
+public:
   using type
-  = typename type_sequence_get<I - 1, Rest...>::type;
+  = typename type_sequence_get<I - 1, Rest ...>::type;
 
 };
 
@@ -92,7 +99,7 @@ struct type_sequence_unique<type_sequence<Seen ...>>
 };
 
 template<typename ...Seen, typename First, typename ...Rest>
-struct type_sequence_unique<type_sequence<Seen ...>, First, Rest...>
+struct type_sequence_unique<type_sequence<Seen ...>, First, Rest ...>
 {
   using type
   = typename type_sequence_unique<
@@ -160,7 +167,7 @@ struct type_sequence_filter<Pred>
 };
 
 template<template<typename> typename Pred, typename First, typename ...Rest>
-struct type_sequence_filter<Pred, First, Rest...>
+struct type_sequence_filter<Pred, First, Rest ...>
 {
   using type
   = std::conditional_t<
@@ -186,19 +193,26 @@ struct type_sequence_remove<I>
 };
 
 template<typename First, typename ...Rest>
-struct type_sequence_remove<0, First, Rest...>
+struct type_sequence_remove<0, First, Rest ...>
 {
   using type
   = type_sequence<Rest ...>;
 };
 
 template<std::size_t I, typename First, typename ...Rest>
-struct type_sequence_remove<I, First, Rest...>
+struct type_sequence_remove<I, First, Rest ...>
 {
+private:
+  static_assert(
+      I < 1 + sizeof...(Rest),
+      "heim::type_sequence_remove<I, First, Rest ...>: "
+          "I < 1 + sizeof...(Rest).");
+
+public:
   using type
   = typename type_sequence_concat<
       type_sequence<First>,
-      typename type_sequence_remove<I - 1, Rest...>::type>::type;
+      typename type_sequence_remove<I - 1, Rest ...>::type>::type;
 
 };
 
@@ -216,7 +230,7 @@ struct type_sequence_erase<T>
 };
 
 template<typename T, typename First, typename ...Rest>
-struct type_sequence_erase<T, First, Rest...>
+struct type_sequence_erase<T, First, Rest ...>
 {
   using type
   = std::conditional_t<
@@ -344,13 +358,13 @@ private:
   using first_t
   = typename type_sequence_subsequences_detail<
       N - 1,
-      type_sequence<Rest...>>::type::template
+      type_sequence<Rest ...>>::type::template
       map_t<prefix>;
 
   using rest_t
   = typename type_sequence_subsequences_detail<
       N,
-      type_sequence<Rest...>>::type;
+      type_sequence<Rest ...>>::type;
 
 public:
   using type
@@ -512,6 +526,8 @@ public:
    * @brief Determines the index in the sequence of @code T@endcode.
    *
    * @tparam T The type to get the index of.
+   * @note If @code contains_v<T> == false@endcode then
+   *    @code index<T>::value = size_v@endcode.
    */
   template<typename T>
   using index
@@ -589,6 +605,12 @@ public:
   using unique_t
   = typename unique::type;
 
+  /*!
+   * @brief Determines whether the sequence is the same as its unique type.
+   */
+  constexpr static bool
+  unique_v = std::is_same_v<type_sequence, unique_t>;
+
 
   /*!
    * @brief Determines the sequence produced by flattening once all
@@ -649,6 +671,8 @@ public:
    *   erased from it.
    *
    * @tparam T The type to erase from the sequence.
+   * @note If @code contains_v<T> == false@endcode, then
+   *   @code std::is_same_v<type_sequence, erase<T>::type> == true@endcode.
    */
   template<typename T>
   using erase
@@ -702,7 +726,7 @@ public:
    * @tparam Meta The type used to map the types.
    * @pre @code Meta@endcode must expose a typename @code type@endcode.
    */
-  template<template<typename> typename Meta>
+  template<template<typename T> typename Meta>
   struct map
   {
     using type
@@ -758,7 +782,7 @@ struct is_type_sequence
 {};
 
 template<typename ...Ts>
-struct is_type_sequence<type_sequence<Ts...>>
+struct is_type_sequence<type_sequence<Ts ...>>
   : std::true_type
 { };
 
@@ -802,7 +826,7 @@ using to_type_sequence_t
 = typename to_type_sequence<Tuple>::type;
 
 template<typename ...Ts>
-struct to_type_sequence<std::tuple<Ts...>>
+struct to_type_sequence<std::tuple<Ts ...>>
 {
   using type
   = type_sequence<Ts ...>;
