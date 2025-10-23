@@ -1,140 +1,62 @@
 #ifndef HEIM_CREATION_INFO_HPP
 #define HEIM_CREATION_INFO_HPP
 
-#include <cstddef>
 #include <type_traits>
 #include "type_sequence.hpp"
 
 namespace heim
 {
 template<typename TSeq>
-struct component_info;
-
-template<
-    typename    Component,
-    std::size_t PageSize,
-    typename    Allocator>
-struct component_info<
-    type_sequence<
-        Component,
-        std::integral_constant<std::size_t, PageSize>,
-        Allocator>>
-{
-public:
-  using type
-  = type_sequence<
-      Component,
-      std::integral_constant<std::size_t, PageSize>,
-      Allocator>;
-
-public:
-  using component_t
-  = Component;
-
-  constexpr static std::size_t
-  page_size_v = PageSize;
-
-  using allocator_t
-  = Allocator;
-
-};
-
-
-template<
-    typename    Component,
-    std::size_t PageSize,
-    typename    Allocator>
-using declare_component_info
-= component_info<
-    type_sequence<
-        Component,
-        std::integral_constant<std::size_t, PageSize>,
-        Allocator>>;
-
-
-template<typename TSeq>
 struct is_component_info
   : std::false_type
 { };
 
 template<
-    typename    Component,
+    typename    T,
     std::size_t PageSize,
-    typename    Allocator>
+    typename    Alloc>
 struct is_component_info<
-    type_sequence<
-        Component,
-        std::integral_constant<std::size_t, PageSize>,
-        Allocator>>
+    type_sequence<T, std::integral_constant<std::size_t, PageSize>, Alloc>>
   : std::true_type
 { };
 
 template<typename TSeq>
-constexpr inline bool
+inline constexpr bool
 is_component_info_v = is_component_info<TSeq>::value;
 
 
-
-
 template<typename TSeq>
-struct sync_info;
-
-template<typename ...TSeqs>
-struct sync_info<type_sequence<TSeqs ...>>
+struct component_info_traits
 {
 private:
   static_assert(
-      (is_component_info_v<TSeqs> && ...),
-      "heim::sync_info<type_sequence<TSeqs ...>>: "
-          "(is_component_info_v<TSeqs> && ...)");
-
-  static_assert(
-      type_sequence<typename component_info<TSeqs>::component_t ...>::unique_v,
-      "heim::sync_info<type_sequence<TSeqs ...>>: type_sequence<"
-          "typename component_info<TSeqs>::component_t ...>::unique_v");
+      is_component_info_v<TSeq>,
+      "heim::component_info_traits<TSeq>: is_component_info_v<TSeq>;");
 
 public:
   using type
-  = type_sequence<TSeqs ...>;
-
-private:
-  template<typename TSeq>
-  struct to_component
-  {
-    using type
-    = typename component_info<TSeq>::component_t;
-
-  };
-
-  using component_seq
-  = typename type
-      ::template map_t<to_component>;
+  = TSeq;
 
 public:
-  template<
-      typename    Component,
-      std::size_t PageSize,
-      typename    Allocator>
-  using sync
-  = sync_info<typename type::template extend_t<
-      typename declare_component_info<Component, PageSize, Allocator>::type>>;
+  using component_t
+  = typename type::template get_t<0>;
 
+  static constexpr std::size_t
+  page_size_v = type::template get_t<1>::value;
 
-  template<typename Component>
-  using syncs
-  = typename component_seq::template contains<Component>;
-
-  template<typename Component>
-  constexpr static bool
-  syncs_v = syncs<Component>::value;
-
-
-  template<typename Component>
-  using info_of
-  = component_info<typename type
-      ::template get_t<component_seq::template index_v<Component>>>;
+  using allocator_t
+  = typename type::template get_t<2>;
 
 };
+
+
+template<
+    typename    T,
+    std::size_t PageSize,
+    typename    Alloc>
+using make_component_info
+= type_sequence<T, std::integral_constant<std::size_t, PageSize>, Alloc>;
+
 
 
 template<typename TSeq>
@@ -143,136 +65,168 @@ struct is_sync_info
 { };
 
 template<typename ...TSeqs>
-struct is_sync_info<type_sequence<TSeqs ...>>
-  : std::bool_constant<(is_component_info_v<TSeqs> && ...)>
+struct is_sync_info<
+    type_sequence<TSeqs ...>>
+  : std::bool_constant<
+        (is_component_info_v<TSeqs> && ...)
+     && type_sequence<TSeqs ...>::unique_v>
 { };
 
 template<typename TSeq>
-constexpr inline bool
+inline constexpr bool
 is_sync_info_v = is_sync_info<TSeq>::value;
 
 
-using declare_sync_info
-= sync_info<type_sequence<>>;
+template<typename TSeq>
+struct sync_info_traits
+{
+private:
+  static_assert(
+      is_sync_info_v<TSeq>,
+      "heim::sync_info_traits<TSeq>: is_sync_info_v<TSeq>;");
+
+public:
+  using type
+  = TSeq;
+
+private:
+  template<typename USeq>
+  struct to_component
+  {
+  public:
+    using type
+    = typename component_info_traits<USeq>::component_t;
+
+  };
+
+public:
+  template<typename USeq>
+  using sync_t
+  = typename sync_info_traits<
+      typename type::template extend_t<USeq>>::type;
+
+
+  using component_sequence_t
+  = typename type::template map_t<to_component>;
+
+
+  template<typename Component>
+  static constexpr bool
+  syncs_v = component_sequence_t::template contains_v<Component>;
+
+
+  template<typename Component>
+  using component_info_t
+  = typename type
+      ::template get_t<component_sequence_t::template index_v<Component>>;
+
+};
 
 
 
 template<typename TSeq>
-struct creation_info;
+struct is_creation_info
+  : std::false_type
+{ };
+
+template<typename ...TSeqs>
+struct is_creation_info<type_sequence<TSeqs ...>>
+  : std::bool_constant<
+        (is_sync_info_v<TSeqs> && ...)
+     && type_sequence<typename sync_info_traits<TSeqs>
+            ::component_sequence_t ...>::flat_t::unique_v>
+{ };
+
+template<typename TSeq>
+inline constexpr bool
+is_creation_info_v = is_creation_info<TSeq>::value;
 
 
 namespace detail
 {
-template<
-    typename    Component,
-    typename ...TSeqs>
-struct creation_info_sync_of;
+template<typename TypeSeq, typename Component>
+struct creation_info_traits_sync_info;
 
 template<typename Component>
-struct creation_info_sync_of<Component>
+struct creation_info_traits_sync_info<
+    type_sequence<>, Component>
 {
+public:
   using type
-  = void;
+  = type_sequence<>;
 
 };
 
-template<
-    typename    Component,
-    typename    First,
-    typename ...Rest>
-struct creation_info_sync_of<
-    Component,
-    First,
-    Rest ...>
+template<typename First, typename ...Rest, typename Component>
+struct creation_info_traits_sync_info<
+    type_sequence<First, Rest ...>, Component>
 {
 private:
   static_assert(
-      is_sync_info_v<First>,
-      "heim::detail::creation_info_sync_of<Component, First, Rest ...>: "
-          "is_sync_info_v<First>.");
-  static_assert(
-      (is_sync_info_v<Rest> && ...),
-      "heim::detail::creation_info_sync_of<Component, First, Rest ...>: "
-          "(is_sync_info_v<Rest> && ...).");
+     is_creation_info_v<type_sequence<First, Rest...>>,
+     "heim::creation_info_traits<TSeq>: "
+         "is_creation_info_v<type_sequence<First, Rest...>>;");
 
 public:
   using type
   = std::conditional_t<
-      sync_info<First>::template syncs_v<Component>,
+      sync_info_traits<First>::template syncs_v<Component>,
       First,
-      typename creation_info_sync_of<Component, Rest ...>::type>;
+      typename creation_info_traits_sync_info<
+          type_sequence<Rest ...>,
+          Component>::type>;
 
 };
+
+template<typename TypeSeq, typename Component>
+using creation_info_traits_sync_info_t
+= typename creation_info_traits_sync_info<TypeSeq, Component>::type;
+
 
 }
 
 
-template<typename ...TSeqs>
-struct creation_info<
-    type_sequence<TSeqs ...>>
+template<typename TSeq>
+struct creation_info_traits
 {
 private:
   static_assert(
-      (is_sync_info_v<TSeqs> && ...),
-      "heim::detail::creation_info_sync_of<Component, First, Rest ...>: "
-          "(is_sync_info_v<Rest> && ...).");
+      is_creation_info_v<TSeq>,
+      "heim::creation_info_traits<TSeq>: is_creation_info_v<TSeq>;");
 
 public:
   using type
-  = type_sequence<TSeqs ...>;
+  = TSeq;
 
 private:
   template<typename Component>
-  using sync_of
-  = detail::creation_info_sync_of<Component, TSeqs ...>;
+  using sync_info_t
+  = detail::creation_info_traits_sync_info_t<type, Component>;
 
 
   template<typename Component>
-  constexpr static std::size_t
-  count_v = (0 + ... + (sync_info<TSeqs>::template syncs_v<Component> ? 1 : 0));
-
-  template<typename ...Components>
-  constexpr static bool
-  can_sync_v
-  =   type_sequence<Components ...>::unique_v
-   && ((count_v<Components> == 1) && ...)
-   && ((sync_of<Components>::type::size_v == 1) && ...);
+  static constexpr bool
+  can_sync_v = sync_info_t<Component>::size_v == 1;
 
 public:
-  template<
-      typename    Component,
-      std::size_t PageSize,
-      typename    Allocator>
-  using component
-  = creation_info<typename type
-      ::template extend_t<
-          typename declare_sync_info
-              ::sync<Component, PageSize, Allocator>::type>>;
-
+  template<typename USeq>
+  using add_t
+  = creation_info_traits<typename type
+      ::template extend_t<type_sequence<USeq>>>;
 
   template<typename ...Components>
-  using sync
+  using sync_t
   = std::conditional_t<
-    can_sync_v<Components ...>,
-    creation_info<typename type
-      ::template difference_t<
-          typename type_sequence<
-              typename sync_of<Components>::type ...>::unique_t>
-      ::template extend_t<
-          typename sync_info<type_sequence<typename sync_of<Components>
-              ::template info_of<Components>::type ...>>::type>>,
-    creation_info>;
-
-
-
-  using component_info_seq
-  = typename type::flat_t;
+      ((can_sync_v<Components>) && ...),
+      creation_info_traits<typename type
+          ::template difference_t<
+              typename type_sequence<sync_info_t<Components> ...>::unique_t>
+          ::template extend_t<
+              type_sequence<typename sync_info_traits<typename type::flat_t>
+                  ::template component_info_t<Components> ...>>>,
+      creation_info_traits>;
 
 };
-
-
-using declare_creation_info
-= creation_info<type_sequence<>>;
 
 
 }
