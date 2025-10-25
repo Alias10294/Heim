@@ -52,7 +52,7 @@ public:
 public:
   //! @brief The type of component.
   using component_t
-  = typename type::template get_t<0>;
+  = type::template get_t<0>;
 
   //! @brief The size of each page in its assigned container.
   static constexpr std::size_t
@@ -60,7 +60,7 @@ public:
 
   //! @brief The allocator type used in its assigned container.
   using allocator_t
-  = typename type::template get_t<2>;
+  = type::template get_t<2>;
 
 };
 
@@ -131,7 +131,7 @@ private:
   {
   public:
     using type
-    = typename component_info_traits<USeq>::component_t;
+    = component_info_traits<USeq>::component_t;
 
   };
 
@@ -144,8 +144,7 @@ public:
    */
   template<typename USeq>
   using sync_t
-  = typename sync_info_traits<
-      typename type::template extend_t<USeq>>::type;
+  = sync_info_traits<typename type::template extend_t<USeq>>::type;
 
 
   /*!
@@ -153,7 +152,7 @@ public:
    *   component_info type.
    */
   using component_sequence_t
-  = typename type::template map_t<to_component>;
+  = type::template map_t<to_component>;
 
 
   /*!
@@ -176,8 +175,7 @@ public:
    */
   template<typename Component>
   using component_info_t
-  = typename type
-      ::template get_t<component_sequence_t::template index_v<Component>>;
+  = type::template get_t<component_sequence_t::template index_v<Component>>;
 
 };
 
@@ -245,7 +243,7 @@ public:
 
 template<typename TypeSeq, typename Component>
 using creation_info_traits_sync_info_t
-= typename creation_info_traits_sync_info<TypeSeq, Component>::type;
+= creation_info_traits_sync_info<TypeSeq, Component>::type;
 
 
 }

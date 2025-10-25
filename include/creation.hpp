@@ -46,7 +46,7 @@ public:
 private:
   template<typename T>
   using component_info_t
-  = typename sync_info_traits<typename TSeq::flat_t>
+  = sync_info_traits<typename TSeq::flat_t>
       ::template component_info_t<T>;
 
 
@@ -63,7 +63,7 @@ private:
   };
 
   using map_tuple_t
-  = typename TSeq
+  = TSeq
       ::flat_t
       ::template map_t<to_index_map>;
 

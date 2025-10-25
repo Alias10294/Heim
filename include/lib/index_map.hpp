@@ -65,7 +65,7 @@ index_map_is_mapped_v = index_map_is_mapped<T>::value;
 
 //! @endcond
 
-}
+} // namespace detail
 
 
 /*!
@@ -105,10 +105,10 @@ class index_map
 private:
   static_assert(
       detail::index_map_is_index_v<Index>,
-      "heim::index_map: detail::index_map_is_index_v<Index>");
+      "heim::index_map: detail::index_map_is_index_v<Index>;");
   static_assert(
       detail::index_map_is_mapped_v<T>,
-      "heim::index_map: detail::index_map_is_mapped_v<T>");
+      "heim::index_map: detail::index_map_is_mapped_v<T>;");
 
 public:
   using index_type  = Index;
@@ -158,7 +158,7 @@ private:
 
 
   using index_alloc_t
-  = typename alloc_traits_t::template rebind_alloc<index_type>;
+  = alloc_traits_t::template rebind_alloc<index_type>;
 
   using index_alloc_traits_t
   = std::allocator_traits<index_alloc_t>;
@@ -169,7 +169,7 @@ private:
 
 
   using mapped_alloc_t
-  = typename alloc_traits_t::template rebind_alloc<mapped_type>;
+  = alloc_traits_t::template rebind_alloc<mapped_type>;
 
   using mapped_alloc_traits_t
   = std::allocator_traits<mapped_alloc_t>;
@@ -186,7 +186,7 @@ private:
   = std::numeric_limits<size_type>::max();
 
   using page_alloc_t
-  = typename alloc_traits_t::template rebind_alloc<page_t>;
+  = alloc_traits_t::template rebind_alloc<page_t>;
 
   using page_alloc_traits_t
   = std::allocator_traits<page_alloc_t>;
@@ -209,7 +209,7 @@ private:
   = PageSize > 0;
 
   using position_alloc_t
-  = typename alloc_traits_t::template rebind_alloc<std::conditional_t<
+  = alloc_traits_t::template rebind_alloc<std::conditional_t<
       is_paged_v,
       page_uptr_t,
       size_type>>;
@@ -2230,6 +2230,6 @@ public:
 };
 
 
-}
+} // namespace heim
 
 #endif // HEIM_INDEX_MAP_HPP

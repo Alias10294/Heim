@@ -64,11 +64,11 @@ private:
   static_assert(
       I < 1 + sizeof...(Rest),
       "heim::detail::type_sequence_get<I, First, Rest ...>: "
-          "I < 1 + sizeof...(Rest).");
+          "I < 1 + sizeof...(Rest);");
 
 public:
   using type
-  = typename type_sequence_get<I - 1, Rest ...>::type;
+  = type_sequence_get<I - 1, Rest ...>::type;
 
 };
 
@@ -102,7 +102,7 @@ template<typename ...Seen, typename First, typename ...Rest>
 struct type_sequence_unique<type_sequence<Seen ...>, First, Rest ...>
 {
   using type
-  = typename type_sequence_unique<
+  = type_sequence_unique<
       std::conditional_t<
           (std::is_same_v<First, Seen> || ...),
           type_sequence<Seen ...>,
@@ -147,7 +147,7 @@ private:
 
 public:
   using type
-  = typename type_sequence_concat<
+  = type_sequence_concat<
       typename expand<First>::type,
       typename type_sequence_flat<Rest ...>::type>::type;
 
@@ -206,11 +206,11 @@ private:
   static_assert(
       I < 1 + sizeof...(Rest),
       "heim::type_sequence_remove<I, First, Rest ...>: "
-          "I < 1 + sizeof...(Rest).");
+          "I < 1 + sizeof...(Rest);");
 
 public:
   using type
-  = typename type_sequence_concat<
+  = type_sequence_concat<
       type_sequence<First>,
       typename type_sequence_remove<I - 1, Rest ...>::type>::type;
 
@@ -328,7 +328,10 @@ struct type_sequence_subsequences_detail<0, type_sequence<Ts ...>, true>
 template<std::size_t N>
 struct type_sequence_subsequences_detail<N, type_sequence<>, false>
 {
-  static_assert(N > 0, "heim::type_sequence::subsequences: incoherent type");
+  static_assert(
+      N > 0,
+      "heim::detail::type_sequence_subsequences_detail<N, Seq, IsZero>: "
+          "N > 0;");
 
   using type
   = type_sequence<>;
@@ -356,19 +359,19 @@ private:
   };
 
   using first_t
-  = typename type_sequence_subsequences_detail<
+  = type_sequence_subsequences_detail<
       N - 1,
       type_sequence<Rest ...>>::type::template
       map_t<prefix>;
 
   using rest_t
-  = typename type_sequence_subsequences_detail<
+  = type_sequence_subsequences_detail<
       N,
       type_sequence<Rest ...>>::type;
 
 public:
   using type
-  = typename type_sequence_concat<first_t, rest_t>::type;
+  = type_sequence_concat<first_t, rest_t>::type;
 
 };
 
@@ -376,7 +379,7 @@ template<std::size_t N, typename Seq>
 struct type_sequence_subsequences
 {
   using type
-  = typename type_sequence_subsequences_detail<N, Seq>::type;
+  = type_sequence_subsequences_detail<N, Seq>::type;
 
 };
 
@@ -390,7 +393,7 @@ template<typename ...Ts>
 struct type_sequence_power_sequence<0, type_sequence<Ts ...>>
 {
   using type
-  = typename type_sequence_subsequences<0, type_sequence<Ts ...>>::type;
+  = type_sequence_subsequences<0, type_sequence<Ts ...>>::type;
 
 };
 
@@ -398,7 +401,7 @@ template<std::size_t N, typename ...Ts>
 struct type_sequence_power_sequence<N, type_sequence<Ts ...>>
 {
   using type
-  = typename type_sequence_concat<
+  = type_sequence_concat<
       typename type_sequence_power_sequence<
           N - 1,
           type_sequence<Ts ...>>::type,
@@ -417,7 +420,7 @@ template<typename ...Us, typename ...Ts>
 struct type_sequence_induce_order<type_sequence<Us ...>, Ts ...>
 {
   using type
-  = typename type_sequence<std::conditional_t<
+  = type_sequence<std::conditional_t<
       type_sequence<Ts ...>::template contains_v<Us>,
       Us,
       void> ...>::dense_t;
@@ -425,8 +428,7 @@ struct type_sequence_induce_order<type_sequence<Us ...>, Ts ...>
 };
 
 
-}
-
+} // namespace detail
 
 
 template<typename ...Ts>
@@ -551,7 +553,7 @@ public:
 
   template<std::size_t I>
   using get_t
-  = typename get<I>::type;
+  = get<I>::type;
 
 
 
@@ -566,7 +568,7 @@ public:
 
   template<typename TypeSeq>
   using concat_t
-  = typename concat<TypeSeq>::type;
+  = concat<TypeSeq>::type;
 
   template<typename ...Us>
   struct concat<type_sequence<Us ...>>
@@ -591,7 +593,7 @@ public:
 
   template<typename ...Us>
   using extend_t
-  = typename extend<Us ...>::type;
+  = extend<Us ...>::type;
 
 
 
@@ -603,7 +605,7 @@ public:
   = detail::type_sequence_unique<type_sequence<>, Ts ...>;
 
   using unique_t
-  = typename unique::type;
+  = unique::type;
 
   /*!
    * @brief Determines whether the sequence is the same as its unique type.
@@ -620,7 +622,7 @@ public:
   = detail::type_sequence_flat<Ts ...>;
 
   using flat_t
-  = typename flat::type;
+  = flat::type;
 
 
   /*!
@@ -637,7 +639,7 @@ public:
 
   template<template<typename> typename Pred>
   using filter_t
-  = typename filter<Pred>::type;
+  = filter<Pred>::type;
 
 
   /*!
@@ -647,7 +649,7 @@ public:
   = filter<is_not_void>;
 
   using dense_t
-  = typename dense::type;
+  = dense::type;
 
 
 
@@ -663,7 +665,7 @@ public:
 
   template<std::size_t I>
   using remove_t
-  = typename remove<I>::type;
+  = remove<I>::type;
 
 
   /*!
@@ -680,7 +682,7 @@ public:
 
   template<typename T>
   using erase_t
-  = typename erase<T>::type;
+  = erase<T>::type;
 
 
 
@@ -698,7 +700,7 @@ public:
 
   template<typename TypeSeq>
   using difference_t
-  = typename difference<TypeSeq>::type;
+  = difference<TypeSeq>::type;
 
 
   /*!
@@ -715,7 +717,7 @@ public:
 
   template<typename TypeSeq>
   using intersect_t
-  = typename intersect<TypeSeq>::type;
+  = intersect<TypeSeq>::type;
 
 
 
@@ -736,7 +738,7 @@ public:
 
   template<template<typename> typename Meta>
   using map_t
-  = typename map<Meta>::type;
+  = map<Meta>::type;
 
 
 
@@ -752,7 +754,7 @@ public:
 
   template<std::size_t N>
   using subsequences_t
-  = typename subsequences<N>::type;
+  = subsequences<N>::type;
 
 
   /*!
@@ -768,7 +770,7 @@ public:
 
   template<typename TypeSeq>
   using induce_order_t
-  = typename induce_order<TypeSeq>::type;
+  = induce_order<TypeSeq>::type;
 
 };
 
@@ -823,7 +825,7 @@ struct to_type_sequence;
 
 template<typename Tuple>
 using to_type_sequence_t
-= typename to_type_sequence<Tuple>::type;
+= to_type_sequence<Tuple>::type;
 
 template<typename ...Ts>
 struct to_type_sequence<std::tuple<Ts ...>>
@@ -834,6 +836,6 @@ struct to_type_sequence<std::tuple<Ts ...>>
 };
 
 
-}
+} // namespace heim
 
 #endif // HEIM_TYPE_SEQUENCE_HPP

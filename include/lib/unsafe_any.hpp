@@ -34,15 +34,15 @@ private:
   static_assert(
       BufferSize >= sizeof(void *),
       "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
-          "BufferSize >= sizeof(void *).");
+          "BufferSize >= sizeof(void *);");
   static_assert(
       BufferAlign >= alignof(void *),
       "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
-          "BufferAlign >= alignof(void*).");
+          "BufferAlign >= alignof(void*);");
   static_assert(
       (BufferAlign & (BufferAlign - 1)) == 0,
       "heim::generic_unsafe_any<BufferSize, BufferAlign>: "
-          "(BufferAlign & BufferAlign - 1) == 0.");
+          "(BufferAlign & BufferAlign - 1) == 0;");
 
 public:
   constexpr static std::size_t buffer_size  = BufferSize;
