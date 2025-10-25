@@ -1,5 +1,5 @@
 #include "doctest.h"
-#include "index_map.hpp"
+#include "lib/index_map.hpp"
 
 #include <iterator>
 #include <string>

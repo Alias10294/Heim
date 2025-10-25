@@ -2,7 +2,7 @@
 #define HEIM_CREATION_INFO_HPP
 
 #include <type_traits>
-#include "type_sequence.hpp"
+#include "lib/type_sequence.hpp"
 
 namespace heim
 {
