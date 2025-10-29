@@ -772,6 +772,23 @@ public:
   using induce_order_t
   = induce_order<TypeSeq>::type;
 
+
+
+  /*!
+   * @brief Determines the corresponding std::tuple specialization to the
+   *   type_sequence.
+   */
+  struct to_tuple
+  {
+    using type
+    = std::tuple<Ts ...>;
+
+  };
+
+  using to_tuple_t
+  = to_tuple::type;
+
+
 };
 
 

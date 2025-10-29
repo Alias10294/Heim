@@ -1,7 +1,10 @@
 #ifndef HEIM_CREATION_HPP
 #define HEIM_CREATION_HPP
 
+#include <cstddef>
 #include <memory>
+#include <type_traits>
+#include "lib/index_map.hpp"
 #include "lib/type_sequence.hpp"
 
 namespace heim
@@ -189,12 +192,12 @@ public:
   using type
   = TSeq;
 
-private:
+
   template<typename T>
   using get_sync_scheme
   = creation_scheme_get_sync_scheme<TSeq, T>::type;
 
-
+private:
   template<typename ...Ts>
   static constexpr bool
   can_sync
@@ -268,6 +271,39 @@ public:
       typename detail::creation_scheme_traits<scheme_type>
           ::template sync_components<First, Second, Rest ...>
           ::type>;
+
+private:
+  template<typename TSeq>
+  struct to_map
+  {
+  private:
+    static_assert(
+        detail::is_component_scheme_v<TSeq>,
+        "heim::creation<Entity, Scheme>::to_map<TSeq>: "
+            "detail::is_component_scheme_v<TSeq>;");
+
+  public:
+    using type
+    = index_map<
+        Entity,
+        typename detail::component_scheme_traits<TSeq>::component,
+        detail::component_scheme_traits<TSeq>::page_size,
+        typename detail::component_scheme_traits<TSeq>::allocator>;
+
+  };
+
+
+  using map_tuple_t
+  = scheme_type
+      ::flat_t
+      ::template map_t<to_map>
+      ::to_tuple_t;
+
+private:
+  map_tuple_t m_maps;
+
+public:
+  // TODO: implement methods
 
 };
 
