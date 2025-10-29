@@ -1,5 +1,5 @@
-#ifndef HEIM_INDEX_MAP_HPP
-#define HEIM_INDEX_MAP_HPP
+#ifndef HEIM_LIB_INDEX_MAP_HPP
+#define HEIM_LIB_INDEX_MAP_HPP
 
 #include <algorithm>
 #include <array>
@@ -2232,4 +2232,4 @@ public:
 
 } // namespace heim
 
-#endif // HEIM_INDEX_MAP_HPP
+#endif // HEIM_LIB_INDEX_MAP_HPP

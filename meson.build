@@ -11,7 +11,6 @@ meson.override_dependency('heim', heim_dep)
 heim_test_src = files(
     'test/test_config.cpp',
     'test/test_creation.cpp',
-    'test/test_creation_info.cpp',
     'test/test_index_map.cpp',
     'test/test_unsafe_any.cpp')
 

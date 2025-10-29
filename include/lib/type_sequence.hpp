@@ -1,5 +1,5 @@
-#ifndef HEIM_TYPE_SEQUENCE_HPP
-#define HEIM_TYPE_SEQUENCE_HPP
+#ifndef HEIM_LIB_TYPE_SEQUENCE_HPP
+#define HEIM_LIB_TYPE_SEQUENCE_HPP
 
 #include <cstddef>
 #include <tuple>
@@ -838,4 +838,4 @@ struct to_type_sequence<std::tuple<Ts ...>>
 
 } // namespace heim
 
-#endif // HEIM_TYPE_SEQUENCE_HPP
+#endif // HEIM_LIB_TYPE_SEQUENCE_HPP
