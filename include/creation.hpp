@@ -158,6 +158,7 @@ private:
             "::has_component<USeq>: "
                 "is_sync_scheme_v<USeq>;");
 
+  public:
     static constexpr bool
     value
     = sync_scheme_traits<USeq>
@@ -229,6 +230,46 @@ public:
 
 
 } // namespace detail
+
+
+template<
+    typename Entity,
+    typename Scheme = type_sequence<>>
+class creation
+{
+private:
+  static_assert(
+      detail::is_creation_scheme_v<Scheme>,
+      "heim::creation<Entity, Scheme>: detail::is_creation_scheme_v<Scheme>;");
+
+public:
+  using entity_type = Entity;
+  using scheme_type = Scheme;
+
+public:
+  template<
+      typename    T,
+      std::size_t PageSize = 4096,
+      typename    Alloc    = std::allocator<T>>
+  using component
+  = creation<
+      entity_type,
+      typename detail::creation_scheme_traits<scheme_type>
+          ::template add_component<T, PageSize, Alloc>
+          ::type>;
+
+  template<
+      typename    First,
+      typename    Second,
+      typename ...Rest>
+  using sync
+  = creation<
+      entity_type,
+      typename detail::creation_scheme_traits<scheme_type>
+          ::template sync_components<First, Second, Rest ...>
+          ::type>;
+
+};
 
 
 } // namespace heim
