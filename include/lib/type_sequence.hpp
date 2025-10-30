@@ -264,10 +264,10 @@ struct type_sequence_difference<
 {
   using type
   = std::conditional_t<
-      type_sequence<Ts ...>::template contains_v<First>,
+      type_sequence<Ts ...>::template contains<First>,
       typename type_sequence_difference<
           type_sequence<Rest ...>,
-          typename type_sequence<Ts ...>::template erase_t<First>>::type,
+          typename type_sequence<Ts ...>::template erase<First>>::type,
       typename type_sequence_difference<
           type_sequence<Rest ...>,
           type_sequence<Ts ...>>::type>;
@@ -296,13 +296,13 @@ struct type_sequence_intersect<
 {
   using type
   = std::conditional_t<
-      type_sequence<Ts ...>::template contains_v<First>,
+      type_sequence<Ts ...>::template contains<First>,
       typename type_sequence_concat<
           type_sequence<First>,
           typename type_sequence_intersect<
               type_sequence<Rest ...>,
               typename type_sequence<Ts ...>::template
-                  erase_t<First>>::type>::type,
+                  erase<First>>::type>::type,
       typename type_sequence_intersect<
           type_sequence<Rest ...>,
           type_sequence<Ts ...>>::type>;
@@ -362,7 +362,7 @@ private:
   = type_sequence_subsequences_detail<
       N - 1,
       type_sequence<Rest ...>>::type::template
-      map_t<prefix>;
+      map<prefix>;
 
   using rest_t
   = type_sequence_subsequences_detail<
@@ -421,9 +421,9 @@ struct type_sequence_induce_order<type_sequence<Us ...>, Ts ...>
 {
   using type
   = type_sequence<std::conditional_t<
-      type_sequence<Ts ...>::template contains_v<Us>,
+      type_sequence<Ts ...>::template contains<Us>,
       Us,
-      void> ...>::dense_t;
+      void> ...>::dense;
 
 };
 
@@ -453,180 +453,114 @@ private:
 
 public:
   /*!
-   * @brief Determines the size of the sequence.
+   * @brief The size of the sequence.
    */
-  struct size
-  {
-    constexpr
-    static std::size_t value
-    = sizeof...(Ts);
-  };
-
-  constexpr
-  static std::size_t size_v
-  = size::value;
+  static constexpr std::size_t
+  size
+  = sizeof...(Ts);
 
   /*!
-   * @brief Determines whether the sequence is empty.
+   * @brief Whether the sequence is empty.
    */
-  struct empty
-  {
-    constexpr
-    static bool value
-    = size_v == 0;
-
-  };
-
-  constexpr
-  static bool empty_v
-  = empty::value;
+  static constexpr bool
+  empty
+  = size == 0;
 
 
   /*!
-   * @brief Determines the number of times @code T@endcode appears in the
+   * @brief The number of times @code T@endcode appears in the
    *   sequence.
    *
    * @tparam T The type to count.
    */
   template<typename T>
-  struct count
-  {
-    constexpr
-    static std::size_t value
-    = (0 + ... + (std::is_same_v<T, Ts> ? 1 : 0));
-
-  };
-
-  template<typename T>
-  constexpr
-  static std::size_t count_v
-  = count<T>::value;
+  static constexpr std::size_t
+  count
+  = (0 + ... + (std::is_same_v<T, Ts> ? 1 : 0));
 
 
 
   /*!
-   * @brief Determines whether @code T@endcode is present in the sequence.
+   * @brief Whether @code T@endcode is present in the sequence.
    *
    * @tparam T The type to check for.
    */
   template<typename T>
-  struct contains
-  {
-    constexpr
-    static bool value
-    = count_v<T> > 0;
-
-  };
-
-  template<typename T>
-  constexpr
-  static bool contains_v
-  = contains<T>::value;
+  static constexpr bool
+  contains
+  = count<T> > 0;
 
 
   /*!
-   * @brief Determines the index in the sequence of @code T@endcode.
+   * @brief The index in the sequence of @code T@endcode.
    *
    * @tparam T The type to get the index of.
    * @note If @code contains_v<T> == false@endcode then
    *    @code index<T>::value = size_v@endcode.
    */
   template<typename T>
-  using index
-  = detail::type_sequence_index<T, Ts...>;
-
-  template<typename T>
-  constexpr
-  static std::size_t index_v
-  = index<T>::value;
+  static constexpr std::size_t
+  index
+  = detail::type_sequence_index<T, Ts...>::value;
 
 
   /*!
-   * @brief Determines the type located at index @code I@endcode in the
+   * @brief The type located at index @code I@endcode in the
    *   sequence.
    *
    * @tparam I The index to get the corresponding type of.
    */
   template<std::size_t I>
   using get
-  = detail::type_sequence_get<I, Ts ...>;
-
-  template<std::size_t I>
-  using get_t
-  = get<I>::type;
+  = detail::type_sequence_get<I, Ts ...>::type;
 
 
 
   /*!
-   * @brief Determines the sequence produced by concatenation of this sequence
+   * @brief The sequence produced by concatenation of this sequence
    *   and @code TypeSeq@endcode.
    *
    * @tparam TypeSeq The type sequence to concatenate.
    */
   template<typename TypeSeq>
-  struct concat;
-
-  template<typename TypeSeq>
-  using concat_t
-  = concat<TypeSeq>::type;
-
-  template<typename ...Us>
-  struct concat<type_sequence<Us ...>>
-  {
-    using type
-    = type_sequence<Ts ..., Us ...>;
-
-  };
+  using concat
+  = detail::type_sequence_concat<type_sequence, TypeSeq>::type;
 
 
   /*!
-   * @brief Determines the sequence produced by extending it with
+   * @brief The sequence produced by extending it with
    *   @code Us ...@endcode.
    */
   template<typename ...Us>
-  struct extend
-  {
-    using type
-    = type_sequence<Ts ..., Us ...>;
-
-  };
-
-  template<typename ...Us>
-  using extend_t
-  = extend<Us ...>::type;
+  using extend
+  = concat<type_sequence<Us ...>>;
 
 
 
   /*!
-   * @brief Determines the sequence produced when filtering out duplicates of
+   * @brief The sequence produced when filtering out duplicates of
    *   the same types.
    */
   using unique
-  = detail::type_sequence_unique<type_sequence<>, Ts ...>;
-
-  using unique_t
-  = unique::type;
+  = detail::type_sequence_unique<type_sequence<>, Ts ...>::type;
 
   /*!
-   * @brief Determines whether the sequence is the same as its unique type.
+   * @brief Whether the sequence is the same as its unique type.
    */
   constexpr static bool
-  unique_v = std::is_same_v<type_sequence, unique_t>;
+  is_unique = std::is_same_v<type_sequence, unique>;
 
 
   /*!
-   * @brief Determines the sequence produced by flattening once all
+   * @brief The sequence produced by flattening once all
    *   type_sequence types in its sequence.
    */
   using flat
-  = detail::type_sequence_flat<Ts ...>;
-
-  using flat_t
-  = flat::type;
+  = detail::type_sequence_flat<Ts ...>::type;
 
 
   /*!
-   * @brief Determines the sequence produced by filtering out types that verify
+   * @brief The sequence produced by filtering out types that verify
    *   @code Pred@endcode.
    *
    * @tparam Pred The predicate type used to filter types.
@@ -635,41 +569,30 @@ public:
    */
   template<template<typename> typename Pred>
   using filter
-  = detail::type_sequence_filter<Pred, Ts ...>;
-
-  template<template<typename> typename Pred>
-  using filter_t
-  = filter<Pred>::type;
+  = detail::type_sequence_filter<Pred, Ts ...>::type;
 
 
   /*!
-   * @brief Determines the sequence produced by filtering out all void types.
+   * @brief The sequence produced by filtering out all void types.
    */
   using dense
   = filter<is_not_void>;
 
-  using dense_t
-  = dense::type;
-
 
 
   /*!
-   * @brief Determines the sequence produced after the type at index
+   * @brief The sequence produced after the type at index
    *   @code I@endcode is removed.
    *
    * @tparam I The index of the type to remove.
    */
   template<std::size_t I>
   using remove
-  = detail::type_sequence_remove<I, Ts ...>;
-
-  template<std::size_t I>
-  using remove_t
-  = remove<I>::type;
+  = detail::type_sequence_remove<I, Ts ...>::type;
 
 
   /*!
-   * @brief Determines the sequence produced after the first @code T@endcode is
+   * @brief The sequence produced after the first @code T@endcode is
    *   erased from it.
    *
    * @tparam T The type to erase from the sequence.
@@ -678,16 +601,12 @@ public:
    */
   template<typename T>
   using erase
-  = detail::type_sequence_erase<T, Ts ...>;
-
-  template<typename T>
-  using erase_t
-  = erase<T>::type;
+  = detail::type_sequence_erase<T, Ts ...>::type;
 
 
 
   /*!
-   * @brief Determines the sequence of the types only contained in this
+   * @brief The sequence of the types only contained in this
    *   sequence.
    *
    * @tparam TypeSeq The sequence to "subtract" to this sequence.
@@ -696,15 +615,11 @@ public:
   using difference
   = detail::type_sequence_difference<
       TypeSeq,
-      type_sequence>;
-
-  template<typename TypeSeq>
-  using difference_t
-  = difference<TypeSeq>::type;
+      type_sequence>::type;
 
 
   /*!
-   * @brief Determines the sequence of types contained in both this sequence
+   * @brief The sequence of types contained in both this sequence
    *   and @code TypeSeq@endcode.
    *
    * @tparam TypeSeq The sequence to intersect with.
@@ -713,52 +628,36 @@ public:
   using intersect
   = detail::type_sequence_intersect<
       TypeSeq,
-      type_sequence>;
-
-  template<typename TypeSeq>
-  using intersect_t
-  = intersect<TypeSeq>::type;
+      type_sequence>::type;
 
 
 
   /*!
-   * @brief Determines the sequence of types after each type is applied
+   * @brief The sequence of types after each type is applied
    *   @code Meta@endcode.
    *
    * @tparam Meta The type used to map the types.
    * @pre @code Meta@endcode must expose a typename @code type@endcode.
    */
-  template<template<typename T> typename Meta>
-  struct map
-  {
-    using type
-    = type_sequence<typename Meta<Ts>::type ...>;
-
-  };
-
   template<template<typename> typename Meta>
-  using map_t
-  = map<Meta>::type;
+  using map
+  = type_sequence<typename Meta<Ts>::type ...>;
 
 
 
   /*!
-   * @brief Determines the sequence of all subsequences of size
+   * @brief The sequence of all subsequences of size
    *   @code N@endcode.
    *
    * @tparam N The size of the subsequences to produce.
    */
   template<std::size_t N>
   using subsequences
-  = detail::type_sequence_subsequences<N, type_sequence>;
-
-  template<std::size_t N>
-  using subsequences_t
-  = subsequences<N>::type;
+  = detail::type_sequence_subsequences<N, type_sequence>::type;
 
 
   /*!
-   * @brief Determines the sequence produced by reordering it in the same order
+   * @brief The sequence produced by reordering it in the same order
    *   as @code TypeSeq@endcode. All types not in @code TypeSeq@endcode are
    *   erased.
    *
@@ -766,27 +665,16 @@ public:
    */
   template<typename TypeSeq>
   using induce_order
-  = detail::type_sequence_induce_order<TypeSeq, Ts ...>;
-
-  template<typename TypeSeq>
-  using induce_order_t
-  = induce_order<TypeSeq>::type;
+  = detail::type_sequence_induce_order<TypeSeq, Ts ...>::type;
 
 
 
   /*!
-   * @brief Determines the corresponding std::tuple specialization to the
+   * @brief The corresponding std::tuple specialization for this
    *   type_sequence.
    */
-  struct to_tuple
-  {
-    using type
-    = std::tuple<Ts ...>;
-
-  };
-
-  using to_tuple_t
-  = to_tuple::type;
+  using to_tuple
+  = std::tuple<Ts ...>;
 
 
 };
@@ -854,5 +742,6 @@ struct to_type_sequence<std::tuple<Ts ...>>
 
 
 } // namespace heim
+
 
 #endif // HEIM_LIB_TYPE_SEQUENCE_HPP

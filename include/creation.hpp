@@ -47,13 +47,13 @@ public:
 
 
   using component
-  = TSeq::template get_t<0>;
+  = TSeq::template get<0>;
 
   static constexpr std::size_t
-  page_size = TSeq::template get_t<1>::value;
+  page_size = TSeq::template get<1>::value;
 
   using allocator
-  = TSeq::template get_t<2>;
+  = TSeq::template get<2>;
 
 };
 
@@ -76,7 +76,7 @@ struct is_sync_scheme<type_sequence<TSeqs ...>>
   : std::bool_constant<
         (is_component_scheme_v<TSeqs> && ...)
      && type_sequence<typename component_scheme_traits<TSeqs>::component ...>
-            ::unique_v>
+            ::is_unique>
 { };
 
 template<typename TSeq>
@@ -109,11 +109,11 @@ private:
 
 public:
   using component_sequence
-  = TSeq::template map_t<to_component>;
+  = TSeq::template map<to_component>;
 
   template<typename T>
   using get_component_scheme
-  = TSeq::template get_t<component_sequence::template index_v<T>>;
+  = TSeq::template get<component_sequence::template index<T>>;
 
 };
 
@@ -130,8 +130,8 @@ struct is_creation_scheme<type_sequence<TSeqs ...>>
         (is_sync_scheme_v<TSeqs> && ...)
      && type_sequence<
             typename sync_scheme_traits<TSeqs>::component_sequence ...>
-                ::flat_t
-                ::unique_v>
+                ::flat
+                ::is_unique>
 { };
 
 template<typename TSeq>
@@ -166,15 +166,15 @@ private:
     value
     = sync_scheme_traits<USeq>
         ::component_sequence
-        ::template contains_v<T>;
+        ::template contains<T>;
 
   };
 
 public:
   using type
   = TSeq
-      ::template filter_t<has_component>
-      ::template get_t<0>;
+      ::template filter<has_component>
+      ::template get<0>;
 
 };
 
@@ -201,7 +201,7 @@ private:
   template<typename ...Ts>
   static constexpr bool
   can_sync
-  = ((get_sync_scheme<Ts>::size_v == 1) && ...);
+  = ((get_sync_scheme<Ts>::size == 1) && ...);
 
 public:
   template<
@@ -210,7 +210,7 @@ public:
       typename    Alloc>
   using add_component
   = creation_scheme_traits<
-      typename type::template extend_t<
+      typename type::template extend<
           type_sequence<declare_component_scheme<T, PageSize, Alloc>>>>;
 
   template<
@@ -220,14 +220,14 @@ public:
   requires (can_sync<First, Second, Rest ...>)
   using sync_components
   = creation_scheme_traits<typename type
-      ::template difference_t<type_sequence<
+      ::template difference<type_sequence<
           get_sync_scheme<First >,
           get_sync_scheme<Second>,
           get_sync_scheme<Rest  > ...>>
-      ::template extend_t    <type_sequence<
-          typename get_sync_scheme<First >::template get_t<0>,
-          typename get_sync_scheme<Second>::template get_t<0>,
-          typename get_sync_scheme<Rest  >::template get_t<0> ...>>>;
+      ::template extend    <type_sequence<
+          typename get_sync_scheme<First >::template get<0>,
+          typename get_sync_scheme<Second>::template get<0>,
+          typename get_sync_scheme<Rest  >::template get<0> ...>>>;
 
 };
 
@@ -235,8 +235,31 @@ public:
 } // namespace detail
 
 
+namespace traits
+{
+template<typename T, typename = void>
+struct page_size
+{
+  static constexpr std::size_t
+  value = 4096;
+
+};
+
+template<typename T, typename = void>
+struct allocator
+{
+  using type
+  = std::allocator<T>;
+
+};
+
+
+} // namespace traits
+
+
 template<
     typename Entity,
+    typename Alloc  = std::allocator<Entity>,
     typename Scheme = type_sequence<>>
 class creation
 {
@@ -246,19 +269,21 @@ private:
       "heim::creation<Entity, Scheme>: detail::is_creation_scheme_v<Scheme>;");
 
 public:
-  using entity_type = Entity;
-  using scheme_type = Scheme;
+  using entity_type    = Entity;
+  using allocator_type = Alloc;
+  using scheme_type    = Scheme;
 
 public:
   template<
       typename    T,
-      std::size_t PageSize = 4096,
-      typename    Alloc    = std::allocator<T>>
+      std::size_t PageSize = traits::page_size<T>::value,
+      typename    TAlloc   = traits::allocator<T>::type>
   using component
   = creation<
       entity_type,
+      allocator_type,
       typename detail::creation_scheme_traits<scheme_type>
-          ::template add_component<T, PageSize, Alloc>
+          ::template add_component<T, PageSize, TAlloc>
           ::type>;
 
   template<
@@ -268,18 +293,19 @@ public:
   using sync
   = creation<
       entity_type,
+      allocator_type,
       typename detail::creation_scheme_traits<scheme_type>
           ::template sync_components<First, Second, Rest ...>
           ::type>;
 
 private:
   template<typename TSeq>
-  struct to_map
+  struct to_container
   {
   private:
     static_assert(
         detail::is_component_scheme_v<TSeq>,
-        "heim::creation<Entity, Scheme>::to_map<TSeq>: "
+        "heim::creation<Entity, Scheme>::to_container<TSeq>: "
             "detail::is_component_scheme_v<TSeq>;");
 
   public:
@@ -287,23 +313,23 @@ private:
     = index_map<
         Entity,
         typename detail::component_scheme_traits<TSeq>::component,
-        detail::component_scheme_traits<TSeq>::page_size,
+        detail::component_scheme_traits         <TSeq>::page_size,
         typename detail::component_scheme_traits<TSeq>::allocator>;
 
   };
 
 
-  using map_tuple_t
+  using container_tuple
   = scheme_type
-      ::flat_t
-      ::template map_t<to_map>
-      ::to_tuple_t;
+      ::flat
+      ::template map<to_container>
+      ::to_tuple;
 
 private:
-  map_tuple_t m_maps;
+  container_tuple m_containers;
 
 public:
-  // TODO: implement methods
+
 
 };
 
