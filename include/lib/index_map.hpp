@@ -105,10 +105,20 @@ class index_map
 private:
   static_assert(
       detail::index_map_is_index_v<Index>,
-      "heim::index_map: detail::index_map_is_index_v<Index>;");
+      "heim::index_map<Index, T, PageSize, Alloc>: "
+          "detail::index_map_is_index_v<Index>;");
   static_assert(
       detail::index_map_is_mapped_v<T>,
-      "heim::index_map: detail::index_map_is_mapped_v<T>;");
+      "heim::index_map<Index, T, PageSize, Alloc>: "
+          "detail::index_map_is_mapped_v<T>;");
+  static_assert(
+      std::is_same_v<
+          typename std::allocator_traits<Alloc>::value_type,
+          std::pair<Index const, T>>,
+      "heim::index_map<Index, T, PageSize, Alloc>: "
+          "std::is_same_v<"
+              "typename std::allocator_traits<Alloc>::value_type,"
+              "std::pair<Index const, T>>;");
 
 public:
   using index_type  = Index;
