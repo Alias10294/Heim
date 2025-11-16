@@ -124,8 +124,8 @@ public:
   using index_type  = Index;
   using mapped_type = T;
 
-  constexpr static std::size_t page_size
-  = PageSize;
+  static constexpr std::size_t
+  page_size = PageSize;
 
   using allocator_type = Alloc;
 
@@ -192,7 +192,7 @@ private:
   using page_t
   = std::array<size_type, page_size>;
 
-  constexpr static size_type s_null_position
+  static constexpr size_type s_null_position
   = std::numeric_limits<size_type>::max();
 
   using page_alloc_t
@@ -492,7 +492,7 @@ private:
 
     using std::swap;
     swap(m_indexes, new_indexes);
-    swap(m_mapped , new_mapped);
+    swap(m_mapped , new_mapped );
   }
 
 
