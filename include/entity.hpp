@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <limits>
 #include <type_traits>
+#include "lib/utility.hpp"
 
 namespace heim
 {
@@ -22,6 +23,10 @@ struct is_entity
 template<typename T>
 inline constexpr bool
 is_entity_v = is_entity<T>::value;
+
+template<typename T>
+concept entity
+= is_entity_v<T>;
 
 
 template<typename Entity>
@@ -52,6 +57,10 @@ private:
           "index_bits + generation_bits == total_bits;");
 
 public:
+  using index_type      = unsigned_integral_for_t<index_bits>;
+  using generation_type = unsigned_integral_for_t<generation_bits>;
+
+
   static constexpr entity_type
   index_mask      = std::numeric_limits<entity_type>::max() >> generation_bits;
 
@@ -59,36 +68,37 @@ public:
   generation_mask = std::numeric_limits<entity_type>::max() << index_bits;
 
 
-  static constexpr entity_type
-  max_index      = index_mask;
+  static constexpr index_type
+  max_index      = static_cast<index_type>(index_mask);
 
-  static constexpr entity_type
-  max_generation = generation_mask >> index_bits;
+  static constexpr generation_type
+  max_generation = static_cast<generation_type>(generation_mask >> index_bits);
 
 public:
-  static constexpr entity_type
+  static constexpr index_type
   index(entity_type const e)
   noexcept
   {
-    return e & index_mask;
+    return static_cast<index_type>(e & index_mask);
   }
 
 
-  static constexpr entity_type
+  static constexpr generation_type
   generation(entity_type const e)
   noexcept
   {
-    return e >> index_bits;
+    return static_cast<generation_type>(e >> index_bits);
   }
 
 
   static constexpr entity_type
   from(
-      entity_type const generation,
-      entity_type const index)
+      generation_type const generation,
+      index_type      const index)
   noexcept
   {
-    return (generation << index_bits) | (index & index_mask);
+    return (static_cast<entity_type>(generation) << index_bits)
+         | (static_cast<entity_type>(index) & index_mask);
   }
 
 

@@ -168,7 +168,7 @@ private:
 
 
   using index_alloc_t
-  = alloc_traits_t::template rebind_alloc<index_type>;
+  = typename alloc_traits_t::template rebind_alloc<index_type>;
 
   using index_alloc_traits_t
   = std::allocator_traits<index_alloc_t>;
@@ -179,7 +179,7 @@ private:
 
 
   using mapped_alloc_t
-  = alloc_traits_t::template rebind_alloc<mapped_type>;
+  = typename alloc_traits_t::template rebind_alloc<mapped_type>;
 
   using mapped_alloc_traits_t
   = std::allocator_traits<mapped_alloc_t>;
@@ -196,7 +196,7 @@ private:
   = std::numeric_limits<size_type>::max();
 
   using page_alloc_t
-  = alloc_traits_t::template rebind_alloc<page_t>;
+  = typename alloc_traits_t::template rebind_alloc<page_t>;
 
   using page_alloc_traits_t
   = std::allocator_traits<page_alloc_t>;
@@ -219,7 +219,7 @@ private:
   = PageSize > 0;
 
   using position_alloc_t
-  = alloc_traits_t::template rebind_alloc<std::conditional_t<
+  = typename alloc_traits_t::template rebind_alloc<std::conditional_t<
       is_paged_v,
       page_uptr_t,
       size_type>>;
@@ -774,6 +774,9 @@ public:
    || alloc_traits_t::is_always_equal::value)
   requires (std::is_move_assignable_v<mapped_type>)
   {
+    if (this == &other)
+      return *this;
+
     m_move_assign(other);
 
     if constexpr (
@@ -1146,8 +1149,11 @@ public:
       return;
 
     if (new_cap > max_size())
-      throw std::length_error{"heim::index_map::reserve(size_type const)"};
-
+    {
+      throw std::length_error{
+          "heim::index_map<Index, T, PageSize, Alloc>"
+              "::reserve(size_type const)"};
+    }
     m_set_capacity(new_cap);
   }
 

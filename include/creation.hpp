@@ -48,13 +48,13 @@ public:
 
 
   using component
-  = TSeq::template get<0>;
+  = typename TSeq::template get<0>;
 
   static constexpr std::size_t
   page_size = TSeq::template get<1>::value;
 
   using allocator
-  = TSeq::template get<2>;
+  = typename TSeq::template get<2>;
 
 };
 
@@ -104,17 +104,17 @@ private:
   {
   public:
     using type
-    = component_scheme_traits<USeq>::component;
+    = typename component_scheme_traits<USeq>::component;
 
   };
 
 public:
   using component_sequence
-  = TSeq::template map<to_component>;
+  = typename TSeq::template map<to_component>;
 
   template<typename T>
   using get_component_scheme
-  = TSeq::template get<component_sequence::template index<T>>;
+  = typename TSeq::template get<component_sequence::template index<T>>;
 
 };
 
@@ -173,7 +173,7 @@ private:
 
 public:
   using type
-  = TSeq
+  = typename TSeq
       ::template filter<has_component>
       ::template get<0>;
 
@@ -196,7 +196,7 @@ public:
 
   template<typename T>
   using get_sync_scheme
-  = creation_scheme_get_sync_scheme<type, T>::type;
+  = typename creation_scheme_get_sync_scheme<type, T>::type;
 
 private:
   template<typename ...Ts>
@@ -351,7 +351,7 @@ private:
 
 
   using container_tuple
-  = scheme_type
+  = typename scheme_type
       ::flat
       ::template map<to_container>
       ::to_tuple;
