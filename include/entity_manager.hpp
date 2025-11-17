@@ -11,6 +11,18 @@
 
 namespace heim
 {
+/*!
+ * @brief The container used to manage and keep track of entities and their
+ *   state.
+ *
+ * @tparam Entity The type of the entities.
+ * @tparam Alloc  The type of allocator used in the container.
+ *
+ * @details Implements a stack of invalidated entities, that are reused
+ *   whenever possible. To make entities reusable, each entity value contains
+ *   its index and a generation, that is used to verify the current validity of
+ *   the index.
+ */
 template<
     typename Entity,
     typename Alloc>
@@ -68,6 +80,13 @@ private:
   index_vector_t      m_stack;
 
 private:
+  //! @cond INTERNAL
+
+  /*!
+   * @brief Sets the capacity of the object to @code new_cap@endcode.
+   *
+   * @param new_cap The new capacity to reserve memory for.
+   */
   constexpr void
   m_set_capacity(size_type const new_cap)
   {
@@ -90,12 +109,21 @@ private:
     swap(m_stack      , stack      );
   }
 
+  //! @endcond
+
 public:
+  //! @brief Default-constructs the entity manager.
   constexpr
   entity_manager()
     : entity_manager{allocator_type{}}
   { }
 
+  /*!
+   * @brief Constructs the entity manager using the allocator
+   *   @code alloc@endcode.
+   *
+   * @param alloc The allocator to construct the entity manager with.
+   */
   explicit constexpr
   entity_manager(allocator_type const &alloc)
     : m_allocator  {alloc},
@@ -103,6 +131,11 @@ public:
       m_stack      {index_alloc_t     {alloc}}
   { }
 
+  /*!
+   * @brief Constructs the entity manager to be a copy of @code other@endcode.
+   *
+   * @param other The entity manager to copy.
+   */
   constexpr
   entity_manager(entity_manager const &other)
     : m_allocator  {alloc_traits_t
@@ -111,11 +144,23 @@ public:
       m_stack      {other.m_stack      , index_alloc_t     {m_allocator}}
   { }
 
+  /*!
+   * @brief Constructs the entity_manager to be the moved @code other@endcode.
+   *
+   * @param other The moved entity manager.
+   */
   constexpr
   entity_manager(entity_manager &&other)
   noexcept
   = default;
 
+  /*!
+   * @brief Constructs the entity manager to be a copy of @code other@endcode
+   *   and using the allocator @code alloc@endcode.
+   *
+   * @param other The entity manager to copy.
+   * @param alloc The allocator to construct the entity manager with.
+   */
   constexpr
   entity_manager(
       entity_manager const &other,
@@ -125,6 +170,13 @@ public:
           m_stack      {other.m_stack      , index_alloc_t     {m_allocator}}
   { }
 
+  /*!
+   * @brief Constructs the entity manager to be the moved @code other@endcode
+   *   and using the allocator @code alloc@endcode.
+   *
+   * @param other The moved entity manager.
+   * @param alloc The allocator to construct the entity manager with.
+   */
   constexpr
   entity_manager(
       entity_manager      &&other,
@@ -139,13 +191,19 @@ public:
           index_alloc_t     {m_allocator}}
   { }
 
-
+  //! @brief Destroys the entity manager.
   constexpr
   ~entity_manager()
   noexcept
   = default;
 
 
+  /*!
+   * @brief Assigns @c *this to be a copy of @code other@endcode.
+   *
+   * @param other The entity manager to copy.
+   * @returns @c *this .
+   */
   constexpr entity_manager &
   operator=(entity_manager const &other)
   {
@@ -172,6 +230,12 @@ public:
     return *this;
   }
 
+  /*!
+   * @brief Assigns @c *this to be the moved @code other@endcode.
+   *
+   * @param other The moved entity manager.
+   * @returns @c *this .
+   */
   constexpr entity_manager &
   operator=(entity_manager &&other)
   noexcept
@@ -191,6 +255,11 @@ public:
   }
 
 
+  /*!
+   * @brief Swaps the contents of @c *this and @code other@endcode.
+   *
+   * @param other The other entity manager whose contents to swap.
+   */
   constexpr void
   swap(entity_manager &other)
   noexcept(
@@ -206,6 +275,12 @@ public:
     swap(m_stack      , other.m_stack      );
   }
 
+  /*!
+   * @brief Swaps the contents of @code lhs @endcode and @code rhs@endcode.
+   *
+   * @param lhs The first  entity manager whose contents to swap.
+   * @param rhs The second entity manager whose contents to swap.
+   */
   friend constexpr void
   swap(entity_manager &lhs, entity_manager &rhs)
   noexcept(noexcept(lhs.swap(rhs)))
@@ -214,6 +289,11 @@ public:
   }
 
 
+  /*!
+   * @brief Returns the entity manager's allocator.
+   *
+   * @returns The entity manager's allocator.
+   */
   [[nodiscard]]
   constexpr allocator_type
   get_allocator() const
@@ -224,6 +304,12 @@ public:
 
 
 
+  /*!
+   * @brief Returns the total number of managed entities, both valid and
+   *   invalid.
+   *
+   * @returns The total number of managed entities, both valid and invalid.
+   */
   [[nodiscard]]
   constexpr size_type
   size() const
@@ -233,6 +319,12 @@ public:
   }
 
 
+  /*!
+   * @brief Returns the maximum number of entities the entity manager can
+   *   manage.
+   *
+   * @returns The maximum number of entities the entity manager can manage.
+   */
   [[nodiscard]]
   constexpr size_type
   max_size() const
@@ -242,6 +334,13 @@ public:
   }
 
 
+  /*!
+   * @brief Returns the maximum number of entities the entity manager can
+   *   manage without requiring reallocation.
+   *
+   * @returns The maximum number of entities the entity manager can manage
+   *   without requiring reallocation.
+   */
   [[nodiscard]]
   constexpr size_type
   capacity() const
@@ -251,6 +350,13 @@ public:
   }
 
 
+  /*!
+   * @brief Increases the capacity (the maximum number of entities the entity
+   *   manager can manage without requiring reallocation) to a value that is at
+   *   least equal to @code new_cap@endcode.
+   *
+   * @param new_cap The new capacity to attain of the entity manager.
+   */
   constexpr void
   reserve(size_type const new_cap)
   {
@@ -267,6 +373,13 @@ public:
   }
 
 
+  /*!
+   * @brief Request the removal of unused capacity.
+   *
+   * @details It is a non-binding request to reduce the entity manager's
+   *   capacity to its size. It depends on the implementation whether the
+   *   request is fulfilled.
+   */
   constexpr void
   shrink_to_fit()
   {
@@ -275,6 +388,13 @@ public:
 
 
 
+  /*!
+   * @brief Checks whether the entity @code e@endcode is valid in the context
+   *   of managements of @c *this .
+   *
+   * @return @c true if the entity's generation exists and is the current,
+   *   @c false otherwise.
+   */
   [[nodiscard]]
   constexpr bool
   valid(entity_type const e) const
@@ -287,6 +407,12 @@ public:
   }
 
 
+  /*!
+   * @brief Returns the generation of the index @code idx@endcode.
+   *
+   * @param idx The index to get the generation of.
+   * @returns The generation of @code idx@endcode.
+   */
   [[nodiscard]]
   constexpr generation_type
   generation(index_type const idx) const
@@ -295,18 +421,16 @@ public:
     return m_generations[static_cast<size_type>(idx)];
   }
 
-  [[nodiscard]]
-  constexpr generation_type
-  generation(entity_type const e) const
-  noexcept
-  {
-    size_type const i = static_cast<size_type>(entity_traits_t::index(e));
-
-    return m_generations[i];
-  }
 
 
-
+  /*!
+   * @brief Generates a new valid entity.
+   *
+   * @returns A new valid entity.
+   *
+   * @details Either frees the stack of invalidated indexes with its generation
+   *   updated, or generates a brand-new index value.
+   */
   [[nodiscard]]
   constexpr entity_type
   generate()
@@ -330,6 +454,12 @@ public:
   }
 
 
+  /*!
+   * @brief Invalidates the entity @code e@endcode 's generation and adds its
+   *   index to the stack of invalidated entities.
+   *
+   * @param e The entity to invalidate.
+   */
   constexpr void
   invalidate(entity_type const e)
   {

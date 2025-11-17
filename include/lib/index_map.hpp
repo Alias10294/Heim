@@ -1140,7 +1140,7 @@ public:
    *   map can hold without requiring reallocation) to a value that is at least
    *   equal to @code new_cap@endcode.
    *
-   * @param new_cap The new capacity of the index map.
+   * @param new_cap The new capacity to attain of the index map.
    */
   constexpr void
   reserve(size_type const new_cap)
