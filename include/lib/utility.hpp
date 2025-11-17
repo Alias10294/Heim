@@ -1,9 +1,9 @@
 #ifndef HEIM_LIB_UTILITY_HPP
 #define HEIM_LIB_UTILITY_HPP
 
-#include <climits>
 #include <cstddef>
-#include <cstdint>
+#include <limits>
+#include <type_traits>
 
 namespace heim
 {
@@ -12,32 +12,42 @@ using redefine_tag = void;
 
 
 
+/*!
+ * @brief The smallest unsigned integral type that can hold @code Bits@endcode
+ *   bits.
+ *
+ * @tparam Bits the number of bits to hold for the deduced type.
+ */
 template<std::size_t Bits>
 struct unsigned_integral_for
 {
   static_assert(
-      0 < Bits && Bits <= 64,
+      0 < Bits && Bits <= std::numeric_limits<unsigned long long>::digits,
       "heim::unsigned_integral_for<Bits>: "
-          "0 < Bits && Bits <= 64;");
+          "0 < Bits && "
+          "Bits <= std::numeric_limits<unsigned long long>::digits;");
 
 public:
   using type
   = std::conditional_t<
-      Bits <= CHAR_BIT,
-      std::uint8_t,
+      Bits <= std::numeric_limits<unsigned char>::digits,
+      unsigned char,
       std::conditional_t<
-          Bits <= CHAR_BIT * 2,
-          std::uint16_t,
+          Bits <= std::numeric_limits<unsigned short>::digits,
+          unsigned short,
           std::conditional_t<
-              Bits <= CHAR_BIT * 4,
-              std::uint32_t,
-              std::uint64_t>>>;
+              Bits <= std::numeric_limits<unsigned int>::digits,
+              unsigned int,
+              std::conditional_t<
+                  Bits <= std::numeric_limits<unsigned long>::digits,
+                  unsigned long,
+                  unsigned long long>>>>;
 
 };
 
 template<std::size_t Bits>
 using unsigned_integral_for_t
-= unsigned_integral_for<Bits>::type;
+= typename unsigned_integral_for<Bits>::type;
 
 
 } // namespace heim

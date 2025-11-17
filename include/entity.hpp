@@ -9,6 +9,11 @@
 
 namespace heim
 {
+/*!
+ * @brief Whether @code T@endcode is a valid entity type or not.
+ *
+ * @tparam T The type to check for.
+ */
 template<typename T>
 struct is_entity
 {
@@ -29,6 +34,11 @@ concept entity
 = is_entity_v<T>;
 
 
+/*!
+ * @brief The uniform interface to use entities.
+ *
+ * @tparam Entity The entity type.
+ */
 template<typename Entity>
 struct entity_traits
 {
@@ -75,6 +85,12 @@ public:
   max_generation = static_cast<generation_type>(generation_mask >> index_bits);
 
 public:
+  /*!
+   * @brief The corresponding index of @code e@endcode.
+   *
+   * @param e The entity to get the index of.
+   * @returns The index of @code e@endcode.
+   */
   static constexpr index_type
   index(entity_type const e)
   noexcept
@@ -83,6 +99,12 @@ public:
   }
 
 
+  /*!
+   * @brief The corresponding generation of @code e@endcode.
+   *
+   * @param e The entity to get the generation of.
+   * @returns The generation of @code e@endcode.
+   */
   static constexpr generation_type
   generation(entity_type const e)
   noexcept
@@ -91,6 +113,14 @@ public:
   }
 
 
+  /*!
+   * @brief The entity formulated by combining the given generation and index.
+   *
+   * @param generation The generation to set the entity to.
+   * @param index      The index      to set the entity to.
+   * @returns The entity with the index @code index@endcode and generation
+   *   @code generation@endcode.
+   */
   static constexpr entity_type
   from(
       generation_type const generation,
