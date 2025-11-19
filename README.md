@@ -5,7 +5,7 @@ To use Heim, users must acquire a compiler that supports at least C++23 as well 
 
 ## Installation
 ### Use as a cloned repository
-To install Heim, to import Heim as a cloned repository, follow these commands :
+To install Heim as a cloned repository, follow these commands :
 ```
 > cd [directory of your choice]
 > git clone https://github.com/Alias10294/Heim.git

@@ -1,5 +1,5 @@
-#ifndef HEIM_CREATION_HPP
-#define HEIM_CREATION_HPP
+#ifndef HEIM_REGISTRY_HPP
+#define HEIM_REGISTRY_HPP
 
 #include <cstddef>
 #include <memory>
@@ -7,6 +7,8 @@
 #include "lib/index_map.hpp"
 #include "lib/type_sequence.hpp"
 #include "lib/utility.hpp"
+#include "entity.hpp"
+#include "entity_manager.hpp"
 
 namespace heim
 {
@@ -121,12 +123,12 @@ public:
 
 
 template<typename TSeq>
-struct is_creation_scheme
+struct is_registry_scheme
   : std::false_type
 { };
 
 template<typename ...TSeqs>
-struct is_creation_scheme<type_sequence<TSeqs ...>>
+struct is_registry_scheme<type_sequence<TSeqs ...>>
   : std::bool_constant<
         (is_sync_scheme_v<TSeqs> && ...)
      && type_sequence<
@@ -137,19 +139,19 @@ struct is_creation_scheme<type_sequence<TSeqs ...>>
 
 template<typename TSeq>
 inline constexpr bool
-is_creation_scheme_v = is_creation_scheme<TSeq>::value;
+is_registry_scheme_v = is_registry_scheme<TSeq>::value;
 
 
 template<
     typename TSeq,
     typename T>
-struct creation_scheme_get_sync_scheme
+struct registry_scheme_get_sync_scheme
 {
 private:
   static_assert(
-      is_creation_scheme_v<TSeq>,
-      "heim::detail::creation_scheme_get_sync_scheme<TSeq, T>: "
-          "heim::detail::is_creation_scheme_v<TSeq>;");
+      is_registry_scheme_v<TSeq>,
+      "heim::detail::registry_scheme_get_sync_scheme<TSeq, T>: "
+          "heim::detail::is_registry_scheme_v<TSeq>;");
 
 private:
   template<typename USeq>
@@ -158,7 +160,7 @@ private:
   private:
     static_assert(
         is_sync_scheme_v<USeq>,
-        "heim::detail::creation_scheme_get_sync_scheme<TSeq, T>"
+        "heim::detail::registry_scheme_get_sync_scheme<TSeq, T>"
             "::has_component<USeq>: "
                 "is_sync_scheme_v<USeq>;");
 
@@ -181,13 +183,13 @@ public:
 
 
 template<typename TSeq>
-class creation_scheme_traits
+class registry_scheme_traits
 {
 private:
   static_assert(
-      is_creation_scheme_v<TSeq>,
-      "heim::detail::creation_scheme_traits<TSeq>: "
-          "is_creation_scheme_v<TSeq>;");
+      is_registry_scheme_v<TSeq>,
+      "heim::detail::registry_scheme_traits<TSeq>: "
+          "is_registry_scheme_v<TSeq>;");
 
 public:
   using type
@@ -196,7 +198,7 @@ public:
 
   template<typename T>
   using get_sync_scheme
-  = typename creation_scheme_get_sync_scheme<type, T>::type;
+  = typename registry_scheme_get_sync_scheme<type, T>::type;
 
 private:
   template<typename ...Ts>
@@ -214,14 +216,14 @@ private:
   private:
     static_assert(
         can_sync<First, Second, Rest...>,
-        "heim::detail::creation_scheme_traits<TSeq>"
+        "heim::detail::registry_scheme_traits<TSeq>"
             "::sync_components_wrapper<First, Second, Rest ...>: "
-                "heim::detail::creation_scheme_traits<TSeq>::"
+                "heim::detail::registry_scheme_traits<TSeq>::"
                     "can_sync<First, Second, Rest...>;");
 
   public:
     using type
-    = creation_scheme_traits<typename type
+    = registry_scheme_traits<typename type
         ::template difference<type_sequence<
             get_sync_scheme<First >,
             get_sync_scheme<Second>,
@@ -239,7 +241,7 @@ public:
       std::size_t PageSize,
       typename    Alloc>
   using add_component
-  = creation_scheme_traits<
+  = registry_scheme_traits<
       typename type::template extend<
           type_sequence<declare_component_scheme<T, PageSize, Alloc>>>>;
 
@@ -256,87 +258,89 @@ public:
 } // namespace detail
 
 
-template<typename T, typename = redefine_tag>
+/*!
+ * @brief The uniform interface to use components.
+ *
+ * @tparam T The type of component to qualify.
+ */
+template<typename T>
 struct component_traits
 {
+  using type
+  = T;
+
   static constexpr std::size_t
   page_size = 4096;
 
   template<typename Index>
   using allocator_type
-  = std::allocator<std::pair<Index const, T>>;
+  = redefine_tag;
 
 };
 
 
 
+/*!
+ * @brief The central object of the entity-component system that manages both
+ *   entities and components alike.
+ *
+ * @tparam Entity The type of entity.
+ * @tparam Alloc  The default allocator for entities (and components).
+ * @tparam Scheme The scheme of the registry used to organize components.
+ */
 template<
-    typename Index,
-    typename Alloc  = std::allocator<Index>,
+    typename Entity,
+    typename Alloc  = std::allocator<Entity>,
     typename Scheme = type_sequence<>>
-class creation
+class registry
 {
 private:
   static_assert(
-      detail::is_creation_scheme_v<Scheme>,
-      "heim::creation<Index, Alloc, Scheme>: "
-          "detail::is_creation_scheme_v<Scheme>;");
+      detail::is_registry_scheme_v<Scheme>,
+      "heim::registry<Entity, Alloc, Scheme>: "
+          "detail::is_registry_scheme_v<Scheme>;");
 
 public:
-  using index_type     = Index;
+  using entity_type    = Entity;
   using allocator_type = Alloc;
   using scheme_type    = Scheme;
+
+
+  using index_type      = entity_traits<entity_type>::index_type;
+  using generation_type = entity_traits<entity_type>::generation_type;
 
 private:
   using alloc_traits_t
   = std::allocator_traits<allocator_type>;
 
+  using entity_alloc_t
+  = typename alloc_traits_t
+      ::template rebind_alloc<entity_type>;
+
   template<typename T>
-  using default_alloc_t
+  using component_alloc_t
   = std::conditional_t<
       std::is_same_v<
-          typename alloc_traits_t
-              ::template rebind_alloc<std::pair<Index const, T>>,
           typename component_traits<T>
-              ::template allocator_type<Index>>,
+              ::template allocator_type<index_type>,
+          redefine_tag>,
       typename alloc_traits_t
-          ::template rebind_alloc<std::pair<Index const, T>>,
+          ::template rebind_alloc<std::pair<index_type const, T>>,
       typename component_traits<T>
-          ::template allocator_type<Index>>;
+          ::template allocator_type<index_type>>;
 
-public:
-  template<
-      typename    T,
-      std::size_t PageSize = component_traits<T>::page_size,
-      typename    TAlloc   = default_alloc_t<T>>
-  using component
-  = creation<
-      index_type,
-      allocator_type,
-      typename detail::creation_scheme_traits<scheme_type>
-          ::template add_component<T, PageSize, TAlloc>
-          ::type>;
 
-  template<
-      typename    First,
-      typename    Second,
-      typename ...Rest>
-  using sync
-  = creation<
-      index_type,
-      allocator_type,
-      typename detail::creation_scheme_traits<scheme_type>
-          ::template sync_components<First, Second, Rest ...>
-          ::type>;
+  using entity_manager_t
+  = entity_manager<entity_type, allocator_type>;
 
-private:
+
   template<typename TSeq>
   struct to_container
   {
   private:
     static_assert(
         detail::is_component_scheme_v<TSeq>,
-        "heim::creation<Index, Scheme>::to_container<TSeq>: "
+        "heim::registry<Index, Scheme>::to_container<TSeq>: "
             "detail::is_component_scheme_v<TSeq>;");
 
   public:
@@ -349,15 +353,66 @@ private:
 
   };
 
-
-  using container_tuple
+  using container_tuple_t
   = typename scheme_type
       ::flat
       ::template map<to_container>
       ::to_tuple;
 
+public:
+  /*!
+   * @brief The registry type with @code T@endcode added as a component type,
+   *   along optional parameters @code PageSize@endcode and
+   *   @code TAlloc@endcode.
+   *
+   * @tparam T        The type of component to add.
+   * @tparam PageSize The size of each internal page for the component's
+   *   container.
+   * @tparam TAlloc   The type of the allocator used for the component's
+   *   container.
+   *
+   * @note Component types can only be found once in a given registry, so
+   *   adding an already informed component will have no effect.
+   */
+  template<
+      typename    T,
+      std::size_t PageSize = component_traits<T>::page_size,
+      typename    TAlloc   = component_alloc_t<T>>
+  using component
+  = registry<
+      entity_type,
+      allocator_type,
+      typename detail::registry_scheme_traits<scheme_type>
+          ::template add_component<T, PageSize, TAlloc>
+          ::type>;
+
+  /*!
+   * @brief The registry type with component types @code First@endcode,
+   *   @code Second@endcode and remaining @code Rest ...@endcode types synced
+   *   together.
+   *
+   * @tparam First  The first  component to sync.
+   * @tparam Second The second component to sync.
+   * @tparam Rest   The rest of the components to sync.
+   *
+   * @note Syncing a component that is not already informed in the registry
+   *   will result in a compilation error.
+   */
+  template<
+      typename    First,
+      typename    Second,
+      typename ...Rest>
+  using sync
+  = registry<
+      entity_type,
+      allocator_type,
+      typename detail::registry_scheme_traits<scheme_type>
+          ::template sync_components<First, Second, Rest ...>
+          ::type>;
+
 private:
-  container_tuple m_containers;
+  entity_manager_t  m_entity_mgr;
+  container_tuple_t m_containers;
 
 };
 
@@ -365,4 +420,4 @@ private:
 } // namespace heim
 
 
-#endif // HEIM_CREATION_HPP
+#endif // HEIM_REGISTRY_HPP
