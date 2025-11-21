@@ -64,7 +64,7 @@ struct component_scheme_traits
 {
   static_assert(
       is_component_scheme_v<Scheme>,
-      "heim::detail::component_scheme_traits<Scheme>: "
+      "heim::component_scheme_traits<Scheme>: "
           "is_component_scheme_v<Scheme>;");
 
 public:
@@ -129,7 +129,7 @@ struct sync_scheme_traits
 {
   static_assert(
       is_sync_scheme_v<Scheme>,
-      "heim::detail::sync_scheme_traits<Scheme>: "
+      "heim::sync_scheme_traits<Scheme>: "
           "is_sync_scheme_v<Scheme>;");
 
 public:
@@ -231,6 +231,12 @@ public:
 };
 
 template<
+    typename Scheme,
+    typename C>
+using scheme_get_sync_scheme_t
+= scheme_get_sync_scheme<Scheme, C>::type;
+
+template<
     typename    Scheme,
     typename ...Cs>
 struct scheme_declare_sync
@@ -239,24 +245,29 @@ struct scheme_declare_sync
       is_scheme_v<Scheme>,
       "heim::detail::scheme_declare_scheme<Scheme, Cs ...>: "
           "is_scheme_v<Scheme>;");
-
   static_assert(
-      ((scheme_get_sync_scheme<Scheme, Cs>::size == 1) && ...),
+      ((scheme_get_sync_scheme_t<Scheme, Cs>::size == 1) && ...),
       "heim::detail::scheme_declare_scheme<Scheme, Cs ...>: "
-          "((scheme_get_sync_scheme<Scheme, Cs>::size == 1) && ...);");
+          "((scheme_get_sync_scheme_t<Scheme, Cs>::size == 1) && ...);");
 
 public:
   using type
   = typename Scheme
       ::template difference<
           type_sequence<
-              scheme_get_sync_scheme<Scheme, Cs> ...>>
+              scheme_get_sync_scheme_t<Scheme, Cs> ...>>
       ::template extend<
           type_sequence<
-              typename scheme_get_sync_scheme<Scheme, Cs>
+              typename scheme_get_sync_scheme_t<Scheme, Cs>
                   ::template get<0> ...>>;
 
 };
+
+template<
+    typename    Scheme,
+    typename ...Cs>
+using scheme_declare_sync_t
+= scheme_declare_sync<Scheme, Cs ...>::type;
 
 
 } // namespace detail
@@ -268,7 +279,7 @@ struct scheme_traits
 private:
   static_assert(
       is_scheme_v<Scheme>,
-      "heim::detail::scheme_traits<Scheme>: "
+      "heim::scheme_traits<Scheme>: "
           "is_scheme_v<Scheme>;");
 
 public:
@@ -284,7 +295,7 @@ public:
    */
   template<typename C>
   using get_sync_scheme
-  = detail::scheme_get_sync_scheme<Scheme, C>;
+  = detail::scheme_get_sync_scheme_t<Scheme, C>;
 
 
   /*!
@@ -324,9 +335,9 @@ public:
       typename ...Rest>
   using declare_sync
   = scheme_traits<
-      typename detail::scheme_declare_sync<
-          Scheme,
-          First, Second, Rest ...>::type>;
+      typename detail::scheme_declare_sync_t<
+          type,
+          First, Second, Rest ...>>;
 
 };
 

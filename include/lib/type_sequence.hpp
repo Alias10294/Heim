@@ -673,7 +673,7 @@ public:
    * @brief The corresponding std::tuple specialization for this
    *   type_sequence.
    */
-  using to_tuple
+  using tuple
   = std::tuple<Ts ...>;
 
 
