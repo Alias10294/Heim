@@ -21,7 +21,7 @@ namespace heim
  */
 template<
     typename Index,
-    typename Alloc  = default_allocator_t<Index>,
+    typename Alloc  = allocator_for_t<Index>,
     typename Scheme = type_sequence<>>
 class component_manager
 {
@@ -58,34 +58,25 @@ private:
   = std::allocator_traits<allocator_type>;
 
 
-  /*!
-   * @brief The allocator to use in the manager for component @code C@endcode.
-   *
-   * @tparam C The component whose allocator to determine.
-   */
   template<typename C>
-  struct component_allocator
+  struct default_allocator_for
   {
   private:
     static constexpr bool
-    is_redefined = !std::is_same_v<
-        default_allocator_t<C>,
-        typename component_traits<C>::allocator_type>;
+    is_redefined
+    = !std::is_same_v<
+        default_allocator<>::template type_for<C>,
+        typename component_traits<C>::allocator>;
 
   public:
     using type
     = std::conditional_t<
         is_redefined,
-        typename component_traits<C>
-            ::allocator_type,
+        typename component_traits<C>::allocator,
         typename alloc_traits_t
             ::template rebind_alloc<C>>;
 
   };
-
-  template<typename C>
-  using component_allocator_t
-  = typename component_allocator<C>::type;
 
 
   //! @brief The tuple of component containers to manage.
@@ -95,6 +86,13 @@ private:
     template<typename CScheme>
     struct to_container
     {
+      static_assert(
+          is_component_scheme_v<CScheme>,
+          "heim::component_manager<Index, Alloc, Scheme>"
+              "::container_tuple"
+              "::to_container<CScheme>: "
+                  "is_component_scheme_v<CScheme>;");
+
     private:
       using component_t
       = typename component_scheme_traits<CScheme>::component;
@@ -105,7 +103,8 @@ private:
           index_type,
           component_t,
           component_scheme_traits<CScheme>::page_size,
-          typename std::allocator_traits<component_allocator_t<component_t>>
+          typename std::allocator_traits<
+              typename component_scheme_traits<CScheme>::allocator>
               ::template rebind_alloc<
                   std::pair<index_type const, component_t>>>;
 
@@ -123,13 +122,48 @@ private:
   using container_tuple_t
   = container_tuple::type;
 
+
+  template<typename C>
+  struct index
+  {
+  private:
+    template<typename CScheme>
+    struct to_component
+    {
+      static_assert(
+          is_component_scheme_v<CScheme>,
+          "heim::component_manager<Index, Alloc, Scheme>"
+              "::index<C>"
+              "::to_component<CScheme>: "
+                  "is_component_scheme_v<CScheme>;");
+
+    public:
+      using type
+      = component_scheme_traits<CScheme>::component;
+
+    };
+
+  public:
+    static constexpr std::size_t
+    value = scheme_type
+        ::flat
+        ::template map<to_component>
+        ::template index<C>;
+
+  };
+
+  template<typename C>
+  static constexpr std::size_t
+  index_v = index<C>::value;
+
+
   //! @endcond
 
 public:
   /*!
    * @brief The manager with the added component scheme described by the
    *   component type @code C@endcode, its container's page size
-   *   @code PageSize@endcode and its allocator @code Alloc@endcode.
+   *   @code PageSize@endcode and its allocator @code CAlloc@endcode.
    *
    * @tparam C        The type of the component.
    * @tparam PageSize The size of each internal page for the component's
@@ -140,7 +174,7 @@ public:
   template<
       typename    C,
       std::size_t PageSize = default_page_size_v<C>,
-      typename    CAlloc   = component_allocator_t<C>>
+      typename    CAlloc   = typename default_allocator_for<C>::type>
   using declare_component
   = component_manager<
       index_type,
@@ -174,6 +208,23 @@ public:
 private:
   container_tuple_t m_containers;
 
+private:
+  template<typename C>
+  constexpr std::tuple_element_t<index_v<C>, container_tuple_t> &
+  m_get()
+  noexcept
+  {
+    return std::get<index_v<C>>(m_containers);
+  }
+
+  template<typename C>
+  constexpr std::tuple_element_t<index_v<C>, container_tuple_t> const &
+  m_get() const
+  noexcept
+  {
+    return std::get<index_v<C>>(m_containers);
+  }
+
 public:
   //! @brief Default-constructs the component manager.
   constexpr
@@ -198,7 +249,7 @@ public:
    */
   constexpr
   component_manager(component_manager &&other)
-  noexcept
+  noexcept(std::is_nothrow_move_constructible_v<container_tuple_t>)
   = default;
 
 
@@ -230,10 +281,37 @@ public:
    */
   constexpr component_manager &
   operator=(component_manager &&other)
-  noexcept(noexcept(m_containers = std::move(other.m_containers)))
+  noexcept(std::is_nothrow_move_assignable_v<container_tuple_t>)
   {
     m_containers = std::move(other.m_containers);
     return *this;
+  }
+
+
+
+  /*!
+   * @brief Swaps the contents of @c *this and @code other@endcode.
+   *
+   * @param other The other component manager whose contents to swap.
+   */
+  constexpr void
+  swap(component_manager &other)
+  noexcept(noexcept(m_containers.swap(other.m_containers)))
+  {
+    m_containers.swap(other.m_containers);
+  }
+
+  /*!
+   * @brief Swaps the contents of @code lhs@endcode and @code rhs@endcode.
+   *
+   * @param lhs The first  component manager whose contents to swap.
+   * @param rhs The second component manager whose contents to swap.
+   */
+  friend constexpr void
+  swap(component_manager &lhs, component_manager &rhs)
+  noexcept(noexcept(lhs.swap(rhs)))
+  {
+    lhs.swap(rhs);
   }
 
 };

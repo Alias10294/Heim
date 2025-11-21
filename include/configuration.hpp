@@ -3,25 +3,42 @@
 
 #include <cstddef>
 #include <memory>
+#include "lib/utility.hpp"
 
 namespace heim
 {
-/*!
- * @brief The default allocator to use in Heim for @code T@endcode.
- *
- * @tparam T The type whose default allocator to get.
- */
-template<typename T>
+template<typename = redefine_tag>
 struct default_allocator
 {
+  template<typename T>
+  using type_for = std::allocator<T>;
+
+};
+
+/*
+Exemple de redéfinition:
+
+template<>
+struct default_allocator<redefine_tag>
+{
+  template<typename T>
+  using type_for = std::pmr::polymorphic_allocator<T>;
+
+};
+*/
+
+template<typename T>
+struct allocator_for
+{
   using type
-  = std::allocator<T>;
+  = default_allocator<>
+      ::template type_for<T>;
 
 };
 
 template<typename T>
-using default_allocator_t
-= typename default_allocator<T>::type;
+using allocator_for_t
+= allocator_for<T>::type;
 
 
 /*!
@@ -52,7 +69,7 @@ template<typename C>
 struct component_traits
 {
   //! @brief The component type.
-  using component_type
+  using component
   = C;
 
   //! @brief The page size for the component type's container.
@@ -60,8 +77,8 @@ struct component_traits
   page_size = default_page_size_v<C>;
 
   //! @brief The allocator type for the component type.
-  using allocator_type
-  = default_allocator_t<C>;
+  using allocator
+  = allocator_for_t<C>;
 
 };
 
