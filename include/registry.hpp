@@ -64,7 +64,7 @@ template<
     typename    T,
     std::size_t PageSize,
     typename    Alloc>
-using declare_component_scheme
+using component_scheme
 = type_sequence<T, std::integral_constant<std::size_t, PageSize>, Alloc>;
 
 
@@ -115,7 +115,7 @@ public:
   = typename TSeq::template map<to_component>;
 
   template<typename T>
-  using get_component_scheme
+  using component_scheme
   = typename TSeq::template get<component_sequence::template index<T>>;
 
 };
@@ -123,12 +123,12 @@ public:
 
 
 template<typename TSeq>
-struct is_registry_scheme
+struct is_scheme
   : std::false_type
 { };
 
 template<typename ...TSeqs>
-struct is_registry_scheme<type_sequence<TSeqs ...>>
+struct is_scheme<type_sequence<TSeqs ...>>
   : std::bool_constant<
         (is_sync_scheme_v<TSeqs> && ...)
      && type_sequence<
@@ -139,7 +139,7 @@ struct is_registry_scheme<type_sequence<TSeqs ...>>
 
 template<typename TSeq>
 inline constexpr bool
-is_registry_scheme_v = is_registry_scheme<TSeq>::value;
+is_scheme_v = is_scheme<TSeq>::value;
 
 
 template<
@@ -149,7 +149,7 @@ struct registry_scheme_get_sync_scheme
 {
 private:
   static_assert(
-      is_registry_scheme_v<TSeq>,
+      is_scheme_v<TSeq>,
       "heim::detail::registry_scheme_get_sync_scheme<TSeq, T>: "
           "heim::detail::is_registry_scheme_v<TSeq>;");
 
@@ -187,7 +187,7 @@ class registry_scheme_traits
 {
 private:
   static_assert(
-      is_registry_scheme_v<TSeq>,
+      is_scheme_v<TSeq>,
       "heim::detail::registry_scheme_traits<TSeq>: "
           "is_registry_scheme_v<TSeq>;");
 
@@ -243,7 +243,7 @@ public:
   using add_component
   = registry_scheme_traits<
       typename type::template extend<
-          type_sequence<declare_component_scheme<T, PageSize, Alloc>>>>;
+          type_sequence<component_scheme<T, PageSize, Alloc>>>>;
 
   template<
       typename    First,
@@ -296,7 +296,7 @@ class registry
 {
 private:
   static_assert(
-      detail::is_registry_scheme_v<Scheme>,
+      detail::is_scheme_v<Scheme>,
       "heim::registry<Entity, Alloc, Scheme>: "
           "detail::is_registry_scheme_v<Scheme>;");
 
@@ -313,9 +313,14 @@ private:
   using alloc_traits_t
   = std::allocator_traits<allocator_type>;
 
+
   using entity_alloc_t
   = typename alloc_traits_t
       ::template rebind_alloc<entity_type>;
+
+  using entity_mgr_t
+  = entity_manager<entity_type, allocator_type>;
+
 
   template<typename T>
   using component_alloc_t
@@ -328,11 +333,6 @@ private:
           ::template rebind_alloc<std::pair<index_type const, T>>,
       typename component_traits<T>
           ::template allocator_type<index_type>>;
-
-
-  using entity_manager_t
-  = entity_manager<entity_type, allocator_type>;
-
 
   template<typename TSeq>
   struct to_container
@@ -411,7 +411,7 @@ public:
           ::type>;
 
 private:
-  entity_manager_t  m_entity_mgr;
+  entity_mgr_t      m_entity_mgr;
   container_tuple_t m_containers;
 
 };
