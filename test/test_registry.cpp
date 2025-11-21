@@ -7,6 +7,7 @@ TEST_CASE("heim::registry")
   = heim::registry<std::size_t>
       ::component<int>
       ::component<float>
+      ::component<short>
       ::sync<int, float>;
 
   registry_t my_registry;
