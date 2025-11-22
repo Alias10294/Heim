@@ -270,13 +270,27 @@ using scheme_declare_sync_t
 = scheme_declare_sync<Scheme, Cs ...>::type;
 
 
+template<typename CScheme>
+struct component_scheme_to_component
+{
+  static_assert(
+      is_component_scheme_v<CScheme>,
+      "heim::detail::component_scheme_to_component<CScheme>: "
+          "is_component_scheme_v<CScheme>;");
+
+public:
+  using type
+  = component_scheme_traits<CScheme>::component;
+
+};
+
+
 } // namespace detail
 
 
 template<typename Scheme>
 struct scheme_traits
 {
-private:
   static_assert(
       is_scheme_v<Scheme>,
       "heim::scheme_traits<Scheme>: "
@@ -338,6 +352,36 @@ public:
       typename detail::scheme_declare_sync_t<
           type,
           First, Second, Rest ...>>;
+
+
+  using component_sequence
+  = typename type
+      ::flat
+      ::template map<detail::component_scheme_to_component>;
+
+
+  /*!
+   * @brief The index of the component @code C@endcode in the scheme.
+   *
+   * @tparam C The component whose index to get.
+   */
+  template<typename C>
+  static constexpr std::size_t
+  component_index
+  = component_sequence::template index<C>;
+
+  /*!
+   * @brief The index of the component @code C@endcode 's sync scheme in the
+   *   scheme.
+   *
+   * @tparam C The component whose sync scheme's index to get.
+   */
+  template<typename C>
+  static constexpr std::size_t
+  sync_index
+  = type
+      ::template index<
+          typename type::template get<get_sync_scheme<C>>>;
 
 };
 

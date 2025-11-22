@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include "lib/index_map.hpp"
 #include "lib/type_sequence.hpp"
 #include "configuration.hpp"
@@ -11,6 +12,38 @@
 
 namespace heim
 {
+namespace detail
+{
+template<
+    typename CScheme,
+    typename Index>
+struct component_scheme_to_container
+{
+  static_assert(
+      is_component_scheme_v<CScheme>,
+      "heim::detail::component_scheme_to_container<CScheme, Index>: "
+          "is_component_scheme_v<CScheme>;");
+
+private:
+  using scheme_traits_t
+  = component_scheme_traits<CScheme>;
+
+public:
+  using type
+  = index_map<
+      Index,
+      typename scheme_traits_t::component,
+      scheme_traits_t         ::page_size,
+      typename std::allocator_traits<typename scheme_traits_t::allocator>
+          ::template rebind_alloc<
+              std::pair<Index const, typename scheme_traits_t::component>>>;
+
+};
+
+
+} // namespace detail
+
+
 /*!
  * @brief The global manager for a set of component maps.
  *
@@ -54,10 +87,21 @@ public:
 private:
   //! @cond INTERNAL
 
+  //! @brief The interface to access the traits of the allocator type.
   using alloc_traits_t
   = std::allocator_traits<allocator_type>;
 
 
+  /*!
+   * @brief The allocator to propose by default for the component type
+   *   @code C@endcode.
+   *
+   * @tparam C The component to get the default allocator.
+   *
+   * @details Takes into account if the external default allocator for
+   *   @code C@endcode has been redefined, otherwise defaults to the allocator
+   *   type of the manager.
+   */
   template<typename C>
   struct default_allocator_for
   {
@@ -78,84 +122,40 @@ private:
 
   };
 
+  template<typename C>
+  using default_allocator_for_t
+  = typename default_allocator_for<C>::type;
 
-  //! @brief The tuple of component containers to manage.
-  struct container_tuple
-  {
-  private:
-    template<typename CScheme>
-    struct to_container
-    {
-      static_assert(
-          is_component_scheme_v<CScheme>,
-          "heim::component_manager<Index, Alloc, Scheme>"
-              "::container_tuple"
-              "::to_container<CScheme>: "
-                  "is_component_scheme_v<CScheme>;");
 
-    private:
-      using component_t
-      = typename component_scheme_traits<CScheme>::component;
 
-    public:
-      using type
-      = index_map<
-          index_type,
-          component_t,
-          component_scheme_traits<CScheme>::page_size,
-          typename std::allocator_traits<
-              typename component_scheme_traits<CScheme>::allocator>
-              ::template rebind_alloc<
-                  std::pair<index_type const, component_t>>>;
+  using component_scheme_sequence
+  = typename scheme_type::flat;
 
-    };
 
-  public:
-    using type
-    = scheme_type
-        ::flat
-        ::template map<to_container>
-        ::tuple;
-
-  };
+  template<typename CScheme>
+  using to_container
+  = detail::component_scheme_to_container<CScheme, index_type>;
 
   using container_tuple_t
-  = container_tuple::type;
+  = typename component_scheme_sequence
+      ::template map<to_container>
+      ::tuple;
 
-
-  template<typename C>
-  struct index
-  {
-  private:
-    template<typename CScheme>
-    struct to_component
-    {
-      static_assert(
-          is_component_scheme_v<CScheme>,
-          "heim::component_manager<Index, Alloc, Scheme>"
-              "::index<C>"
-              "::to_component<CScheme>: "
-                  "is_component_scheme_v<CScheme>;");
-
-    public:
-      using type
-      = component_scheme_traits<CScheme>::component;
-
-    };
-
-  public:
-    static constexpr std::size_t
-    value = scheme_type
-        ::flat
-        ::template map<to_component>
-        ::template index<C>;
-
-  };
 
   template<typename C>
   static constexpr std::size_t
-  index_v = index<C>::value;
+  component_index_v
+  = scheme_traits<scheme_type>::template component_index<C>;
 
+  template<typename C>
+  static constexpr std::size_t
+  sync_index_v
+  = scheme_traits<scheme_type>::template sync_index<C>;
+
+
+  template<typename C>
+  using container_for_t
+  = std::tuple_element_t<component_index_v<C>, container_tuple_t>;
 
   //! @endcond
 
@@ -208,23 +208,6 @@ public:
 private:
   container_tuple_t m_containers;
 
-private:
-  template<typename C>
-  constexpr std::tuple_element_t<index_v<C>, container_tuple_t> &
-  m_get()
-  noexcept
-  {
-    return std::get<index_v<C>>(m_containers);
-  }
-
-  template<typename C>
-  constexpr std::tuple_element_t<index_v<C>, container_tuple_t> const &
-  m_get() const
-  noexcept
-  {
-    return std::get<index_v<C>>(m_containers);
-  }
-
 public:
   //! @brief Default-constructs the component manager.
   constexpr
@@ -268,6 +251,7 @@ public:
    */
   constexpr component_manager &
   operator=(component_manager const &other)
+  requires (std::is_copy_assignable_v<container_tuple_t>)
   {
     m_containers = other.m_containers;
     return *this;
@@ -312,6 +296,71 @@ public:
   noexcept(noexcept(lhs.swap(rhs)))
   {
     lhs.swap(rhs);
+  }
+
+
+
+  /*!
+   * @brief Returns the container related to the component type
+   *   @code C@endcode in the manager.
+   *
+   * @tparam C The component type whose container to get.
+   * @returns The container related to the component type @code C@endcode in
+   *   the manager.
+   */
+  template<typename C>
+  [[nodiscard]]
+  constexpr container_for_t<C> &
+  container()
+  noexcept
+  {
+    return std::get<component_index_v<C>>(m_containers);
+  }
+
+  /*!
+   * @brief Returns the const container related to the component type
+   *   @code C@endcode in the manager.
+   *
+   * @tparam C The component type whose container to get.
+   * @returns The const container related to the component type @code C@endcode
+   *   in the manager.
+   */
+  template<typename C>
+  [[nodiscard]]
+  constexpr container_for_t<C> const &
+  container() const
+  noexcept
+  {
+    return std::as_const(std::get<component_index_v<C>>(m_containers));
+  }
+
+
+
+  template<
+      typename    C,
+      typename ...Args>
+  constexpr auto
+  emplace(index_type const idx, Args &&...args)
+  requires (std::constructible_from<C, Args ...>)
+  {
+    auto r = container<C>().emplace(idx, std::forward<Args>(args)...);
+    // TODO: synchronize
+    return r;
+  }
+
+
+  template<
+      typename    C,
+      typename ...Args>
+  constexpr auto
+  emplace_or_assign(index_type const idx, Args &&...args)
+  requires (
+      std::constructible_from<C, Args ...>
+   && std::is_move_assignable_v<C>)
+  {
+    auto r = container<C>().emplace_or_assign(idx, std::forward<Args>(args)...);
+    // TODO: synchronize
+    return r;
   }
 
 };
