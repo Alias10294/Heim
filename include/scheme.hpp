@@ -108,7 +108,7 @@ public:
 
   template<typename C>
   using component_scheme_of
-  = type::template get<component_sequence::template index<C>>;
+  = typename type::template get<component_sequence::template index<C>>;
 
 };
 
@@ -149,14 +149,25 @@ struct scheme_traits_sync_scheme_of
 private:
   template<typename SScheme>
   struct has_component
-    : std::bool_constant<SScheme::template contains<C>>
+    : std::bool_constant<
+          sync_scheme_traits<SScheme>
+              ::component_sequence
+              ::template contains<C>>
   { };
 
 public:
   using type
-  = Scheme::template filter<has_component>::template get<0>;
+  = typename Scheme
+      ::template filter<has_component>
+      ::template get<0>;
 
 };
+
+template<
+    typename Scheme,
+    typename C>
+using scheme_traits_sync_scheme_of_t
+= scheme_traits_sync_scheme_of<Scheme, C>::type;
 
 
 template<
@@ -169,7 +180,7 @@ struct scheme_traits_declare_sync
       "heim::detail::scheme_traits_declare_sync<Scheme, Cs ...>: "
           "is_scheme_v<Scheme>;");
   static_assert(
-      ((scheme_traits_sync_scheme_of<Scheme, Cs>::type::size == 1) && ...),
+      ((scheme_traits_sync_scheme_of_t<Scheme, Cs>::size == 1) && ...),
       "heim::detail::scheme_traits_declare_sync<Scheme, Cs ...>: "
           "((scheme_traits_sync_scheme_of<Scheme, Cs>::size == 1) && ...);");
 
@@ -178,10 +189,10 @@ public:
   = Scheme
       ::template difference<
           type_sequence<
-              typename scheme_traits_sync_scheme_of<Scheme, Cs>::type ...>>
+              scheme_traits_sync_scheme_of_t<Scheme, Cs> ...>>
       ::template extend<
           type_sequence<
-              typename scheme_traits_sync_scheme_of<Scheme, Cs>::type
+              typename scheme_traits_sync_scheme_of_t<Scheme, Cs>
               ::template get<0> ...>>;
 
 };
@@ -209,7 +220,7 @@ private:
 
 public:
   using type
-  = Scheme::flat::template map<to_container_type>;
+  = typename Scheme::flat::template map<to_container_type>;
 
 };
 
@@ -236,7 +247,7 @@ public:
 
 
   using component_sequence
-  = type_sequence<
+  = typename type_sequence<
       typename sync_scheme_traits<SSchemes>::component_sequence ...>
       ::flat;
 
@@ -251,6 +262,17 @@ public:
       ::template component_scheme_of<C>;
 
 
+  template<typename C>
+  static constexpr std::size_t
+  component_index_of
+  = component_sequence::template index<C>;
+
+  template<typename C>
+  static constexpr std::size_t
+  sync_index_of
+  = type::template index<sync_scheme_of<C>>;
+
+
   template<
       typename    C,
       std::size_t PageSize,
@@ -263,8 +285,8 @@ public:
 
   template<typename ...Cs>
   using declare_sync
-  = scheme_traits<detail::scheme_traits_declare_sync<type, Cs ...>>;
-
+  = scheme_traits<
+      typename detail::scheme_traits_declare_sync<type, Cs ...>::type>;
 
   template<typename Index>
   using container_sequence
