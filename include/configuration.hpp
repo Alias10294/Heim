@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <memory>
+
+#include "lib/index_map.hpp"
 #include "lib/utility.hpp"
 
 namespace heim
@@ -15,24 +17,12 @@ struct default_allocator
 
 };
 
-/*
-Exemple de redéfinition:
-
-template<>
-struct default_allocator<redefine_tag>
-{
-  template<typename T>
-  using type_for = std::pmr::polymorphic_allocator<T>;
-
-};
-*/
 
 template<typename T>
 struct allocator_for
 {
   using type
-  = default_allocator<>
-      ::template type_for<T>;
+  = default_allocator<>::template type_for<T>;
 
 };
 
@@ -41,44 +31,65 @@ using allocator_for_t
 = allocator_for<T>::type;
 
 
-/*!
- * @brief The default page size for each internal page of the component type
- *   @code C@endcode 's container.
- *
- * @tparam C The component whose default page size to get.
- */
-template<typename C>
+
+template<typename = redefine_tag>
 struct default_page_size
 {
+  template<typename T>
   static constexpr std::size_t
-  value = 4096;
+  value_for = 1024;
 
 };
 
-template<typename C>
-inline constexpr std::size_t
-default_page_size_v = default_page_size<C>::value;
 
-
-/*!
- * @brief The properties in Heim for the component type @code C@endcode.
- *
- * @tparam C The component type whose traits to get.
- */
-template<typename C>
-struct component_traits
+template<typename T>
+struct page_size_for
 {
-  //! @brief The component type.
-  using component
-  = C;
-
-  //! @brief The page size for the component type's container.
   static constexpr std::size_t
-  page_size = default_page_size_v<C>;
+  value = default_page_size<>::template value_for<T>;
 
-  //! @brief The allocator type for the component type.
-  using allocator
-  = allocator_for_t<C>;
+};
+
+template<typename T>
+inline constexpr std::size_t
+page_size_for_v = page_size_for<T>::value;
+
+
+
+template<typename = redefine_tag>
+struct default_container
+{
+private:
+  template<
+      typename Index,
+      typename C,
+      typename CAlloc>
+  using allocator_for_t
+  = std::allocator_traits<CAlloc>
+      ::template rebind_alloc<std::pair<Index const, C>>;
+
+  template<
+      typename    Index,
+      typename    C,
+      std::size_t PageSize,
+      typename    CAlloc>
+  using type_for
+  = index_map<Index, C, PageSize, allocator_for_t<Index, C, CAlloc>>;
+
+};
+
+
+
+template<typename C>
+struct container_for
+{
+public:
+  template<
+      typename    Index,
+      std::size_t PageSize,
+      typename    CAlloc>
+  using type_for
+  = default_container<>::type_for<Index, C, PageSize, CAlloc>;
 
 };
 

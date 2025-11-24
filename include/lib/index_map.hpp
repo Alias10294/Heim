@@ -2246,6 +2246,28 @@ public:
 };
 
 
+
+template<typename T>
+struct is_index_map
+  : std::false_type
+{ };
+
+template<typename T>
+inline constexpr bool
+is_index_map_v = is_index_map<T>::value;
+
+template<
+    typename    Index,
+    typename    T,
+    std::size_t PageSize,
+    typename    Alloc>
+struct is_index_map<
+    index_map<Index, T, PageSize, Alloc>>
+  : std::true_type
+{ };
+
+
 } // namespace heim
+
 
 #endif // HEIM_LIB_INDEX_MAP_HPP
