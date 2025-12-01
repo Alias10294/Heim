@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <memory>
-
 #include "lib/index_map.hpp"
 #include "lib/utility.hpp"
 
@@ -53,45 +52,6 @@ struct page_size_for
 template<typename T>
 inline constexpr std::size_t
 page_size_for_v = page_size_for<T>::value;
-
-
-
-template<typename = redefine_tag>
-struct default_container
-{
-private:
-  template<
-      typename Index,
-      typename C,
-      typename CAlloc>
-  using allocator_for_t
-  = std::allocator_traits<CAlloc>
-      ::template rebind_alloc<std::pair<Index const, C>>;
-
-  template<
-      typename    Index,
-      typename    C,
-      std::size_t PageSize,
-      typename    CAlloc>
-  using type_for
-  = index_map<Index, C, PageSize, allocator_for_t<Index, C, CAlloc>>;
-
-};
-
-
-
-template<typename C>
-struct container_for
-{
-public:
-  template<
-      typename    Index,
-      std::size_t PageSize,
-      typename    CAlloc>
-  using type_for
-  = default_container<>::type_for<Index, C, PageSize, CAlloc>;
-
-};
 
 
 }

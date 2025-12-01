@@ -48,11 +48,11 @@ struct entity_traits
           "is_entity_v<Entity>;");
 
 public:
-  using entity_type = Entity;
+  using type = Entity;
 
 
   static constexpr std::size_t
-  total_bits      = sizeof(entity_type) * CHAR_BIT;
+  total_bits      = sizeof(type) * CHAR_BIT;
 
   static constexpr std::size_t
   index_bits      = total_bits / 2;
@@ -71,11 +71,11 @@ public:
   using generation_type = unsigned_integral_for_t<generation_bits>;
 
 
-  static constexpr entity_type
-  index_mask      = std::numeric_limits<entity_type>::max() >> generation_bits;
+  static constexpr type
+  index_mask      = std::numeric_limits<type>::max() >> generation_bits;
 
-  static constexpr entity_type
-  generation_mask = std::numeric_limits<entity_type>::max() << index_bits;
+  static constexpr type
+  generation_mask = std::numeric_limits<type>::max() << index_bits;
 
 
   static constexpr index_type
@@ -92,7 +92,7 @@ public:
    * @returns The index of @code e@endcode.
    */
   static constexpr index_type
-  index(entity_type const e)
+  index(type const e)
   noexcept
   {
     return static_cast<index_type>(e & index_mask);
@@ -106,7 +106,7 @@ public:
    * @returns The generation of @code e@endcode.
    */
   static constexpr generation_type
-  generation(entity_type const e)
+  generation(type const e)
   noexcept
   {
     return static_cast<generation_type>(e >> index_bits);
@@ -121,14 +121,14 @@ public:
    * @returns The entity with the index @code index@endcode and generation
    *   @code generation@endcode.
    */
-  static constexpr entity_type
+  static constexpr type
   from(
       generation_type const generation,
       index_type      const index)
   noexcept
   {
-    return (static_cast<entity_type>(generation) << index_bits)
-         | (static_cast<entity_type>(index) & index_mask);
+    return (static_cast<type>(generation) << index_bits)
+         | (static_cast<type>(index) & index_mask);
   }
 
 

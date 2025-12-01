@@ -28,14 +28,11 @@ namespace detail
  */
 template<typename T>
 struct index_map_is_index
-{
-  constexpr static bool
-  value
-  =   std::is_same_v<T, std::remove_cvref_t<T>>
-   && std::is_integral_v<T>
-   && std::is_unsigned_v<T>;
-
-};
+  : std::bool_constant<
+          std::is_same_v<T, std::remove_cvref_t<T>>
+       && std::is_integral_v<T>
+       && std::is_unsigned_v<T>>
+{ };
 
 template<typename T>
 constexpr inline bool
@@ -50,14 +47,11 @@ index_map_is_index_v = index_map_is_index<T>::value;
  */
 template<typename T>
 struct index_map_is_mapped
-{
-  constexpr static bool
-  value
-  =   std::is_same_v<T, std::remove_cv_t<T>>
-   && std::is_object_v              <T>
-   && std::is_nothrow_destructible_v<T>;
-
-};
+  : std::bool_constant<
+        std::is_same_v<T, std::remove_cv_t<T>>
+     && std::is_object_v<T>
+     && std::is_nothrow_destructible_v<T>>
+{ };
 
 template<typename T>
 constexpr inline bool

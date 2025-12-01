@@ -112,18 +112,11 @@ private:
   //! @endcond
 
 public:
-  //! @brief Default-constructs the entity manager.
   constexpr
   entity_manager()
     : entity_manager{allocator_type{}}
   { }
 
-  /*!
-   * @brief Constructs the entity manager using the allocator
-   *   @code alloc@endcode.
-   *
-   * @param alloc The allocator to construct the entity manager with.
-   */
   explicit constexpr
   entity_manager(allocator_type const &alloc)
     : m_allocator  {alloc},
@@ -131,11 +124,6 @@ public:
       m_stack      {index_alloc_t     {alloc}}
   { }
 
-  /*!
-   * @brief Constructs the entity manager to be a copy of @code other@endcode.
-   *
-   * @param other The entity manager to copy.
-   */
   constexpr
   entity_manager(entity_manager const &other)
     : m_allocator  {alloc_traits_t
@@ -144,23 +132,11 @@ public:
       m_stack      {other.m_stack      , index_alloc_t     {m_allocator}}
   { }
 
-  /*!
-   * @brief Constructs the entity_manager to be the moved @code other@endcode.
-   *
-   * @param other The moved entity manager.
-   */
   constexpr
   entity_manager(entity_manager &&other)
   noexcept
   = default;
 
-  /*!
-   * @brief Constructs the entity manager to be a copy of @code other@endcode
-   *   and using the allocator @code alloc@endcode.
-   *
-   * @param other The entity manager to copy.
-   * @param alloc The allocator to construct the entity manager with.
-   */
   constexpr
   entity_manager(
       entity_manager const &other,
@@ -170,13 +146,6 @@ public:
           m_stack      {other.m_stack      , index_alloc_t     {m_allocator}}
   { }
 
-  /*!
-   * @brief Constructs the entity manager to be the moved @code other@endcode
-   *   and using the allocator @code alloc@endcode.
-   *
-   * @param other The moved entity manager.
-   * @param alloc The allocator to construct the entity manager with.
-   */
   constexpr
   entity_manager(
       entity_manager      &&other,
@@ -191,19 +160,12 @@ public:
           index_alloc_t     {m_allocator}}
   { }
 
-  //! @brief Destroys the entity manager.
   constexpr
   ~entity_manager()
   noexcept
   = default;
 
 
-  /*!
-   * @brief Assigns @c *this to be a copy of @code other@endcode.
-   *
-   * @param other The entity manager to copy.
-   * @returns @c *this .
-   */
   constexpr entity_manager &
   operator=(entity_manager const &other)
   {
@@ -230,12 +192,6 @@ public:
     return *this;
   }
 
-  /*!
-   * @brief Assigns @c *this to be the moved @code other@endcode.
-   *
-   * @param other The moved entity manager.
-   * @returns @c *this .
-   */
   constexpr entity_manager &
   operator=(entity_manager &&other)
   noexcept
@@ -289,11 +245,7 @@ public:
   }
 
 
-  /*!
-   * @brief Returns the entity manager's allocator.
-   *
-   * @returns The entity manager's allocator.
-   */
+  //! @returns The entity manager's allocator.
   [[nodiscard]]
   constexpr allocator_type
   get_allocator() const
@@ -304,12 +256,7 @@ public:
 
 
 
-  /*!
-   * @brief Returns the total number of managed entities, both valid and
-   *   invalid.
-   *
-   * @returns The total number of managed entities, both valid and invalid.
-   */
+  //! @returns The total number of managed entities, both valid and invalid.
   [[nodiscard]]
   constexpr size_type
   size() const
@@ -319,12 +266,7 @@ public:
   }
 
 
-  /*!
-   * @brief Returns the maximum number of entities the entity manager can
-   *   manage.
-   *
-   * @returns The maximum number of entities the entity manager can manage.
-   */
+  //! @returns The maximum number of entities the entity manager can manage.
   [[nodiscard]]
   constexpr size_type
   max_size() const
@@ -335,9 +277,6 @@ public:
 
 
   /*!
-   * @brief Returns the maximum number of entities the entity manager can
-   *   manage without requiring reallocation.
-   *
    * @returns The maximum number of entities the entity manager can manage
    *   without requiring reallocation.
    */
@@ -392,7 +331,8 @@ public:
    * @brief Checks whether the entity @code e@endcode is valid in the context
    *   of managements of @c *this .
    *
-   * @return @c true if the entity's generation exists and is the current,
+   * @param e The entity to validate.
+   * @returns @c true if the entity's generation exists and is the current,
    *   @c false otherwise.
    */
   [[nodiscard]]

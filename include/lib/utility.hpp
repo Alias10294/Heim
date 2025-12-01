@@ -50,7 +50,30 @@ using unsigned_integral_for_t
 = typename unsigned_integral_for<Bits>::type;
 
 
+
+/*!
+ * @brief Determines if the type @code T@endcode is a type that can serve as
+ *   in index in a container.
+ *
+ * @tparam T The type to determine the viability of.
+ */
+template<typename T>
+struct is_index
+  : std::bool_constant<
+        std::is_same_v<T, std::remove_cvref_t<T>>
+     && std::is_integral_v<T>
+     && std::is_unsigned_v<T>>
+{ };
+
+template<typename T>
+inline constexpr bool
+is_index_v = is_index<T>::value;
+
+template<typename T>
+concept index = is_index_v<T>;
+
+
 } // namespace heim
 
 
-#endif //HEIM_LIB_UTILITY_HPP
+#endif // HEIM_LIB_UTILITY_HPP
