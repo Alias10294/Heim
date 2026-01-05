@@ -46,20 +46,17 @@ public:
   using component_type = Component;
   using entity_type    = Entity;
   using allocator_type = Allocator;
+  
+  static constexpr size_type page_size = PageSize;
+  static constexpr bool      is_tag    = IsTag;
 
-  static constexpr size_type page_size() noexcept { return PageSize; }
-  static constexpr bool      is_tag   () noexcept { return IsTag;    }
-
-  static constexpr size_type page_size_v = page_size();
-  static constexpr bool      is_tag_v    = is_tag();
-
-  static_assert(is_entity_v   <entity_type>);
-  static_assert(is_allocator_v<allocator_type>);
+  static_assert(is_entity_v       <entity_type>);
+  static_assert(is_allocator_for_v<allocator_type, entity_type>);
 
 
   using value_type
   = std::conditional_t<
-      is_tag_v,
+      is_tag,
       std::tuple<
           entity_type>,
       std::tuple<
@@ -68,7 +65,7 @@ public:
 
   using reference
   = std::conditional_t<
-      is_tag_v,
+      is_tag,
       std::tuple<
           entity_type const &>,
       std::tuple<
@@ -77,7 +74,7 @@ public:
 
   using const_reference
   = std::conditional_t<
-      is_tag_v,
+      is_tag,
       std::tuple<
           entity_type const &>,
       std::tuple<
@@ -88,8 +85,7 @@ private:
   class value_container;
   class position_container;
 
-  template<
-      bool IsConst>
+  template<bool IsConst>
   class generic_iterator;
 
 public:
@@ -231,21 +227,21 @@ public:
   component_type &
   operator[](entity_type const e)
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return m_values.components()[m_positions[e]]; }
 
   [[nodiscard]] constexpr
   component_type const &
   operator[](entity_type const e) const
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return m_values.components()[m_positions[e]]; }
 
 
   [[nodiscard]] constexpr
   component_type &
   at(entity_type const e)
-  requires(!is_tag_v)
+  requires(!is_tag)
   {
     if (!contains(e)) throw std::out_of_range("container::at");
     return operator[](e);
@@ -254,7 +250,7 @@ public:
   [[nodiscard]] constexpr
   component_type const &
   at(entity_type const e) const
-  requires(!is_tag_v)
+  requires(!is_tag)
   {
     if (!contains(e)) throw std::out_of_range("container::at");
     return operator[](e);
@@ -275,9 +271,9 @@ public:
   template<typename ...Args>
   constexpr
   std::pair<iterator, bool>
-  try_emplace(entity_type const e, Args &&...args)
+  emplace(entity_type const e, Args &&...args)
   requires(
-      is_tag_v
+      is_tag
    || std::is_constructible_v<component_type, Args &&...>)
   {
     if (contains(e))
@@ -293,8 +289,8 @@ public:
   constexpr
   bool
   erase(entity_type const e)
-  noexcept(is_tag_v || std::is_nothrow_move_assignable_v<component_type>)
-  requires(is_tag_v || std::is_move_assignable_v        <component_type>)
+  noexcept(is_tag || std::is_nothrow_move_assignable_v<component_type>)
+  requires(is_tag || std::is_move_assignable_v        <component_type>)
   {
     if (!contains(e))
       return false;
@@ -420,7 +416,7 @@ public:
     {
       if (!rhs.contains(e)) return false;
 
-      if constexpr (!is_tag_v)
+      if constexpr (!is_tag)
       {
         if (lhs[e] != rhs[e])
           return false;
@@ -453,7 +449,7 @@ private:
 
   using vector_tuple
   = std::conditional_t<
-      is_tag_v,
+      is_tag,
       std::tuple<entity_vector>,
       std::tuple<entity_vector, component_vector>>;
 
@@ -478,14 +474,14 @@ public:
   component_vector &
   components()
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return std::get<1>(m_vectors); }
 
   [[nodiscard]] constexpr
   component_vector const &
   components() const
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return std::get<1>(m_vectors); }
 
 
@@ -506,7 +502,7 @@ public:
   max_size() const
   noexcept
   {
-    if constexpr (is_tag_v)
+    if constexpr (is_tag)
       return entities().max_size();
     else
       return std::min(entities().max_size(), components().max_size());
@@ -518,28 +514,28 @@ public:
   reference
   operator[](size_type const idx)
   noexcept
-  requires(is_tag_v)
+  requires(is_tag)
   { return reference(entities()[idx]); }
 
   constexpr
   reference
   operator[](size_type const idx)
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return reference(entities()[idx], components()[idx]); }
 
   constexpr
   const_reference
   operator[](size_type const idx) const
   noexcept
-  requires(is_tag_v)
+  requires(is_tag)
   { return const_reference(entities()[idx]); }
 
   constexpr
   const_reference
   operator[](size_type const idx) const
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
   { return const_reference(entities()[idx], components()[idx]); }
 
 
@@ -550,7 +546,7 @@ public:
   noexcept
   {
     entities().clear();
-    if constexpr (!is_tag_v)
+    if constexpr (!is_tag)
       components().clear();
   }
 
@@ -560,10 +556,10 @@ public:
   void
   emplace_back(entity_type const e, Args&&... args)
   requires(
-      is_tag_v
+      is_tag
    || std::is_constructible_v<component_type, Args &&...>)
   {
-    if constexpr (is_tag_v)
+    if constexpr (is_tag)
       entities().emplace_back(e);
     else
     {
@@ -579,10 +575,10 @@ public:
 
   constexpr void
   overwrite_with_back(size_type const i)
-  noexcept(is_tag_v || std::is_nothrow_move_assignable_v<component_type>)
-  requires(is_tag_v || std::is_move_assignable_v        <component_type>)
+  noexcept(is_tag || std::is_nothrow_move_assignable_v<component_type>)
+  requires(is_tag || std::is_move_assignable_v        <component_type>)
   {
-    if constexpr (!is_tag_v)
+    if constexpr (!is_tag)
       components()[i] = std::move(components().back());
     entities()[i] = std::move(entities().back());
   }
@@ -594,7 +590,7 @@ public:
   noexcept
   {
     entities().pop_back();
-    if constexpr (!is_tag_v)
+    if constexpr (!is_tag)
       components().pop_back();
   }
 
@@ -620,14 +616,14 @@ public:
   explicit constexpr
   value_container(allocator_type const &alloc)
   noexcept
-  requires(is_tag_v)
+  requires(is_tag)
     : m_vectors(entity_vector(entity_allocator(alloc)))
   { }
 
   explicit constexpr
   value_container(allocator_type const &alloc)
   noexcept
-  requires(!is_tag_v)
+  requires(!is_tag)
     : m_vectors(
           entity_vector   (entity_allocator   (alloc)),
           component_vector(component_allocator(alloc)))
@@ -642,13 +638,13 @@ public:
 
   constexpr
   value_container(value_container const &other, allocator_type const &alloc)
-  requires(is_tag_v)
+  requires(is_tag)
     : m_vectors(entity_vector(other.entities(), entity_allocator(alloc)))
   { }
 
   constexpr
   value_container(value_container const &other, allocator_type const &alloc)
-  requires(!is_tag_v)
+  requires(!is_tag)
     : m_vectors(
           entity_vector   (other.entities  (), entity_allocator   (alloc)),
           component_vector(other.components(), component_allocator(alloc)))
@@ -661,7 +657,7 @@ public:
           entity_vector,
           entity_vector &&,
           entity_allocator const &>)
-  requires(is_tag_v)
+  requires(is_tag)
     : m_vectors(entity_vector(std::move(other.entities()), entity_allocator(alloc)))
   { }
 
@@ -676,7 +672,7 @@ public:
           component_vector,
           component_vector &&,
           component_allocator const &>)
-  requires(!is_tag_v)
+  requires(!is_tag)
     : m_vectors(
           entity_vector   (std::move(other.entities  ()), entity_allocator   (alloc)),
           component_vector(std::move(other.components()), component_allocator(alloc)))
@@ -722,16 +718,13 @@ class container<Component, Entity, Allocator, PageSize, IsTag>
     ::position_container
 {
 private:
-  static constexpr bool      s_is_paged     () noexcept { return page_size_v != 0; }
-  static constexpr size_type s_null_position() noexcept { return std::numeric_limits<size_type>::max(); }
-
-  static constexpr bool      s_is_paged_v      = s_is_paged     ();
-  static constexpr size_type s_null_position_v = s_null_position();
+  static constexpr bool      s_is_paged      = page_size != 0;
+  static constexpr size_type s_null_position = std::numeric_limits<size_type>::max();
 
 
   class page_deleter;
 
-  using page         = std::array<size_type, page_size_v>;
+  using page         = std::array<size_type, page_size>;
   using page_pointer = std::unique_ptr<page, page_deleter>;
 
   using page_allocator         = typename alloc_traits::template rebind_alloc<page        >;
@@ -744,7 +737,7 @@ private:
 
   using vector
   = std::conditional_t<
-      s_is_paged_v,
+      s_is_paged,
       std::vector<page_pointer, page_pointer_allocator>,
       std::vector<size_type   , size_allocator        >>;
 
@@ -756,24 +749,24 @@ private:
   size_type
   s_page_index(typename entity_type::index_type const idx)
   noexcept
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
-    if constexpr (std::has_single_bit(page_size_v))
-      return static_cast<size_type>(idx) >> std::countr_zero(page_size_v);
+    if constexpr (std::has_single_bit(page_size))
+      return static_cast<size_type>(idx) >> std::countr_zero(page_size);
     else
-      return static_cast<size_type>(idx) / page_size_v;
+      return static_cast<size_type>(idx) / page_size;
   }
 
   static constexpr
   size_type
   s_line_index(typename entity_type::index_type const idx)
   noexcept
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
-    if constexpr (std::has_single_bit(page_size_v))
-      return static_cast<size_type>(idx) & (page_size_v - 1);
+    if constexpr (std::has_single_bit(page_size))
+      return static_cast<size_type>(idx) & (page_size - 1);
     else
-      return static_cast<size_type>(idx) % page_size_v;
+      return static_cast<size_type>(idx) % page_size;
   }
 
 
@@ -783,7 +776,7 @@ private:
   page_pointer
   m_make_page_pointer(Args &&...args)
   requires(
-      s_is_paged_v
+      s_is_paged
    && std::is_constructible_v<page, Args &&...>)
   {
     page_allocator alloc(m_vector.get_allocator());
@@ -800,7 +793,7 @@ private:
   [[nodiscard]] constexpr
   page_pointer
   m_make_page_pointer(std::nullptr_t p)
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   { return page_pointer(p, page_deleter(page_allocator(m_vector.get_allocator()))); }
 
 
@@ -808,7 +801,7 @@ private:
   constexpr
   void
   m_copy_vector(vector const &from, vector &to)
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     to.reserve(from.capacity());
     for (auto const &p : from)
@@ -825,21 +818,21 @@ public:
   size_type
   max_size() const
   noexcept
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     size_type const max       = m_vector.max_size();
-    size_type const max_pages = std::numeric_limits<size_type>::max() / page_size_v;
+    size_type const max_pages = std::numeric_limits<size_type>::max() / page_size;
 
     return max > max_pages
-         ? max_pages * page_size_v
-         : max       * page_size_v;
+         ? max_pages * page_size
+         : max       * page_size;
   }
 
   [[nodiscard]] constexpr
   size_type
   max_size() const
   noexcept
-  requires(!s_is_paged_v)
+  requires(!s_is_paged)
   { return m_vector.max_size(); }
 
 
@@ -848,26 +841,26 @@ public:
   bool
   contains(entity_type const e) const
   noexcept
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     auto      const idx      = e.index();
     size_type const page_idx = s_page_index(idx);
 
     return page_idx < m_vector.size()
         && static_cast<bool>(m_vector[page_idx])
-        && (*m_vector[page_idx])[s_line_index(idx)] != s_null_position_v;
+        && (*m_vector[page_idx])[s_line_index(idx)] != s_null_position;
   }
 
   [[nodiscard]] constexpr
   bool
   contains(entity_type const e) const
   noexcept
-  requires(!s_is_paged_v)
+  requires(!s_is_paged)
   {
     size_type const i = static_cast<size_type>(e.index());
 
     return i < m_vector.size()
-        && m_vector[i] != s_null_position_v;
+        && m_vector[i] != s_null_position;
   }
 
 
@@ -878,7 +871,7 @@ public:
   {
     auto const idx = e.index();
 
-    if constexpr (s_is_paged_v)
+    if constexpr (s_is_paged)
       return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
     else
       return m_vector[static_cast<size_type>(idx)];
@@ -891,7 +884,7 @@ public:
   {
     auto const idx = e.index();
 
-    if constexpr (s_is_paged_v)
+    if constexpr (s_is_paged)
       return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
     else
       return m_vector[static_cast<size_type>(idx)];
@@ -903,12 +896,12 @@ public:
   void
   clear()
   noexcept
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     for (auto const &p : m_vector)
     {
       if (static_cast<bool>(p))
-        std::fill(p->begin(), p->end(), s_null_position_v);
+        std::fill(p->begin(), p->end(), s_null_position);
     }
   }
 
@@ -916,14 +909,14 @@ public:
   void
   clear()
   noexcept
-  requires(!s_is_paged_v)
-  { std::fill(m_vector.begin(), m_vector.end(), s_null_position_v); }
+  requires(!s_is_paged)
+  { std::fill(m_vector.begin(), m_vector.end(), s_null_position); }
 
 
   constexpr
   void
   reserve_for(entity_type const e)
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     auto      const idx      = e.index();
     size_type const page_idx = s_page_index(idx);
@@ -937,19 +930,19 @@ public:
     if (!static_cast<bool>(m_vector[page_idx]))
     {
       m_vector[page_idx] = m_make_page_pointer();
-      m_vector[page_idx] ->fill(s_null_position_v);
+      m_vector[page_idx] ->fill(s_null_position);
     }
   }
 
   constexpr
   void
   reserve_for(entity_type const e)
-  requires(!s_is_paged_v)
+  requires(!s_is_paged)
   {
     size_type const i = static_cast<size_type>(e.index());
 
     if (i >= m_vector.size())
-      m_vector.resize(i + 1, s_null_position_v);
+      m_vector.resize(i + 1, s_null_position);
   }
 
 
@@ -957,7 +950,7 @@ public:
   void
   erase(entity_type const e)
   noexcept
-  { (*this)[e] = s_null_position_v; }
+  { (*this)[e] = s_null_position; }
 
 
 
@@ -988,7 +981,7 @@ public:
   position_container(
       position_container const &other,
       allocator_type     const &alloc)
-  requires(s_is_paged_v)
+  requires(s_is_paged)
     : position_container(alloc)
   { m_copy_vector(other.m_vector, m_vector); }
 
@@ -996,7 +989,7 @@ public:
   position_container(
       position_container const &other,
       allocator_type     const &alloc)
-  requires(!s_is_paged_v)
+  requires(!s_is_paged)
     : m_vector(other.m_vector, typename vector::allocator_type(alloc))
   { }
 
@@ -1021,7 +1014,7 @@ public:
 
   constexpr position_container &
   operator=(position_container const &other)
-  requires(s_is_paged_v)
+  requires(s_is_paged)
   {
     if (this == std::addressof(other))
       return *this;
@@ -1041,7 +1034,7 @@ public:
 
   constexpr position_container &
   operator=(position_container const &other)
-  requires(!s_is_paged_v)
+  requires(!s_is_paged)
   {
     m_vector = other.m_vector;
     return *this;
@@ -1118,7 +1111,8 @@ public:
   using iterator_category = std::input_iterator_tag;
   using iterator_concept  = std::random_access_iterator_tag;
 
-  using value_type = typename container::value_type;
+  using value_type
+  = typename container::value_type;
 
   using reference
   = std::conditional_t<
@@ -1217,7 +1211,9 @@ public:
 
   friend constexpr
   generic_iterator
-  operator+(generic_iterator it, difference_type const n)
+  operator+(
+      generic_iterator      it,
+      difference_type const n)
   noexcept
   {
     it += n;
@@ -1226,7 +1222,9 @@ public:
 
   friend constexpr
   generic_iterator
-  operator+(difference_type const n, generic_iterator it)
+  operator+(
+      difference_type const n,
+      generic_iterator      it)
   noexcept
   {
     it += n;
@@ -1236,7 +1234,9 @@ public:
 
   friend constexpr
   generic_iterator
-  operator-(generic_iterator it, difference_type const n)
+  operator-(
+      generic_iterator      it,
+      difference_type const n)
   noexcept
   {
     it -= n;
@@ -1245,7 +1245,9 @@ public:
 
   friend constexpr
   difference_type
-  operator-(generic_iterator const &lhs, generic_iterator const &rhs)
+  operator-(
+      generic_iterator const &lhs,
+      generic_iterator const &rhs)
   noexcept
   {
     return lhs.m_index - rhs.m_index;
@@ -1257,14 +1259,14 @@ public:
   reference
   operator*() const
   noexcept
-  { return reference{m_container->m_values[m_index]}; }
+  { return reference(m_container->m_values[m_index]); }
 
 
   constexpr
   pointer
   operator->() const
   noexcept
-  { return pointer{operator*()}; }
+  { return pointer(operator*()); }
 
   constexpr
   reference
@@ -1294,24 +1296,52 @@ public:
   noexcept
   requires(is_const_v)
     : m_container(it.m_container),
-      m_index    (it.m_index)
+      m_index    (it.m_index    )
   { }
 
 
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(generic_iterator const &lhs, generic_iterator const &rhs)
+  operator==(
+      generic_iterator const &lhs,
+      generic_iterator const &rhs)
   noexcept
   { return lhs.m_index == rhs.m_index; }
 
 
   [[nodiscard]] friend constexpr
   auto
-  operator<=>(generic_iterator const &lhs, generic_iterator const &rhs)
+  operator<=>(
+      generic_iterator const &lhs,
+      generic_iterator const &rhs)
   noexcept
   { return lhs.m_index <=> rhs.m_index; }
 };
+
+
+
+template<typename T>
+struct is_container
+  : bool_constant<false>
+{ };
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        IsTag>
+struct is_container<container<Component, Entity, Allocator, PageSize, IsTag>>
+  : bool_constant<true>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+is_container_v
+= is_container<T>::value();
+
 
 } // namespace heim
 
