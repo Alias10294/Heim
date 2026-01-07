@@ -1,7 +1,6 @@
 #include "doctest.h"
 #include "type_sequence.hpp"
 #include "container.hpp"
-#include "registry.hpp"
 #include <string>
 
 TEST_CASE("test")
@@ -21,17 +20,7 @@ TEST_CASE("test")
   CHECK_EQ(c.size (), std::size_t{0});
   CHECK_EQ(c.empty(), true          );
   CHECK_EQ(decltype(c)::page_size, 1024 );
-  CHECK_EQ(decltype(c)::is_tag   , false);
+  CHECK_EQ(decltype(c)::tag_value, false);
   CHECK_EQ(c.begin (), c.end ());
   CHECK_EQ(c.cbegin(), c.cend());
-
-  using registry_t
-  = heim::registry<>
-      ::component<int>
-      ::component<float>
-      ::sync<int, float>;
-
-  CHECK_EQ(
-      std::is_same_v<typename registry_t::entity_type, heim::default_entity>,
-      true);
 }

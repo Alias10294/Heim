@@ -12,7 +12,7 @@ namespace heim
 template<
     typename    Value     = std::uintmax_t,
     std::size_t IndexBits = std::numeric_limits<Value>::digits / 2>
-class entity
+class generic_entity
 {
 public:
   using size_type  = std::size_t;
@@ -40,7 +40,7 @@ public:
   static constexpr generation_type null_generation = static_cast<generation_type>(null_value >> index_bits);
 
   static constexpr value_type index_mask      = static_cast<value_type>(null_index     );
-  static constexpr value_type generation_mask = static_cast<value_type>(generation_bits);
+  static constexpr value_type generation_mask = static_cast<value_type>(null_generation) << index_bits;
 
 private:
   value_type m_value;
@@ -49,8 +49,8 @@ public:
   [[nodiscard]] friend constexpr
   bool
   operator==(
-      entity const &lhs,
-      entity const &rhs)
+      generic_entity const &lhs,
+      generic_entity const &rhs)
   noexcept
   = default;
 
@@ -84,24 +84,24 @@ public:
 
 
   constexpr
-  entity()
+  generic_entity()
   noexcept
-    : m_value{null_value}
+    : m_value(null_value)
   { }
 
   constexpr
-  entity(entity const &)
+  generic_entity(generic_entity const &)
   noexcept
   = default;
 
   constexpr
-  entity(entity &&)
+  generic_entity(generic_entity &&)
   noexcept
   = default;
 
   template<typename Val>
   explicit constexpr
-  entity(Val const value)
+  generic_entity(Val const value)
   noexcept
   requires(std::is_same_v<Val, value_type>)
     : m_value(value)
@@ -111,7 +111,7 @@ public:
       typename Idx,
       typename Gen>
   constexpr
-  entity(
+  generic_entity(
       Idx const idx,
       Gen const gen)
   noexcept
@@ -124,25 +124,25 @@ public:
   { }
 
   constexpr
-  ~entity()
+  ~generic_entity()
   noexcept
   = default;
 
   constexpr
-  entity &
-  operator=(entity const &)
+  generic_entity &
+  operator=(generic_entity const &)
   noexcept
   = default;
 
   constexpr
-  entity &
-  operator=(entity &&)
+  generic_entity &
+  operator=(generic_entity &&)
   noexcept
   = default;
 
   template<typename Val>
   constexpr
-  entity &
+  generic_entity &
   operator=(Val const value)
   noexcept
   requires(std::is_same_v<Val, value_type>)
@@ -162,16 +162,20 @@ template<
     typename    Value,
     std::size_t IndexBits>
 struct is_entity<
-    entity<Value, IndexBits>>
+    generic_entity<Value, IndexBits>>
   : bool_constant<true>
 { };
 
 template<typename T>
-inline constexpr bool is_entity_v = is_entity<T>::value;
+inline constexpr
+bool
+is_entity_v
+= is_entity<T>::value;
 
 
 
-using default_entity = entity<>;
+using entity
+= generic_entity<>;
 
 
 } // namespace heim

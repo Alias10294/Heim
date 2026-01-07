@@ -1,17 +1,14 @@
 #ifndef HEIM_CONTAINER_HPP
 #define HEIM_CONTAINER_HPP
 
-#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstddef>
 #include <iterator>
 #include <limits>
-#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
-#include <utility>
 #include <vector>
 #include "allocator.hpp"
 #include "component.hpp"
@@ -19,23 +16,12 @@
 
 namespace heim
 {
-/*!
- * @brief An associative container specialized for its use in this
- *   entity-component library, providing constant-time insertion, removal,
- *   access and search of elements, while also providing memory contiguity.
- *
- * @tparam Component The component type held.
- * @tparam Entity    The entity type held.
- * @tparam Allocator The allocator type for the container.
- * @tparam PageSize  The size of each page in the position container.
- * @tparam IsTag     The value marking Component as a tag or not.
- */
 template<
     typename    Component,
-    typename    Entity    = default_entity,
-    typename    Allocator = default_allocator<Entity>,
+    typename    Entity    = entity,
+    typename    Allocator = allocator<Entity>,
     std::size_t PageSize  = container_page_size_for_v<Component>,
-    bool        IsTag     = is_tag_for_v<Component>>
+    bool        TagValue  = tag_value_for_v          <Component>>
 class container
 {
 public:
@@ -46,49 +32,620 @@ public:
   using component_type = Component;
   using entity_type    = Entity;
   using allocator_type = Allocator;
-  
+
   static constexpr size_type page_size = PageSize;
-  static constexpr bool      is_tag    = IsTag;
-
-  static_assert(is_entity_v       <entity_type>);
-  static_assert(is_allocator_for_v<allocator_type, entity_type>);
-
-
-  using value_type
-  = std::conditional_t<
-      is_tag,
-      std::tuple<
-          entity_type>,
-      std::tuple<
-          entity_type,
-          component_type>>;
-
-  using reference
-  = std::conditional_t<
-      is_tag,
-      std::tuple<
-          entity_type const &>,
-      std::tuple<
-          entity_type const &,
-          component_type    &>>;
-
-  using const_reference
-  = std::conditional_t<
-      is_tag,
-      std::tuple<
-          entity_type const &>,
-      std::tuple<
-          entity_type    const &,
-          component_type const &>>;
+  static constexpr bool      tag_value = TagValue;
 
 private:
-  class value_container;
-  class position_container;
+  using alloc_traits = allocator_traits<allocator_type>;
+
+private:
+  class value_container
+  {
+  public:
+    using value_type
+    = std::conditional_t<
+        tag_value,
+        std::tuple<entity_type>,
+        std::tuple<entity_type, component_type>>;
+
+    using reference
+    = std::conditional_t<
+        tag_value,
+        std::tuple<entity_type const &>,
+        std::tuple<entity_type const &, component_type &>>;
+
+    using const_reference
+    = std::conditional_t<
+        tag_value,
+        std::tuple<entity_type const &>,
+        std::tuple<entity_type const &, component_type const &>>;
+
+  private:
+    using entity_allocator    = typename alloc_traits::template rebind_alloc<entity_type   >;
+    using component_allocator = typename alloc_traits::template rebind_alloc<component_type>;
+
+    using entity_alloc_traits    = allocator_traits<entity_allocator   >;
+    using component_alloc_traits = allocator_traits<component_allocator>;
+
+    using entity_vector    = std::vector<entity_type   , entity_allocator   >;
+    using component_vector = std::vector<component_type, component_allocator>;
+
+    using vector_tuple
+    = std::conditional_t<
+        tag_value,
+        std::tuple<entity_vector>,
+        std::tuple<entity_vector, component_vector>>;
+
+  private:
+    vector_tuple
+    m_vectors;
+
+  public:
+    [[nodiscard]] constexpr
+    entity_vector &
+    entities()
+    noexcept;
+
+    [[nodiscard]] constexpr
+    entity_vector const &
+    entities() const
+    noexcept;
+
+
+    [[nodiscard]] constexpr
+    component_vector &
+    components()
+    noexcept
+    requires(!tag_value);
+
+    [[nodiscard]] constexpr
+    component_vector const &
+    components() const
+    noexcept
+    requires(!tag_value);
+
+
+    [[nodiscard]] constexpr
+    size_type
+    size() const
+    noexcept;
+
+    [[nodiscard]] constexpr
+    bool
+    empty() const
+    noexcept;
+
+    [[nodiscard]] constexpr
+    size_type
+    max_size() const
+    noexcept;
+
+
+    [[nodiscard]] constexpr
+    reference
+    operator[](size_type const)
+    noexcept;
+
+    [[nodiscard]] constexpr
+    const_reference
+    operator[](size_type const) const
+    noexcept;
+
+
+
+    constexpr
+    void
+    clear()
+    noexcept(
+       (tag_value
+     || noexcept(components().clear()))
+     && noexcept(entities  ().clear()));
+
+    template<typename ...Args>
+    constexpr
+    void
+    emplace_back(
+        entity_type const,
+        Args &&...)
+    requires(
+        tag_value
+     || std::is_constructible_v<component_type, Args &&...>);
+
+    constexpr
+    void
+    overwrite_with_back(size_type const)
+    noexcept(tag_value || std::is_nothrow_move_assignable_v<component_type>)
+    requires(tag_value || std::is_move_assignable_v        <component_type>);
+
+    constexpr
+    void
+    pop_back()
+    noexcept(
+       (tag_value
+     || noexcept(components().pop_back()))
+     && noexcept(entities  ().pop_back()));
+
+    constexpr
+    void
+    swap(value_container &)
+    noexcept(std::is_nothrow_swappable_v<vector_tuple>)
+    requires(std::is_swappable_v        <vector_tuple>);
+
+    constexpr
+    void
+    swap(
+        size_type const,
+        size_type const)
+    noexcept(std::is_nothrow_swappable_v<component_type>)
+    requires(std::is_swappable_v        <component_type>);
+
+    friend constexpr
+    void
+    swap(
+        value_container &lhs,
+        value_container &rhs)
+    noexcept(std::is_nothrow_swappable_v<vector_tuple>)
+    requires(std::is_swappable_v        <vector_tuple>)
+    { lhs.swap(rhs); }
+
+
+    [[nodiscard]] constexpr
+    allocator_type
+    get_allocator() const
+    noexcept;
+
+    explicit constexpr
+    value_container(allocator_type const &)
+    noexcept;
+
+    constexpr
+    value_container()
+    noexcept(std::is_nothrow_constructible_v<allocator_type>)
+    requires(std::is_constructible_v        <allocator_type>);
+
+    constexpr
+    value_container(
+        value_container const &,
+        allocator_type  const &)
+    requires(
+        tag_value
+     || std::is_copy_constructible_v<component_type>);
+
+    constexpr
+    value_container(value_container const &)
+    requires(
+        tag_value
+     || std::is_copy_constructible_v<component_type>)
+    = default;
+
+    constexpr
+    value_container(
+        value_container &&,
+        allocator_type const &)
+    noexcept(
+        std::is_nothrow_constructible_v<
+            vector_tuple,
+            std::allocator_arg_t,
+            allocator_type const &,
+            vector_tuple &&>)
+    requires(
+        tag_value
+     || std::is_move_constructible_v<component_type>);
+
+    constexpr
+    value_container(value_container &&)
+    = default;
+
+    constexpr
+    ~value_container()
+    = default;
+
+    constexpr value_container &
+    operator=(value_container const &)
+    = default;
+
+    constexpr value_container &
+    operator=(value_container &&)
+    = default;
+  };
+
+
+  class position_container
+  {
+  private:
+    static constexpr bool      s_is_paged      = page_size != 0;
+    static constexpr size_type s_null_position = std::numeric_limits<size_type>::max();
+
+    using size_allocator    = typename alloc_traits::template rebind_alloc<size_type>;
+    using size_alloc_traits = allocator_traits<size_allocator>;
+
+    using page              = std::array<size_type, page_size>;
+    using page_allocator    = typename alloc_traits::template rebind_alloc<page>;
+    using page_alloc_traits = allocator_traits<page_allocator>;
+
+    class page_deleter
+    {
+    private:
+      [[no_unique_address]]
+      page_allocator
+      m_allocator;
+
+    public:
+      constexpr
+      void
+      operator()(page *)
+      noexcept;
+
+
+      explicit constexpr
+      page_deleter(allocator_type &&)
+      noexcept;
+
+      constexpr
+      ~page_deleter()
+      = default;
+    };
+
+    using page_pointer              = std::unique_ptr<page, page_deleter>;
+    using page_pointer_allocator    = typename alloc_traits::template rebind_alloc<page_pointer>;
+    using page_pointer_alloc_traits = allocator_traits<page_pointer_allocator>;
+
+    using vector_type
+    = std::conditional_t<
+        s_is_paged,
+        std::vector<page_pointer, page_pointer_allocator>,
+        std::vector<size_type   , size_allocator        >>;
+
+  private:
+    vector_type
+    m_vector;
+
+  private:
+    static constexpr
+    size_type
+    s_page_index(typename entity_type::index_type const)
+    noexcept
+    requires(s_is_paged);
+
+    static constexpr
+    size_type
+    s_line_index(typename entity_type::index_type const)
+    noexcept
+    requires(s_is_paged);
+
+
+    template<typename ...Args>
+    [[nodiscard]] constexpr
+    page_pointer
+    m_make_page_pointer(Args &&...args)
+    requires(
+        s_is_paged
+     || std::is_constructible_v<page, Args &&...>);
+
+    [[nodiscard]] constexpr
+    page_pointer
+    m_make_page_pointer(std::nullptr_t)
+    requires(s_is_paged);
+
+
+    constexpr
+    void
+    m_copy_vector(
+        vector_type const &,
+        vector_type &)
+    requires(s_is_paged);
+
+
+    [[nodiscard]] constexpr
+    allocator_type
+    m_get_allocator() const
+    noexcept;
+
+    constexpr
+    position_container(
+        position_container const &,
+        allocator_type     const &,
+        bool_constant<true>);
+
+    constexpr
+    position_container(
+        position_container const &,
+        allocator_type     const &,
+        bool_constant<false>);
+
+    constexpr
+    position_container(
+        position_container const &,
+        bool_constant<true>);
+
+    constexpr
+    position_container(
+        position_container const &,
+        bool_constant<false>);
+
+  public:
+    [[nodiscard]] constexpr
+    size_type
+    max_size() const
+    noexcept;
+
+    [[nodiscard]] constexpr
+    bool
+    contains(entity_type const) const
+    noexcept;
+
+    [[nodiscard]] constexpr
+    size_type &
+    operator[](entity_type const)
+    noexcept;
+
+    [[nodiscard]] constexpr
+    size_type
+    operator[](entity_type const) const
+    noexcept;
+
+
+    constexpr
+    void
+    clear()
+    noexcept;
+
+    constexpr
+    void
+    reserve_for(entity_type const);
+
+    constexpr
+    void
+    erase(entity_type const)
+    noexcept;
+
+    constexpr
+    void
+    swap(position_container &)
+    noexcept(std::is_nothrow_swappable_v<vector_type>)
+    requires(std::is_swappable_v        <vector_type>);
+
+    constexpr
+    void
+    swap(
+        entity_type const e,
+        entity_type const f)
+    noexcept;
+
+    friend constexpr
+    void
+    swap(
+        position_container &lhs,
+        position_container &rhs)
+    noexcept(noexcept(lhs.swap(rhs)))
+    { lhs.swap(rhs); }
+
+
+    explicit constexpr
+    position_container(allocator_type const &)
+    noexcept;
+
+    constexpr
+    position_container()
+    noexcept(std::is_nothrow_constructible_v<allocator_type>)
+    requires(std::is_constructible_v        <allocator_type>);
+
+    constexpr
+    position_container(
+        position_container const &,
+        allocator_type     const &);
+
+    constexpr
+    position_container(position_container const &);
+
+    constexpr
+    position_container(
+        position_container &&,
+        allocator_type const &)
+    noexcept(
+        std::is_nothrow_constructible_v<
+            vector_type,
+            vector_type &&,
+            typename vector_type::allocator_type const &>);
+
+    constexpr
+    position_container(position_container &&)
+    = default;
+
+    constexpr
+    ~position_container()
+    = default;
+
+    constexpr position_container &
+    operator=(position_container const &);
+
+    constexpr position_container &
+    operator=(position_container &&)
+    = default;
+  };
+
 
   template<bool IsConst>
-  class generic_iterator;
+  class generic_iterator
+  {
+  public:
+    static constexpr bool is_const = IsConst;
+
+    using difference_type = std::ptrdiff_t;
+
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept  = std::random_access_iterator_tag;
+
+    using value_type = typename value_container::value_type;
+
+    using reference
+    = std::conditional_t<
+        is_const,
+        typename value_container::const_reference,
+        typename value_container::reference>;
+
+    struct pointer
+    {
+    private:
+      reference
+      r;
+
+    public:
+      constexpr
+      reference *
+      operator->() const
+      noexcept;
+    };
+
+    friend container;
+    friend generic_iterator<!is_const>;
+
+  private:
+    maybe_const_t<container, is_const> *m_container;
+    difference_type                     m_index;
+
+  private:
+    constexpr
+    generic_iterator(
+        maybe_const_t<container, is_const> *container,
+        difference_type const               index)
+    noexcept;
+
+  public:
+    constexpr
+    generic_iterator &
+    operator++()
+    noexcept;
+
+    constexpr
+    generic_iterator
+    operator++(int)
+    noexcept;
+
+    constexpr
+    generic_iterator &
+    operator--()
+    noexcept;
+
+    constexpr
+    generic_iterator
+    operator--(int)
+    noexcept;
+
+
+    constexpr
+    generic_iterator &
+    operator+=(difference_type const)
+    noexcept;
+
+    constexpr
+    generic_iterator &
+    operator-=(difference_type const)
+    noexcept;
+
+
+    friend constexpr
+    generic_iterator
+    operator+(
+        generic_iterator      it,
+        difference_type const n)
+    noexcept
+    {
+      it += n;
+      return it;
+    }
+
+    friend constexpr
+    generic_iterator
+    operator+(
+        difference_type const n,
+        generic_iterator      it)
+    noexcept
+    {
+      it += n;
+      return it;
+    }
+
+    friend constexpr
+    generic_iterator
+    operator-(
+        generic_iterator      it,
+        difference_type const n)
+    noexcept
+    {
+      it -= n;
+      return it;
+    }
+
+    friend constexpr
+    difference_type
+    operator-(
+        generic_iterator const &lhs,
+        generic_iterator const &rhs)
+    noexcept
+    {
+      return lhs.m_index - rhs.m_index;
+    }
+
+
+    constexpr
+    reference
+    operator*() const
+    noexcept;
+
+    constexpr
+    pointer
+    operator->() const
+    noexcept;
+
+    constexpr
+    reference
+    operator[](difference_type const n) const
+    noexcept;
+
+
+    constexpr
+    generic_iterator()
+    = default;
+
+    constexpr
+    generic_iterator(generic_iterator const &)
+    = default;
+
+    constexpr
+    generic_iterator(generic_iterator &&)
+    = default;
+
+    explicit constexpr
+    generic_iterator(generic_iterator<!is_const>)
+    noexcept
+    requires(is_const);
+
+
+    [[nodiscard]] friend constexpr
+    bool
+    operator==(
+        generic_iterator const &lhs,
+        generic_iterator const &rhs)
+    noexcept
+    {
+      return lhs.m_index == rhs.m_index;
+    }
+
+    [[nodiscard]] friend constexpr
+    auto
+    operator<=>(
+        generic_iterator const &,
+        generic_iterator const &)
+    = default;
+  };
 
 public:
+  using value_type      = value_container::value_type;
+  using reference       = value_container::reference;
+  using const_reference = value_container::const_reference;
+
   using iterator       = generic_iterator<false>;
   using const_iterator = generic_iterator<true >;
 
@@ -99,309 +656,210 @@ private:
   value_container    m_values;
   position_container m_positions;
 
-private:
-  using alloc_traits = allocator_traits<allocator_type>;
-
 public:
-  [[nodiscard]] constexpr
-  allocator_type
-  get_allocator() const
-  noexcept
-  { return allocator_type(m_values.entities().get_allocator()); }
-
-
   [[nodiscard]] constexpr
   size_type
   size() const
-  noexcept
-  { return m_values.size(); }
-
-  [[nodiscard]] constexpr
-  size_type
-  max_size() const
-  noexcept
-  { return std::min(m_values.max_size(), m_positions.max_size()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   bool
   empty() const
-  noexcept
-  { return m_values.empty(); }
+  noexcept;
+
+  [[nodiscard]] constexpr
+  size_type
+  max_size() const
+  noexcept;
 
 
   [[nodiscard]] constexpr
   iterator
   begin()
-  noexcept
-  { return iterator(this, 0); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_iterator
   begin() const
-  noexcept
-  { return const_iterator(this, 0); }
+  noexcept;
 
   [[nodiscard]] constexpr
   iterator
   end()
-  noexcept
-  { return iterator(this, size()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_iterator
   end() const
-  noexcept
-  { return const_iterator(this, size()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_iterator
   cbegin() const
-  noexcept
-  { return begin(); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_iterator
   cend() const
-  noexcept
-  { return end(); }
+  noexcept;
 
 
   [[nodiscard]] constexpr
   reverse_iterator
   rbegin()
-  noexcept
-  { return reverse_iterator(end()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_reverse_iterator
   rbegin() const
-  noexcept
-  { return const_reverse_iterator(end()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   reverse_iterator
   rend()
-  noexcept
-  { return reverse_iterator(begin()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_reverse_iterator
   rend() const
-  noexcept
-  { return const_reverse_iterator(begin()); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_reverse_iterator
   crbegin() const
-  noexcept
-  { return rbegin(); }
+  noexcept;
 
   [[nodiscard]] constexpr
   const_reverse_iterator
   crend() const
-  noexcept
-  { return rend(); }
-
+  noexcept;
 
 
   [[nodiscard]] constexpr
   bool
-  contains(entity_type const e) const
-  noexcept
-  { return m_positions.contains(e); }
+  contains(entity_type const) const
+  noexcept;
 
   [[nodiscard]] constexpr
   iterator
-  find(entity_type const e)
-  noexcept
-  { return contains(e) ? iterator(this, m_positions[e]) : end(); }
+  find(entity_type const)
+  noexcept;
 
   [[nodiscard]] constexpr
   const_iterator
-  find(entity_type const e) const
-  noexcept
-  { return contains(e) ? const_iterator(this, m_positions[e]) : end(); }
+  find(entity_type const) const
+  noexcept;
 
 
   [[nodiscard]] constexpr
   component_type &
-  operator[](entity_type const e)
+  operator[](entity_type const)
   noexcept
-  requires(!is_tag)
-  { return m_values.components()[m_positions[e]]; }
+  requires(!tag_value);
 
   [[nodiscard]] constexpr
   component_type const &
-  operator[](entity_type const e) const
+  operator[](entity_type const) const
   noexcept
-  requires(!is_tag)
-  { return m_values.components()[m_positions[e]]; }
-
+  requires(!tag_value);
 
   [[nodiscard]] constexpr
   component_type &
-  at(entity_type const e)
-  requires(!is_tag)
-  {
-    if (!contains(e)) throw std::out_of_range("container::at");
-    return operator[](e);
-  }
+  at(entity_type const)
+  requires(!tag_value);
 
   [[nodiscard]] constexpr
   component_type const &
-  at(entity_type const e) const
-  requires(!is_tag)
-  {
-    if (!contains(e)) throw std::out_of_range("container::at");
-    return operator[](e);
-  }
-
+  at(entity_type const) const
+  requires(!tag_value);
 
 
   constexpr
   void
   clear()
-  noexcept
-  {
-    m_values   .clear();
-    m_positions.clear();
-  }
-
+  noexcept(noexcept(m_values.clear()));
 
   template<typename ...Args>
   constexpr
   std::pair<iterator, bool>
-  emplace(entity_type const e, Args &&...args)
-  requires(
-      is_tag
-   || std::is_constructible_v<component_type, Args &&...>)
-  {
-    if (contains(e))
-      return {iterator(this, m_positions[e]), false};
-
-    m_positions.reserve_for(e);
-    m_values.emplace_back(e, std::forward<Args>(args)...);
-    m_positions[e] = size() - 1;
-    return {--end(), true};
-  }
-
+  emplace(entity const e, Args &&...args)
+  requires(requires { m_values.emplace(e, std::forward<Args>(args)...); });
 
   constexpr
   bool
-  erase(entity_type const e)
-  noexcept(is_tag || std::is_nothrow_move_assignable_v<component_type>)
-  requires(is_tag || std::is_move_assignable_v        <component_type>)
-  {
-    if (!contains(e))
-      return false;
-
-    if (size_type &pos = m_positions[e]; pos != size() - 1)
-    {
-      m_values.overwrite_with_back(pos);
-      m_positions[m_values.entities()[pos]] = pos;
-    }
-
-    m_values   .pop_back();
-    m_positions.erase(e);
-    return true;
-  }
-
+  erase(entity_type const)
+  noexcept(
+      noexcept(m_values.overwrite_with_back(std::declval<size_type &>()))
+   && noexcept(m_values.pop_back()))
+  requires(
+      requires(size_type &pos) { m_values.overwrite_with_back(pos); });
 
 
   constexpr
   void
-  swap(container &other)
+  swap(container &)
   noexcept(
-      std::is_nothrow_swappable_v<position_container>
-   && std::is_nothrow_swappable_v<value_container   >)
-  {
-    using std::swap;
-    swap(m_positions, other.m_positions);
-    swap(m_values   , other.m_values   );
-  }
+      std::is_nothrow_swappable_v<value_container   >
+   && std::is_nothrow_swappable_v<position_container>)
+  requires(
+      std::is_swappable_v<value_container   >
+   && std::is_swappable_v<position_container>);
 
-  friend constexpr
+  constexpr
   void
-  swap(container &lhs, container &rhs)
-  noexcept(noexcept(lhs.swap(rhs)))
-  { lhs.swap(rhs); }
+  swap(entity_type const, entity_type const)
+  noexcept(noexcept(m_values.swap(m_positions[0], m_positions[0])))
+  requires(requires(size_type const i, size_type const j) { m_values.swap(i, j); });
 
 
+  [[nodiscard]] constexpr
+  allocator_type
+  get_allocator() const
+  noexcept;
 
   explicit constexpr
-  container(allocator_type const &alloc)
-    : m_values   (alloc),
-      m_positions(alloc)
-  { }
+  container(allocator_type const &)
+  noexcept;
 
   constexpr
   container()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
-  requires(std::is_default_constructible_v        <allocator_type>)
-    : container(allocator_type())
-  { }
+  noexcept(std::is_nothrow_constructible_v<allocator_type>)
+  requires(std::is_constructible_v        <allocator_type>);
 
   constexpr
-  container(container const &other, allocator_type const &alloc)
-    : m_values   (other.m_values   , alloc),
-      m_positions(other.m_positions, alloc)
-  { }
+  container(
+      container      const &,
+      allocator_type const &);
 
   constexpr
-  container(container const &other)
-    : container(
-          other,
-          alloc_traits::select_on_container_copy_construction(other.get_allocator()))
-  { }
-
-  constexpr
-  container(container &&other, allocator_type const &alloc)
-  noexcept(
-      std::is_nothrow_constructible_v<
-          position_container,
-          position_container &&,
-          allocator_type const &>
-   && std::is_nothrow_constructible_v<
-          value_container,
-          value_container &&,
-          allocator_type const &>)
-    : m_values   (std::move(other.m_values   ), alloc),
-      m_positions(std::move(other.m_positions), alloc)
-  { }
-
-  constexpr
-  container(container &&other)
-  noexcept
+  container(container const &)
   = default;
 
+  constexpr
+  container(
+      container &&,
+      allocator_type const &)
+  noexcept(
+      std::is_nothrow_constructible_v<value_container   , value_container    &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<position_container, position_container &&, allocator_type const &>)
+  requires(
+      std::is_constructible_v<value_container, value_container &&, allocator_type const &>);
+
+  constexpr
+  container(container &&)
+  = default;
 
   constexpr
   ~container()
-  noexcept
   = default;
 
+  constexpr container &
+  operator=(container const &)
+  = default;
 
-  constexpr
-  container &
-  operator=(container const &other)
-  {
-    m_values    = other.m_values;
-    m_positions = other.m_positions;
-    return *this;
-  }
-
-  constexpr
-  container &
-  operator=(container &&other)
-  noexcept(
-      std::is_nothrow_move_assignable_v<position_container>
-   && std::is_nothrow_move_assignable_v<value_container   >)
-  {
-    m_positions = std::move(other.m_positions);
-    m_values    = std::move(other.m_values   );
-    return *this;
-  }
-
+  constexpr container &
+  operator=(container &&)
+  = default;
 
 
   [[nodiscard]] friend constexpr
@@ -414,9 +872,10 @@ public:
 
     for (auto const e : lhs.m_values.entities())
     {
-      if (!rhs.contains(e)) return false;
+      if (!rhs.contains(e))
+        return false;
 
-      if constexpr (!is_tag)
+      if constexpr (!tag_value)
       {
         if (lhs[e] != rhs[e])
           return false;
@@ -427,284 +886,106 @@ public:
 };
 
 
+template<typename>
+struct is_container
+  : bool_constant<false>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+is_container_v
+= is_container<T>::value;
 
 template<
     typename    Component,
     typename    Entity,
     typename    Allocator,
     std::size_t PageSize,
-    bool        IsTag>
-class container<Component, Entity, Allocator, PageSize, IsTag>
+    bool        TagValue>
+struct is_container<
+    container<Component, Entity, Allocator, PageSize, TagValue>>
+  : bool_constant<true>
+{ };
+
+
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
+    ::entity_vector &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::entities()
+noexcept
 {
-private:
-  using entity_allocator    = typename alloc_traits::template rebind_alloc<entity_type   >;
-  using component_allocator = typename alloc_traits::template rebind_alloc<component_type>;
+  return std::get<0>(m_vectors);
+}
 
-  using entity_alloc_traits    = allocator_traits<entity_allocator   >;
-  using component_alloc_traits = allocator_traits<component_allocator>;
-
-  using entity_vector    = std::vector<entity_type   , entity_allocator   >;
-  using component_vector = std::vector<component_type, component_allocator>;
-
-  using vector_tuple
-  = std::conditional_t<
-      is_tag,
-      std::tuple<entity_vector>,
-      std::tuple<entity_vector, component_vector>>;
-
-private:
-  vector_tuple m_vectors;
-
-public:
-  [[nodiscard]] constexpr
-  entity_vector &
-  entities()
-  noexcept
-  { return std::get<0>(m_vectors); }
-
-  [[nodiscard]] constexpr
-  entity_vector const &
-  entities() const
-  noexcept
-  { return std::get<0>(m_vectors); }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::entity_vector const &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::entities() const
+noexcept
+{
+  return std::get<0>(m_vectors);
+}
 
 
-  [[nodiscard]] constexpr
-  component_vector &
-  components()
-  noexcept
-  requires(!is_tag)
-  { return std::get<1>(m_vectors); }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::component_vector &
+container<Component, Entity, Allocator,PageSize, TagValue>
+    ::value_container
+    ::components()
+noexcept
+requires(!tag_value)
+{
+  return std::get<1>(m_vectors);
+}
 
-  [[nodiscard]] constexpr
-  component_vector const &
-  components() const
-  noexcept
-  requires(!is_tag)
-  { return std::get<1>(m_vectors); }
-
-
-  [[nodiscard]] constexpr
-  size_type
-  size() const
-  noexcept
-  { return entities().size(); }
-
-  [[nodiscard]] constexpr
-  bool
-  empty() const
-  noexcept
-  { return entities().empty(); }
-
-  [[nodiscard]] constexpr
-  size_type
-  max_size() const
-  noexcept
-  {
-    if constexpr (is_tag)
-      return entities().max_size();
-    else
-      return std::min(entities().max_size(), components().max_size());
-  }
-
-
-
-  constexpr
-  reference
-  operator[](size_type const idx)
-  noexcept
-  requires(is_tag)
-  { return reference(entities()[idx]); }
-
-  constexpr
-  reference
-  operator[](size_type const idx)
-  noexcept
-  requires(!is_tag)
-  { return reference(entities()[idx], components()[idx]); }
-
-  constexpr
-  const_reference
-  operator[](size_type const idx) const
-  noexcept
-  requires(is_tag)
-  { return const_reference(entities()[idx]); }
-
-  constexpr
-  const_reference
-  operator[](size_type const idx) const
-  noexcept
-  requires(!is_tag)
-  { return const_reference(entities()[idx], components()[idx]); }
-
-
-
-  constexpr
-  void
-  clear()
-  noexcept
-  {
-    entities().clear();
-    if constexpr (!is_tag)
-      components().clear();
-  }
-
-
-  template<typename ...Args>
-  constexpr
-  void
-  emplace_back(entity_type const e, Args&&... args)
-  requires(
-      is_tag
-   || std::is_constructible_v<component_type, Args &&...>)
-  {
-    if constexpr (is_tag)
-      entities().emplace_back(e);
-    else
-    {
-      components().emplace_back(std::forward<Args>(args)...);
-      // strong exception safety guarantee
-      try
-      { entities().emplace_back(e); }
-      catch (...)
-      { components().pop_back(); throw; }
-    }
-  }
-
-
-  constexpr void
-  overwrite_with_back(size_type const i)
-  noexcept(is_tag || std::is_nothrow_move_assignable_v<component_type>)
-  requires(is_tag || std::is_move_assignable_v        <component_type>)
-  {
-    if constexpr (!is_tag)
-      components()[i] = std::move(components().back());
-    entities()[i] = std::move(entities().back());
-  }
-
-
-  constexpr
-  void
-  pop_back()
-  noexcept
-  {
-    entities().pop_back();
-    if constexpr (!is_tag)
-      components().pop_back();
-  }
-
-
-
-  constexpr
-  void
-  swap(value_container &other)
-  noexcept(std::is_nothrow_swappable_v<vector_tuple>)
-  {
-    using std::swap;
-    swap(m_vectors, other.m_vectors);
-  }
-
-  friend constexpr
-  void
-  swap(value_container &lhs, value_container &rhs)
-  noexcept(noexcept(lhs.swap(rhs)))
-  { lhs.swap(rhs); }
-
-
-
-  explicit constexpr
-  value_container(allocator_type const &alloc)
-  noexcept
-  requires(is_tag)
-    : m_vectors(entity_vector(entity_allocator(alloc)))
-  { }
-
-  explicit constexpr
-  value_container(allocator_type const &alloc)
-  noexcept
-  requires(!is_tag)
-    : m_vectors(
-          entity_vector   (entity_allocator   (alloc)),
-          component_vector(component_allocator(alloc)))
-  { }
-
-  constexpr
-  value_container()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
-  requires(std::is_default_constructible_v        <allocator_type>)
-    : value_container(allocator_type())
-  { }
-
-  constexpr
-  value_container(value_container const &other, allocator_type const &alloc)
-  requires(is_tag)
-    : m_vectors(entity_vector(other.entities(), entity_allocator(alloc)))
-  { }
-
-  constexpr
-  value_container(value_container const &other, allocator_type const &alloc)
-  requires(!is_tag)
-    : m_vectors(
-          entity_vector   (other.entities  (), entity_allocator   (alloc)),
-          component_vector(other.components(), component_allocator(alloc)))
-  { }
-
-  constexpr
-  value_container(value_container &&other, allocator_type const &alloc)
-  noexcept(
-      std::is_nothrow_constructible_v<
-          entity_vector,
-          entity_vector &&,
-          entity_allocator const &>)
-  requires(is_tag)
-    : m_vectors(entity_vector(std::move(other.entities()), entity_allocator(alloc)))
-  { }
-
-  constexpr
-  value_container(value_container &&other, allocator_type const &alloc)
-  noexcept(
-      std::is_nothrow_constructible_v<
-          entity_vector,
-          entity_vector &&,
-          entity_allocator const &>
-   && std::is_nothrow_constructible_v<
-          component_vector,
-          component_vector &&,
-          component_allocator const &>)
-  requires(!is_tag)
-    : m_vectors(
-          entity_vector   (std::move(other.entities  ()), entity_allocator   (alloc)),
-          component_vector(std::move(other.components()), component_allocator(alloc)))
-  { }
-
-  constexpr
-  value_container(value_container &&other)
-  noexcept
-  = default;
-
-
-  constexpr
-  ~value_container()
-  noexcept
-  = default;
-
-
-  constexpr value_container &
-  operator=(value_container const &other)
-  {
-    m_vectors = other.m_vectors;
-    return *this;
-  }
-
-  constexpr value_container &
-  operator=(value_container &&other)
-  noexcept(std::is_nothrow_move_assignable_v<vector_tuple>)
-  {
-    m_vectors = std::move(other.m_vectors);
-    return *this;
-  }
-};
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::component_vector const &
+container<Component, Entity, Allocator,PageSize, TagValue>
+    ::value_container
+    ::components() const
+noexcept
+requires(!tag_value)
+{
+  return std::get<1>(m_vectors);
+}
 
 
 
@@ -713,135 +994,613 @@ template<
     typename    Entity,
     typename    Allocator,
     std::size_t PageSize,
-    bool        IsTag>
-class container<Component, Entity, Allocator, PageSize, IsTag>
-    ::position_container
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::size() const
+noexcept
 {
-private:
-  static constexpr bool      s_is_paged      = page_size != 0;
-  static constexpr size_type s_null_position = std::numeric_limits<size_type>::max();
+  return entities().size();
+}
 
 
-  class page_deleter;
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::empty() const
+noexcept
+{
+  return entities().empty();
+}
 
-  using page         = std::array<size_type, page_size>;
-  using page_pointer = std::unique_ptr<page, page_deleter>;
 
-  using page_allocator         = typename alloc_traits::template rebind_alloc<page        >;
-  using page_pointer_allocator = typename alloc_traits::template rebind_alloc<page_pointer>;
-  using size_allocator         = typename alloc_traits::template rebind_alloc<size_type   >;
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::max_size() const
+noexcept
+{
+  if constexpr (tag_value)
+    return entities().max_size();
+  else
+    return std::min(entities().max_size(), components().max_size());
+}
 
-  using page_alloc_traits         = allocator_traits<page_allocator        >;
-  using page_pointer_alloc_traits = allocator_traits<page_pointer_allocator>;
-  using size_alloc_traits         = allocator_traits<size_allocator        >;
 
-  using vector
-  = std::conditional_t<
-      s_is_paged,
-      std::vector<page_pointer, page_pointer_allocator>,
-      std::vector<size_type   , size_allocator        >>;
 
-private:
-  vector m_vector;
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::reference
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::operator[](size_type const pos)
+noexcept
+{
+  if constexpr (tag_value)
+    return reference(entities()[pos]);
+  else
+    return reference(entities()[pos], components()[pos]);
+}
 
-private:
-  static constexpr
-  size_type
-  s_page_index(typename entity_type::index_type const idx)
-  noexcept
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::const_reference
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::operator[](size_type const pos) const
+noexcept
+{
+  if constexpr (tag_value)
+    return const_reference(entities()[pos]);
+  else
+    return const_reference(entities()[pos], components()[pos]);
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::clear()
+noexcept(
+   (tag_value
+ || noexcept(components().clear()))
+ && noexcept(entities  ().clear()))
+{
+  if constexpr (!tag_value)
+    components().clear();
+  entities().clear();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename ...Args>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::emplace_back(
+    entity_type const e,
+    Args &&...        args)
+requires(
+    tag_value
+ || std::is_constructible_v<Component, Args &&...>)
+{
+  if constexpr (tag_value)
+    entities().emplace_back(e);
+  else
   {
-    if constexpr (std::has_single_bit(page_size))
-      return static_cast<size_type>(idx) >> std::countr_zero(page_size);
-    else
-      return static_cast<size_type>(idx) / page_size;
-  }
-
-  static constexpr
-  size_type
-  s_line_index(typename entity_type::index_type const idx)
-  noexcept
-  requires(s_is_paged)
-  {
-    if constexpr (std::has_single_bit(page_size))
-      return static_cast<size_type>(idx) & (page_size - 1);
-    else
-      return static_cast<size_type>(idx) % page_size;
-  }
-
-
-
-  template<typename ...Args>
-  [[nodiscard]] constexpr
-  page_pointer
-  m_make_page_pointer(Args &&...args)
-  requires(
-      s_is_paged
-   && std::is_constructible_v<page, Args &&...>)
-  {
-    page_allocator alloc(m_vector.get_allocator());
-    page          *p    (page_alloc_traits::allocate(alloc, 1));
-
+    components().emplace_back(std::forward<Args>(args)...);
+    // strong exception safety guarantee
     try
-    { page_alloc_traits::construct(alloc, p, std::forward<Args>(args)...); }
+    { entities().emplace_back(e); }
     catch (...)
-    { page_alloc_traits::deallocate(alloc, p, 1); throw; }
-
-    return page_pointer(p, page_deleter(std::move(alloc)));
+    { components().pop_back(); throw; }
   }
-
-  [[nodiscard]] constexpr
-  page_pointer
-  m_make_page_pointer(std::nullptr_t p)
-  requires(s_is_paged)
-  { return page_pointer(p, page_deleter(page_allocator(m_vector.get_allocator()))); }
+}
 
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::overwrite_with_back(size_type const pos)
+noexcept(tag_value || std::is_nothrow_move_assignable_v<component_type>)
+requires(tag_value || std::is_move_assignable_v        <component_type>)
+{
+  if constexpr (!tag_value)
+    components()[pos] = std::move(components().back());
+  entities()[pos] = std::move(entities().back());
+}
 
-  constexpr
-  void
-  m_copy_vector(vector const &from, vector &to)
-  requires(s_is_paged)
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::pop_back()
+noexcept(
+   (tag_value
+ || noexcept(components().pop_back()))
+ && noexcept(entities  ().pop_back()))
+{
+  if constexpr (!tag_value)
+    components().pop_back();
+  entities().pop_back();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::swap(value_container &other)
+noexcept(std::is_nothrow_swappable_v<vector_tuple>)
+requires(std::is_swappable_v        <vector_tuple>)
+{
+  using std::swap;
+  std::swap(m_vectors, other.m_vectors);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::swap(
+    size_type const i,
+    size_type const j)
+noexcept(std::is_nothrow_swappable_v<component_type>)
+requires(std::is_swappable_v        <component_type>)
+{
+  using std::swap;
+
+  if constexpr (!tag_value)
+    swap(components()[i], components()[j]);
+  swap(entities()[i], entities()[j]);
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::allocator_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::get_allocator() const
+noexcept
+{
+  return entities().get_allocator();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::value_container(allocator_type const &alloc)
+noexcept
+  : m_vectors(std::allocator_arg, alloc)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::value_container()
+noexcept(std::is_nothrow_constructible_v<allocator_type>)
+requires(std::is_constructible_v        <allocator_type>)
+  : m_vectors(std::allocator_arg, allocator_type())
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::value_container(
+    value_container const &other,
+    allocator_type  const &alloc)
+requires (
+    tag_value
+ || std::is_copy_constructible_v<Component>)
+  : m_vectors(std::allocator_arg, alloc, other.m_vectors)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::value_container(
+    value_container &&    other,
+    allocator_type const &alloc)
+noexcept(
+    std::is_nothrow_constructible_v<
+        vector_tuple,
+        std::allocator_arg_t,
+        allocator_type const &,
+        vector_tuple &&>)
+requires(
+    tag_value
+ || std::is_move_constructible_v<component_type>)
+  : m_vectors(std::allocator_arg, alloc, std::move(other.m_vectors))
+{ }
+
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::page_deleter
+    ::operator()(page *p)
+noexcept
+{
+  page_alloc_traits::destroy   (m_allocator, p);
+  page_alloc_traits::deallocate(m_allocator, p, 1);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::page_deleter
+    ::page_deleter(allocator_type &&alloc)
+noexcept
+  : m_allocator(std::move(alloc))
+{ }
+
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::s_page_index(typename entity_type::index_type const idx)
+noexcept
+requires(s_is_paged)
+{
+  if constexpr (std::has_single_bit(page_size))
+    return static_cast<size_type>(idx) >> std::countr_zero(page_size);
+  else
+    return static_cast<size_type>(idx) / page_size;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::s_line_index(typename entity_type::index_type const idx)
+noexcept
+requires(s_is_paged)
+{
+  if constexpr (std::has_single_bit(page_size))
+    return static_cast<size_type>(idx) & (page_size - 1);
+  else
+    return static_cast<size_type>(idx) % page_size;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename ...Args>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::page_pointer
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::m_make_page_pointer(Args&&... args)
+requires(
+    s_is_paged
+ || std::is_constructible_v<page, Args&&...>)
+{
+  page_allocator alloc(m_vector.get_allocator());
+  page          *p    (page_alloc_traits::allocate(alloc, 1));
+
+  try
+  { page_alloc_traits::construct(alloc, p, std::forward<Args>(args)...); }
+  catch (...)
+  { page_alloc_traits::deallocate(alloc, p, 1); throw; }
+
+  return page_pointer(p, page_deleter(std::move(alloc)));
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::page_pointer
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::m_make_page_pointer(std::nullptr_t p)
+requires(s_is_paged)
+{
+  return page_pointer(p, page_deleter(page_allocator(m_vector.get_allocator())));
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::m_copy_vector(
+    vector_type const &from,
+    vector_type       &to)
+requires(s_is_paged)
+{
+  to.reserve(from.capacity());
+  for (page_pointer const &p : from)
   {
-    to.reserve(from.capacity());
-    for (auto const &p : from)
-    {
-      if (static_cast<bool>(p))
-        to.emplace_back(m_make_page_pointer(*p));
-      else
-        to.emplace_back(m_make_page_pointer(nullptr));
-    }
+    if (static_cast<bool>(p))
+      to.emplace_back(m_make_page_pointer(*p));
+    else
+      to.emplace_back(m_make_page_pointer(nullptr));
   }
+}
 
-public:
-  [[nodiscard]] constexpr
-  size_type
-  max_size() const
-  noexcept
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::allocator_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::m_get_allocator() const
+noexcept
+{
+  return m_vector.get_allocator();
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other,
+    allocator_type     const &alloc,
+    bool_constant<true>)
+  : position_container(alloc)
+{
+  m_copy_vector(other.m_vector, m_vector);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other,
+    allocator_type     const &alloc,
+    bool_constant<false>)
+  : m_vector(other.m_vector, typename vector_type::allocator_type(alloc))
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other,
+    bool_constant<true>)
+  : position_container(
+        alloc_traits::select_on_container_copy_construction(other.m_get_allocator()))
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other,
+    bool_constant<false>)
+  : m_vector(other.m_vector)
+{ }
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::max_size() const
+noexcept
+{
+  if constexpr (s_is_paged)
   {
-    size_type const max       = m_vector.max_size();
-    size_type const max_pages = std::numeric_limits<size_type>::max() / page_size;
+    size_type const max      (m_vector.max_size());
+    size_type const max_pages(std::numeric_limits<size_type>::max() / page_size);
 
     return max > max_pages
          ? max_pages * page_size
          : max       * page_size;
   }
-
-  [[nodiscard]] constexpr
-  size_type
-  max_size() const
-  noexcept
-  requires(!s_is_paged)
-  { return m_vector.max_size(); }
+  else
+  {
+    return m_vector.max_size();
+  }
+}
 
 
-
-  [[nodiscard]] constexpr
-  bool
-  contains(entity_type const e) const
-  noexcept
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::contains(entity_type const e) const
+noexcept
+{
+  if constexpr (s_is_paged)
   {
     auto      const idx      = e.index();
     size_type const page_idx = s_page_index(idx);
@@ -850,53 +1609,74 @@ public:
         && static_cast<bool>(m_vector[page_idx])
         && (*m_vector[page_idx])[s_line_index(idx)] != s_null_position;
   }
-
-  [[nodiscard]] constexpr
-  bool
-  contains(entity_type const e) const
-  noexcept
-  requires(!s_is_paged)
+  else
   {
     size_type const i = static_cast<size_type>(e.index());
 
     return i < m_vector.size()
         && m_vector[i] != s_null_position;
   }
+}
 
 
-  [[nodiscard]] constexpr
-  size_type &
-  operator[](entity_type const e)
-  noexcept
-  {
-    auto const idx = e.index();
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::operator[](entity_type const e)
+noexcept
+{
+  auto const idx = e.index();
 
-    if constexpr (s_is_paged)
-      return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
-    else
-      return m_vector[static_cast<size_type>(idx)];
-  }
+  if constexpr (s_is_paged)
+    return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
+  else
+    return m_vector[static_cast<size_type>(idx)];
+}
 
-  [[nodiscard]] constexpr
-  size_type
-  operator[](entity_type const e) const
-  noexcept
-  {
-    auto const idx = e.index();
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::operator[](entity_type const e) const
+noexcept
+{
+  auto const idx = e.index();
 
-    if constexpr (s_is_paged)
-      return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
-    else
-      return m_vector[static_cast<size_type>(idx)];
-  }
+  if constexpr (s_is_paged)
+    return (*m_vector[s_page_index(idx)])[s_line_index(idx)];
+  else
+    return m_vector[static_cast<size_type>(idx)];
+}
 
-
-
-  constexpr
-  void
-  clear()
-  noexcept
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::clear()
+noexcept
+{
+  if constexpr (s_is_paged)
   {
     for (auto const &p : m_vector)
     {
@@ -904,19 +1684,23 @@ public:
         std::fill(p->begin(), p->end(), s_null_position);
     }
   }
+  else
+    std::fill(m_vector.begin(), m_vector.end(), s_null_position);
+}
 
-  constexpr
-  void
-  clear()
-  noexcept
-  requires(!s_is_paged)
-  { std::fill(m_vector.begin(), m_vector.end(), s_null_position); }
-
-
-  constexpr
-  void
-  reserve_for(entity_type const e)
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::reserve_for(entity_type const e)
+{
+  if constexpr (s_is_paged)
   {
     auto      const idx      = e.index();
     size_type const page_idx = s_page_index(idx);
@@ -933,88 +1717,162 @@ public:
       m_vector[page_idx] ->fill(s_null_position);
     }
   }
-
-  constexpr
-  void
-  reserve_for(entity_type const e)
-  requires(!s_is_paged)
+  else
   {
     size_type const i = static_cast<size_type>(e.index());
 
     if (i >= m_vector.size())
       m_vector.resize(i + 1, s_null_position);
   }
+}
 
 
-  constexpr
-  void
-  erase(entity_type const e)
-  noexcept
-  { (*this)[e] = s_null_position; }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::erase(entity_type const e)
+noexcept
+{
+  (*this)[e] = s_null_position;
+}
 
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::swap(position_container &other)
+noexcept(std::is_nothrow_swappable_v<vector_type>)
+requires(std::is_swappable_v        <vector_type>)
+{
+  using std::swap;
+  swap(m_vector, other.m_vector);
+}
 
-  constexpr
-  void
-  swap(position_container &other)
-  noexcept
-  {
-    using std::swap;
-    swap(m_vector, other.m_vector);
-  }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::swap(
+    entity_type const e,
+    entity_type const f)
+noexcept
+{
+  using std::swap;
+  swap((*this)[e], (*this)[f]);
+}
 
-  friend constexpr
-  void
-  swap(position_container &lhs, position_container &rhs)
-  noexcept(noexcept(lhs.swap(rhs)))
-  { lhs.swap(rhs); }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(allocator_type const &alloc)
+noexcept
+  : m_vector(typename vector_type::allocator_type(alloc))
+{ }
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container()
+noexcept(std::is_nothrow_constructible_v<allocator_type>)
+requires(std::is_constructible_v        <allocator_type>)
+  : position_container(allocator_type())
+{ }
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other,
+    allocator_type     const &alloc)
+  : position_container(other.m_vector, alloc, bool_constant<s_is_paged>())
+{ }
 
-  explicit constexpr
-  position_container(allocator_type const &alloc)
-  noexcept
-    : m_vector(typename vector::allocator_type(alloc))
-  { }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container const &other)
+  : position_container(other, bool_constant<s_is_paged>())
+{ }
 
-  constexpr
-  position_container(
-      position_container const &other,
-      allocator_type     const &alloc)
-  requires(s_is_paged)
-    : position_container(alloc)
-  { m_copy_vector(other.m_vector, m_vector); }
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::position_container(
+    position_container &&     other,
+    allocator_type     const &alloc)
+noexcept(
+    std::is_nothrow_constructible_v<
+        vector_type,
+        vector_type &&,
+        typename vector_type::allocator_type const &>)
+  : m_vector(std::move(other.m_vector), alloc)
+{ }
 
-  constexpr
-  position_container(
-      position_container const &other,
-      allocator_type     const &alloc)
-  requires(!s_is_paged)
-    : m_vector(other.m_vector, typename vector::allocator_type(alloc))
-  { }
-
-  constexpr
-  position_container(
-      position_container  &&other,
-      allocator_type const &alloc)
-    : m_vector(std::move(other.m_vector), typename vector::allocator_type(alloc))
-  { }
-
-  constexpr
-  position_container(position_container &&other)
-  noexcept
-  = default;
-
-
-  constexpr
-  ~position_container()
-  noexcept
-  = default;
-
-
-  constexpr position_container &
-  operator=(position_container const &other)
-  requires(s_is_paged)
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::position_container
+    ::operator=(position_container const &other)
+{
+  if constexpr (s_is_paged)
   {
     if (this == std::addressof(other))
       return *this;
@@ -1029,25 +1887,13 @@ public:
     { m_vector.clear(); }
 
     m_copy_vector(other.m_vector, m_vector);
-    return *this;
   }
-
-  constexpr position_container &
-  operator=(position_container const &other)
-  requires(!s_is_paged)
-  {
+  else
     m_vector = other.m_vector;
-    return *this;
-  }
 
-  constexpr position_container &
-  operator=(position_container &&other)
-  noexcept
-  {
-    m_vector = std::move(other.m_vector);
-    return *this;
-  }
-};
+  return *this;
+}
+
 
 
 
@@ -1056,38 +1902,38 @@ template<
     typename    Entity,
     typename    Allocator,
     std::size_t PageSize,
-    bool        IsTag>
-class container<Component, Entity, Allocator, PageSize, IsTag>
-    ::position_container
-    ::page_deleter
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+    ::reference *
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::pointer
+    ::operator->() const
+noexcept
 {
-private:
-  [[no_unique_address]] page_allocator m_allocator;
+  return std::addressof(r);
+}
 
-public:
-  constexpr
-  void
-  operator()(page *p)
-  noexcept
-  {
-    page_alloc_traits::destroy   (m_allocator, p);
-    page_alloc_traits::deallocate(m_allocator, p, 1);
-  }
-
-
-
-  explicit constexpr
-  page_deleter(page_allocator &&alloc)
-    : m_allocator(std::move(alloc))
-  { }
-
-
-  constexpr
-  ~page_deleter()
-  noexcept
-  = default;
-};
-
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::generic_iterator(
+    maybe_const_t<container, is_const> *container,
+    difference_type const               index)
+noexcept
+  : m_container(container),
+    m_index    (index)
+{ }
 
 
 template<
@@ -1095,253 +1941,776 @@ template<
     typename    Entity,
     typename    Allocator,
     std::size_t PageSize,
-    bool        IsTag>
-template<
-    bool IsConst>
-class container<Component, Entity, Allocator, PageSize, IsTag>
-    ::generic_iterator
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst> &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator++()
+noexcept
 {
-public:
-  static constexpr bool is_const() noexcept { return IsConst; }
-  static constexpr bool is_const_v = is_const();
-
-
-  using difference_type = typename container::difference_type;
-
-  using iterator_category = std::input_iterator_tag;
-  using iterator_concept  = std::random_access_iterator_tag;
-
-  using value_type
-  = typename container::value_type;
-
-  using reference
-  = std::conditional_t<
-      is_const_v,
-      typename container::const_reference,
-      typename container::reference>;
-
-  struct pointer
-  {
-    reference r;
-
-    constexpr
-    reference const *
-    operator->() const
-    noexcept
-    { return std::addressof(r); }
-  };
-
-
-  friend container;
-  friend generic_iterator<!is_const_v>;
-
-private:
-  maybe_const_t<container, is_const_v> *m_container;
-  difference_type                       m_index;
-
-private:
-  constexpr
-  generic_iterator(
-      maybe_const_t<container, is_const_v> *container,
-      difference_type const                 index)
-  noexcept
-    : m_container(container),
-      m_index    (index    )
-  { }
-
-public:
-  constexpr
-  generic_iterator &
-  operator++()
-  noexcept
-  {
-    ++m_index;
-    return *this;
-  }
-
-  constexpr
-  generic_iterator
-  operator++(int)
-  noexcept
-  {
-    generic_iterator tmp(*this);
-    ++*this;
-    return tmp;
-  }
-
-
-  constexpr
-  generic_iterator &
-  operator--()
-  noexcept
-  {
-    --m_index;
-    return *this;
-  }
-
-  constexpr
-  generic_iterator
-  operator--(int)
-  noexcept
-  {
-    generic_iterator tmp(*this);
-    --*this;
-    return tmp;
-  }
-
-
-  constexpr
-  generic_iterator &
-  operator+=(difference_type const n)
-  noexcept
-  {
-    m_index += n;
-    return *this;
-  }
-
-  constexpr
-  generic_iterator &
-  operator-=(difference_type const n)
-  noexcept
-  {
-    m_index -= n;
-    return *this;
-  }
-
-
-  friend constexpr
-  generic_iterator
-  operator+(
-      generic_iterator      it,
-      difference_type const n)
-  noexcept
-  {
-    it += n;
-    return it;
-  }
-
-  friend constexpr
-  generic_iterator
-  operator+(
-      difference_type const n,
-      generic_iterator      it)
-  noexcept
-  {
-    it += n;
-    return it;
-  }
-
-
-  friend constexpr
-  generic_iterator
-  operator-(
-      generic_iterator      it,
-      difference_type const n)
-  noexcept
-  {
-    it -= n;
-    return it;
-  }
-
-  friend constexpr
-  difference_type
-  operator-(
-      generic_iterator const &lhs,
-      generic_iterator const &rhs)
-  noexcept
-  {
-    return lhs.m_index - rhs.m_index;
-  }
-
-
-
-  constexpr
-  reference
-  operator*() const
-  noexcept
-  { return reference(m_container->m_values[m_index]); }
-
-
-  constexpr
-  pointer
-  operator->() const
-  noexcept
-  { return pointer(operator*()); }
-
-  constexpr
-  reference
-  operator[](difference_type const n) const
-  noexcept
-  { return *(*this + n); }
-
-
-
-  constexpr
-  generic_iterator()
-  noexcept
-  = default;
-
-  constexpr
-  generic_iterator(generic_iterator const &other)
-  noexcept
-  = default;
-
-  constexpr
-  generic_iterator(generic_iterator &&other)
-  noexcept
-  = default;
-
-  explicit constexpr
-  generic_iterator(generic_iterator<!is_const_v> it)
-  noexcept
-  requires(is_const_v)
-    : m_container(it.m_container),
-      m_index    (it.m_index    )
-  { }
-
-
-
-  [[nodiscard]] friend constexpr
-  bool
-  operator==(
-      generic_iterator const &lhs,
-      generic_iterator const &rhs)
-  noexcept
-  { return lhs.m_index == rhs.m_index; }
-
-
-  [[nodiscard]] friend constexpr
-  auto
-  operator<=>(
-      generic_iterator const &lhs,
-      generic_iterator const &rhs)
-  noexcept
-  { return lhs.m_index <=> rhs.m_index; }
-};
-
-
-
-template<typename T>
-struct is_container
-  : bool_constant<false>
-{ };
+  ++m_index;
+  return *this;
+}
 
 template<
     typename    Component,
     typename    Entity,
     typename    Allocator,
     std::size_t PageSize,
-    bool        IsTag>
-struct is_container<container<Component, Entity, Allocator, PageSize, IsTag>>
-  : bool_constant<true>
-{ };
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator++(int)
+noexcept
+{
+  generic_iterator tmp(*this);
+  ++*this;
+  return tmp;
+}
 
-template<typename T>
-inline constexpr
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst> &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator--()
+noexcept
+{
+  --m_index;
+  return *this;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator--(int)
+noexcept
+{
+  generic_iterator tmp(*this);
+  --*this;
+  return tmp;
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst> &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator+=(difference_type const n)
+noexcept
+{
+  m_index += n;
+  return *this;
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst> &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator-=(difference_type const n)
+noexcept
+{
+  m_index -= n;
+  return *this;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+    ::reference
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator*() const
+noexcept
+{
+  return m_container->m_values[m_index];
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+    ::pointer
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator->() const
+noexcept
+{
+  return pointer(**this);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::template generic_iterator<IsConst>
+    ::reference
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::operator[](difference_type const n) const
+noexcept
+{
+  return *(*this + n);
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::generic_iterator(generic_iterator<!is_const> it)
+noexcept
+requires(is_const)
+  : m_container(it.m_container),
+    m_index    (it.m_index)
+{ }
+
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size() const
+noexcept
+{
+  return m_values.size();
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
 bool
-is_container_v
-= is_container<T>::value();
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::empty() const
+noexcept
+{
+  return m_values.empty();
+}
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::size_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::max_size() const
+noexcept
+{
+  return std::min(m_values.max_size(), m_positions.max_size());
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::begin()
+noexcept
+{
+  return iterator(this, 0);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::begin() const
+noexcept
+{
+  return const_iterator(this, 0);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::end()
+noexcept
+{
+  return iterator(this, size());
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::end() const
+noexcept
+{
+  return const_iterator(this, size());
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::cbegin() const
+noexcept
+{
+  return begin();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::cend() const
+noexcept
+{
+  return end();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::rbegin()
+noexcept
+{
+  return reverse_iterator(end());
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::rbegin() const
+noexcept
+{
+  return const_reverse_iterator(end());
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::rend()
+noexcept
+{
+  return reverse_iterator(begin());
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::rend() const
+noexcept
+{
+  return const_reverse_iterator(begin());
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::crbegin() const
+noexcept
+{
+  return rbegin();
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_reverse_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::crend() const
+noexcept
+{
+  return rend();
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::contains(entity_type const e) const
+noexcept
+{
+  return m_positions.contains(e);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::find(entity_type const e)
+noexcept
+{
+  return contains(e)
+    ? iterator(this, m_positions[e])
+    : end();
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::find(entity_type const e) const
+noexcept
+{
+  return contains(e)
+    ? const_iterator(this, m_positions[e])
+    : end();
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::component_type &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::operator[](entity_type const e)
+noexcept
+requires (!tag_value)
+{
+  return m_values.components()[m_positions[e]];
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::component_type const &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::operator[](entity_type const e) const
+noexcept
+requires (!tag_value)
+{
+  return m_values.components()[m_positions[e]];
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::component_type &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::at(entity_type const e)
+requires (!tag_value)
+{
+  if (!contains(e))
+    throw std::out_of_range("container::at");
+
+  return operator[](e);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::component_type const &
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::at(entity_type const e) const
+requires (!tag_value)
+{
+  if (!contains(e))
+    throw std::out_of_range("container::at");
+
+  return operator[](e);
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::clear()
+noexcept(noexcept(m_values.clear()))
+{
+  m_values   .clear();
+  m_positions.clear();
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename ... Args>
+constexpr
+std::pair<
+    typename container<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::emplace(
+    entity const e,
+    Args &&...   args)
+requires(
+    requires { m_values.emplace(e, std::forward<Args>(args)...); })
+{
+  if (contains(e))
+    return {iterator(this, m_positions[e]), false};
+
+  m_positions.reserve_for(e);
+  m_values.emplace_back(e, std::forward<Args>(args)...);
+  m_positions[e] = size() - 1;
+  return {--end(), true};
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::erase(entity_type const e)
+noexcept(
+    noexcept(m_values.overwrite_with_back(std::declval<size_type &>()))
+ && noexcept(m_values.pop_back()))
+requires(
+    requires(size_type &pos) { m_values.overwrite_with_back(pos); })
+{
+  if (!contains(e))
+    return false;
+
+  if (size_type &pos = m_positions[e]; pos != size() - 1)
+  {
+    m_values.overwrite_with_back(pos);
+    m_positions[m_values.entities()[pos]] = pos;
+  }
+
+  m_values   .pop_back();
+  m_positions.erase(e);
+  return true;
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::swap(container &other)
+noexcept(
+    std::is_nothrow_swappable_v<value_container   >
+ && std::is_nothrow_swappable_v<position_container>)
+requires(
+    std::is_swappable_v<value_container   >
+ && std::is_swappable_v<position_container>)
+{
+  using std::swap;
+  swap(m_values   , other.m_values   );
+  swap(m_positions, other.m_positions);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::swap(
+    entity_type const e,
+    entity_type const f)
+noexcept(noexcept(m_values.swap(m_positions[0], m_positions[0])))
+requires(requires(size_type const i, size_type const j) { m_values.swap(i, j); })
+{
+  m_values   .swap(m_positions[e], m_positions[f]);
+  m_positions.swap(e, f);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename container<Component, Entity, Allocator, PageSize, TagValue>
+    ::allocator_type
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::get_allocator() const
+noexcept
+{
+  return m_values.get_allocator();
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::container(allocator_type const &alloc)
+noexcept
+  : m_values   (alloc),
+    m_positions(alloc)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::container()
+noexcept(std::is_nothrow_constructible_v<allocator_type>)
+requires(std::is_constructible_v        <allocator_type>)
+  : container(allocator_type())
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::container(
+    container      const &other,
+    allocator_type const &alloc)
+  : m_values   (other.m_values   , alloc),
+    m_positions(other.m_positions, alloc)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::container(
+    container &&          other,
+    allocator_type const &alloc)
+noexcept(
+      std::is_nothrow_constructible_v<value_container   , value_container    &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<position_container, position_container &&, allocator_type const &>)
+  requires(
+      std::is_constructible_v<value_container, value_container &&, allocator_type const &>)
+  : m_values   (std::move(other.m_values   ), alloc),
+    m_positions(std::move(other.m_positions), alloc)
+{ }
 
 } // namespace heim
 

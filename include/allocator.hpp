@@ -59,7 +59,7 @@ struct allocator_traits
 
 
 template<typename T>
-using default_allocator
+using allocator
 = std::allocator<T>;
 
 
