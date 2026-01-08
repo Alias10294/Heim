@@ -6,9 +6,17 @@
 
 namespace heim
 {
+/*!
+ * @brief Determines the page size for the default container of a component type.
+ */
 template<typename = redefine_tag>
 struct default_container_page_size
 {
+  /*!
+   * @brief The default page size the given component type.
+   *
+   * @tparam Component The component type.
+   */
   template<typename Component>
   static constexpr
   std::size_t
@@ -16,10 +24,17 @@ struct default_container_page_size
   = 1024;
 };
 
+/*!
+ * @brief Determines the page size for the given component type.
+ *
+ * @tparam Component The component type.
+ */
 template<typename Component>
 struct container_page_size_for
-  : size_constant<default_container_page_size<>::value_for<Component>>
+  : size_constant<
+        default_container_page_size<>::value_for<Component>>
 {
+  //! @brief The component type.
   using component_type
   = Component;
 };
@@ -32,16 +47,28 @@ container_page_size_for_v
 
 
 
-
+/*!
+ * @brief Determines whether a component type is a tag (i.e. is solely used for its association with an entity).
+ */
 template<typename = redefine_tag>
 struct default_tag_value
 {
+  /*!
+   * @brief @c true if the given component is a tag, @c false otherwise.
+   *
+   * @tparam Component The component type.
+   */
   template<typename Component>
   static constexpr
   bool value_for
   = std::is_empty_v<Component>;
 };
 
+/*!
+ * @brief Determines the tag value for the given component, @c true if it is a tag, @c false otherwise.
+ *
+ * @tparam Component The component type.
+ */
 template<typename Component>
 struct tag_value_for
   : bool_constant<default_tag_value<>::value_for<Component>>

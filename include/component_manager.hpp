@@ -1,11 +1,9 @@
 #ifndef HEIM_COMPONENT_MANAGER_HPP
 #define HEIM_COMPONENT_MANAGER_HPP
-
 #include "allocator.hpp"
 #include "container.hpp"
 #include "entity.hpp"
 #include "type_sequence.hpp"
-
 namespace heim
 {
 template<
@@ -39,7 +37,7 @@ private:
     struct meta_container_for
     {
       using type
-      = container<Component, entity_type, allocator_type>;
+      = container<Component,entity_type,allocator_type>;
     };
 
   public:
@@ -72,12 +70,17 @@ private:
     struct predicate
     {
       template<typename Group>
-      struct contains : bool_constant<Group::template contains<Component>> { };
+      struct contains
+        : bool_constant<Group::template contains<Component>>
+      { };
     };
 
     template<typename Component>
     using filtered_for
-    = type::flatten::template filter<predicate<Component>::template contains>;
+    = type
+        ::flatten
+        ::template filter<
+            predicate<Component>::template contains>;
 
   public:
     template<typename Component>
@@ -91,18 +94,17 @@ private:
     static constexpr
     size_type
     index
-    = type::template index<filtered_for<Component>::template get<0>>;
+    = type
+        ::template index<
+            filtered_for<Component>::template get<0>>;
 
     using length_array
     = std::array<size_type, type::size>;
   };
 
-
 private:
   typename component_sequence_traits::container_tuple m_containers;
   typename group_sequence_traits    ::length_array    m_groups;
-
-public:
 };
 
 }

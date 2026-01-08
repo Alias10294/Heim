@@ -1,14 +1,17 @@
 #ifndef HEIM_CONTAINER_HPP
 #define HEIM_CONTAINER_HPP
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstddef>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include "allocator.hpp"
 #include "component.hpp"
@@ -489,12 +492,16 @@ private:
     {
     private:
       reference
-      r;
+      m_ref;
 
     public:
       constexpr
       reference *
       operator->() const
+      noexcept;
+
+      explicit constexpr
+      pointer(reference &&ref)
       noexcept;
     };
 
@@ -782,8 +789,10 @@ public:
   template<typename ...Args>
   constexpr
   std::pair<iterator, bool>
-  emplace(entity const e, Args &&...args)
-  requires(requires { m_values.emplace(e, std::forward<Args>(args)...); });
+  emplace(
+      entity const e,
+      Args &&...   args)
+  requires(requires { m_values.emplace_back(e, std::forward<Args>(args)...); });
 
   constexpr
   bool
@@ -1822,7 +1831,7 @@ container<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container(
     position_container const &other,
     allocator_type     const &alloc)
-  : position_container(other.m_vector, alloc, bool_constant<s_is_paged>())
+  : position_container(other, alloc, bool_constant<s_is_paged>())
 { }
 
 template<
@@ -1914,8 +1923,28 @@ container<Component, Entity, Allocator, PageSize, TagValue>
     ::operator->() const
 noexcept
 {
-  return std::addressof(r);
+  return std::addressof(m_ref);
 }
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<bool IsConst>
+constexpr
+container<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_iterator<IsConst>
+    ::pointer
+    ::pointer(reference &&ref)
+noexcept
+  : m_ref(std::move(ref))
+{ }
+
+
 
 template<
     typename    Component,
@@ -2548,7 +2577,7 @@ container<Component, Entity, Allocator, PageSize, TagValue>
     entity const e,
     Args &&...   args)
 requires(
-    requires { m_values.emplace(e, std::forward<Args>(args)...); })
+    requires { m_values.emplace_back(e, std::forward<Args>(args)...); })
 {
   if (contains(e))
     return {iterator(this, m_positions[e]), false};
