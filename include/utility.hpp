@@ -24,10 +24,7 @@ template<
     T        val>
 struct constant
 {
-  //! @brief The value type.
-  using value_type = T;
-
-  //! @brief The value.
+  using value_type                  = T;
   static constexpr value_type value = val;
 };
 
@@ -74,7 +71,6 @@ struct maybe_const
       std::is_same_v<T, std::remove_const_t<T>>,
       "The type must not be already const-qualified.");
 
-  //! @brief The determined type.
   using type
   = std::conditional_t<IsConst, T const, T>;
 };
@@ -88,7 +84,8 @@ using maybe_const_t
 
 
 /*!
- * @brief Determines the unsigned integral type which is composed of at least the given number of bits.
+ * @brief Determines the unsigned integral type which is composed of at least the given number of
+ *   bits.
  *
  * @tparam Bits The number of bits.
  */
@@ -97,9 +94,9 @@ struct unsigned_integral_for
 {
   static_assert(
       0 < Bits && Bits <= std::numeric_limits<unsigned long long>::digits,
-      "The given number of bits must be strictly positive and within the limits of the existing unsigned integral types.");
+      "The given number of bits must be strictly positive and within the limits of the existing "
+      "unsigned integral types.");
 
-  //! @brief The determined type.
   using type
   = std::conditional_t<
       Bits <= std::numeric_limits<unsigned char>::digits,

@@ -12,11 +12,11 @@ namespace heim
 /*!
  * @brief The library's entity type, that acts as the identifier for a represented object.
  *
- * @tparam Value The underlying unsigned integral type.
+ * @tparam Value     The underlying unsigned integral type.
  * @tparam IndexBits The number of bits representing the index value of the entity.
  *
- * @details This type uses a mechanism of index and generation to differentiate active and inactive entities,
- *   and to allow for the reuse of index values.
+ * @details This type uses a mechanism of index and generation to differentiate active and inactive
+ *   entities, and to allow for the reuse of index values.
  */
 template<
     typename    Value     = std::uintmax_t,
@@ -24,9 +24,7 @@ template<
 class generic_entity
 {
 public:
-  //! @brief The size type.
   using size_type  = std::size_t;
-  //! @brief The underlying unsigned integral value type.
   using value_type = Value;
 
   static_assert(
@@ -34,40 +32,30 @@ public:
       "The value type must be an unsigned integral type.");
 
 
-  //! @brief The number of bits of the value_type.
   static constexpr size_type value_bits = std::numeric_limits<value_type>::digits;
-  //! @brief The number of bits of the index value.
   static constexpr size_type index_bits = IndexBits;
 
   static_assert(
       0 < index_bits && index_bits < value_bits,
       "The number of index bits must be valid and within the value type's number of bits");
 
-  //! @brief The number of bits of the generation value.
   static constexpr size_type generation_bits = value_bits - index_bits;
 
 
-  //! @brief The optimal type to represent the index value.
   using index_type      = unsigned_integral_for_t<index_bits     >;
-  //! @brief The optimal type to represent the generation value.
   using generation_type = unsigned_integral_for_t<generation_bits>;
 
 
-  //! @brief The value for a null or invalid entity value.
   static constexpr value_type      null_value      = std::numeric_limits<value_type>::max();
-  //! @brief The value for a null or invalid index value.
   static constexpr index_type      null_index      = static_cast<index_type>(null_value >> generation_bits);
-  //! @brief The value for a null or invalid generation value.
   static constexpr generation_type null_generation = static_cast<generation_type>(null_value >> index_bits);
 
-  //! @brief The value isolating the index value bits in the entity value.
   static constexpr value_type index_mask      = static_cast<value_type>(null_index     );
-  //! @brief The value isolating the generation value bits in the entity value.
   static constexpr value_type generation_mask = static_cast<value_type>(null_generation) << index_bits;
 
 private:
-  //! @brief The entity value.
-  value_type m_value;
+  value_type
+  m_value;
 
 public:
   [[nodiscard]] friend constexpr
@@ -80,42 +68,32 @@ public:
 
 
 
-  //! @returns The underlying unsigned integral type value of the entity.
   [[nodiscard]] constexpr
   value_type
   value() const
-  noexcept
-  { return m_value; }
+  noexcept;
 
-  //! @returns The index value of the entity.
   [[nodiscard]] constexpr
   index_type
   index() const
-  noexcept
-  { return static_cast<index_type>(m_value & index_mask); }
+  noexcept;
 
-  //! @returns The generation value of the entity.
   [[nodiscard]] constexpr
   generation_type
   generation() const
-  noexcept
-  { return static_cast<generation_type>(m_value >> index_bits); }
+  noexcept;
 
 
-  //! @returns @c true if the entity has the null value, @c false otherwise.
   [[nodiscard]] constexpr
   bool
   is_null() const
-  noexcept
-  { return m_value == null_value; }
+  noexcept;
 
 
 
   constexpr
   generic_entity()
-  noexcept
-    : m_value(null_value)
-  { }
+  noexcept;
 
   constexpr
   generic_entity(generic_entity const &)
@@ -131,9 +109,7 @@ public:
   explicit constexpr
   generic_entity(Val const value)
   noexcept
-  requires(std::is_same_v<Val, value_type>)
-    : m_value(value)
-  { }
+  requires(std::is_same_v<Val, value_type>);
 
   template<
       typename Idx,
@@ -145,11 +121,7 @@ public:
   noexcept
   requires(
       std::is_same_v<Idx, index_type>
-   && std::is_same_v<Gen, generation_type>)
-    : m_value(
-          (static_cast<value_type>(gen) << index_bits)
-        | (static_cast<value_type>(idx)  & index_mask))
-  { }
+   && std::is_same_v<Gen, generation_type>);
 
   constexpr
   ~generic_entity()
@@ -173,11 +145,7 @@ public:
   generic_entity &
   operator=(Val const value)
   noexcept
-  requires(std::is_same_v<Val, value_type>)
-  {
-    m_value = value;
-    return *this;
-  }
+  requires(std::is_same_v<Val, value_type>);
 };
 
 
@@ -206,10 +174,123 @@ is_entity_v
 = is_entity<T>::value;
 
 
-
 //! @brief The default entity type across the library.
 using entity
 = generic_entity<>;
+
+
+
+
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+constexpr
+typename generic_entity<Value, IndexBits>
+    ::value_type
+generic_entity<Value, IndexBits>
+    ::value() const
+noexcept
+{
+  return m_value;
+}
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+constexpr
+typename generic_entity<Value, IndexBits>
+    ::index_type
+generic_entity<Value, IndexBits>
+    ::index() const
+noexcept
+{
+  return static_cast<index_type>(m_value & index_mask);
+}
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+constexpr
+typename generic_entity<Value, IndexBits>
+    ::generation_type
+generic_entity<Value, IndexBits>
+    ::generation() const
+noexcept
+{
+  return static_cast<generation_type>(m_value >> index_bits);
+}
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+constexpr
+bool
+generic_entity<Value, IndexBits>
+    ::is_null() const
+noexcept
+{
+  return m_value == null_value;
+}
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+constexpr
+generic_entity<Value, IndexBits>
+    ::generic_entity()
+noexcept
+  : m_value(null_value)
+{ }
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+template<
+    typename Val>
+constexpr
+generic_entity<Value, IndexBits>
+    ::generic_entity(Val const value)
+noexcept
+requires(std::is_same_v<Val, value_type>)
+  : m_value(value)
+{ }
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+template<
+    typename Idx,
+    typename Gen>
+constexpr
+generic_entity<Value, IndexBits>
+    ::generic_entity(
+        Idx const idx,
+        Gen const gen)
+noexcept
+requires(
+    std::is_same_v<Idx, index_type>
+ && std::is_same_v<Gen, generation_type>)
+  : m_value(
+      (static_cast<value_type>(gen) << index_bits)
+    | (static_cast<value_type>(idx)  & index_mask))
+{ }
+
+template<
+    typename    Value,
+    std::size_t IndexBits>
+template<
+    typename Val>
+constexpr
+generic_entity<Value, IndexBits> &
+generic_entity<Value, IndexBits>
+    ::operator=(Val const value)
+noexcept
+requires(std::is_same_v<Val, value_type>)
+{
+  m_value = value;
+  return *this;
+}
 
 
 } // namespace heim

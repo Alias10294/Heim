@@ -12,6 +12,8 @@ namespace heim
  *
  * @details Implements what is typically referred to as a type list.
  *   Includes all existing expressed type sequence traits.
+ *
+ * @tparam Ts The pack of types.
  */
 template<typename ...Ts>
 struct type_sequence;

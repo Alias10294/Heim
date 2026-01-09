@@ -12,9 +12,9 @@ namespace heim
  *
  * @tparam T The type to determine for.
  *
- * @note This type only adheres to what the std::allocator_traits type demands
- *   of an allocator type. Proper complete allocator types should try to adhere
- *   to the allocator requirements formulated on cppreference.com.
+ * @note This type only adheres to what the std::allocator_traits type demands of an allocator
+ *   type. Proper complete allocator types should try to adhere to the allocator requirements
+ *   formulated on cppreference.com.
  */
 template<typename T>
 struct is_allocator
@@ -62,7 +62,8 @@ is_allocator_for_v
 
 
 /*!
- * @brief An extension of std::allocator_traits that explicitly checks if the given type is an allocator.
+ * @brief An extension of std::allocator_traits that explicitly checks if the given type is an
+ *   allocator.
  *
  * @tparam Allocator The allocator type.
  */
