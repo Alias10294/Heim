@@ -10,13 +10,16 @@
 namespace heim
 {
 /*!
- * @brief The library's entity type, that acts as the identifier for a represented object.
+ * @brief An implementation of the entity type as described by the entity-component-system pattern.
  *
- * @tparam Value     The underlying unsigned integral type.
- * @tparam IndexBits The number of bits representing the index value of the entity.
+ * @details Encapsulates an unsigned integral value and divides it into an index and a generation.
+ *   This generation mechanism allows us to recycle index values and monitor the lifetime of
+ *   entities themselves.
  *
- * @details This type uses a mechanism of index and generation to differentiate active and inactive
- *   entities, and to allow for the reuse of index values.
+ * @tparam Value     The underlying value type.
+ * @tparam IndexBits The number of bits allocated to represent the index value.
+ *
+ * @note All remaining bits thar are not used for the index are used for its generation.
  */
 template<
     typename    Value     = std::uintmax_t,
@@ -195,6 +198,7 @@ noexcept
   return m_value;
 }
 
+
 template<
     typename    Value,
     std::size_t IndexBits>
@@ -207,6 +211,7 @@ noexcept
 {
   return static_cast<index_type>(m_value & index_mask);
 }
+
 
 template<
     typename    Value,
@@ -221,6 +226,8 @@ noexcept
   return static_cast<generation_type>(m_value >> index_bits);
 }
 
+
+
 template<
     typename    Value,
     std::size_t IndexBits>
@@ -232,6 +239,8 @@ noexcept
 {
   return m_value == null_value;
 }
+
+
 
 template<
     typename    Value,
@@ -275,6 +284,7 @@ requires(
       (static_cast<value_type>(gen) << index_bits)
     | (static_cast<value_type>(idx)  & index_mask))
 { }
+
 
 template<
     typename    Value,

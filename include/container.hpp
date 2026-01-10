@@ -63,6 +63,16 @@ public:
   static constexpr size_type page_size = PageSize;
   static constexpr bool      tag_value = TagValue;
 
+  static_assert(
+      is_unqualified_v<component_type>,
+      "component_type must be an unqualified type.");
+  static_assert(
+      is_entity_v<entity_type>,
+      "entity_type must be a specialization of generic_entity.");
+  static_assert(
+      is_allocator_for_v<allocator_type, entity_type>,
+      "allocator_type must pass as an allocator of entity_type.");
+
 private:
   using alloc_traits = allocator_traits<allocator_type>;
 
