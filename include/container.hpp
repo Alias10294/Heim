@@ -799,7 +799,7 @@ public:
   std::pair<iterator, bool>
   emplace(
       entity_type const e,
-      Args &&...   args)
+      Args &&...        args)
   requires(
       requires { m_values.emplace_back(e, std::forward<Args>(args)...); });
 
@@ -2439,7 +2439,8 @@ container<Component, Entity, Allocator, PageSize, TagValue>
     ::contains(entity_type const e) const
 noexcept
 {
-  return m_positions.contains(e);
+  return m_positions.contains(e)
+      && m_values.entities()[m_positions[e]] == e;
 }
 
 
