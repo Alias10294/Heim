@@ -42,7 +42,7 @@ struct health
 };
 
 using registry 
-= heim::registry<>
+= heim::registry
     ::component<position>
     ::component<velocity>
     ::component<health  >
@@ -52,19 +52,15 @@ int main()
 {
   registry r;
   
-  r.reserve<position>(2);
-  r.reserve<velocity>(2);
-  r.reserve<health  >(1);
-  
   auto const e0 = r.entity();
   auto const e1 = r.entity();
   
-  r.add<position>(e0, .0f, .0f, .0f);
-  r.add<velocity>(e0, .0f, .0f, .0f);
-  r.add<health  >(e0, 100, 10);
+  r.emplace<position>(e0, 0.f, 0.f, 0.f);
+  r.emplace<velocity>(e0, 0.f, 0.f, 0.f);
+  r.emplace<health  >(e0, 100, 10);
   
-  r.add<position>(e1, 1.0f, .0f, .0f);
-  r.add<velocity>(e1, 1.0f, .0f, .0f);
+  r.emplace<position>(e1, 1.f, 0.f, 0.f);
+  r.emplace<velocity>(e1, 1.f, 0.f, 0.f);
   
   auto  view = r.view<position, velocity const>();
   float dt   = 16.0f;

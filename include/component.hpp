@@ -50,7 +50,8 @@ struct default_tag_value
 {
   template<typename Component>
   static constexpr
-  bool value_for
+  bool
+  value_for
   = std::is_empty_v<Component>;
 };
 

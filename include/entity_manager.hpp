@@ -27,8 +27,8 @@ namespace heim
  * @tparam Allocator The allocator type.
  */
 template<
-    typename Entity    = entity,
-    typename Allocator = allocator<Entity>>
+    typename Entity    = default_entity,
+    typename Allocator = default_allocator<Entity>>
 class entity_manager
 {
 public:
@@ -175,6 +175,36 @@ public:
   operator=(entity_manager &&)
   = default;
 };
+
+
+/*!
+ * @brief Determines whether the given type is a specialization of entity_manager.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct is_entity_manager
+  : bool_constant<false>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+is_entity_manager_v
+= is_entity_manager<T>::value;
+
+template<
+    typename Entity,
+    typename Allocator>
+struct is_entity_manager<
+    entity_manager<Entity, Allocator>>
+  : bool_constant<true>
+{ };
+
+
+//! @brief The default entity_manager across the library.
+using default_entity_manager
+= entity_manager<>;
 
 
 

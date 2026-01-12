@@ -45,8 +45,8 @@ namespace heim
  */
 template<
     typename    Component,
-    typename    Entity    = entity,
-    typename    Allocator = allocator<Entity>,
+    typename    Entity    = default_entity,
+    typename    Allocator = default_allocator<Entity>,
     std::size_t PageSize  = container_page_size_for_v<Component>,
     bool        TagValue  = tag_value_for_v          <Component>>
 class container
@@ -798,7 +798,7 @@ public:
   constexpr
   std::pair<iterator, bool>
   emplace(
-      entity const e,
+      entity_type const e,
       Args &&...   args)
   requires(
       requires { m_values.emplace_back(e, std::forward<Args>(args)...); });
@@ -2587,7 +2587,7 @@ std::pair<
     bool>
 container<Component, Entity, Allocator, PageSize, TagValue>
     ::emplace(
-        entity const e,
+        entity_type const e,
         Args &&...   args)
 requires(
     requires { m_values.emplace_back(e, std::forward<Args>(args)...); })

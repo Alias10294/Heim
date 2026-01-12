@@ -2,6 +2,7 @@
 #define HEIM_TYPE_SEQUENCE_HPP
 
 #include <cstddef>
+#include <tuple>
 #include <type_traits>
 #include "utility.hpp"
 

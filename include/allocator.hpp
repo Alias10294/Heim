@@ -67,8 +67,7 @@ is_allocator_for_v
  *
  * @tparam Allocator The allocator type.
  */
-template<
-    typename Allocator>
+template<typename Allocator>
 struct allocator_traits
   : std::allocator_traits<Allocator>
 {
@@ -80,12 +79,12 @@ struct allocator_traits
 
 
 /*!
- * @brief An alias to simplify and standardize the used allocator across the library.
+ * @brief The default allocator used across the library.
  *
  * @tparam T The value type.
  */
 template<typename T>
-using allocator
+using default_allocator
 = std::allocator<T>;
 
 
