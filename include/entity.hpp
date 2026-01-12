@@ -93,7 +93,6 @@ public:
   noexcept;
 
 
-
   constexpr
   generic_entity()
   noexcept;

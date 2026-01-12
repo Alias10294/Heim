@@ -2,6 +2,7 @@
 #define HEIM_ENTITY_MANAGER_HPP
 
 #include <cstddef>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -24,9 +25,6 @@ namespace heim
  *
  * @tparam Entity    The entity type.
  * @tparam Allocator The allocator type.
- *
- * @note By default, the interval described by the begin and end iterators of the manager only
- *   includes the partition of valid entities.
  */
 template<
     typename Entity    = entity,
@@ -76,67 +74,53 @@ public:
 private:
   entity_vector   m_entities;
   position_vector m_positions;
-  difference_type m_begin;
+  size_type       m_begin;
 
 public:
   [[nodiscard]] constexpr
-  iterator
-  begin()
+  auto
+  valid()
   noexcept;
 
   [[nodiscard]] constexpr
-  const_iterator
-  begin() const
+  auto
+  valid() const
   noexcept;
 
   [[nodiscard]] constexpr
-  iterator
-  end()
+  auto
+  invalid()
   noexcept;
 
   [[nodiscard]] constexpr
-  const_iterator
-  end() const
+  auto
+  invalid() const
   noexcept;
 
   [[nodiscard]] constexpr
-  const_iterator
-  cbegin() const
+  auto
+  all()
   noexcept;
 
   [[nodiscard]] constexpr
-  const_iterator
-  cend() const
+  auto
+  all() const
   noexcept;
 
-  [[nodiscard]] constexpr
-  reverse_iterator
-  rbegin()
-  noexcept;
 
   [[nodiscard]] constexpr
-  const_reverse_iterator
-  rbegin() const
+  bool
+  is_valid(entity_type const) const
   noexcept;
 
-  [[nodiscard]] constexpr
-  reverse_iterator
-  rend()
-  noexcept;
 
   [[nodiscard]] constexpr
-  const_reverse_iterator
-  rend() const
-  noexcept;
+  entity_type
+  summon();
 
-  [[nodiscard]] constexpr
-  const_reverse_iterator
-  crbegin() const
-  noexcept;
-
-  [[nodiscard]] constexpr
-  const_reverse_iterator
-  crend() const
+  constexpr
+  void
+  banish(entity_type const)
   noexcept;
 
 
@@ -200,53 +184,28 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::iterator
+auto
 entity_manager<Entity, Allocator>
-    ::begin()
+    ::valid()
 noexcept
 {
-  return m_entities.begin() + m_begin;
+  return std::ranges::subrange(
+      m_entities.begin() + static_cast<difference_type>(m_begin),
+      m_entities.end  ());
 }
 
 template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_iterator
+auto
 entity_manager<Entity, Allocator>
-    ::begin() const
+    ::valid() const
 noexcept
 {
-  return m_entities.begin() + m_begin;
-}
-
-
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-typename entity_manager<Entity, Allocator>
-    ::iterator
-entity_manager<Entity, Allocator>
-    ::end()
-noexcept
-{
-  return m_entities.end();
-}
-
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_iterator
-entity_manager<Entity, Allocator>
-    ::end() const
-noexcept
-{
-  return m_entities.end();
+  return std::ranges::subrange(
+      m_entities.cbegin() + static_cast<difference_type>(m_begin),
+      m_entities.cend  ());
 }
 
 
@@ -254,13 +213,28 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_iterator
+auto
 entity_manager<Entity, Allocator>
-    ::cbegin() const
+    ::invalid()
 noexcept
 {
-  return begin();
+  return std::ranges::subrange(
+      m_entities.begin(),
+      m_entities.begin() + static_cast<difference_type>(m_begin));
+}
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+auto
+entity_manager<Entity, Allocator>
+    ::invalid() const
+noexcept
+{
+  return std::ranges::subrange(
+      m_entities.cbegin(),
+      m_entities.cbegin() + static_cast<difference_type>(m_begin));
 }
 
 
@@ -268,67 +242,49 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_iterator
+auto
 entity_manager<Entity, Allocator>
-    ::cend() const
+    ::all()
 noexcept
 {
-  return end();
-}
-
-
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-typename entity_manager<Entity, Allocator>
-    ::reverse_iterator
-entity_manager<Entity, Allocator>
-    ::rbegin()
-noexcept
-{
-  return reverse_iterator(end());
+  return std::ranges::subrange(
+      m_entities.begin(),
+      m_entities.end  ());
 }
 
 template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_reverse_iterator
+auto
 entity_manager<Entity, Allocator>
-    ::rbegin() const
+    ::all() const
 noexcept
 {
-  return const_reverse_iterator(end());
+  return std::ranges::subrange(
+      m_entities.cbegin(),
+      m_entities.cend  ());
 }
+
 
 
 template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::reverse_iterator
+bool
 entity_manager<Entity, Allocator>
-    ::rend()
+    ::is_valid(entity_type const e) const
 noexcept
 {
-  return reverse_iterator(begin());
-}
+  size_type const idx = static_cast<size_type>(e.index());
+  if (idx >= m_positions.size())
+    return false;
 
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_reverse_iterator
-entity_manager<Entity, Allocator>
-    ::rend() const
-noexcept
-{
-  return const_reverse_iterator(begin());
+  size_type const pos = m_positions[idx];
+
+  return pos >= m_begin
+      && m_entities[pos] == e;
 }
 
 
@@ -337,12 +293,25 @@ template<
     typename Allocator>
 constexpr
 typename entity_manager<Entity, Allocator>
-    ::const_reverse_iterator
+    ::entity_type
 entity_manager<Entity, Allocator>
-    ::crbegin() const
-noexcept
+    ::summon()
 {
-  return rbegin();
+  if (m_begin != 0)
+    return m_entities[--m_begin];
+
+  size_type const pos = m_entities.size();
+
+  m_entities.emplace_back(
+      static_cast<index_type>(pos),
+      generation_type(0));
+  // strong exception safety guarantee
+  try
+  { m_positions.emplace_back(pos); }
+  catch (...)
+  { m_entities.pop_back(); throw; }
+
+  return m_entities.back();
 }
 
 
@@ -350,13 +319,30 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
-    ::const_reverse_iterator
+void
 entity_manager<Entity, Allocator>
-    ::crend() const
+    ::banish(entity_type e)
 noexcept
 {
-  return rend();
+  if (!is_valid(e))
+    return;
+
+  size_type const idx_e     = static_cast<size_type>(e.index());
+  size_type const pos_e     = m_positions[idx_e];
+  size_type const pos_begin = m_begin;
+  size_type const idx_begin = static_cast<size_type>(m_entities[pos_begin].index());
+
+  if (pos_e != pos_begin)
+  {
+    using std::swap;
+    swap(m_entities [pos_e], m_entities [pos_begin]);
+    swap(m_positions[idx_e], m_positions[idx_begin]);
+  }
+
+  entity_type &banned = m_entities[pos_begin];
+  banned = entity_type(banned.index(), banned.generation() + 1);
+
+  ++m_begin;
 }
 
 
