@@ -1,5 +1,5 @@
-#ifndef HEIM_CONTAINER_HPP
-#define HEIM_CONTAINER_HPP
+#ifndef HEIM_POOL_HPP
+#define HEIM_POOL_HPP
 
 #include <algorithm>
 #include <array>
@@ -40,16 +40,16 @@ namespace heim
  * @tparam TagValue  The value by which the component type is considered a tag type or not.
  *
  * @note Specializing the page size to be 0 causes the position container to not be paginated at
- *   all. This can be considered a good option if inserted entities are expected to have low index
- *   values.
+ *   all. This can be considered a good option if inserted entities are expected to have low enough
+ *   index values.
  */
 template<
     typename    Component,
-    typename    Entity    = default_entity,
-    typename    Allocator = default_allocator<Entity>,
-    std::size_t PageSize  = container_page_size_for_v<Component>,
+    typename    Entity    = entity,
+    typename    Allocator = allocator<Entity>,
+    std::size_t PageSize  = pool_page_size_for_v<Component>,
     bool        TagValue  = tag_value_for_v          <Component>>
-class container
+class generic_pool
 {
 public:
   using size_type       = std::size_t;
@@ -70,7 +70,7 @@ public:
       is_entity_v<entity_type>,
       "entity_type must be a specialization of generic_entity.");
   static_assert(
-      is_allocator_for_v<allocator_type, entity_type>,
+      is_an_allocator_for_v<allocator_type, entity_type>,
       "allocator_type must pass as an allocator of entity_type.");
 
 private:
@@ -525,17 +525,17 @@ private:
       noexcept;
     };
 
-    friend container;
+    friend generic_pool;
     friend generic_iterator<!is_const>;
 
   private:
-    maybe_const_t<container, is_const> *m_container;
+    maybe_const_t<generic_pool, is_const> *m_container;
     difference_type                     m_index;
 
   private:
     constexpr
     generic_iterator(
-        maybe_const_t<container, is_const> *container,
+        maybe_const_t<generic_pool, is_const> *generic_pool,
         difference_type const               index)
     noexcept;
 
@@ -815,7 +815,7 @@ public:
 
   constexpr
   void
-  swap(container &)
+  swap(generic_pool &)
   noexcept(
       std::is_nothrow_swappable_v<value_container   >
    && std::is_nothrow_swappable_v<position_container>)
@@ -838,26 +838,26 @@ public:
   noexcept;
 
   explicit constexpr
-  container(allocator_type const &)
+  generic_pool(allocator_type const &)
   noexcept;
 
   constexpr
-  container()
+  generic_pool()
   noexcept(std::is_nothrow_constructible_v<allocator_type>)
   requires(std::is_constructible_v        <allocator_type>);
 
   constexpr
-  container(
-      container      const &,
+  generic_pool(
+      generic_pool      const &,
       allocator_type const &);
 
   constexpr
-  container(container const &)
+  generic_pool(generic_pool const &)
   = default;
 
   constexpr
-  container(
-      container &&,
+  generic_pool(
+      generic_pool &&,
       allocator_type const &)
   noexcept(
       std::is_nothrow_constructible_v<
@@ -872,27 +872,27 @@ public:
           value_container &&, allocator_type const &>);
 
   constexpr
-  container(container &&)
+  generic_pool(generic_pool &&)
   = default;
 
   constexpr
-  ~container()
+  ~generic_pool()
   = default;
 
-  constexpr container &
-  operator=(container const &)
+  constexpr generic_pool &
+  operator=(generic_pool const &)
   = default;
 
-  constexpr container &
-  operator=(container &&)
+  constexpr generic_pool &
+  operator=(generic_pool &&)
   = default;
 
 
   [[nodiscard]] friend constexpr
   bool
   operator==(
-      container const &lhs,
-      container const &rhs)
+      generic_pool const &lhs,
+      generic_pool const &rhs)
   noexcept
   {
     if (lhs.size() != rhs.size())
@@ -914,16 +914,21 @@ public:
 };
 
 
-template<typename>
-struct is_container
+/*!
+ * @brief Determines whether the given type is a specialization of generic_pool.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct is_pool
   : bool_constant<false>
 { };
 
 template<typename T>
 inline constexpr
 bool
-is_container_v
-= is_container<T>::value;
+is_pool_v
+= is_pool<T>::value;
 
 template<
     typename    Component,
@@ -931,10 +936,16 @@ template<
     typename    Allocator,
     std::size_t PageSize,
     bool        TagValue>
-struct is_container<
-    container<Component, Entity, Allocator, PageSize, TagValue>>
+struct is_pool<
+    generic_pool<Component, Entity, Allocator, PageSize, TagValue>>
   : bool_constant<true>
 { };
+
+
+//! @brief The default specialization of generic_pool.
+template<typename Component>
+using pool
+= generic_pool<Component>;
 
 
 
@@ -947,10 +958,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::entity_vector &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::entities()
 noexcept
@@ -965,10 +976,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::entity_vector const &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::entities() const
 noexcept
@@ -984,10 +995,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::component_vector &
-container<Component, Entity, Allocator,PageSize, TagValue>
+generic_pool<Component, Entity, Allocator,PageSize, TagValue>
     ::value_container
     ::components()
 noexcept
@@ -1003,10 +1014,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::component_vector const &
-container<Component, Entity, Allocator,PageSize, TagValue>
+generic_pool<Component, Entity, Allocator,PageSize, TagValue>
     ::value_container
     ::components() const
 noexcept
@@ -1024,9 +1035,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::size() const
 noexcept
@@ -1043,7 +1054,7 @@ template<
     bool        TagValue>
 constexpr
 bool
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::empty() const
 noexcept
@@ -1059,9 +1070,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::max_size() const
 noexcept
@@ -1081,10 +1092,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::reference
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::operator[](size_type const pos)
 noexcept
@@ -1102,10 +1113,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::const_reference
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::operator[](size_type const pos) const
 noexcept
@@ -1126,7 +1137,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::clear()
 noexcept(
@@ -1149,7 +1160,7 @@ template<
     typename ...Args>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::emplace_back(
         entity_type const e,
@@ -1179,7 +1190,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::overwrite_with_back(size_type const pos)
 noexcept(
@@ -1201,7 +1212,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::pop_back()
 noexcept(
@@ -1222,7 +1233,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::swap(value_container &other)
 noexcept(std::is_nothrow_swappable_v<vector_tuple>)
@@ -1240,7 +1251,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::swap(
         size_type const pos_i,
@@ -1264,9 +1275,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::allocator_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::get_allocator() const
 noexcept
@@ -1282,7 +1293,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::value_container(allocator_type const &alloc)
 noexcept
@@ -1296,7 +1307,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::value_container()
 noexcept(std::is_nothrow_constructible_v<allocator_type>)
@@ -1311,7 +1322,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::value_container(
         value_container const &other,
@@ -1327,7 +1338,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
     ::value_container(
         value_container &&    other,
@@ -1351,7 +1362,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::page_deleter
     ::operator()(page *p)
@@ -1368,7 +1379,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::page_deleter
     ::page_deleter(allocator_type &&alloc)
@@ -1386,9 +1397,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::s_page_index(typename entity_type::index_type const idx)
 noexcept
@@ -1408,9 +1419,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::s_line_index(typename entity_type::index_type const idx)
 noexcept
@@ -1432,10 +1443,10 @@ template<
 template<
     typename ...Args>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::page_pointer
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::m_make_page_pointer(Args&&... args)
 requires(s_is_paged || std::is_constructible_v<page, Args&&...>)
@@ -1459,10 +1470,10 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::page_pointer
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::m_make_page_pointer(std::nullptr_t p)
 requires(s_is_paged)
@@ -1480,7 +1491,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::m_copy_vector(
         vector_type const &from,
@@ -1504,9 +1515,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::allocator_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::m_get_allocator() const
 noexcept
@@ -1521,7 +1532,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container const &other,
@@ -1539,7 +1550,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container const &other,
@@ -1555,7 +1566,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container const &other,
@@ -1570,7 +1581,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container const &other,
@@ -1587,9 +1598,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::max_size() const
 noexcept
@@ -1618,7 +1629,7 @@ template<
     bool        TagValue>
 constexpr
 bool
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::contains(entity_type const e) const
 noexcept
@@ -1649,9 +1660,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::operator[](entity_type const e)
 noexcept
@@ -1671,9 +1682,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::operator[](entity_type const e) const
 noexcept
@@ -1694,7 +1705,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::clear()
 noexcept
@@ -1719,7 +1730,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::reserve_for(entity_type const e)
 {
@@ -1758,7 +1769,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::erase(entity_type const e)
 noexcept
@@ -1775,7 +1786,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::swap(position_container &other)
 noexcept(std::is_nothrow_swappable_v<vector_type>)
@@ -1793,7 +1804,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::swap(
         entity_type const e,
@@ -1811,7 +1822,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(allocator_type const &alloc)
 noexcept
@@ -1825,7 +1836,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container()
 noexcept(std::is_nothrow_constructible_v<allocator_type>)
@@ -1840,7 +1851,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container const &other,
@@ -1855,7 +1866,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(position_container const &other)
   : position_container(other, bool_constant<s_is_paged>())
@@ -1868,7 +1879,7 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::position_container(
         position_container && other,
@@ -1887,9 +1898,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::position_container
     ::operator=(position_container const &other)
 {
@@ -1926,10 +1937,10 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
     ::reference *
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::pointer
     ::operator->() const
@@ -1948,7 +1959,7 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::pointer
     ::pointer(reference &&ref)
@@ -1966,13 +1977,13 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::generic_iterator(
-        maybe_const_t<container, is_const> *container,
+        maybe_const_t<generic_pool, is_const> *generic_pool,
         difference_type const               index)
 noexcept
-  : m_container(container),
+  : m_container(generic_pool),
     m_index    (index)
 { }
 
@@ -1985,9 +1996,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst> &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator++()
 noexcept
@@ -2004,9 +2015,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator++(int)
 noexcept
@@ -2025,9 +2036,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst> &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator--()
 noexcept
@@ -2044,9 +2055,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator--(int)
 noexcept
@@ -2065,9 +2076,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst> &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator+=(difference_type const n)
 noexcept
@@ -2085,9 +2096,9 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst> &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator-=(difference_type const n)
 noexcept
@@ -2104,10 +2115,10 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
     ::reference
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator*() const
 noexcept
@@ -2124,10 +2135,10 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
     ::pointer
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator->() const
 noexcept
@@ -2144,10 +2155,10 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::template generic_iterator<IsConst>
     ::reference
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::operator[](difference_type const n) const
 noexcept
@@ -2165,7 +2176,7 @@ template<
     bool        TagValue>
 template<bool IsConst>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
     ::generic_iterator(generic_iterator<!is_const> it)
 noexcept
@@ -2184,9 +2195,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size() const
 noexcept
 {
@@ -2201,7 +2212,7 @@ template<
     bool        TagValue>
 constexpr
 bool
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::empty() const
 noexcept
 {
@@ -2215,9 +2226,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::max_size() const
 noexcept
 {
@@ -2233,9 +2244,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::begin()
 noexcept
 {
@@ -2249,9 +2260,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::begin() const
 noexcept
 {
@@ -2266,9 +2277,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::end()
 noexcept
 {
@@ -2282,9 +2293,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::end() const
 noexcept
 {
@@ -2299,9 +2310,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::cbegin() const
 noexcept
 {
@@ -2316,9 +2327,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::cend() const
 noexcept
 {
@@ -2333,9 +2344,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::rbegin()
 noexcept
 {
@@ -2349,9 +2360,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::rbegin() const
 noexcept
 {
@@ -2366,9 +2377,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::rend()
 noexcept
 {
@@ -2382,9 +2393,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::rend() const
 noexcept
 {
@@ -2399,9 +2410,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::crbegin() const
 noexcept
 {
@@ -2416,9 +2427,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_reverse_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::crend() const
 noexcept
 {
@@ -2435,7 +2446,7 @@ template<
     bool        TagValue>
 constexpr
 bool
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::contains(entity_type const e) const
 noexcept
 {
@@ -2451,9 +2462,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::find(entity_type const e)
 noexcept
 {
@@ -2469,9 +2480,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::const_iterator
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::find(entity_type const e) const
 noexcept
 {
@@ -2489,9 +2500,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::component_type &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::operator[](entity_type const e)
 noexcept
 requires (!tag_value)
@@ -2506,9 +2517,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::component_type const &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::operator[](entity_type const e) const
 noexcept
 requires (!tag_value)
@@ -2524,14 +2535,14 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::component_type &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e)
 requires (!tag_value)
 {
   if (!contains(e))
-    throw std::out_of_range("container::at");
+    throw std::out_of_range("generic_pool::at");
 
   return operator[](e);
 }
@@ -2543,14 +2554,14 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::component_type const &
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e) const
 requires (!tag_value)
 {
   if (!contains(e))
-    throw std::out_of_range("container::at");
+    throw std::out_of_range("generic_pool::at");
 
   return operator[](e);
 }
@@ -2565,7 +2576,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::clear()
 noexcept(
     noexcept(m_values.clear()))
@@ -2583,10 +2594,10 @@ template<
 template<typename ... Args>
 constexpr
 std::pair<
-    typename container<Component, Entity, Allocator, PageSize, TagValue>
+    typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
         ::iterator,
     bool>
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::emplace(
         entity_type const e,
         Args &&...   args)
@@ -2610,7 +2621,7 @@ template<
     bool        TagValue>
 constexpr
 bool
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::erase(entity_type const e)
 noexcept(
     noexcept(m_values.overwrite_with_back(std::declval<size_type &>()))
@@ -2641,8 +2652,8 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
-    ::swap(container &other)
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::swap(generic_pool &other)
 noexcept(
     std::is_nothrow_swappable_v<value_container   >
  && std::is_nothrow_swappable_v<position_container>)
@@ -2663,7 +2674,7 @@ template<
     bool        TagValue>
 constexpr
 void
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::swap(
         entity_type const e,
         entity_type const f)
@@ -2684,9 +2695,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-typename container<Component, Entity, Allocator, PageSize, TagValue>
+typename generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::allocator_type
-container<Component, Entity, Allocator, PageSize, TagValue>
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
     ::get_allocator() const
 noexcept
 {
@@ -2702,8 +2713,8 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
-    ::container(allocator_type const &alloc)
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_pool(allocator_type const &alloc)
 noexcept
   : m_values   (alloc),
     m_positions(alloc)
@@ -2716,11 +2727,11 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
-    ::container()
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_pool()
 noexcept(std::is_nothrow_constructible_v<allocator_type>)
 requires(std::is_constructible_v        <allocator_type>)
-  : container(allocator_type())
+  : generic_pool(allocator_type())
 { }
 
 template<
@@ -2730,9 +2741,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
-    ::container(
-        container      const &other,
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_pool(
+        generic_pool      const &other,
         allocator_type const &alloc)
   : m_values   (other.m_values   , alloc),
     m_positions(other.m_positions, alloc)
@@ -2745,9 +2756,9 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
-container<Component, Entity, Allocator, PageSize, TagValue>
-    ::container(
-        container &&          other,
+generic_pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::generic_pool(
+        generic_pool &&          other,
         allocator_type const &alloc)
 noexcept(
       std::is_nothrow_constructible_v<
@@ -2766,4 +2777,4 @@ noexcept(
 
 } // namespace heim
 
-#endif // HEIM_CONTAINER_HPP
+#endif // HEIM_POOL_HPP

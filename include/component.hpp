@@ -7,10 +7,10 @@
 namespace heim
 {
 /*!
- * @brief Determines the page size for the default container of a component type.
+ * @brief Determines the default pool page size for a component type.
  */
 template<typename = redefine_tag>
-struct default_container_page_size
+struct default_pool_page_size
 {
   template<typename Component>
   static constexpr
@@ -20,14 +20,14 @@ struct default_container_page_size
 };
 
 /*!
- * @brief Determines the page size for the given component type.
+ * @brief Determines the default pool page size for the given component type.
  *
  * @tparam Component The component type.
  */
 template<typename Component>
-struct container_page_size_for
+struct pool_page_size_for
   : size_constant<
-        default_container_page_size<>::value_for<Component>>
+        default_pool_page_size<>::value_for<Component>>
 {
   using component_type
   = Component;
@@ -36,8 +36,8 @@ struct container_page_size_for
 template<typename Component>
 inline constexpr
 std::size_t
-container_page_size_for_v
-= container_page_size_for<Component>::value;
+pool_page_size_for_v
+= pool_page_size_for<Component>::value;
 
 
 

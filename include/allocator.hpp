@@ -17,7 +17,7 @@ namespace heim
  *   formulated on cppreference.com.
  */
 template<typename T>
-struct is_allocator
+struct is_an_allocator
   : bool_constant<
         requires(
             T                                           &t,
@@ -33,8 +33,8 @@ struct is_allocator
 template<typename T>
 inline constexpr
 bool
-is_allocator_v
-= is_allocator<T>::value;
+is_an_allocator_v
+= is_an_allocator<T>::value;
 
 /*!
  * @brief Determines whether a type passes as an allocator for a certain value type.
@@ -45,9 +45,9 @@ is_allocator_v
 template<
     typename T,
     typename U>
-struct is_allocator_for
+struct is_an_allocator_for
   : bool_constant<
-        is_allocator_v<T>
+        is_an_allocator_v<T>
      && std::is_same_v<typename T::value_type, U>>
 { };
 
@@ -56,8 +56,8 @@ template<
     typename T>
 inline constexpr
 bool
-is_allocator_for_v
-= is_allocator_for<Allocator, T>::value;
+is_an_allocator_for_v
+= is_an_allocator_for<Allocator, T>::value;
 
 
 
@@ -72,8 +72,8 @@ struct allocator_traits
   : std::allocator_traits<Allocator>
 {
   static_assert(
-      is_allocator_v<Allocator>,
-      "The type must pass as an valid allocator type.");
+      is_an_allocator_v<Allocator>,
+      "The type must pass as a valid allocator type.");
 };
 
 
@@ -84,7 +84,7 @@ struct allocator_traits
  * @tparam T The value type.
  */
 template<typename T>
-using default_allocator
+using allocator
 = std::allocator<T>;
 
 

@@ -21,15 +21,15 @@ namespace heim
  *   optimal iteration.
  *   Moreover, internally the dense array of entities of partitioned in two groups of valid and
  *   invalid entities. The invalid entities sit at the front of the vector and the valid ones at
- *   the back to accommodate for newly-generated entities.
+ *   the back to accommodate for emplaced newly-generated entities.
  *
  * @tparam Entity    The entity type.
  * @tparam Allocator The allocator type.
  */
 template<
-    typename Entity    = default_entity,
-    typename Allocator = default_allocator<Entity>>
-class entity_manager
+    typename Entity    = entity,
+    typename Allocator = allocator<Entity>>
+class generic_entity_manager
 {
 public:
   using size_type       = std::size_t;
@@ -43,7 +43,7 @@ public:
       is_entity_v<entity_type>,
       "entity_type must be a specialization of generic_entity.");
   static_assert(
-      is_allocator_for_v<allocator_type, entity_type>,
+      is_an_allocator_for_v<allocator_type, entity_type>,
       "allocator_type must pass as an allocator of entity_type.");
 
 private:
@@ -130,26 +130,26 @@ public:
   noexcept;
 
   explicit constexpr
-  entity_manager(allocator_type const &)
+  generic_entity_manager(allocator_type const &)
   noexcept;
 
   constexpr
-  entity_manager()
+  generic_entity_manager()
   noexcept(std::is_nothrow_constructible_v<allocator_type>)
   requires(std::is_constructible_v        <allocator_type>);
 
   constexpr
-  entity_manager(
-      entity_manager const &,
+  generic_entity_manager(
+      generic_entity_manager const &,
       allocator_type const &);
 
   constexpr
-  entity_manager(entity_manager const &)
+  generic_entity_manager(generic_entity_manager const &)
   = default;
 
   constexpr
-  entity_manager(
-      entity_manager &&,
+  generic_entity_manager(
+      generic_entity_manager &&,
       allocator_type const &)
   noexcept(
       std::is_nothrow_constructible_v<
@@ -160,25 +160,25 @@ public:
           entity_vector &&, entity_allocator const &>);
 
   constexpr
-  entity_manager(entity_manager &&)
+  generic_entity_manager(generic_entity_manager &&)
   = default;
 
   constexpr
-  ~entity_manager()
+  ~generic_entity_manager()
   = default;
 
-  constexpr entity_manager &
-  operator=(entity_manager const &)
+  constexpr generic_entity_manager &
+  operator=(generic_entity_manager const &)
   = default;
 
-  constexpr entity_manager &
-  operator=(entity_manager &&)
+  constexpr generic_entity_manager &
+  operator=(generic_entity_manager &&)
   = default;
 };
 
 
 /*!
- * @brief Determines whether the given type is a specialization of entity_manager.
+ * @brief Determines whether the given type is a specialization of generic_entity_manager.
  *
  * @tparam T The type to determine for.
  */
@@ -197,14 +197,14 @@ template<
     typename Entity,
     typename Allocator>
 struct is_entity_manager<
-    entity_manager<Entity, Allocator>>
+    generic_entity_manager<Entity, Allocator>>
   : bool_constant<true>
 { };
 
 
-//! @brief The default entity_manager across the library.
-using default_entity_manager
-= entity_manager<>;
+//! @brief The default specialization of generic_entity_manager.
+using entity_manager
+= generic_entity_manager<>;
 
 
 
@@ -215,7 +215,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::valid()
 noexcept
 {
@@ -229,7 +229,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::valid() const
 noexcept
 {
@@ -244,7 +244,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::invalid()
 noexcept
 {
@@ -258,7 +258,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::invalid() const
 noexcept
 {
@@ -273,7 +273,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::all()
 noexcept
 {
@@ -287,7 +287,7 @@ template<
     typename Allocator>
 constexpr
 auto
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::all() const
 noexcept
 {
@@ -303,7 +303,7 @@ template<
     typename Allocator>
 constexpr
 bool
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::is_valid(entity_type const e) const
 noexcept
 {
@@ -322,9 +322,9 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
+typename generic_entity_manager<Entity, Allocator>
     ::entity_type
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::summon()
 {
   if (m_begin != 0)
@@ -350,7 +350,7 @@ template<
     typename Allocator>
 constexpr
 void
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::banish(entity_type e)
 noexcept
 {
@@ -381,9 +381,9 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-typename entity_manager<Entity, Allocator>
+typename generic_entity_manager<Entity, Allocator>
     ::allocator_type
-entity_manager<Entity, Allocator>
+generic_entity_manager<Entity, Allocator>
     ::get_allocator() const
 noexcept
 {
@@ -394,8 +394,8 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-entity_manager<Entity, Allocator>
-    ::entity_manager(allocator_type const &alloc)
+generic_entity_manager<Entity, Allocator>
+    ::generic_entity_manager(allocator_type const &alloc)
 noexcept
   : m_entities (entity_allocator(alloc)),
     m_positions(size_allocator  (alloc)),
@@ -406,20 +406,20 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-entity_manager<Entity, Allocator>
-    ::entity_manager()
+generic_entity_manager<Entity, Allocator>
+    ::generic_entity_manager()
 noexcept(std::is_nothrow_constructible_v<allocator_type>)
 requires(std::is_constructible_v        <allocator_type>)
-  : entity_manager(allocator_type())
+  : generic_entity_manager(allocator_type())
 { }
 
 template<
     typename Entity,
     typename Allocator>
 constexpr
-entity_manager<Entity, Allocator>
-    ::entity_manager(
-        entity_manager const &other,
+generic_entity_manager<Entity, Allocator>
+    ::generic_entity_manager(
+        generic_entity_manager const &other,
         allocator_type const &alloc)
   : m_entities (other.m_entities , entity_allocator(alloc)),
     m_positions(other.m_positions, size_allocator  (alloc)),
@@ -430,9 +430,9 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
-entity_manager<Entity, Allocator>
-    ::entity_manager(
-        entity_manager &&     other,
+generic_entity_manager<Entity, Allocator>
+    ::generic_entity_manager(
+        generic_entity_manager &&     other,
         allocator_type const &alloc)
 noexcept(
     std::is_nothrow_constructible_v<
