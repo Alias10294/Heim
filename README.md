@@ -23,58 +23,53 @@ Heim is a header-only entity-component system library that focuses on intuitive 
 and outstanding performance. 
 
 ## Code Example 
-```cpp
-#include "heim/heim.hpp"
+```c++
+#include <heim/heim.hpp>
 
-struct position 
-{
-  float x, y, z;
-};
+struct position { float x, y, z; };
+struct velocity { float x, y, z; };
 
-struct velocity 
-{
-  float x, y, z;
-};
-
-struct health 
-{
-  int hp, regen;
-};
-
-using registry 
-= heim::registry
+using registry_t
+= heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
     ::component<velocity>
-    ::component<health  >
-    ::sync<position, velocity>;
+    ::group<position, velocity>>;
+/* 
+using registry_t 
+= heim::registry<heim::archetype_based::storage<>
+    ::component<position>
+    ::component<velocity>
+    ::cached_query<position, velocity>>;
+*/
+
+using query_t 
+= registry_t::query
+    ::include<position, velocity const>;
+//  ::exclude<some_other_type, ...>;
 
 int main()
 {
-  registry r;
-  
-  auto const e0 = r.entity();
-  auto const e1 = r.entity();
-  
-  r.emplace<position>(e0, 0.f, 0.f, 0.f);
-  r.emplace<velocity>(e0, 0.f, 0.f, 0.f);
-  r.emplace<health  >(e0, 100, 10);
-  
-  r.emplace<position>(e1, 1.f, 0.f, 0.f);
-  r.emplace<velocity>(e1, 1.f, 0.f, 0.f);
-  
-  auto  view = r.view<position, velocity const>();
-  float dt   = 16.0f;
-  for (auto const e : view)
-  {
-    position       &pos = view.get<position>(e);
-    velocity const &vel = view.get<velocity>(e);
+  registry_t r;
 
-    pos.x += vel.x * dt;
-    pos.y += vel.y * dt;
-    pos.z += vel.z * dt;
+  auto e0 = r.create();
+  e0.emplace<position>(0.f, 0.f, 0.f);
+  e0.emplace<velocity>(1.f, 0.f, 0.f);
+
+  auto e1 = r.create();
+  e1.emplace<position>(0.f, 1.f, 0.f);
+
+  auto  q0 = r.query<query_t>();
+  float ms = 16.f;
+
+  for (auto [e, pos, vel] : q0)
+  {
+    pos.x += vel.x * ms;
+    pos.y += vel.y * ms;
+    pos.z += vel.z * ms;
   }
   
-  return 0;
+  r.destroy(e0);
+  r.destroy(e1);
 }
 ```
 As Heim has yet to reach a functional implementation stage, this example is only suggestive, and only serves as an 

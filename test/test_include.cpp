@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "type_sequence.hpp"
-#include "container.hpp"
+#include "storage/sparse_set/pool.hpp"
 #include <string>
 
 TEST_CASE("test")
@@ -16,11 +16,11 @@ TEST_CASE("test")
   CHECK_EQ(test_t::template contains<double>, false);
   CHECK_EQ(test_t::is_unique, true);
 
-  heim::container<std::string> c;
-  CHECK_EQ(c.size (), std::size_t{0});
-  CHECK_EQ(c.empty(), true          );
-  CHECK_EQ(decltype(c)::page_size, 1024 );
-  CHECK_EQ(decltype(c)::tag_value, false);
-  CHECK_EQ(c.begin (), c.end ());
-  CHECK_EQ(c.cbegin(), c.cend());
+  heim::sparse_set_based::pool<std::string> p;
+  CHECK_EQ(p.size (), 0);
+  CHECK_EQ(p.empty(), true);
+  CHECK_EQ(decltype(p)::page_size, 1024 );
+  CHECK_EQ(decltype(p)::tag_value, false);
+  CHECK_EQ(p.begin (), p.end ());
+  CHECK_EQ(p.cbegin(), p.cend());
 }
