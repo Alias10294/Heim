@@ -12,67 +12,73 @@ struct type_sequence
   static constexpr
   std::size_t
   size
-  = type_sequence_size<type_sequence>::value;
+  = type_sequence_size_v<type_sequence>;
 
   template<typename T>
   static constexpr
   std::size_t
   count
-  = type_sequence_count<type_sequence, T>::value;
+  = type_sequence_count_v<type_sequence, T>;
 
   template<typename T>
   static constexpr
   bool
   contains
-  = type_sequence_contains<type_sequence, T>::value;
+  = type_sequence_contains_v<type_sequence, T>;
 
   template<typename T>
   static constexpr
   std::size_t
   index
-  = type_sequence_index<type_sequence, T>::value;
+  = type_sequence_index_v<type_sequence, T>;
 
   template<std::size_t Index>
   using get
-  = typename type_sequence_get<type_sequence, Index>::type;
+  = type_sequence_get_t<type_sequence, Index>;
 
   template<typename TypeSequence>
   using concatenate
-  = typename type_sequence_concatenate<type_sequence, TypeSequence>::type;
+  = type_sequence_concatenate_t<type_sequence, TypeSequence>;
 
   template<typename ...Us>
   using append
-  = typename type_sequence_append<type_sequence, Us ...>::type;
+  = type_sequence_append_t<type_sequence, Us ...>;
+
+  template<
+      std::size_t Index,
+      typename    T>
+  using set
+  = type_sequence_set_t<type_sequence, Index, T>;
 
   template<typename T>
   using erase
-  = typename type_sequence_erase<type_sequence, T>::type;
+  = type_sequence_erase_t<type_sequence, T>;
 
   template<template<typename> typename Pred>
   using filter
-  = typename type_sequence_filter<type_sequence, Pred>::type;
+  = type_sequence_filter_t<type_sequence, Pred>;
 
   template<template<typename> typename Meta>
   using map
-  = typename type_sequence_map<type_sequence, Meta>::type;
+  = type_sequence_map_t<type_sequence, Meta>;
 
   using unique
-  = typename type_sequence_unique<type_sequence>::type;
+  = type_sequence_unique_t<type_sequence>;
 
   static constexpr
   bool
   is_unique
-  = type_sequence_is_unique<type_sequence>::value;
+  = type_sequence_is_unique_v<type_sequence>;
 
   using flatten
-  = typename type_sequence_flatten<type_sequence>::type;
+  = type_sequence_flatten_t<type_sequence>;
 
   template<typename TypeSequence>
   using difference
-  = typename type_sequence_difference<type_sequence, TypeSequence>::type;
+  = type_sequence_difference_t<type_sequence, TypeSequence>;
 
   using tuple
-  = typename type_sequence_tuple<type_sequence>::type;
+  = type_sequence_tuple_t<type_sequence>;
 };
 
 
@@ -145,7 +151,7 @@ struct type_sequence_index<
   : size_constant<
         std::is_same_v<First, T>
           ? 0
-          : 1 + type_sequence_index<type_sequence<Rest ...>, T>::value>
+          : 1 + type_sequence_index_v<type_sequence<Rest ...>, T>>
 { };
 
 
@@ -180,7 +186,7 @@ struct type_sequence_get<
       "The index must be within the type sequence's size.");
 
   using type
-  = typename type_sequence_get<type_sequence<Rest ...>, Index - 1>::type;
+  = type_sequence_get_t<type_sequence<Rest ...>, Index - 1>;
 };
 
 
@@ -216,6 +222,48 @@ struct type_sequence_append
 
 
 template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+struct type_sequence_set
+{ };
+
+template<
+    typename    First,
+    typename ...Rest,
+    typename    T>
+struct type_sequence_set<
+    type_sequence<First, Rest ...>,
+    0,
+    T>
+{
+  using type
+  = type_sequence<T, Rest ...>;
+};
+
+template<
+    typename    First,
+    typename ...Rest,
+    std::size_t Index,
+    typename    T>
+struct type_sequence_set<
+    type_sequence<First, Rest ...>,
+    Index,
+    T>
+{
+  static_assert(
+      Index < type_sequence_size_v<type_sequence<First, Rest ...>>,
+      "The index must be within the type sequence's size.");
+
+  using type
+  = type_sequence_concatenate_t<
+      type_sequence<First>,
+      type_sequence_set_t<type_sequence<Rest ...>, Index - 1, T>>;
+};
+
+
+
+template<
     typename TypeSequence,
     typename T>
 struct type_sequence_erase
@@ -245,7 +293,9 @@ struct type_sequence_erase<
       type_sequence<Rest ...>,
       type_sequence_concatenate_t<
           type_sequence<First>,
-          typename type_sequence_erase<type_sequence<Rest ...>, T>::type>>;
+          type_sequence_erase_t<
+              type_sequence<Rest ...>,
+              T>>>;
 };
 
 
@@ -276,17 +326,14 @@ struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
   using type
   = std::conditional_t<
       Pred<First>::value,
-      typename type_sequence_concatenate<
+      type_sequence_concatenate_t<
           type_sequence<First>,
-          typename type_sequence_filter<
+          type_sequence_filter_t<
               type_sequence<Rest ...>,
-              Pred>
-              ::type>
-          ::type,
-      typename type_sequence_filter<
+              Pred>>,
+      type_sequence_filter_t<
           type_sequence<Rest ...>,
-          Pred>
-          ::type>;
+          Pred>>;
 };
 
 
@@ -332,13 +379,12 @@ struct type_sequence_unique<
     type_sequence<Visited ...>>
 {
   using type
-  = typename type_sequence_unique<
+  = type_sequence_unique_t<
       type_sequence<Rest ...>,
       std::conditional_t<
           (std::is_same_v<First, Visited> || ...),
           type_sequence<Visited ...>,
-          type_sequence<Visited ..., First>>>
-      ::type;
+          type_sequence<Visited ..., First>>>;
 };
 
 
@@ -348,7 +394,7 @@ struct type_sequence_is_unique
   : bool_constant<
         std::is_same_v<
             TypeSequence,
-            typename type_sequence_unique<TypeSequence>::type>>
+            type_sequence_unique_t<TypeSequence>>>
 { };
 
 
@@ -385,11 +431,14 @@ private:
     = type_sequence<Ts ...>;
   };
 
+  template<typename T>
+  using expand_t = typename expand<T>::type;
+
 public:
   using type
   = type_sequence_concatenate_t<
-      typename expand<First>::type,
-      typename type_sequence_flatten<type_sequence<Rest ...>>::type>;
+      expand_t<First>,
+      type_sequence_flatten_t<type_sequence<Rest ...>>>;
 };
 
 
@@ -422,14 +471,12 @@ struct type_sequence_difference<
       type_sequence_contains_v<
           type_sequence<Ls ...>,
           RFirst>,
-      typename type_sequence_difference<
+      type_sequence_difference_t<
           type_sequence_erase_t<type_sequence<Ls ...>, RFirst>,
-          type_sequence<RRest ...>>
-          ::type,
-      typename type_sequence_difference<
+          type_sequence<RRest ...>>,
+      type_sequence_difference_t<
           type_sequence<Ls ...>,
-          type_sequence<RRest ...>>
-          ::type>;
+          type_sequence<RRest ...>>>;
 };
 
 

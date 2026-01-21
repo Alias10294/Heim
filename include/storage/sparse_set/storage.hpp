@@ -26,42 +26,85 @@ public:
   using difference_type = std::ptrdiff_t;
 
 private:
-  template<typename ComponentInfo>
-  struct to_component
+  struct component_info_sequence_traits
   {
-    using type
-    = typename ComponentInfo::template get<0>;
+  private:
+    template<typename ComponentInfo>
+    struct to_component
+    {
+      using type
+      = typename ComponentInfo::template get<0>;
+    };
+
+    template<typename ComponentInfo>
+    struct to_pool
+    {
+      using type
+      = pool<
+          typename ComponentInfo::template get<0>,
+          entity_type,
+          allocator_type,
+          ComponentInfo::template get<1>::value,
+          ComponentInfo::template get<2>::value>;
+    };
+
+  public:
+    using component_sequence = typename component_info_sequence::template map<to_component>;
+    using pool_sequence      = typename component_info_sequence::template map<to_pool>;
+
+    using pool_tuple = typename pool_sequence::tuple;
+
+
+    template<typename Component>
+    static constexpr
+    size_type
+    component_index
+    = component_sequence::template index<Component>;
+
+    template<typename Component>
+    using pool_type_for
+    = std::tuple_element_t<component_index<Component>, pool_tuple>;
+
+  public:
+    template<typename Component>
+    using component
+    = typename component_info_sequence
+        ::template append<
+            type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>;
+
+    // template<std::size_t PageSize>
+    // using paged
+    // = typename component_info_sequence
+    //     ::template set<
+    //         component_info_sequence::size - 1,
+    //         typename component_info_sequence
+    //             ::template get<component_info_sequence::size - 1>
+    //             ::template set<1, size_constant<PageSize>>>;
+    //
+    // template<bool TagValue>
+    // using tagged
+    // = typename component_info_sequence
+    //     ::template set<
+    //         component_info_sequence::size - 1,
+    //         typename component_info_sequence
+    //             ::template get<component_info_sequence::size - 1>
+    //             ::template set<2, bool_constant<TagValue>>>;
   };
 
-  template<typename ComponentInfo>
-  struct to_pool
-  {
-    using type
-    = pool<
-        typename ComponentInfo::template get<0>,
-        entity_type,
-        allocator_type,
-        ComponentInfo::template get<1>::value,
-        ComponentInfo::template get<2>::value>;
-  };
 
-
-  using component_sequence = typename component_info_sequence::template map<to_component>;
-  using pool_sequence      = typename component_info_sequence::template map<to_pool>;
-
-  using pool_tuple = typename pool_sequence::tuple;
-
+  using pool_tuple
+  = typename component_info_sequence_traits::pool_tuple;
 
   template<typename Component>
   static constexpr
   size_type
   s_component_index
-  = component_sequence::template index<Component>;
+  = component_info_sequence_traits::template component_index<Component>;
 
 public:
   template<typename Component>
-  using pool_type_of
-  = std::tuple_element_t<s_component_index<Component>, pool_tuple>;
+  using pool_type_for
+  = typename component_info_sequence_traits::template pool_type_for<Component>;
 
 
   template<typename Component>
@@ -69,19 +112,32 @@ public:
   = storage<
       entity_type,
       allocator_type,
-      typename component_info_sequence
-          ::template append<
-              type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>>;
+      typename component_info_sequence_traits::template component<Component>>;
 
-  template<size_type PageSize>
-  using paged
-  = storage;
-
-  using unpaged
-  = storage;
-
-  using as_tag
-  = storage;
+  // template<size_type PageSize>
+  // using paged
+  // = storage<
+  //     entity_type,
+  //     allocator_type,
+  //     typename component_info_sequence_traits::template paged<PageSize>>;
+  //
+  // using unpaged
+  // = storage<
+  //     entity_type,
+  //     allocator_type,
+  //     typename component_info_sequence_traits::template paged<0>>;
+  //
+  // using tagged
+  // = storage<
+  //     entity_type,
+  //     allocator_type,
+  //     typename component_info_sequence_traits::template tagged<true>>;
+  //
+  // using untagged
+  // = storage<
+  //     entity_type,
+  //     allocator_type,
+  //     typename component_info_sequence_traits::template tagged<false>>;
 
 private:
   pool_tuple m_pools;
@@ -89,13 +145,13 @@ private:
 private:
   template<typename Component>
   [[nodiscard]] constexpr
-  pool_type_of<Component> &
+  pool_type_for<Component> &
   m_pool()
   noexcept;
 
   template<typename Component>
   [[nodiscard]] constexpr
-  pool_type_of<Component> const &
+  pool_type_for<Component> const &
   m_pool() const
   noexcept;
 
@@ -170,13 +226,13 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  typename pool_type_of<Component>::iterator
+  typename pool_type_for<Component>::iterator
   find(entity_type const)
   noexcept;
 
   template<typename Component>
   [[nodiscard]] constexpr
-  typename pool_type_of<Component>::const_iterator
+  typename pool_type_for<Component>::const_iterator
   find(entity_type const) const
   noexcept;
 
@@ -201,7 +257,7 @@ public:
       typename    Component,
       typename ...Args>
   constexpr
-  std::pair<typename pool_type_of<Component>::iterator, bool>
+  std::pair<typename pool_type_for<Component>::iterator, bool>
   emplace(entity_type const, Args &&...);
 
   constexpr
@@ -233,7 +289,7 @@ template<
 template<typename Component>
 constexpr
 typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_of<Component> &
+    ::template pool_type_for<Component> &
 storage<Entity, Allocator, ComponentInfoSeq>
     ::m_pool()
 noexcept
@@ -248,7 +304,7 @@ template<
 template<typename Component>
 constexpr
 typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_of<Component> const &
+    ::template pool_type_for<Component> const &
 storage<Entity, Allocator, ComponentInfoSeq>
     ::m_pool() const
 noexcept
@@ -388,7 +444,7 @@ template<
 template<typename Component>
 constexpr
 typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_of<Component>
+    ::template pool_type_for<Component>
     ::iterator
 storage<Entity, Allocator, ComponentInfoSeq>
     ::find(entity_type const e)
@@ -404,7 +460,7 @@ template<
 template<typename Component>
 constexpr
 typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_of<Component>
+    ::template pool_type_for<Component>
     ::const_iterator
 storage<Entity, Allocator, ComponentInfoSeq>
     ::find(entity_type const e) const
@@ -474,7 +530,7 @@ template<
 constexpr
 std::pair<
     typename storage<Entity, Allocator, ComponentInfoSeq>
-        ::template pool_type_of<Component>
+        ::template pool_type_for<Component>
         ::iterator,
     bool>
 storage<Entity, Allocator, ComponentInfoSeq>

@@ -259,6 +259,26 @@ using type_sequence_append_t
 = typename type_sequence_append<TypeSequence, Ts ...>::type;
 
 /*!
+ * @brief Sets the type located the given index in the type sequence to the given type.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Index        The index value.
+ * @tparam T            The set type.
+ */
+template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+struct type_sequence_set;
+
+template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+using type_sequence_set_t
+= type_sequence_set<TypeSequence, Index, T>::type;
+
+/*!
  * @brief Determines the type sequence with the first occurrence of the given type erased from it.
  *
  * @tparam TypeSequence The type sequence.
@@ -325,9 +345,11 @@ template<
     typename VisitedSequence = type_sequence<>>
 struct type_sequence_unique;
 
-template<typename TypeSequence>
+template<
+    typename TypeSequence,
+    typename VisitedSequence = type_sequence<>>
 using type_sequence_unique_t
-= typename type_sequence_unique<TypeSequence>::type;
+= typename type_sequence_unique<TypeSequence, VisitedSequence>::type;
 
 /*!
  * @brief Determines whether the given type sequence is unique (i.e. contains no duplicated types).
@@ -528,6 +550,17 @@ specializes_pool_v
 
 
 
+/*!
+ * @brief
+ *
+ * @details
+ *
+ * @tparam Entity           The entity type.
+ * @tparam Allocator        The allocator type.
+ * @tparam ComponentInfoSeq The component information sequence.
+ *
+ * @note The component information sequence should not be specialized manually.
+ */
 template<
     typename Entity           = entity<>,
     typename Allocator        = std::allocator<Entity>,
