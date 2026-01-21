@@ -38,14 +38,13 @@ using registry_t
 using registry_t 
 = heim::registry<heim::archetype_based::storage<>
     ::component<position>
-    ::component<velocity>
-    ::cached_query<position, velocity>>;
+    ::component<velocity>>;
 */
 
 using query_t 
 = registry_t::query
     ::include<position, velocity const>;
-//  ::exclude<some_other_type, ...>;
+//  ::exclude<...>;
 
 int main()
 {

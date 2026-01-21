@@ -296,7 +296,8 @@ using type_sequence_erase_t
 = typename type_sequence_erase<TypeSequence, T>::type;
 
 /*!
- * @brief Determines the type sequence obtained by keeping the types which verifies the given predicate.
+ * @brief Determines the type sequence obtained by keeping the types which verifies the given
+ *   predicate.
  *
  * @tparam TypeSequence The type sequence.
  * @tparam Pred         The predicate type.
@@ -334,11 +335,13 @@ using type_sequence_map_t
 = typename type_sequence_map<TypeSequence, Meta>::type;
 
 /*!
- * @brief Determines the type sequence obtained all duplicates of present types in the given sequence.
+ * @brief Determines the type sequence obtained all duplicates of present types in the given
+ *   sequence.
  *
  * @tparam TypeSequence The type sequence.
  *
- * @note The second template parameter exists as an implementation requirement and should not be specialized manually.
+ * @note The second template parameter exists as an implementation requirement and should not be
+ *   specialized manually.
  */
 template<
     typename TypeSequence,
@@ -372,8 +375,8 @@ type_sequence_is_unique_v
  * @tparam TypeSequence The type sequence.
  *
  * @note Only "top-level" type sequences are replaced by their packs.
- *   That is, if the given type sequence contains a type sequence which itself contains a type sequence,
- *   the latter will remain a type sequence.
+ *   That is, if the given type sequence contains a type sequence which itself contains a type
+ *   sequence, the latter will remain a type sequence.
  */
 template<typename TypeSequence>
 struct type_sequence_flatten;
@@ -550,6 +553,12 @@ specializes_pool_v
 
 
 
+//! @brief A type to act as a placeholder for an empty storage.
+struct empty_storage_tag;
+
+using empty_storage_component_info_sequence
+= type_sequence<type_sequence<empty_storage_tag, size_constant<0>, bool_constant<true>>>;
+
 /*!
  * @brief
  *
@@ -564,7 +573,7 @@ specializes_pool_v
 template<
     typename Entity           = entity<>,
     typename Allocator        = std::allocator<Entity>,
-    typename ComponentInfoSeq = type_sequence<>>
+    typename ComponentInfoSeq = empty_storage_component_info_sequence>
 class storage;
 
 /*!

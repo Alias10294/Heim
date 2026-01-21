@@ -11,6 +11,11 @@
 
 namespace heim::sparse_set_based
 {
+struct empty_storage_tag
+{ };
+
+
+
 template<
     typename Entity,
     typename Allocator,
@@ -68,27 +73,33 @@ private:
   public:
     template<typename Component>
     using component
-    = typename component_info_sequence
-        ::template append<
-            type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>;
+    = std::conditional_t<
+        std::is_same_v<
+            component_info_sequence,
+            empty_storage_component_info_sequence>,
+        type_sequence<
+            type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>,
+        typename component_info_sequence
+            ::template append<
+                type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>>;
 
-    // template<std::size_t PageSize>
-    // using paged
-    // = typename component_info_sequence
-    //     ::template set<
-    //         component_info_sequence::size - 1,
-    //         typename component_info_sequence
-    //             ::template get<component_info_sequence::size - 1>
-    //             ::template set<1, size_constant<PageSize>>>;
-    //
-    // template<bool TagValue>
-    // using tagged
-    // = typename component_info_sequence
-    //     ::template set<
-    //         component_info_sequence::size - 1,
-    //         typename component_info_sequence
-    //             ::template get<component_info_sequence::size - 1>
-    //             ::template set<2, bool_constant<TagValue>>>;
+    template<std::size_t PageSize>
+    using paged
+    = typename component_info_sequence
+        ::template set<
+            component_info_sequence::size - 1,
+            typename component_info_sequence
+                ::template get<component_info_sequence::size - 1>
+                ::template set<1, size_constant<PageSize>>>;
+
+    template<bool TagValue>
+    using tagged
+    = typename component_info_sequence
+        ::template set<
+            component_info_sequence::size - 1,
+            typename component_info_sequence
+                ::template get<component_info_sequence::size - 1>
+                ::template set<2, bool_constant<TagValue>>>;
   };
 
 
@@ -114,30 +125,30 @@ public:
       allocator_type,
       typename component_info_sequence_traits::template component<Component>>;
 
-  // template<size_type PageSize>
-  // using paged
-  // = storage<
-  //     entity_type,
-  //     allocator_type,
-  //     typename component_info_sequence_traits::template paged<PageSize>>;
-  //
-  // using unpaged
-  // = storage<
-  //     entity_type,
-  //     allocator_type,
-  //     typename component_info_sequence_traits::template paged<0>>;
-  //
-  // using tagged
-  // = storage<
-  //     entity_type,
-  //     allocator_type,
-  //     typename component_info_sequence_traits::template tagged<true>>;
-  //
-  // using untagged
-  // = storage<
-  //     entity_type,
-  //     allocator_type,
-  //     typename component_info_sequence_traits::template tagged<false>>;
+  template<size_type PageSize>
+  using paged
+  = storage<
+      entity_type,
+      allocator_type,
+      typename component_info_sequence_traits::template paged<PageSize>>;
+
+  using unpaged
+  = storage<
+      entity_type,
+      allocator_type,
+      typename component_info_sequence_traits::template paged<0>>;
+
+  using tagged
+  = storage<
+      entity_type,
+      allocator_type,
+      typename component_info_sequence_traits::template tagged<true>>;
+
+  using untagged
+  = storage<
+      entity_type,
+      allocator_type,
+      typename component_info_sequence_traits::template tagged<false>>;
 
 private:
   pool_tuple m_pools;

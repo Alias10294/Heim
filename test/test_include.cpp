@@ -26,8 +26,9 @@ TEST_CASE("test")
 
   using storage_t
   = heim::sparse_set_based::storage<>
-      ::component<std::string>
-      ::component<unsigned   >;
+      ::component<std::string>::paged<64>::untagged
+      ::component<unsigned   >::unpaged  ::tagged
+      ::component<long double>;
 
   storage_t s;
   CHECK_EQ(s.erase<std::string>(storage_t::entity_type()), false);
