@@ -613,6 +613,57 @@ private:
   position_container m_positions;
 
 public:
+  explicit constexpr
+  pool(allocator_type const &)
+  noexcept;
+
+  constexpr
+  pool()
+  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+
+  constexpr
+  pool(
+      pool           const &,
+      allocator_type const &);
+
+  constexpr
+  pool(pool const &)
+  = default;
+
+  constexpr
+  pool(
+      pool &&,
+      allocator_type const &)
+  noexcept(
+      std::is_nothrow_constructible_v<
+          value_container,
+          value_container &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<
+          position_container,
+          position_container &&, allocator_type const &>);
+
+  constexpr
+  pool(pool &&)
+  = default;
+
+  constexpr
+  ~pool()
+  = default;
+
+  constexpr pool &
+  operator=(pool const &)
+  = default;
+
+  constexpr pool &
+  operator=(pool &&)
+  = default;
+
+  [[nodiscard]] constexpr
+  allocator_type
+  get_allocator() const
+  noexcept;
+
+
   [[nodiscard]] constexpr
   size_type
   size() const
@@ -757,56 +808,13 @@ public:
   noexcept(noexcept(m_values.swap(m_positions[0], m_positions[0])));
 
 
-  [[nodiscard]] constexpr
-  allocator_type
-  get_allocator() const
-  noexcept;
-
-  explicit constexpr
-  pool(allocator_type const &)
-  noexcept;
-
-  constexpr
-  pool()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
-
-  constexpr
-  pool(
-      pool           const &,
-      allocator_type const &);
-
-  constexpr
-  pool(pool const &)
-  = default;
-
-  constexpr
-  pool(
-      pool &&,
-      allocator_type const &)
-  noexcept(
-      std::is_nothrow_constructible_v<
-          value_container,
-          value_container &&, allocator_type const &>
-   && std::is_nothrow_constructible_v<
-          position_container,
-          position_container &&, allocator_type const &>);
-
-  constexpr
-  pool(pool &&)
-  = default;
-
-  constexpr
-  ~pool()
-  = default;
-
-  constexpr pool &
-  operator=(pool const &)
-  = default;
-
-  constexpr pool &
-  operator=(pool &&)
-  = default;
-
+  friend constexpr
+  void
+  swap(pool &lhs, pool &rhs)
+  noexcept(noexcept(lhs.swap(rhs)))
+  {
+    lhs.swap(rhs);
+  }
 
   [[nodiscard]] friend constexpr
   bool
@@ -2058,6 +2066,81 @@ template<
     std::size_t PageSize,
     bool        TagValue>
 constexpr
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::pool(allocator_type const &alloc)
+noexcept
+  : m_values   (alloc),
+    m_positions(alloc)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::pool()
+noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
+  : pool(allocator_type())
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::pool(pool const &other, allocator_type const &alloc)
+  : m_values   (other.m_values   , alloc),
+    m_positions(other.m_positions, alloc)
+{ }
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::pool(pool &&other, allocator_type const &alloc)
+noexcept(
+      std::is_nothrow_constructible_v<value_container   , value_container    &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<position_container, position_container &&, allocator_type const &>)
+  : m_values   (std::move(other.m_values   ), alloc),
+    m_positions(std::move(other.m_positions), alloc)
+{ }
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::allocator_type
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::get_allocator() const
+noexcept
+{
+  return m_values.get_allocator();
+}
+
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
 typename pool<Component, Entity, Allocator, PageSize, TagValue>
     ::size_type
 pool<Component, Entity, Allocator, PageSize, TagValue>
@@ -2534,80 +2617,6 @@ noexcept(
   m_values   .swap(m_positions[e], m_positions[f]);
   m_positions.swap(e, f);
 }
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-typename pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::allocator_type
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::get_allocator() const
-noexcept
-{
-  return m_values.get_allocator();
-}
-
-
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::pool(allocator_type const &alloc)
-noexcept
-  : m_values   (alloc),
-    m_positions(alloc)
-{ }
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::pool()
-noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
-  : pool(allocator_type())
-{ }
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::pool(pool const &other, allocator_type const &alloc)
-  : m_values   (other.m_values   , alloc),
-    m_positions(other.m_positions, alloc)
-{ }
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::pool(pool &&other, allocator_type const &alloc)
-noexcept(
-      std::is_nothrow_constructible_v<value_container   , value_container    &&, allocator_type const &>
-   && std::is_nothrow_constructible_v<position_container, position_container &&, allocator_type const &>)
-  : m_values   (std::move(other.m_values   ), alloc),
-    m_positions(std::move(other.m_positions), alloc)
-{ }
 
 
 

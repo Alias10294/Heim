@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "type_sequence.hpp"
-#include "storage/sparse_set/pool.hpp"
+#include "storage/sparse_set/storage.hpp"
 #include <string>
 
 TEST_CASE("test")
@@ -19,8 +19,18 @@ TEST_CASE("test")
   heim::sparse_set_based::pool<std::string> p;
   CHECK_EQ(p.size (), 0);
   CHECK_EQ(p.empty(), true);
-  CHECK_EQ(decltype(p)::page_size, 1024 );
+  CHECK_EQ(decltype(p)::page_size, 1024);
   CHECK_EQ(decltype(p)::tag_value, false);
   CHECK_EQ(p.begin (), p.end ());
   CHECK_EQ(p.cbegin(), p.cend());
+
+  using storage_t
+  = heim::sparse_set_based::storage<>
+      ::component<std::string>
+      ::component<int        >::paged<2048>
+      ::component<float      >::as_tag;
+
+  storage_t s;
+  CHECK_EQ(s.erase<std::string>(storage_t::entity_type()), false);
+  CHECK_EQ(s.erase(storage_t::entity_type()), false);
 }

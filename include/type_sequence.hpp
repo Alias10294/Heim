@@ -52,6 +52,10 @@ struct type_sequence
   using filter
   = typename type_sequence_filter<type_sequence, Pred>::type;
 
+  template<template<typename> typename Meta>
+  using map
+  = typename type_sequence_map<type_sequence, Meta>::type;
+
   using unique
   = typename type_sequence_unique<type_sequence>::type;
 
@@ -142,11 +146,7 @@ struct type_sequence_index<
         std::is_same_v<First, T>
           ? 0
           : 1 + type_sequence_index<type_sequence<Rest ...>, T>::value>
-{
-  static_assert(
-      type_sequence_contains_v<type_sequence<First, Rest ...>, T>,
-      "The given type must be present in the type sequence.");
-};
+{ };
 
 
 
@@ -289,6 +289,23 @@ struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
           ::type>;
 };
 
+
+
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+struct type_sequence_map
+{ };
+
+template<
+    typename ...                Ts,
+    template<typename> typename Meta>
+struct type_sequence_map<
+    type_sequence<Ts ...>,
+    Meta>
+{
+  using type = type_sequence<typename Meta<Ts>::type ...>;
+};
 
 
 template<

@@ -295,6 +295,25 @@ using type_sequence_filter_t
 = typename type_sequence_filter<TypeSequence, Pred>::type;
 
 /*!
+ * @brief Determines the type sequence obtained by applying the given transformation to each type.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Meta         The transformation to apply to each type.
+ *
+ * @note The transformation type must expose a type alias named 'type'.
+ */
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+struct type_sequence_map;
+
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+using type_sequence_map_t
+= typename type_sequence_map<TypeSequence, Meta>::type;
+
+/*!
  * @brief Determines the type sequence obtained all duplicates of present types in the given sequence.
  *
  * @tparam TypeSequence The type sequence.
@@ -506,6 +525,28 @@ inline constexpr
 bool
 specializes_pool_v
 = specializes_pool<T>::value;
+
+
+
+template<
+    typename Entity           = entity<>,
+    typename Allocator        = std::allocator<Entity>,
+    typename ComponentInfoSeq = type_sequence<>>
+class storage;
+
+/*!
+ * @brief Determines whether the given type is a specialization of storage.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_storage;
+
+template<typename T>
+inline constexpr
+bool
+specializes_storage_v
+= specializes_storage<T>::value;
 
 
 } // namespace sparse_set_based
