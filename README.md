@@ -33,8 +33,7 @@ struct velocity { float x, y, z; };
 using registry
 = heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
-    ::component<velocity>
-//  ::group<position, velocity>>;
+    ::component<velocity>>;
 /* 
 using registry 
 = heim::registry<heim::archetype_based::storage<>
@@ -44,9 +43,8 @@ using registry
 
 using query
 = heim::query<registry>
-    ::include<position, velocity const>;
-//  ::exclude<...>;
-
+    ::include<position>;
+    ::exclude<velocity>;
 
 int main()
 {
