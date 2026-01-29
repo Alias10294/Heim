@@ -273,7 +273,9 @@ private:
     void
     swap(value_container &lhs, value_container &rhs)
     noexcept(std::is_nothrow_swappable_v<vector_tuple>)
-    { lhs.swap(rhs); }
+    {
+      lhs.swap(rhs);
+    }
   };
 
 
@@ -421,7 +423,9 @@ private:
     void
     swap(position_container &lhs, position_container &rhs)
     noexcept(noexcept(lhs.swap(rhs)))
-    { lhs.swap(rhs); }
+    {
+      lhs.swap(rhs);
+    }
 
 
     explicit constexpr
@@ -546,25 +550,36 @@ private:
     generic_iterator
     operator+(generic_iterator it, difference_type const n)
     noexcept
-    { it += n; return it; }
+    {
+      it += n;
+      return it;
+    }
 
     friend constexpr
     generic_iterator
     operator+(difference_type const n, generic_iterator it)
     noexcept
-    { it += n; return it; }
+    {
+      it += n;
+      return it;
+    }
 
     friend constexpr
     generic_iterator
     operator-(generic_iterator it, difference_type const n)
     noexcept
-    { it -= n; return it; }
+    {
+      it -= n;
+      return it;
+    }
 
     friend constexpr
     difference_type
     operator-(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
-    { return lhs.m_index - rhs.m_index; }
+    {
+      return lhs.m_index - rhs.m_index;
+    }
 
 
     constexpr
@@ -606,14 +621,18 @@ private:
         generic_iterator const &lhs,
         generic_iterator const &rhs)
     noexcept
-    { return lhs.m_index == rhs.m_index; }
+    {
+      return lhs.m_index == rhs.m_index;
+    }
 
     [[nodiscard]] friend constexpr
     auto
     operator<=>(
         generic_iterator const &lhs,
         generic_iterator const &rhs)
-    { return lhs.m_index <=> rhs.m_index; }
+    {
+      return lhs.m_index <=> rhs.m_index;
+    }
   };
 
 public:

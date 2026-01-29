@@ -17,7 +17,7 @@ namespace heim::sparse_set_based
  * @brief The main container of components, specialized for usage in the entity-component-system
  *   pattern.
  *
- * @details Uses single-component optimized pools to hold components of each type in their
+ * @details Manages single-component optimized pools to hold components of each type in their
  *   separate container. This allows for fast addition and removal of components on entities, and
  *   optimal iteration speed on small sets of component types.
  *
