@@ -64,7 +64,7 @@ template<
     typename    Component,
     typename    Entity    = entity<>,
     typename    Allocator = std::allocator<Entity>,
-    std::size_t PageSize  = 1024,
+    std::size_t PageSize  = default_pool_page_size<>::value,
     bool        TagValue  = std::is_empty_v<Component>>
 class pool;
 
