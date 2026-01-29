@@ -3,11 +3,28 @@
 
 #include <type_traits>
 #include <utility>
-#include "fwd.hpp"
 #include "utility.hpp"
 
 namespace heim
 {
+/*!
+ * @brief An implementation of the entity type as described by the generic_entity-component-system
+ *   pattern.
+ *
+ * @details Encapsulates an unsigned integral value and divides it into an index and a generation.
+ *   This generation mechanism allows us to recycle index values and monitor the lifetime of
+ *   entities themselves.
+ *
+ * @tparam UInt        The underlying value type.
+ * @tparam IndexDigits The number of bits allocated to represent the index value.
+ *
+ * @note All remaining bits thar are not used for the index are used for its generation.
+ */
+template<
+    typename UInt        = std::uintmax_t,
+    int      IndexDigits = std::numeric_limits<UInt>::digits / 2>
+class entity;
+
 template<
     typename UInt,
     int      IndexDigits>
@@ -212,6 +229,20 @@ noexcept
 }
 
 
+
+/*!
+ * @brief Determines whether the given type is a specialization of entity.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_entity;
+
+template<typename T>
+inline constexpr
+bool
+specializes_entity_v
+= specializes_entity<T>::value;
 
 template<typename T>
 struct specializes_entity

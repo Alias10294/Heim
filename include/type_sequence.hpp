@@ -2,10 +2,322 @@
 #define HEIM_TYPE_SEQUENCE_HPP
 
 #include <tuple>
-#include "fwd.hpp"
+#include "utility.hpp"
 
 namespace heim
 {
+/*!
+ * @brief A type representing a pack of types.
+ *
+ * @details Implements what is typically referred to as a type list.
+ *   Includes all existing expressed type sequence traits.
+ *
+ * @tparam Ts The pack of types.
+ */
+template<typename ...Ts>
+struct type_sequence;
+
+/*!
+ * @brief Determines the number of types in a given type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ */
+template<typename TypeSequence>
+struct type_sequence_size;
+
+template<typename TypeSequence>
+static constexpr
+std::size_t
+type_sequence_size_v
+= type_sequence_size<TypeSequence>::value;
+
+/*!
+ * @brief Determines the number of occurrences of a given type in a type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam T            The type to determine the count of.
+ */
+template<
+    typename TypeSequence,
+    typename T>
+struct type_sequence_count;
+
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+std::size_t
+type_sequence_count_v
+= type_sequence_count<TypeSequence, T>::value;
+
+/*!
+ * @brief Determines whether the given type is present in the type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam T            The type to determine the presence of.
+ */
+template<
+    typename TypeSequence,
+    typename T>
+struct type_sequence_contains;
+
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+bool
+type_sequence_contains_v
+= type_sequence_contains<TypeSequence, T>::value;
+
+/*!
+ * @brief Determines the index of the given type in the type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam T            The type to get the index of.
+ *
+ * @warning This trait is ill-formed when the type is not present in the type sequence.
+ */
+template<
+    typename TypeSequence,
+    typename T>
+struct type_sequence_index;
+
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+std::size_t
+type_sequence_index_v
+= type_sequence_index<TypeSequence, T>::value;
+
+/*!
+ * @brief Determines the type located the given index in the type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Index        The index value.
+ */
+template<
+    typename    TypeSequence,
+    std::size_t Index>
+struct type_sequence_get;
+
+template<
+    typename TypeSequence,
+    std::size_t Index>
+using type_sequence_get_t
+= typename type_sequence_get<TypeSequence, Index>::type;
+
+/*!
+ * @brief Determines the type sequence obtained by concatenating the two given type sequences.
+ *
+ * @tparam Left  The type sequence on the left.
+ * @tparam Right The type sequence on the right.
+ */
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_concatenate;
+
+template<
+    typename Left,
+    typename Right>
+using type_sequence_concatenate_t
+= typename type_sequence_concatenate<Left, Right>::type;
+
+/*!
+ * @brief Determines the type sequence with the given pack of types added to its end.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Ts           The pack of types to append.
+ */
+template<
+    typename    TypeSequence,
+    typename ...Ts>
+struct type_sequence_append;
+
+template<
+    typename    TypeSequence,
+    typename ...Ts>
+using type_sequence_append_t
+= typename type_sequence_append<TypeSequence, Ts ...>::type;
+
+/*!
+ * @brief Sets the type located the given index in the type sequence to the given type.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Index        The index value.
+ * @tparam T            The set type.
+ */
+template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+struct type_sequence_set;
+
+template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+using type_sequence_set_t
+= type_sequence_set<TypeSequence, Index, T>::type;
+
+/*!
+ * @brief Determines the type sequence with the first occurrence of the given type erased from it.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam T            The type to erase.
+ */
+template<
+    typename TypeSequence,
+    typename T>
+struct type_sequence_erase;
+
+template<
+    typename TypeSequence,
+    typename T>
+using type_sequence_erase_t
+= typename type_sequence_erase<TypeSequence, T>::type;
+
+/*!
+ * @brief Determines the type sequence obtained by keeping the types which verifies the given
+ *   predicate.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Pred         The predicate type.
+ *
+ * @note The predicate type must expose a static constexpr bool value attribute.
+ */
+template<
+    typename                    TypeSequence,
+    template<typename> typename Pred>
+struct type_sequence_filter;
+
+template<
+    typename                    TypeSequence,
+    template<typename> typename Pred>
+using type_sequence_filter_t
+= typename type_sequence_filter<TypeSequence, Pred>::type;
+
+/*!
+ * @brief Determines the type sequence obtained by applying the given transformation to each type.
+ *
+ * @tparam TypeSequence The type sequence.
+ * @tparam Meta         The transformation to apply to each type.
+ *
+ * @note The transformation type must expose a type alias named 'type'.
+ */
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+struct type_sequence_map;
+
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+using type_sequence_map_t
+= typename type_sequence_map<TypeSequence, Meta>::type;
+
+/*!
+ * @brief Determines the type sequence obtained all duplicates of present types in the given
+ *   sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ *
+ * @note The second template parameter exists as an implementation requirement and should not be
+ *   specialized manually.
+ */
+template<
+    typename TypeSequence,
+    typename VisitedSequence = type_sequence<>>
+struct type_sequence_unique;
+
+template<
+    typename TypeSequence,
+    typename VisitedSequence = type_sequence<>>
+using type_sequence_unique_t
+= typename type_sequence_unique<TypeSequence, VisitedSequence>::type;
+
+/*!
+ * @brief Determines whether the given type sequence is unique (i.e. contains no duplicated types).
+ *
+ * @tparam TypeSequence The type sequence.
+ */
+template<typename TypeSequence>
+struct type_sequence_is_unique;
+
+template<typename TypeSequence>
+inline constexpr
+bool
+type_sequence_is_unique_v
+= type_sequence_is_unique<TypeSequence>::value;
+
+/*!
+ * @brief Determines the type sequence obtained by replacing in the type sequence
+ *   all present type sequences by their pack of types.
+ *
+ * @tparam TypeSequence The type sequence.
+ *
+ * @note Only "top-level" type sequences are replaced by their packs.
+ *   That is, if the given type sequence contains a type sequence which itself contains a type
+ *   sequence, the latter will remain a type sequence.
+ */
+template<typename TypeSequence>
+struct type_sequence_flatten;
+
+template<typename TypeSequence>
+using type_sequence_flatten_t
+= typename type_sequence_flatten<TypeSequence>::type;
+
+/*!
+ * @brief Determines the type sequence obtained by keeping only the type occurrences
+ *   present in the left type sequence and absent in the right type sequence.
+ *
+ * @tparam Left  The type sequence to the left of the subtraction.
+ * @tparam Right The type sequence to the right of the subtraction.
+ *
+ * @note This trait models a typical list difference with multiplicity and stable order.
+ */
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_difference;
+
+template<
+    typename Left,
+    typename Right>
+using type_sequence_difference_t
+= typename type_sequence_difference<Left, Right>::type;
+
+/*!
+ * @brief Determines the std::tuple type with the same of types as the given type sequence.
+ *
+ * @tparam TypeSequence The type sequence.
+ */
+template<typename TypeSequence>
+struct type_sequence_tuple;
+
+template<typename TypeSequence>
+using type_sequence_tuple_t
+= typename type_sequence_tuple<TypeSequence>::type;
+
+/*!
+ * @brief Determines whether the given type is a specialization of type_sequence.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_type_sequence;
+
+template<typename T>
+inline constexpr
+bool
+specializes_type_sequence_v
+= specializes_type_sequence<T>::value;
+
+
+
+
+
 template<typename ...Ts>
 struct type_sequence
 {

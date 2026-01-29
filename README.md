@@ -29,36 +29,38 @@ and outstanding performance.
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
 
-using registry_t
+
+using registry
 = heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
     ::component<velocity>
-    ::group<position, velocity>>;
+//  ::group<position, velocity>>;
 /* 
-using registry_t 
+using registry 
 = heim::registry<heim::archetype_based::storage<>
     ::component<position>
     ::component<velocity>>;
 */
 
-using query_t 
-= registry_t::query
+using query
+= heim::query<registry>
     ::include<position, velocity const>;
 //  ::exclude<...>;
 
+
 int main()
 {
-  registry_t r;
+  registry r;
 
-  auto e0 = r.create();
+  auto e0(r.summon());
   e0.emplace<position>(0.f, 0.f, 0.f);
   e0.emplace<velocity>(1.f, 0.f, 0.f);
 
-  auto e1 = r.create();
+  auto e1(r.summon());
   e1.emplace<position>(0.f, 1.f, 0.f);
 
-  auto  q0 = r.query<query_t>();
-  float ms = 16.f;
+  query q0(r);
+  float ms(16.f);
 
   for (auto [e, pos, vel] : q0)
   {
@@ -66,7 +68,7 @@ int main()
     pos.y += vel.y * ms;
     pos.z += vel.z * ms;
   }
-  
+
   r.destroy(e0);
   r.destroy(e1);
 }

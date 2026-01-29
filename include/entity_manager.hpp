@@ -7,11 +7,32 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "fwd.hpp"
+#include "allocator.hpp"
 #include "entity.hpp"
+#include "utility.hpp"
 
 namespace heim
 {
+/*!
+ * @brief An associative container specializing in the management of entities in the
+ *   entity-component-system pattern.
+ *
+ * @details Implements a customized sparse set, that is each entity's position in the container is
+ *   kept tracked by a complementary array. This structure allows for constant-time insertion,
+ *   removal and access to entities, whilst containing the entities in contiguous memory for
+ *   optimal iteration.
+ *   Moreover, internally the dense array of entities of partitioned in two groups of valid and
+ *   invalid entities. The invalid entities sit at the front of the vector and the valid ones at
+ *   the back to accommodate for emplaced newly-generated entities.
+ *
+ * @tparam Entity    The entity type.
+ * @tparam Allocator The allocator type.
+ */
+template<
+    typename Entity,
+    typename Allocator>
+class entity_manager;
+
 template<
     typename Entity,
     typename Allocator>
@@ -24,6 +45,9 @@ public:
   static_assert(
       specializes_entity_v<entity_type>,
       "entity_type must specialize entity.");
+  static_assert(
+      is_an_allocator_for_v<allocator_type, entity_type>,
+      "allocator_type must pass as an allocator of entity_type.");
 
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
@@ -364,6 +388,20 @@ noexcept
 }
 
 
+
+/*!
+ * @brief Determines whether the given type is a specialization of entity_manager.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_entity_manager;
+
+template<typename T>
+inline constexpr
+bool
+specializes_entity_manager_v
+= specializes_entity_manager<T>::value;
 
 template<typename T>
 struct specializes_entity_manager

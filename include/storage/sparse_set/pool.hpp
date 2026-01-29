@@ -1,5 +1,5 @@
-#ifndef HEIM_POOL_HPP
-#define HEIM_POOL_HPP
+#ifndef HEIM_SPARSE_SET_BASED_POOL_HPP
+#define HEIM_SPARSE_SET_BASED_POOL_HPP
 
 #include <algorithm>
 #include <array>
@@ -13,13 +13,61 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "fwd.hpp"
 #include "allocator.hpp"
 #include "entity.hpp"
 #include "utility.hpp"
 
 namespace heim::sparse_set_based
 {
+/*!
+ * @brief Determines the default page size to use for pools of components when used by a storage.
+ *
+ * @tparam Redefine The type present for user specialization.
+ *
+ * @note The actual default value can be customized by specializing the trait using redefine_tag.
+ */
+template<typename Redefine = redefine_tag>
+struct default_pool_page_size;
+
+template<typename Redefine>
+struct default_pool_page_size
+  : size_constant<1024>
+{ };
+
+
+
+/*!
+ * @brief An associative container optimized for usage in the context of the
+ *   entity-component-system pattern.
+ *
+ * @details Implements a customized sparse set, that is each entity's position in the container is
+ *   kept tracked by a complementary array, which is by default paginated to avoid significant
+ *   memory overhead in most use cases. This structure allows for constant-time insertion, removal
+ *   and access to elements, whilst containing values in contiguous memory for optimal iteration.
+ *   Also, because of the structure-of-array (SoA) nature of the container, iterators expose a pair
+ *   of references rather than a reference to a pair.
+ *   Empty types, or types that are only considered valuable for their presence alongside an entity
+ *   can be marked as tags. This option makes it so that they are not stored at all in the
+ *   container nor exposed by iterators, which can constitute a significant memory saving.
+ *
+ * @tparam Component The component type.
+ * @tparam Entity    The entity type.
+ * @tparam Allocator The allocator type.
+ * @tparam PageSize  The size of the internal pages of tracked positions.
+ * @tparam TagValue  The value by which the component type is considered a tag type or not.
+ *
+ * @note Specializing the page size to be 0 causes the position container to not be paginated at
+ *   all. This can be considered a good option if inserted entities are expected to have low enough
+ *   index values.
+ */
+template<
+    typename    Component,
+    typename    Entity    = entity<>,
+    typename    Allocator = std::allocator<Entity>,
+    std::size_t PageSize  = 1024,
+    bool        TagValue  = std::is_empty_v<Component>>
+class pool;
+
 template<
     typename    Component,
     typename    Entity,
@@ -109,9 +157,7 @@ private:
     = default;
 
     constexpr
-    value_container(
-        value_container &&,
-        allocator_type const &)
+    value_container(value_container &&, allocator_type const &)
     noexcept(
         std::is_nothrow_constructible_v<
             vector_tuple,
@@ -314,26 +360,16 @@ private:
     noexcept;
 
     constexpr
-    position_container(
-        position_container const &,
-        allocator_type     const &,
-        bool_constant<true>);
+    position_container(position_container const &, allocator_type const &, bool_constant<true>);
 
     constexpr
-    position_container(
-        position_container const &,
-        allocator_type     const &,
-        bool_constant<false>);
+    position_container(position_container const &, allocator_type const &, bool_constant<false>);
 
     constexpr
-    position_container(
-        position_container const &,
-        bool_constant<true>);
+    position_container(position_container const &, bool_constant<true>);
 
     constexpr
-    position_container(
-        position_container const &,
-        bool_constant<false>);
+    position_container(position_container const &, bool_constant<false>);
 
   public:
     [[nodiscard]] constexpr
@@ -378,16 +414,12 @@ private:
 
     constexpr
     void
-    swap(
-        entity_type const e,
-        entity_type const f)
+    swap(entity_type const, entity_type const)
     noexcept;
 
     friend constexpr
     void
-    swap(
-        position_container &lhs,
-        position_container &rhs)
+    swap(position_container &lhs, position_container &rhs)
     noexcept(noexcept(lhs.swap(rhs)))
     { lhs.swap(rhs); }
 
@@ -407,9 +439,7 @@ private:
     position_container(position_container const &);
 
     constexpr
-    position_container(
-        position_container &&,
-        allocator_type const &)
+    position_container(position_container &&, allocator_type const &)
     noexcept(
         std::is_nothrow_constructible_v<
             vector_type,
@@ -454,8 +484,7 @@ private:
     struct pointer
     {
     private:
-      reference
-      m_ref;
+      reference m_ref;
 
     public:
       constexpr
@@ -477,9 +506,7 @@ private:
 
   private:
     constexpr
-    generic_iterator(
-        maybe_const_t<pool, is_const> *pool,
-        difference_type const          index)
+    generic_iterator(maybe_const_t<pool, is_const> *pool, difference_type const index)
     noexcept;
 
   public:
@@ -517,33 +544,25 @@ private:
 
     friend constexpr
     generic_iterator
-    operator+(
-        generic_iterator      it,
-        difference_type const n)
+    operator+(generic_iterator it, difference_type const n)
     noexcept
     { it += n; return it; }
 
     friend constexpr
     generic_iterator
-    operator+(
-        difference_type const n,
-        generic_iterator      it)
+    operator+(difference_type const n, generic_iterator it)
     noexcept
     { it += n; return it; }
 
     friend constexpr
     generic_iterator
-    operator-(
-        generic_iterator      it,
-        difference_type const n)
+    operator-(generic_iterator it, difference_type const n)
     noexcept
     { it -= n; return it; }
 
     friend constexpr
     difference_type
-    operator-(
-        generic_iterator const &lhs,
-        generic_iterator const &rhs)
+    operator-(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
     { return lhs.m_index - rhs.m_index; }
 
@@ -622,25 +641,17 @@ public:
   noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
 
   constexpr
-  pool(
-      pool           const &,
-      allocator_type const &);
+  pool(pool const &, allocator_type const &);
 
   constexpr
   pool(pool const &)
   = default;
 
   constexpr
-  pool(
-      pool &&,
-      allocator_type const &)
+  pool(pool &&, allocator_type const &)
   noexcept(
-      std::is_nothrow_constructible_v<
-          value_container,
-          value_container &&, allocator_type const &>
-   && std::is_nothrow_constructible_v<
-          position_container,
-          position_container &&, allocator_type const &>);
+      std::is_nothrow_constructible_v<value_container   , value_container    &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<position_container, position_container &&, allocator_type const &>);
 
   constexpr
   pool(pool &&)
@@ -2620,6 +2631,20 @@ noexcept(
 
 
 
+/*!
+ * @brief Determines whether the given type is a specialization of pool.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_pool;
+
+template<typename T>
+inline constexpr
+bool
+specializes_pool_v
+= specializes_pool<T>::value;
+
 template<typename T>
 struct specializes_pool
   : bool_constant<false>
@@ -2636,6 +2661,7 @@ struct specializes_pool<
   : bool_constant<true>
 { };
 
-} // namespace heim
 
-#endif // HEIM_POOL_HPP
+} // namespace heim::sparse_set_based
+
+#endif // HEIM_SPARSE_SET_BASED_POOL_HPP

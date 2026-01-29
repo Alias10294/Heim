@@ -1,20 +1,37 @@
-#ifndef HEIM_STORAGE_HPP
-#define HEIM_STORAGE_HPP
+#ifndef HEIM_SPARSE_SET_BASED_STORAGE_HPP
+#define HEIM_SPARSE_SET_BASED_STORAGE_HPP
 
 #include <cstddef>
 #include <memory>
 #include <tuple>
 #include <type_traits>
-#include "fwd.hpp"
+#include "allocator.hpp"
+#include "entity.hpp"
 #include "pool.hpp"
 #include "type_sequence.hpp"
+#include "utility.hpp"
 
 namespace heim::sparse_set_based
 {
-struct empty_storage_tag
-{ };
-
-
+/*!
+ * @brief The main container of components, specialized for usage in the entity-component-system
+ *   pattern.
+ *
+ * @details Uses single-component optimized pools to hold components of each type in their
+ *   separate container. This allows for fast addition and removal of components on entities, and
+ *   optimal iteration speed on small sets of component types.
+ *
+ * @tparam Entity           The entity type.
+ * @tparam Allocator        The allocator type.
+ * @tparam ComponentInfoSeq The component information sequence.
+ *
+ * @note The component information sequence should not be specialized manually.
+ */
+template<
+    typename Entity           = entity<>,
+    typename Allocator        = std::allocator<Entity>,
+    typename ComponentInfoSeq = type_sequence<>>
+class storage;
 
 template<
     typename Entity,
@@ -23,12 +40,20 @@ template<
 class storage
 {
 public:
+  using size_type       = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+
   using entity_type             = Entity;
   using allocator_type          = Allocator;
   using component_info_sequence = ComponentInfoSeq;
 
-  using size_type       = std::size_t;
-  using difference_type = std::ptrdiff_t;
+  static_assert(
+      specializes_entity_v<entity_type>,
+      "entity_type must be a specialization of entity.");
+  static_assert(
+      is_an_allocator_for_v<allocator_type, entity_type>,
+      "allocator_type must pass as an allocator of entity_type.");
 
 private:
   struct component_info_sequence_traits
@@ -53,71 +78,72 @@ private:
           ComponentInfo::template get<2>::value>;
     };
 
-  public:
+    // makes the last component info index expression dependent, forcing its evaluation to be done
+    // in the second phase of the name lookup, avoiding some obscure errors on ::paged & ::tagged.
+    template<auto>
+    static constexpr
+    size_type
+    s_dependent_last_index
+    = component_info_sequence::size - 1;
+
+
     using component_sequence = typename component_info_sequence::template map<to_component>;
     using pool_sequence      = typename component_info_sequence::template map<to_pool>;
 
+  public:
     using pool_tuple = typename pool_sequence::tuple;
 
 
     template<typename Component>
-    static constexpr
-    size_type
-    component_index
-    = component_sequence::template index<Component>;
-
-    template<typename Component>
-    using pool_type_for
-    = std::tuple_element_t<component_index<Component>, pool_tuple>;
-
-  public:
-    template<typename Component>
     using component
-    = std::conditional_t<
-        std::is_same_v<
-            component_info_sequence,
-            empty_storage_component_info_sequence>,
-        type_sequence<
-            type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>,
-        typename component_info_sequence
-            ::template append<
-                type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>>;
+    = typename component_info_sequence
+        ::template append<type_sequence<Component, size_constant<1024>, std::is_empty<Component>>>;
 
     template<std::size_t PageSize>
+    requires(component_info_sequence::size > 0)
     using paged
     = typename component_info_sequence
         ::template set<
-            component_info_sequence::size - 1,
+            s_dependent_last_index<PageSize>,
             typename component_info_sequence
-                ::template get<component_info_sequence::size - 1>
+                ::template get<s_dependent_last_index<PageSize>>
                 ::template set<1, size_constant<PageSize>>>;
 
     template<bool TagValue>
+    requires(component_info_sequence::size > 0)
     using tagged
     = typename component_info_sequence
         ::template set<
-            component_info_sequence::size - 1,
+            s_dependent_last_index<TagValue>,
             typename component_info_sequence
-                ::template get<component_info_sequence::size - 1>
+                ::template get<s_dependent_last_index<TagValue>>
                 ::template set<2, bool_constant<TagValue>>>;
+
+
+    template<typename Component>
+    requires(component_sequence::template contains<Component>)
+    static constexpr
+    size_type
+    index
+    = component_sequence::template index<Component>;
+
+    static_assert(
+        component_sequence::is_unique,
+        "Component types can only be declared once in the storage.");
   };
 
+private:
+  using pool_tuple = typename component_info_sequence_traits::pool_tuple;
 
-  using pool_tuple
-  = typename component_info_sequence_traits::pool_tuple;
 
   template<typename Component>
+  requires(requires { component_info_sequence_traits::template index<Component>; })
   static constexpr
   size_type
   s_component_index
-  = component_info_sequence_traits::template component_index<Component>;
+  = component_info_sequence_traits::template index<Component>;
 
 public:
-  template<typename Component>
-  using pool_type_for
-  = typename component_info_sequence_traits::template pool_type_for<Component>;
-
-
   template<typename Component>
   using component
   = storage<
@@ -125,58 +151,46 @@ public:
       allocator_type,
       typename component_info_sequence_traits::template component<Component>>;
 
-  template<size_type PageSize>
+  template<std::size_t PageSize>
+  requires(component_info_sequence::size > 0)
   using paged
   = storage<
       entity_type,
       allocator_type,
       typename component_info_sequence_traits::template paged<PageSize>>;
 
-  using unpaged
-  = storage<
-      entity_type,
-      allocator_type,
-      typename component_info_sequence_traits::template paged<0>>;
-
+  template<bool TagValue>
+  requires(component_info_sequence::size > 0)
   using tagged
   = storage<
       entity_type,
       allocator_type,
-      typename component_info_sequence_traits::template tagged<true>>;
-
-  using untagged
-  = storage<
-      entity_type,
-      allocator_type,
-      typename component_info_sequence_traits::template tagged<false>>;
+      typename component_info_sequence_traits::template tagged<TagValue>>;
 
 private:
-  pool_tuple m_pools;
+  pool_tuple
+  m_pools;
 
 private:
+  explicit constexpr
+  storage(bool_constant<true>)
+  noexcept;
+
+  explicit constexpr
+  storage(bool_constant<false>)
+  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+
+
   template<typename Component>
   [[nodiscard]] constexpr
-  pool_type_for<Component> &
+  auto &
   m_pool()
   noexcept;
 
   template<typename Component>
   [[nodiscard]] constexpr
-  pool_type_for<Component> const &
+  auto const &
   m_pool() const
-  noexcept;
-
-
-  template<std::size_t ...Is>
-  static consteval
-  bool
-  s_clear_noexcept_cond(std::index_sequence<Is ...>)
-  noexcept;
-
-  template<std::size_t ...Is>
-  static consteval
-  bool
-  s_erase_noexcept_cond(std::index_sequence<Is ...>)
   noexcept;
 
 public:
@@ -186,7 +200,9 @@ public:
 
   constexpr
   storage()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+  noexcept(
+      component_info_sequence::size > 0
+   || std::is_nothrow_default_constructible_v<allocator_type>);
 
   constexpr
   storage(storage const &, allocator_type const &);
@@ -197,7 +213,7 @@ public:
 
   constexpr
   storage(storage &&, allocator_type const &)
-  noexcept(std::is_nothrow_constructible_v<pool_tuple, std::allocator_arg_t, allocator_type const &, pool_tuple &&>);
+  noexcept(std::is_nothrow_constructible_v<pool_tuple, pool_tuple &&, allocator_type const &>);
 
   constexpr
   storage(storage &&)
@@ -207,13 +223,11 @@ public:
   ~storage()
   = default;
 
-  constexpr
-  storage &
+  constexpr storage &
   operator=(storage const &)
   = default;
 
-  constexpr
-  storage &
+  constexpr storage &
   operator=(storage &&)
   = default;
 
@@ -222,54 +236,6 @@ public:
   get_allocator() const
   noexcept;
 
-
-
-  [[nodiscard]] constexpr
-  bool
-  empty() const
-  noexcept;
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  bool
-  contains(entity_type const) const
-  noexcept;
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  typename pool_type_for<Component>::iterator
-  find(entity_type const)
-  noexcept;
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  typename pool_type_for<Component>::const_iterator
-  find(entity_type const) const
-  noexcept;
-
-
-  constexpr
-  void
-  clear()
-  noexcept(s_clear_noexcept_cond(std::make_index_sequence<std::tuple_size_v<pool_tuple>>{}));
-
-  template<typename Component>
-  constexpr
-  bool
-  erase(entity_type const)
-  noexcept(noexcept(m_pool<Component>().erase(std::declval<entity_type const>())));
-
-  constexpr
-  bool
-  erase(entity_type const)
-  noexcept(s_erase_noexcept_cond(std::make_index_sequence<std::tuple_size_v<pool_tuple>>{}));
-
-  template<
-      typename    Component,
-      typename ...Args>
-  constexpr
-  std::pair<typename pool_type_for<Component>::iterator, bool>
-  emplace(entity_type const, Args &&...);
 
   constexpr
   void
@@ -297,10 +263,33 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
+constexpr
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::storage(bool_constant<true>)
+noexcept
+  : m_pools()
+{ }
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::storage(bool_constant<false>)
+noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
+  : storage(allocator_type())
+{ }
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
 template<typename Component>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_for<Component> &
+auto &
 storage<Entity, Allocator, ComponentInfoSeq>
     ::m_pool()
 noexcept
@@ -314,8 +303,7 @@ template<
     typename ComponentInfoSeq>
 template<typename Component>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_for<Component> const &
+auto const &
 storage<Entity, Allocator, ComponentInfoSeq>
     ::m_pool() const
 noexcept
@@ -329,43 +317,16 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
-template<std::size_t ...Is>
-consteval
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::s_clear_noexcept_cond(std::index_sequence<Is...>)
-noexcept
-{
-  return (noexcept(std::declval<std::tuple_element_t<Is, pool_tuple> &>().clear()) && ...);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<std::size_t... Is>
-consteval
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::s_erase_noexcept_cond(std::index_sequence<Is...>)
-noexcept
-{
-  return (noexcept(std::declval<std::tuple_element_t<Is, pool_tuple> &>().erase(std::declval<entity_type const>())) || ...);
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(allocator_type const &alloc)
 noexcept
   : m_pools(std::allocator_arg, alloc)
-{ }
+{
+  static_assert(
+      component_info_sequence::size > 0,
+      "A storage with no component types does not hold any allocator.");
+}
 
 template<
     typename Entity,
@@ -374,29 +335,40 @@ template<
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage()
-noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
-  : storage(allocator_type())
+noexcept(
+    component_info_sequence::size > 0
+ || std::is_nothrow_default_constructible_v<allocator_type>)
+  : storage(bool_constant<(component_info_sequence::size > 0)>())
 { }
 
 template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
-constexpr storage<Entity, Allocator, ComponentInfoSeq>
+constexpr
+storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(storage const &other, allocator_type const &alloc)
   : m_pools(std::allocator_arg, alloc, other.m_pools)
-{ }
+{
+  static_assert(
+      component_info_sequence::size > 0,
+      "A storage with no component types does not hold any allocator.");
+}
 
 template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
-constexpr storage<Entity, Allocator, ComponentInfoSeq>
+constexpr
+storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(storage &&other, allocator_type const &alloc)
-noexcept(std::is_nothrow_constructible_v<pool_tuple, std::allocator_arg_t, allocator_type const &, pool_tuple &&>)
+noexcept(std::is_nothrow_constructible_v<pool_tuple, pool_tuple &&, allocator_type const &>)
   : m_pools(std::allocator_arg, alloc, std::move(other.m_pools))
-{ }
-
+{
+  static_assert(
+      component_info_sequence::size > 0,
+      "A storage with no component types does not hold any allocator.");
+}
 
 
 template<
@@ -410,145 +382,14 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::get_allocator() const
 noexcept
 {
-  return std::get<0>(m_pools).get_allocator();
+  static_assert(
+      component_info_sequence::size > 0,
+      "A storage with no component types does not hold any allocator.");
+
+  return allocator_type(std::get<0>(m_pools).get_allocator());
 }
 
 
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::empty() const
-noexcept
-{
-  return std::apply(
-      [](auto &...pools)
-      {
-        return (pools.empty() && ...);
-      },
-      m_pools);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::contains(entity_type const e) const
-noexcept
-{
-  return m_pool<Component>().contains(e);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_for<Component>
-    ::iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::find(entity_type const e)
-noexcept
-{
-  return m_pool<Component>().find(e);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template pool_type_for<Component>
-    ::const_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::find(entity_type const e) const
-noexcept
-{
-  return m_pool<Component>().find(e);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::clear()
-noexcept(s_clear_noexcept_cond(std::make_index_sequence<std::tuple_size_v<pool_tuple>>{}))
-{
-  std::apply(
-      [](auto &...pools)
-      {
-        (pools.clear(), ...);
-      },
-      m_pools);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase(entity_type const e)
-noexcept(noexcept(m_pool<Component>().erase(std::declval<entity_type const>())))
-{
-  return m_pool<Component>().erase(e);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase(entity_type const e)
-noexcept(s_erase_noexcept_cond(std::make_index_sequence<std::tuple_size_v<pool_tuple>>{}))
-{
-  return std::apply(
-      [e](auto &...pools)
-      {
-        return (pools.erase(e) || ...);
-      },
-      m_pools);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<
-    typename    Component,
-    typename ...Args>
-constexpr
-std::pair<
-    typename storage<Entity, Allocator, ComponentInfoSeq>
-        ::template pool_type_for<Component>
-        ::iterator,
-    bool>
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace(entity_type const e, Args &&...args)
-{
-  return m_pool<Component>().emplace(e, std::forward<Args>(args)...);
-}
 
 template<
     typename Entity,
@@ -560,10 +401,24 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::swap(storage &other)
 noexcept(std::is_nothrow_swappable_v<pool_tuple>)
 {
-  m_pools.swap(other.m_pools);
+  std::swap(m_pools, other.m_pools);
 }
 
 
+
+/*!
+ * @brief Determines whether the given type is a specialization of storage.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_storage;
+
+template<typename T>
+inline constexpr
+bool
+specializes_storage_v
+= specializes_storage<T>::value;
 
 template<typename T>
 struct specializes_storage
@@ -580,6 +435,6 @@ struct specializes_storage<
 { };
 
 
-}
+} // namespace heim::sparse_set_based
 
-#endif // HEIM_STORAGE_HPP
+#endif // HEIM_SPARSE_SET_BASED_STORAGE_HPP
