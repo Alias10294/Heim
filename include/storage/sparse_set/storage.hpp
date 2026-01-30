@@ -5,6 +5,7 @@
 #include <memory>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include "allocator.hpp"
 #include "entity.hpp"
 #include "pool.hpp"
