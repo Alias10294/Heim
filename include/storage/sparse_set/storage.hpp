@@ -193,6 +193,13 @@ private:
   m_pool() const
   noexcept;
 
+
+  template<std::size_t ...Is>
+  static consteval
+  bool
+  s_noexcept_erase_entity(std::index_sequence<Is ...>)
+  noexcept;
+
 public:
   explicit constexpr
   storage(allocator_type const &)
@@ -235,6 +242,12 @@ public:
   allocator_type
   get_allocator() const
   noexcept;
+
+
+  constexpr
+  void
+  erase_entity(entity_type const)
+  noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
   constexpr
@@ -317,6 +330,22 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
+template<std::size_t ...Is>
+consteval
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_erase_entity(std::index_sequence<Is...>)
+noexcept
+{
+  return (noexcept(std::get<Is>(m_pools).erase(std::declval<entity_type const>())) && ...);
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(allocator_type const &alloc)
@@ -387,6 +416,24 @@ noexcept
       "A storage with no component types does not hold any allocator.");
 
   return allocator_type(std::get<0>(m_pools).get_allocator());
+}
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::erase_entity(entity_type const e)
+noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
+{
+  std::apply(
+      [e](auto &...pools)
+      {
+        (pools.erase(e), ...);
+      },
+      m_pools);
 }
 
 

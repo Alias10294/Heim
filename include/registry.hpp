@@ -89,6 +89,16 @@ public:
   noexcept;
 
 
+  [[nodiscard]] constexpr
+  entity_type
+  create();
+
+  constexpr
+  void
+  destroy(entity_type const)
+  noexcept(noexcept(m_storage.erase_entity(std::declval<entity_type const>())));
+
+
   constexpr
   void
   swap(registry &)
@@ -160,6 +170,45 @@ registry<Storage>
 noexcept
 {
   return m_entity_mgr.get_allocator();
+}
+
+template<typename Storage>
+constexpr
+typename registry<Storage>
+    ::entity_type
+registry<Storage>
+    ::create()
+{
+  entity_type const e = m_entity_mgr.summon();
+
+  // depending on the storage type it might need to be introduced to the entity
+  if constexpr (requires { m_storage.emplace_entity(e); })
+  {
+    if constexpr (noexcept(m_storage.emplace_entity(e)))
+      m_storage.emplace_entity(e);
+    else
+    {
+      // ensure "strong" (basic in reality but strong in this context) exception safety guarantee
+      try
+      { m_storage.emplace_entity(e); }
+      catch (...)
+      { m_entity_mgr.banish(e); throw; }
+    }
+  }
+
+  return e;
+}
+
+
+template<typename Storage>
+constexpr
+void
+registry<Storage>
+    ::destroy(entity_type const e)
+noexcept(noexcept(m_storage.erase_entity(std::declval<entity_type const>())))
+{
+  m_storage   .erase_entity(e);
+  m_entity_mgr.banish(e);
 }
 
 

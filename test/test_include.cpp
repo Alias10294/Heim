@@ -1,6 +1,7 @@
 #include "doctest.h"
 #include "type_sequence.hpp"
 #include "storage/sparse_set/storage.hpp"
+#include "registry.hpp"
 #include <string>
 
 TEST_CASE("test")
@@ -32,4 +33,10 @@ TEST_CASE("test")
 
   storage_t s;
   storage_t t(s);
+
+  using registry_t
+  = heim::registry<storage_t>;
+
+  registry_t r;
+  registry_t r2(r);
 }
