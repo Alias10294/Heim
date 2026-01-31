@@ -43,6 +43,41 @@ private:
   entity_manager_type m_entity_mgr;
   storage_type        m_storage;
 
+private:
+  static constexpr
+  bool
+  s_noexcept_default_construct()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_move_alloc_construct()
+  noexcept;
+
+  static consteval
+  bool
+  s_noexcept_destroy()
+  noexcept;
+
+  template<
+      typename    Component,
+      typename ...Args>
+  static consteval
+  bool
+  s_noexcept_emplace()
+  noexcept;
+
+  template<typename Component>
+  static consteval
+  bool
+  s_noexcept_erase()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_swap()
+  noexcept;
+
 public:
   explicit constexpr
   registry(allocator_type const &)
@@ -50,7 +85,7 @@ public:
 
   constexpr
   registry()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+  noexcept(s_noexcept_default_construct());
 
   constexpr
   registry(registry const &, allocator_type const &);
@@ -61,9 +96,7 @@ public:
 
   constexpr
   registry(registry &&, allocator_type const &)
-  noexcept(
-      std::is_nothrow_constructible_v<entity_manager_type, entity_manager_type &&, allocator_type const &>
-   && std::is_nothrow_constructible_v<storage_type       , storage_type        &&, allocator_type const &>);
+  noexcept(s_noexcept_move_alloc_construct());
 
   constexpr
   registry(registry &&)
@@ -96,21 +129,34 @@ public:
   constexpr
   void
   destroy(entity_type const)
-  noexcept(noexcept(m_storage.erase_entity(std::declval<entity_type const>())));
+  noexcept(s_noexcept_destroy());
+
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  auto
+  emplace(entity_type const, Args &&...)
+  noexcept(s_noexcept_emplace<Component, Args ...>());
+
+  template<typename Component>
+  constexpr
+  auto
+  erase(entity_type const)
+  noexcept(s_noexcept_erase<Component>());
 
 
   constexpr
   void
   swap(registry &)
-  noexcept(
-      std::is_nothrow_swappable_v<entity_manager_type>
-   && std::is_nothrow_swappable_v<storage_type       >);
+  noexcept(s_noexcept_swap());
 
 
   friend constexpr
   void
   swap(registry &lhs, registry &rhs)
-  noexcept(noexcept(lhs.swap(rhs)))
+  noexcept(s_noexcept_swap())
   {
     lhs.swap(rhs);
   }
@@ -120,6 +166,86 @@ public:
   operator==(registry const &, registry const &)
   = default;
 };
+
+
+
+template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_default_construct()
+noexcept
+{
+  return std::is_nothrow_default_constructible_v<allocator_type>;
+}
+
+
+template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_move_alloc_construct()
+noexcept
+{
+  return
+      std::is_nothrow_constructible_v<
+          entity_manager_type,
+          entity_manager_type &&, allocator_type const &>
+   && std::is_nothrow_constructible_v<
+          storage_type,
+          storage_type &&, allocator_type const &>;
+}
+
+
+template<typename Storage>
+consteval
+bool
+registry<Storage>
+    ::s_noexcept_destroy()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>().erase_entity(std::declval<entity_type const>()));
+}
+
+
+template<typename Storage>
+template<
+    typename    Component,
+    typename ...Args>
+consteval
+bool
+registry<Storage>
+    ::s_noexcept_emplace()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template emplace<Component>(std::declval<entity_type const>(), std::declval<Args &&>()...));
+}
+
+
+template<typename Storage>
+template<typename Component>
+consteval
+bool
+registry<Storage>
+    ::s_noexcept_erase()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template erase<Component>(std::declval<entity_type const>()));
+}
+
+
+template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_swap()
+noexcept
+{
+  return std::is_nothrow_swappable_v<entity_manager_type>
+      && std::is_nothrow_swappable_v<storage_type       >;
+}
 
 
 
@@ -136,7 +262,7 @@ template<typename Storage>
 constexpr
 registry<Storage>
     ::registry()
-noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
+noexcept(s_noexcept_default_construct())
   : registry(allocator_type())
 { }
 
@@ -152,9 +278,7 @@ template<typename Storage>
 constexpr
 registry<Storage>
     ::registry(registry &&other, allocator_type const &alloc)
-noexcept(
-    std::is_nothrow_constructible_v<entity_manager_type, entity_manager_type &&, allocator_type const &>
- && std::is_nothrow_constructible_v<storage_type       , storage_type        &&, allocator_type const &>)
+noexcept(s_noexcept_move_alloc_construct())
   : m_entity_mgr(std::move(other.m_entity_mgr), alloc),
     m_storage   (std::move(other.m_storage   ), alloc)
 { }
@@ -205,10 +329,37 @@ constexpr
 void
 registry<Storage>
     ::destroy(entity_type const e)
-noexcept(noexcept(m_storage.erase_entity(std::declval<entity_type const>())))
+noexcept(s_noexcept_destroy())
 {
   m_storage   .erase_entity(e);
   m_entity_mgr.banish(e);
+}
+
+
+
+template<typename Storage>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+auto
+registry<Storage>
+    ::emplace(entity_type const e, Args &&...args)
+noexcept(s_noexcept_emplace<Component, Args ...>())
+{
+  return m_storage.template emplace<Component>(e, std::forward<Args>(args)...);
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+auto
+registry<Storage>
+    ::erase(entity_type const e)
+noexcept(s_noexcept_erase<Component>())
+{
+  return m_storage.template erase<Component>(e);
 }
 
 
@@ -218,9 +369,7 @@ constexpr
 void
 registry<Storage>
     ::swap(registry &other)
-noexcept(
-    std::is_nothrow_swappable_v<entity_manager_type>
- && std::is_nothrow_swappable_v<storage_type       >)
+noexcept(s_noexcept_swap())
 {
   m_entity_mgr.swap(other.m_entity_mgr);
   m_storage   .swap(other.m_storage   );

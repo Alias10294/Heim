@@ -67,6 +67,22 @@ private:
   position_vector m_positions;
   size_type       m_begin;
 
+private:
+  static constexpr
+  bool
+  s_noexcept_default_construct()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_move_alloc_construct()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_swap()
+  noexcept;
+
 public:
   explicit constexpr
   entity_manager(allocator_type const &)
@@ -74,7 +90,7 @@ public:
 
   constexpr
   entity_manager()
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+  noexcept(s_noexcept_default_construct());
 
   constexpr
   entity_manager(entity_manager const &)
@@ -89,9 +105,7 @@ public:
 
   constexpr
   entity_manager(entity_manager &&, allocator_type const &)
-  noexcept(
-      std::is_nothrow_constructible_v<entity_vector  , entity_vector   &&, entity_allocator const &>
-   && std::is_nothrow_constructible_v<position_vector, position_vector &&, size_allocator   const &>);
+  noexcept(s_noexcept_move_alloc_construct());
 
   constexpr
   ~entity_manager()
@@ -115,9 +129,7 @@ public:
   constexpr
   void
   swap(entity_manager &)
-  noexcept(
-      noexcept(m_entities .swap(std::declval<entity_manager &>().m_entities ))
-   && noexcept(m_positions.swap(std::declval<entity_manager &>().m_positions)));
+  noexcept(s_noexcept_swap());
 
 
   [[nodiscard]] constexpr
@@ -193,6 +205,52 @@ template<
     typename Entity,
     typename Allocator>
 constexpr
+bool
+entity_manager<Entity, Allocator>
+    ::s_noexcept_default_construct()
+noexcept
+{
+  return std::is_nothrow_default_constructible_v<allocator_type>;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+bool
+entity_manager<Entity, Allocator>
+    ::s_noexcept_move_alloc_construct()
+noexcept
+{
+  return
+      std::is_nothrow_constructible_v<
+          entity_vector,
+          entity_vector &&, entity_allocator const &>
+   && std::is_nothrow_constructible_v<
+          position_vector,
+          position_vector &&, size_allocator const &>;
+}
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+bool
+entity_manager<Entity, Allocator>
+    ::s_noexcept_swap()
+noexcept
+{
+  return std::is_nothrow_swappable_v<entity_vector  >
+      && std::is_nothrow_swappable_v<position_vector>;
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
 entity_manager<Entity, Allocator>
     ::entity_manager(allocator_type const &alloc)
 noexcept
@@ -207,7 +265,7 @@ template<
 constexpr
 entity_manager<Entity, Allocator>
     ::entity_manager()
-noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
+noexcept(s_noexcept_default_construct())
   : entity_manager(allocator_type())
 { }
 
@@ -228,9 +286,7 @@ template<
 constexpr
 entity_manager<Entity, Allocator>
     ::entity_manager(entity_manager &&other, allocator_type const &alloc)
-noexcept(
-    std::is_nothrow_constructible_v<entity_vector  , entity_vector   &&, entity_allocator const &>
- && std::is_nothrow_constructible_v<position_vector, position_vector &&, size_allocator   const &>)
+noexcept(s_noexcept_move_alloc_construct())
   : m_entities (std::move(other.m_entities ), entity_allocator(alloc)),
     m_positions(std::move(other.m_positions), size_allocator  (alloc)),
     m_begin    (std::move(other.m_begin))
@@ -257,15 +313,11 @@ constexpr
 void
 entity_manager<Entity, Allocator>
     ::swap(entity_manager &other)
-noexcept(
-    noexcept(m_entities .swap(std::declval<entity_manager &>().m_entities ))
- && noexcept(m_positions.swap(std::declval<entity_manager &>().m_positions)))
+noexcept(s_noexcept_swap())
 {
-  m_entities .swap(other.m_entities );
-  m_positions.swap(other.m_positions);
-
-  using std::swap;
-  swap(m_begin, other.m_begin);
+  std::swap(m_entities , other.m_entities );
+  std::swap(m_positions, other.m_positions);
+  std::swap(m_begin    , other.m_begin    );
 }
 
 
