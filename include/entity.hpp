@@ -1,6 +1,7 @@
 #ifndef HEIM_ENTITY_HPP
 #define HEIM_ENTITY_HPP
 
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 #include "utility.hpp"

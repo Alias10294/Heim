@@ -5,6 +5,7 @@
 #include <memory>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include "allocator.hpp"
 #include "entity.hpp"
 #include "pool.hpp"
@@ -17,7 +18,7 @@ namespace heim::sparse_set_based
  * @brief The main container of components, specialized for usage in the entity-component-system
  *   pattern.
  *
- * @details Uses single-component optimized pools to hold components of each type in their
+ * @details Manages single-component optimized pools to hold components of each type in their
  *   separate container. This allows for fast addition and removal of components on entities, and
  *   optimal iteration speed on small sets of component types.
  *
@@ -172,13 +173,46 @@ private:
   m_pools;
 
 private:
+  static constexpr
+  bool
+  s_noexcept_default_construct_false()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_default_construct()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_move_alloc_construct()
+  noexcept;
+
+  template<std::size_t ...Is>
+  static constexpr
+  bool
+  s_noexcept_erase_entity(std::index_sequence<Is ...>)
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_erase()
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_swap()
+  noexcept;
+
+
   explicit constexpr
   storage(bool_constant<true>)
   noexcept;
 
   explicit constexpr
   storage(bool_constant<false>)
-  noexcept(std::is_nothrow_default_constructible_v<allocator_type>);
+  noexcept(s_noexcept_default_construct_false());
 
 
   template<typename Component>
@@ -200,9 +234,7 @@ public:
 
   constexpr
   storage()
-  noexcept(
-      component_info_sequence::size > 0
-   || std::is_nothrow_default_constructible_v<allocator_type>);
+  noexcept(s_noexcept_default_construct());
 
   constexpr
   storage(storage const &, allocator_type const &);
@@ -213,7 +245,7 @@ public:
 
   constexpr
   storage(storage &&, allocator_type const &)
-  noexcept(std::is_nothrow_constructible_v<pool_tuple, pool_tuple &&, allocator_type const &>);
+  noexcept(s_noexcept_move_alloc_construct());
 
   constexpr
   storage(storage &&)
@@ -239,14 +271,47 @@ public:
 
   constexpr
   void
+  erase_entity(entity_type const)
+  noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
+
+
+  template<typename Component>
+  [[nodiscard]] constexpr
+  bool
+  has(entity_type const) const
+  noexcept;
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  void
+  emplace(entity_type const, Args &&...);
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  void
+  emplace_or_assign(entity_type const, Args &&...);
+
+  template<typename Component>
+  constexpr
+  void
+  erase(entity_type const)
+  noexcept(s_noexcept_erase<Component>());
+
+
+  constexpr
+  void
   swap(storage &)
-  noexcept(std::is_nothrow_swappable_v<pool_tuple>);
+  noexcept(s_noexcept_swap());
 
 
   friend constexpr
   void
   swap(storage &lhs, storage &rhs)
-  noexcept(noexcept(lhs.swap(rhs)))
+  noexcept(s_noexcept_swap())
   {
     lhs.swap(rhs);
   }
@@ -256,6 +321,98 @@ public:
   operator==(storage const &, storage const &)
   = default;
 };
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_default_construct_false()
+noexcept
+{
+  return std::is_nothrow_default_constructible_v<allocator_type>;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_default_construct()
+noexcept
+{
+  return component_info_sequence::size > 0
+      || std::is_nothrow_default_constructible_v<allocator_type>;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_move_alloc_construct()
+noexcept
+{
+  return std::is_nothrow_constructible_v<
+      pool_tuple,
+      pool_tuple &&, allocator_type const &>;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<std::size_t ...Is>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_erase_entity(std::index_sequence<Is...>)
+noexcept
+{
+  return
+     (noexcept(std::get<Is>(std::declval<pool_tuple &>()).erase(std::declval<entity_type const>()))
+   && ...);
+}
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_erase()
+noexcept
+{
+  return noexcept(std::get<s_component_index<Component>>(std::declval<pool_tuple &>())
+      .erase(std::declval<entity_type const>()));
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_swap()
+noexcept
+{
+  return std::is_nothrow_swappable_v<pool_tuple>;
+}
 
 
 
@@ -277,7 +434,7 @@ template<
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(bool_constant<false>)
-noexcept(std::is_nothrow_default_constructible_v<allocator_type>)
+noexcept(s_noexcept_default_construct_false())
   : storage(allocator_type())
 { }
 
@@ -335,9 +492,7 @@ template<
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage()
-noexcept(
-    component_info_sequence::size > 0
- || std::is_nothrow_default_constructible_v<allocator_type>)
+noexcept(s_noexcept_default_construct())
   : storage(bool_constant<(component_info_sequence::size > 0)>())
 { }
 
@@ -362,7 +517,7 @@ template<
 constexpr
 storage<Entity, Allocator, ComponentInfoSeq>
     ::storage(storage &&other, allocator_type const &alloc)
-noexcept(std::is_nothrow_constructible_v<pool_tuple, pool_tuple &&, allocator_type const &>)
+noexcept(s_noexcept_move_alloc_construct())
   : m_pools(std::allocator_arg, alloc, std::move(other.m_pools))
 {
   static_assert(
@@ -398,8 +553,91 @@ template<
 constexpr
 void
 storage<Entity, Allocator, ComponentInfoSeq>
+    ::erase_entity(entity_type const e)
+noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
+{
+  std::apply(
+      [e](auto &...pools)
+      {
+        (pools.erase(e), ...);
+      },
+      m_pools);
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::has(entity_type const e) const
+noexcept
+{
+  return std::get<s_component_index<Component>>(m_pools).contains(e);
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::emplace(entity_type const e, Args &&...args)
+{
+  std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::emplace_or_assign(entity_type const e, Args &&...args)
+{
+  std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::erase(entity_type const e)
+noexcept(s_noexcept_erase<Component>())
+{
+  std::get<s_component_index<Component>>(m_pools).erase(e);
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
     ::swap(storage &other)
-noexcept(std::is_nothrow_swappable_v<pool_tuple>)
+noexcept(s_noexcept_swap())
 {
   std::swap(m_pools, other.m_pools);
 }

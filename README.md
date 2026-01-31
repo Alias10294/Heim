@@ -33,8 +33,7 @@ struct velocity { float x, y, z; };
 using registry
 = heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
-    ::component<velocity>
-//  ::group<position, velocity>>;
+    ::component<velocity>>;
 /* 
 using registry 
 = heim::registry<heim::archetype_based::storage<>
@@ -42,27 +41,31 @@ using registry
     ::component<velocity>>;
 */
 
-using query
-= heim::query<registry>
-    ::include<position, velocity const>;
-//  ::exclude<...>;
-
-
 int main()
 {
   registry r;
 
-  auto e0(r.summon());
-  e0.emplace<position>(0.f, 0.f, 0.f);
-  e0.emplace<velocity>(1.f, 0.f, 0.f);
+  auto e0 = r.create();
+  r.emplace<position>(e0, 0.f, 0.f, 0.f);
+  r.emplace<velocity>(e0, 1.f, 0.f, 0.f);
 
-  auto e1(r.summon());
-  e1.emplace<position>(0.f, 1.f, 0.f);
+  auto e1 = r.create();
+  r.emplace<position>(e1, 0.f, 1.f, 0.f);
 
-  query q0(r);
-  float ms(16.f);
+  auto  q0 = r.query<position, velocity const>();
+  float ms = 16.f;
 
-  for (auto [e, pos, vel] : q0)
+  for (auto e : q0)
+  {
+    auto &pos = q0.get<position      >(e);
+    auto &vel = q0.get<velocity const>(e);
+
+    pos.x += vel.x * ms;
+    pos.y += vel.y * ms;
+    pos.z += vel.z * ms;
+  }
+    
+  for (auto &&[e, pos, vel] : q0.each())
   {
     pos.x += vel.x * ms;
     pos.y += vel.y * ms;
