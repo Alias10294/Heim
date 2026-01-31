@@ -126,11 +126,6 @@ public:
   get_allocator() const
   noexcept;
 
-  constexpr
-  void
-  swap(entity_manager &)
-  noexcept(s_noexcept_swap());
-
 
   [[nodiscard]] constexpr
   auto
@@ -163,6 +158,11 @@ public:
   banish(entity_type const)
   noexcept;
 
+
+  constexpr
+  void
+  swap(entity_manager &)
+  noexcept(s_noexcept_swap());
 
 
   friend constexpr
@@ -306,20 +306,6 @@ noexcept
   return allocator_type(m_entities.get_allocator());
 }
 
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-void
-entity_manager<Entity, Allocator>
-    ::swap(entity_manager &other)
-noexcept(s_noexcept_swap())
-{
-  std::swap(m_entities , other.m_entities );
-  std::swap(m_positions, other.m_positions);
-  std::swap(m_begin    , other.m_begin    );
-}
-
 
 
 template<
@@ -437,6 +423,22 @@ noexcept
   banned = {banned.index(), banned.generation() + 1};
 
   ++m_begin;
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+void
+entity_manager<Entity, Allocator>
+    ::swap(entity_manager &other)
+noexcept(s_noexcept_swap())
+{
+  std::swap(m_entities , other.m_entities );
+  std::swap(m_positions, other.m_positions);
+  std::swap(m_begin    , other.m_begin    );
 }
 
 
