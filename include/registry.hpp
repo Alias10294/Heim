@@ -59,12 +59,26 @@ private:
   s_noexcept_destroy()
   noexcept;
 
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_has()
+  noexcept;
+
   template<
       typename    Component,
       typename ...Args>
   static consteval
   bool
   s_noexcept_emplace()
+  noexcept;
+
+  template<
+      typename    Component,
+      typename ...Args>
+  static consteval
+  bool
+  s_noexcept_emplace_or_assign()
   noexcept;
 
   template<typename Component>
@@ -137,6 +151,12 @@ public:
   noexcept;
 
 
+  template<typename Component>
+  [[nodiscard]] constexpr
+  bool
+  has(entity_type const) const
+  noexcept(s_noexcept_has<Component>());
+
   template<
       typename    Component,
       typename ...Args>
@@ -144,6 +164,14 @@ public:
   decltype(auto)
   emplace(entity_type const, Args &&...)
   noexcept(s_noexcept_emplace<Component, Args ...>());
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  decltype(auto)
+  emplace_or_assign(entity_type const, Args &&...)
+  noexcept(s_noexcept_emplace_or_assign<Component, Args ...>());
 
   template<typename Component>
   constexpr
@@ -212,6 +240,18 @@ noexcept
   return noexcept(std::declval<storage_type &>().erase_entity(std::declval<entity_type const>()));
 }
 
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_has()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template has<Component>(std::declval<entity_type const>()));
+}
+
 
 template<typename Storage>
 template<
@@ -225,6 +265,22 @@ noexcept
 {
   return noexcept(std::declval<storage_type &>()
       .template emplace<Component>(std::declval<entity_type const>(), std::declval<Args &&>()...));
+}
+
+template<typename Storage>
+template<
+    typename    Component,
+    typename ...Args>
+consteval
+bool
+registry<Storage>
+    ::s_noexcept_emplace_or_assign()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template emplace_or_assign<Component>(
+          std::declval<entity_type const>(),
+          std::declval<Args &&          >()...));
 }
 
 
@@ -351,6 +407,17 @@ noexcept
   return m_entity_mgr.is_valid(e);
 }
 
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::has(entity_type const e) const
+noexcept(s_noexcept_has<Component>())
+{
+  return m_storage.template has<Component>(e);
+}
+
 
 
 template<typename Storage>
@@ -364,6 +431,19 @@ registry<Storage>
 noexcept(s_noexcept_emplace<Component, Args ...>())
 {
   return m_storage.template emplace<Component>(e, std::forward<Args>(args)...);
+}
+
+template<typename Storage>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+decltype(auto)
+registry<Storage>
+    ::emplace_or_assign(entity_type const e, Args &&...args)
+noexcept(s_noexcept_emplace_or_assign<Component, Args...>())
+{
+  return m_storage.template emplace_or_assign<Component>(e, std::forward<Args>(args)...);
 }
 
 
@@ -387,8 +467,10 @@ registry<Storage>
     ::swap(registry &other)
 noexcept(s_noexcept_swap())
 {
-  m_entity_mgr.swap(other.m_entity_mgr);
-  m_storage   .swap(other.m_storage   );
+  using std::swap;
+
+  swap(m_entity_mgr, other.m_entity_mgr);
+  swap(m_storage   , other.m_storage   );
 }
 
 

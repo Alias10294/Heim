@@ -275,12 +275,25 @@ public:
   noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
+  template<typename Component>
+  [[nodiscard]] constexpr
+  bool
+  has(entity_type const) const
+  noexcept;
+
   template<
       typename    Component,
       typename ...Args>
   constexpr
   void
   emplace(entity_type const, Args &&...);
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  void
+  emplace_or_assign(entity_type const, Args &&...);
 
   template<typename Component>
   constexpr
@@ -557,6 +570,21 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::has(entity_type const e) const
+noexcept
+{
+  return std::get<s_component_index<Component>>(m_pools).contains(e);
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
 template<
     typename    Component,
     typename ...Args>
@@ -567,6 +595,23 @@ storage<Entity, Allocator, ComponentInfoSeq>
 {
   std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
 }
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::emplace_or_assign(entity_type const e, Args &&...args)
+{
+  std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
+}
+
 
 template<
     typename Entity,
