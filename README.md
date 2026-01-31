@@ -19,8 +19,8 @@ Once the project is set up, the tests' executable can be compiled and executed u
 ```
 
 ## Introduction
-Heim is a header-only entity-component system library that focuses on intuitive usability, extensive customizability 
-and outstanding performance. 
+Heim is a header-only entity-component system library that focuses on usability, customizability and performance, while 
+providing an elegant API.
 
 ## Code Example 
 ```c++
@@ -52,20 +52,10 @@ int main()
   auto e1 = r.create();
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
 
-  auto  q0 = r.query<position, velocity const>();
+  auto  q  = r.query<position, velocity const>();
   float ms = 16.f;
 
-  for (auto e : q0)
-  {
-    auto &pos = q0.get<position      >(e);
-    auto &vel = q0.get<velocity const>(e);
-
-    pos.x += vel.x * ms;
-    pos.y += vel.y * ms;
-    pos.z += vel.z * ms;
-  }
-    
-  for (auto &&[e, pos, vel] : q0.each())
+  for (auto &&[e, pos, vel] : q)
   {
     pos.x += vel.x * ms;
     pos.y += vel.y * ms;
@@ -76,5 +66,5 @@ int main()
   r.destroy(e1);
 }
 ```
-As Heim has yet to reach a functional implementation stage, this example is only suggestive, and only serves as an 
-illustratory example.
+As Heim has yet to implement queries and the archetype-based storage, this example is only suggestive, and only serves 
+as an illustratory example.
