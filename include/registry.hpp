@@ -137,6 +137,17 @@ public:
 
 
   [[nodiscard]] constexpr
+  storage_type &
+  storage()
+  noexcept;
+
+  [[nodiscard]] constexpr
+  storage_type const &
+  storage() const
+  noexcept;
+
+
+  [[nodiscard]] constexpr
   entity_type
   create();
 
@@ -156,6 +167,25 @@ public:
   bool
   has(entity_type const) const
   noexcept(s_noexcept_has<Component>());
+
+  template<typename ...Components>
+  [[nodiscard]] constexpr
+  bool
+  has_all_of(entity_type const) const
+  noexcept((s_noexcept_has<Components>() && ...));
+
+  template<typename ...Components>
+  [[nodiscard]] constexpr
+  bool
+  has_any_of(entity_type const) const
+  noexcept((s_noexcept_has<Components>() || ...));
+
+  template<typename ...Components>
+  [[nodiscard]] constexpr
+  bool
+  has_none_of(entity_type const) const
+  noexcept((!s_noexcept_has<Components>() && ...));
+
 
   template<
       typename    Component,
@@ -357,6 +387,32 @@ noexcept
   return m_entity_mgr.get_allocator();
 }
 
+
+
+template<typename Storage>
+constexpr
+typename registry<Storage>
+    ::storage_type &
+registry<Storage>
+    ::storage()
+noexcept
+{
+  return m_storage;
+}
+
+template<typename Storage>
+constexpr
+typename registry<Storage>
+    ::storage_type const &
+registry<Storage>
+    ::storage() const
+noexcept
+{
+  return m_storage;
+}
+
+
+
 template<typename Storage>
 constexpr
 typename registry<Storage>
@@ -392,6 +448,10 @@ registry<Storage>
     ::destroy(entity_type const e)
 noexcept(s_noexcept_destroy())
 {
+  static_assert(
+      requires { m_storage.erase_entity(e); },
+      "storage_type must expose an erase_entity method.");
+
   m_storage   .erase_entity(e);
   m_entity_mgr.banish(e);
 }
@@ -407,6 +467,8 @@ noexcept
   return m_entity_mgr.is_valid(e);
 }
 
+
+
 template<typename Storage>
 template<typename Component>
 constexpr
@@ -415,7 +477,47 @@ registry<Storage>
     ::has(entity_type const e) const
 noexcept(s_noexcept_has<Component>())
 {
+  static_assert(
+      requires { m_storage.template has<Component>(e); },
+      "storage_type must expose a has method for this component type.");
+
   return m_storage.template has<Component>(e);
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::has_all_of(entity_type const e) const
+noexcept((s_noexcept_has<Components>() && ...))
+{
+  return (has<Components>(e) && ...);
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::has_any_of(entity_type const e) const
+noexcept((s_noexcept_has<Components>() || ...))
+{
+  return (has<Components>(e) || ...);
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::has_none_of(entity_type const e) const
+noexcept((!s_noexcept_has<Components>() && ...))
+{
+  return (!has<Components>(e) && ...);
 }
 
 
@@ -430,8 +532,13 @@ registry<Storage>
     ::emplace(entity_type const e, Args &&...args)
 noexcept(s_noexcept_emplace<Component, Args ...>())
 {
+  static_assert(
+      requires { m_storage.template emplace<Component>(e, std::forward<Args>(args)...); },
+      "storage_type must expose an emplace method for this component type.");
+
   return m_storage.template emplace<Component>(e, std::forward<Args>(args)...);
 }
+
 
 template<typename Storage>
 template<
@@ -441,8 +548,12 @@ constexpr
 decltype(auto)
 registry<Storage>
     ::emplace_or_assign(entity_type const e, Args &&...args)
-noexcept(s_noexcept_emplace_or_assign<Component, Args...>())
+noexcept(s_noexcept_emplace_or_assign<Component, Args ...>())
 {
+  static_assert(
+      requires { m_storage.template emplace_or_assign<Component>(e, std::forward<Args>(args)...); },
+      "storage_type must expose an emplace_or_assign method for this component type.");
+
   return m_storage.template emplace_or_assign<Component>(e, std::forward<Args>(args)...);
 }
 
@@ -455,6 +566,10 @@ registry<Storage>
     ::erase(entity_type const e)
 noexcept(s_noexcept_erase<Component>())
 {
+  static_assert(
+      requires { m_storage.template erase<Component>(e); },
+      "storage_type must expose an erase method for this component type.");
+
   return m_storage.template erase<Component>(e);
 }
 
@@ -468,6 +583,10 @@ registry<Storage>
 noexcept(s_noexcept_swap())
 {
   using std::swap;
+
+  static_assert(
+      requires { swap(m_storage, other.m_storage); },
+      "storage_type must be swappable.");
 
   swap(m_entity_mgr, other.m_entity_mgr);
   swap(m_storage   , other.m_storage   );
