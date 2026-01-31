@@ -131,18 +131,23 @@ public:
   destroy(entity_type const)
   noexcept(s_noexcept_destroy());
 
+  [[nodiscard]] constexpr
+  bool
+  is_valid(entity_type const) const
+  noexcept;
+
 
   template<
       typename    Component,
       typename ...Args>
   constexpr
-  auto
+  decltype(auto)
   emplace(entity_type const, Args &&...)
   noexcept(s_noexcept_emplace<Component, Args ...>());
 
   template<typename Component>
   constexpr
-  auto
+  decltype(auto)
   erase(entity_type const)
   noexcept(s_noexcept_erase<Component>());
 
@@ -336,13 +341,24 @@ noexcept(s_noexcept_destroy())
 }
 
 
+template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::is_valid(entity_type const e) const
+noexcept
+{
+  return m_entity_mgr.is_valid(e);
+}
+
+
 
 template<typename Storage>
 template<
     typename    Component,
     typename ...Args>
 constexpr
-auto
+decltype(auto)
 registry<Storage>
     ::emplace(entity_type const e, Args &&...args)
 noexcept(s_noexcept_emplace<Component, Args ...>())
@@ -354,7 +370,7 @@ noexcept(s_noexcept_emplace<Component, Args ...>())
 template<typename Storage>
 template<typename Component>
 constexpr
-auto
+decltype(auto)
 registry<Storage>
     ::erase(entity_type const e)
 noexcept(s_noexcept_erase<Component>())
