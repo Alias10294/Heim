@@ -41,11 +41,6 @@ using registry
     ::component<velocity>>;
 */
 
-using query
-= heim::query<registry>
-    ::include<position>;
-    ::exclude<velocity>;
-
 int main()
 {
   registry r;
