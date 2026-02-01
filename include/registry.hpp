@@ -54,7 +54,7 @@ private:
   s_noexcept_move_alloc_construct()
   noexcept;
 
-  static consteval
+  static constexpr
   bool
   s_noexcept_destroy()
   noexcept;
@@ -68,7 +68,7 @@ private:
   template<
       typename    Component,
       typename ...Args>
-  static consteval
+  static constexpr
   bool
   s_noexcept_emplace()
   noexcept;
@@ -76,13 +76,13 @@ private:
   template<
       typename    Component,
       typename ...Args>
-  static consteval
+  static constexpr
   bool
   s_noexcept_emplace_or_assign()
   noexcept;
 
   template<typename Component>
-  static consteval
+  static constexpr
   bool
   s_noexcept_erase()
   noexcept;
@@ -261,7 +261,7 @@ noexcept
 
 
 template<typename Storage>
-consteval
+constexpr
 bool
 registry<Storage>
     ::s_noexcept_destroy()
@@ -287,7 +287,7 @@ template<typename Storage>
 template<
     typename    Component,
     typename ...Args>
-consteval
+constexpr
 bool
 registry<Storage>
     ::s_noexcept_emplace()
@@ -301,7 +301,7 @@ template<typename Storage>
 template<
     typename    Component,
     typename ...Args>
-consteval
+constexpr
 bool
 registry<Storage>
     ::s_noexcept_emplace_or_assign()
@@ -316,7 +316,7 @@ noexcept
 
 template<typename Storage>
 template<typename Component>
-consteval
+constexpr
 bool
 registry<Storage>
     ::s_noexcept_erase()
