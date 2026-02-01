@@ -78,7 +78,7 @@ private:
       typename ...Args>
   static constexpr
   bool
-  s_noexcept_emplace_or_assign()
+  s_noexcept_emplace_or_replace()
   noexcept;
 
   template<typename Component>
@@ -200,8 +200,8 @@ public:
       typename ...Args>
   constexpr
   decltype(auto)
-  emplace_or_assign(entity_type const, Args &&...)
-  noexcept(s_noexcept_emplace_or_assign<Component, Args ...>());
+  emplace_or_replace(entity_type const, Args &&...)
+  noexcept(s_noexcept_emplace_or_replace<Component, Args ...>());
 
   template<typename Component>
   constexpr
@@ -304,11 +304,11 @@ template<
 constexpr
 bool
 registry<Storage>
-    ::s_noexcept_emplace_or_assign()
+    ::s_noexcept_emplace_or_replace()
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template emplace_or_assign<Component>(
+      .template emplace_or_replace<Component>(
           std::declval<entity_type const>(),
           std::declval<Args &&          >()...));
 }
@@ -547,14 +547,15 @@ template<
 constexpr
 decltype(auto)
 registry<Storage>
-    ::emplace_or_assign(entity_type const e, Args &&...args)
-noexcept(s_noexcept_emplace_or_assign<Component, Args ...>())
+    ::emplace_or_replace(entity_type const e, Args &&...args)
+noexcept(s_noexcept_emplace_or_replace<Component, Args ...>())
 {
   static_assert(
-      requires { m_storage.template emplace_or_assign<Component>(e, std::forward<Args>(args)...); },
-      "storage_type must expose an emplace_or_assign method.");
+      requires
+      { m_storage.template emplace_or_replace<Component>(e, std::forward<Args>(args)...); },
+      "storage_type must expose an emplace_or_replace method.");
 
-  return m_storage.template emplace_or_assign<Component>(e, std::forward<Args>(args)...);
+  return m_storage.template emplace_or_replace<Component>(e, std::forward<Args>(args)...);
 }
 
 
