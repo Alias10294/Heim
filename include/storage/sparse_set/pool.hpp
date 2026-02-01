@@ -864,6 +864,16 @@ public:
   crend() const
   noexcept;
 
+  [[nodiscard]] constexpr
+  iterator
+  iterate(entity_type const)
+  noexcept;
+
+  [[nodiscard]] constexpr
+  const_iterator
+  iterate(entity_type const) const
+  noexcept;
+
 
   [[nodiscard]] constexpr
   bool
@@ -2842,6 +2852,39 @@ noexcept
 }
 
 
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterator
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterate(entity_type const e)
+noexcept
+{
+  return iterator(this, m_positions[e]);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+typename pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::const_iterator
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::iterate(entity_type const e) const
+noexcept
+{
+  return const_iterator(this, m_positions[e]);
+}
+
+
 
 template<
     typename    Component,
@@ -2873,9 +2916,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::find(entity_type const e)
 noexcept
 {
-  return contains(e)
-    ? iterator(this, m_positions[e])
-    : end();
+  return contains(e) ? iterate(e) : end();
 }
 
 template<
@@ -2891,9 +2932,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::find(entity_type const e) const
 noexcept
 {
-  return contains(e)
-    ? const_iterator(this, m_positions[e])
-    : end();
+  return contains(e) ? iterate(e) : end();
 }
 
 
