@@ -293,7 +293,7 @@ public:
       typename ...Args>
   constexpr
   void
-  emplace_or_assign(entity_type const, Args &&...);
+  emplace_or_replace(entity_type const, Args &&...);
 
   template<typename Component>
   constexpr
@@ -577,7 +577,7 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::has(entity_type const e) const
 noexcept
 {
-  return std::get<s_component_index<Component>>(m_pools).contains(e);
+  return m_pool<Component>().contains(e);
 }
 
 
@@ -593,7 +593,7 @@ void
 storage<Entity, Allocator, ComponentInfoSeq>
     ::emplace(entity_type const e, Args &&...args)
 {
-  std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
+  m_pool<Component>().emplace(e, std::forward<Args>(args)...);
 }
 
 
@@ -607,9 +607,9 @@ template<
 constexpr
 void
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace_or_assign(entity_type const e, Args &&...args)
+    ::emplace_or_replace(entity_type const e, Args &&...args)
 {
-  std::get<s_component_index<Component>>(m_pools).emplace(e, std::forward<Args>(args)...);
+  m_pool<Component>().emplace_or_replace(e, std::forward<Args>(args)...);
 }
 
 
@@ -624,7 +624,7 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::erase(entity_type const e)
 noexcept(s_noexcept_erase<Component>())
 {
-  std::get<s_component_index<Component>>(m_pools).erase(e);
+  m_pool<Component>().erase(e);
 }
 
 
