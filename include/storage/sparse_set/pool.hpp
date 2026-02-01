@@ -158,11 +158,6 @@ private:
 
     static constexpr
     bool
-    s_noexcept_replace()
-    noexcept;
-
-    static constexpr
-    bool
     s_noexcept_overwrite_with_back()
     noexcept;
 
@@ -282,11 +277,6 @@ private:
     constexpr
     void
     emplace_back(entity_type const, Args &&...);
-
-    constexpr
-    void
-    replace(size_type const, component_type &&)
-    noexcept(s_noexcept_replace());
 
     constexpr
     void
@@ -920,11 +910,6 @@ public:
   std::pair<iterator, bool>
   emplace(entity_type const, Args &&...);
 
-  template<typename ...Args>
-  constexpr
-  std::pair<iterator, bool>
-  emplace_or_replace(entity_type const, Args &&...);
-
   constexpr
   bool
   erase(entity_type const)
@@ -1028,23 +1013,6 @@ noexcept
 {
   return (tag_value || noexcept(std::declval<component_vector &>().clear()))
       && noexcept(std::declval<entity_vector &>().clear());
-}
-
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-bool
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::value_container
-    ::s_noexcept_replace()
-noexcept
-{
-  return tag_value || std::is_nothrow_move_assignable_v<component_type>;
 }
 
 
@@ -1420,24 +1388,6 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     catch (...)
     { components().pop_back(); throw; }
   }
-}
-
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-constexpr
-void
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::value_container
-    ::replace(size_type const pos, component_type &&c)
-noexcept(s_noexcept_replace())
-{
-  if constexpr (!tag_value)
-    components()[pos] = std::move(c);
 }
 
 
@@ -3041,33 +2991,6 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
 {
   if (contains(e))
     return {iterator(this, m_positions[e]), false};
-
-  return m_emplace(e, std::forward<Args>(args)...);
-}
-
-
-template<
-    typename    Component,
-    typename    Entity,
-    typename    Allocator,
-    std::size_t PageSize,
-    bool        TagValue>
-template<typename ... Args>
-constexpr
-std::pair<
-    typename pool<Component, Entity, Allocator, PageSize, TagValue>
-        ::iterator,
-    bool>
-pool<Component, Entity, Allocator, PageSize, TagValue>
-    ::emplace_or_replace(entity_type const e, Args &&...args)
-{
-  if (contains(e))
-  {
-    size_type const pos = m_positions[e];
-
-    m_values.replace(pos, component_type(std::forward<Args>(args)...));
-    return {iterator(this, pos), false};
-  }
 
   return m_emplace(e, std::forward<Args>(args)...);
 }

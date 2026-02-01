@@ -65,6 +65,36 @@ private:
   s_noexcept_has()
   noexcept;
 
+  template<typename ...Components>
+  static constexpr
+  bool
+  s_noexcept_has_all_of()
+  noexcept;
+
+  template<typename ...Components>
+  static constexpr
+  bool
+  s_noexcept_has_any_of()
+  noexcept;
+
+  template<typename ...Components>
+  static constexpr
+  bool
+  s_noexcept_has_none_of()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_get()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_get_const()
+  noexcept;
+
   template<
       typename    Component,
       typename ...Args>
@@ -172,19 +202,31 @@ public:
   [[nodiscard]] constexpr
   bool
   has_all_of(entity_type const) const
-  noexcept((s_noexcept_has<Components>() && ...));
+  noexcept(s_noexcept_has_all_of<Components ...>());
 
   template<typename ...Components>
   [[nodiscard]] constexpr
   bool
   has_any_of(entity_type const) const
-  noexcept((s_noexcept_has<Components>() || ...));
+  noexcept(s_noexcept_has_any_of<Components ...>());
 
   template<typename ...Components>
   [[nodiscard]] constexpr
   bool
   has_none_of(entity_type const) const
-  noexcept((!s_noexcept_has<Components>() && ...));
+  noexcept(s_noexcept_has_none_of<Components ...>());
+
+  template<typename Component>
+  [[nodiscard]] constexpr
+  Component &
+  get(entity_type const)
+  noexcept(s_noexcept_get<Component>());
+
+  template<typename Component>
+  [[nodiscard]] constexpr
+  Component const &
+  get(entity_type const) const
+  noexcept(s_noexcept_get_const<Component>());
 
 
   template<
@@ -194,14 +236,6 @@ public:
   decltype(auto)
   emplace(entity_type const, Args &&...)
   noexcept(s_noexcept_emplace<Component, Args ...>());
-
-  template<
-      typename    Component,
-      typename ...Args>
-  constexpr
-  decltype(auto)
-  emplace_or_replace(entity_type const, Args &&...)
-  noexcept(s_noexcept_emplace_or_replace<Component, Args ...>());
 
   template<typename Component>
   constexpr
@@ -280,6 +314,92 @@ noexcept
 {
   return noexcept(std::declval<storage_type &>()
       .template has<Component>(std::declval<entity_type const>()));
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_has_all_of()
+noexcept
+{
+  if constexpr (
+      requires { std::declval<storage_type &>()
+          .template has_all_of<Components ...>(std::declval<entity_type const>()); })
+  {
+    return noexcept(std::declval<storage_type &>()
+        .template has_all_of<Components ...>(std::declval<entity_type const>()));
+  }
+
+  return (s_noexcept_has<Components> && ...);
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_has_any_of()
+noexcept
+{
+  if constexpr (
+      requires { std::declval<storage_type &>()
+          .template has_any_of<Components ...>(std::declval<entity_type const>()); })
+  {
+    return noexcept(std::declval<storage_type &>()
+        .template has_any_of<Components ...>(std::declval<entity_type const>()));
+  }
+
+  return (s_noexcept_has<Components> || ...);
+}
+
+
+template<typename Storage>
+template<typename ...Components>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_has_none_of()
+noexcept
+{
+  if constexpr (
+      requires { std::declval<storage_type &>()
+          .template has_none_of<Components ...>(std::declval<entity_type const>()); })
+  {
+    return noexcept(std::declval<storage_type &>()
+        .template has_none_of<Components ...>(std::declval<entity_type const>()));
+  }
+
+  return (!s_noexcept_has<Components> && ...);
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_get()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template get<Component>(std::declval<entity_type const>()));
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_get_const()
+noexcept
+{
+  return noexcept(std::declval<storage_type const &>()
+      .template get<Component>(std::declval<entity_type const>()));
 }
 
 
@@ -491,8 +611,12 @@ constexpr
 bool
 registry<Storage>
     ::has_all_of(entity_type const e) const
-noexcept((s_noexcept_has<Components>() && ...))
+noexcept(s_noexcept_has_all_of<Components ...>())
 {
+  // the storage can implement this method for specific advantageous behavior
+  if constexpr (requires { m_storage.template has_all_of<Components ...>(e); })
+    return m_storage.template has_all_of<Components ...>(e);
+
   return (has<Components>(e) && ...);
 }
 
@@ -503,8 +627,12 @@ constexpr
 bool
 registry<Storage>
     ::has_any_of(entity_type const e) const
-noexcept((s_noexcept_has<Components>() || ...))
+noexcept(s_noexcept_has_any_of<Components ...>())
 {
+  // the storage can implement this method for specific advantageous behavior
+  if constexpr (requires { m_storage.template has_any_of<Components ...>(e); })
+    return m_storage.template has_any_of<Components ...>(e);
+
   return (has<Components>(e) || ...);
 }
 
@@ -515,9 +643,36 @@ constexpr
 bool
 registry<Storage>
     ::has_none_of(entity_type const e) const
-noexcept((!s_noexcept_has<Components>() && ...))
+noexcept(s_noexcept_has_none_of<Components ...>())
 {
+  // the storage can implement this method for specific advantageous behavior
+  if constexpr (requires { m_storage.template has_none_of<Components ...>(e); })
+    return m_storage.template has_none_of<Components ...>(e);
+
   return (!has<Components>(e) && ...);
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+Component &
+registry<Storage>
+    ::get(entity_type const e)
+noexcept(s_noexcept_get<Component>())
+{
+  return m_storage.template get<Component>(e);
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+Component const &
+registry<Storage>
+    ::get(entity_type const e) const
+noexcept(s_noexcept_get_const<Component>())
+{
+  return m_storage.template get<Component>(e);
 }
 
 
@@ -537,25 +692,6 @@ noexcept(s_noexcept_emplace<Component, Args ...>())
       "storage_type must expose an emplace method.");
 
   return m_storage.template emplace<Component>(e, std::forward<Args>(args)...);
-}
-
-
-template<typename Storage>
-template<
-    typename    Component,
-    typename ...Args>
-constexpr
-decltype(auto)
-registry<Storage>
-    ::emplace_or_replace(entity_type const e, Args &&...args)
-noexcept(s_noexcept_emplace_or_replace<Component, Args ...>())
-{
-  static_assert(
-      requires
-      { m_storage.template emplace_or_replace<Component>(e, std::forward<Args>(args)...); },
-      "storage_type must expose an emplace_or_replace method.");
-
-  return m_storage.template emplace_or_replace<Component>(e, std::forward<Args>(args)...);
 }
 
 

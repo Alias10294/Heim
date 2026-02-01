@@ -281,19 +281,25 @@ public:
   has(entity_type const) const
   noexcept;
 
-  template<
-      typename    Component,
-      typename ...Args>
-  constexpr
-  bool
-  emplace(entity_type const, Args &&...);
+  template<typename Component>
+  [[nodiscard]] constexpr
+  Component &
+  get(entity_type const)
+  noexcept;
+
+  template<typename Component>
+  [[nodiscard]] constexpr
+  Component const &
+  get(entity_type const) const
+  noexcept;
+
 
   template<
       typename    Component,
       typename ...Args>
   constexpr
   bool
-  emplace_or_replace(entity_type const, Args &&...);
+  emplace(entity_type const, Args &&...);
 
   template<typename Component>
   constexpr
@@ -585,16 +591,31 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
-template<
-    typename    Component,
-    typename ...Args>
+template<typename Component>
 constexpr
-bool
+Component &
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace(entity_type const e, Args &&...args)
+    ::get(entity_type const e)
+noexcept
 {
-  return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
+  return m_pool<Component>()[e];
 }
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+Component const &
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::get(entity_type const e) const
+noexcept
+{
+  return m_pool<Component>()[e];
+}
+
+
 
 
 template<
@@ -607,9 +628,9 @@ template<
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace_or_replace(entity_type const e, Args &&...args)
+    ::emplace(entity_type const e, Args &&...args)
 {
-  return m_pool<Component>().emplace_or_replace(e, std::forward<Args>(args)...).second;
+  return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
 }
 
 
