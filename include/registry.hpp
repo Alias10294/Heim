@@ -103,14 +103,6 @@ private:
   s_noexcept_emplace()
   noexcept;
 
-  template<
-      typename    Component,
-      typename ...Args>
-  static constexpr
-  bool
-  s_noexcept_emplace_or_replace()
-  noexcept;
-
   template<typename Component>
   static constexpr
   bool
@@ -333,7 +325,7 @@ noexcept
         .template has_all_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return (s_noexcept_has<Components> && ...);
+  return noexcept((s_noexcept_has<Components> && ...));
 }
 
 
@@ -353,7 +345,7 @@ noexcept
         .template has_any_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return (s_noexcept_has<Components> || ...);
+  return noexcept((s_noexcept_has<Components> || ...));
 }
 
 
@@ -373,7 +365,7 @@ noexcept
         .template has_none_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return (!s_noexcept_has<Components> && ...);
+  return noexcept((!s_noexcept_has<Components> && ...));
 }
 
 
@@ -415,22 +407,6 @@ noexcept
 {
   return noexcept(std::declval<storage_type &>()
       .template emplace<Component>(std::declval<entity_type const>(), std::declval<Args &&>()...));
-}
-
-template<typename Storage>
-template<
-    typename    Component,
-    typename ...Args>
-constexpr
-bool
-registry<Storage>
-    ::s_noexcept_emplace_or_replace()
-noexcept
-{
-  return noexcept(std::declval<storage_type &>()
-      .template emplace_or_replace<Component>(
-          std::declval<entity_type const>(),
-          std::declval<Args &&          >()...));
 }
 
 
