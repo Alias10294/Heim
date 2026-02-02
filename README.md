@@ -53,13 +53,12 @@ int main()
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
 
   auto  q  = r.query<position, velocity const>();
-  float ms = 16.f;
 
   for (auto &&[e, pos, vel] : q)
   {
-    pos.x += vel.x * ms;
-    pos.y += vel.y * ms;
-    pos.z += vel.z * ms;
+    pos.x += vel.x;
+    pos.y += vel.y;
+    pos.z += vel.z;
   }
 
   r.destroy(e0);
