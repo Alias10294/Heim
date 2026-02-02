@@ -98,13 +98,13 @@ private:
   template<typename Component>
   static constexpr
   bool
-  s_noexcept_try_get()
+  s_noexcept_get_if()
   noexcept;
 
   template<typename Component>
   static constexpr
   bool
-  s_noexcept_try_get_const()
+  s_noexcept_get_if_const()
   noexcept;
 
   template<
@@ -235,14 +235,24 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component *
-  try_get(entity_type const)
-  noexcept(s_noexcept_try_get<Component>());
+  get_if(entity_type const)
+  noexcept(s_noexcept_get_if<Component>());
 
   template<typename Component>
   constexpr
   Component const *
-  try_get(entity_type const) const
-  noexcept(s_noexcept_try_get_const<Component>());
+  get_if(entity_type const) const
+  noexcept(s_noexcept_get_if_const<Component>());
+
+  template<typename Component>
+  constexpr
+  Component &
+  try_get(entity_type const);
+
+  template<typename Component>
+  constexpr
+  Component const &
+  try_get(entity_type const) const;
 
 
   template<
@@ -440,27 +450,28 @@ noexcept
       .template get<Component>(std::declval<entity_type const>()));
 }
 
+
 template<typename Storage>
 template<typename Component>
 constexpr
 bool
 registry<Storage>
-    ::s_noexcept_try_get()
+    ::s_noexcept_get_if()
 noexcept
 {
   static constexpr
   bool
-  storage_implements_try_get
+  storage_implements_get_if
   = requires
   {
     std::declval<storage_type &>()
-        .template try_get<Component>(std::declval<entity_type const>());
+        .template get_if<Component>(std::declval<entity_type const>());
   };
 
-  if constexpr (storage_implements_try_get)
+  if constexpr (storage_implements_get_if)
   {
     return noexcept(std::declval<storage_type &>()
-        .template try_get<Component>(std::declval<entity_type const>()));
+        .template get_if<Component>(std::declval<entity_type const>()));
   }
 
   return s_noexcept_has<Component>()
@@ -473,22 +484,22 @@ template<typename Component>
 constexpr
 bool
 registry<Storage>
-    ::s_noexcept_try_get_const()
+    ::s_noexcept_get_if_const()
 noexcept
 {
   static constexpr
   bool
-  storage_implements_try_get_const
+  storage_implements_get_if_const
   = requires
   {
     std::declval<storage_type const &>()
-        .template try_get<Component>(std::declval<entity_type const>());
+        .template get_if<Component>(std::declval<entity_type const>());
   };
 
-  if constexpr (storage_implements_try_get_const)
+  if constexpr (storage_implements_get_if_const)
   {
     return noexcept(std::declval<storage_type const &>()
-        .template try_get<Component>(std::declval<entity_type const>()));
+        .template get_if<Component>(std::declval<entity_type const>()));
   }
 
   return s_noexcept_has      <Component>()
@@ -620,9 +631,9 @@ registry<Storage>
   entity_type const e = m_entity_mgr.summon();
 
   // depending on the storage type it might need to be introduced to the entity
-  if constexpr (requires { std::declval<storage_type &>().emplace_entity(e); })
+  if constexpr (requires { std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()); })
   {
-    if constexpr (noexcept(std::declval<storage_type &>().emplace_entity(e)))
+    if constexpr (noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>())))
       m_storage.emplace_entity(e);
     else
     {
@@ -646,7 +657,7 @@ registry<Storage>
 noexcept(s_noexcept_destroy())
 {
   static_assert(
-      requires { std::declval<storage_type &>().erase_entity(e); },
+      requires { std::declval<storage_type &>().erase_entity(std::declval<entity_type const>()); },
       "storage_type must expose an erase_entity method.");
 
   m_storage   .erase_entity(e);
@@ -679,7 +690,8 @@ noexcept(s_noexcept_has<Component>())
   storage_implements_has
   = requires
   {
-    { std::declval<storage_type const &>().template has<Component>(e) }
+    { std::declval<storage_type const &>()
+        .template has<Component>(std::declval<entity_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -704,7 +716,8 @@ noexcept(s_noexcept_has_all_of<Components ...>())
   storage_implements_has_all_of
   = requires
   {
-    { std::declval<storage_type const &>().template has_all_of<Components ...>(e) }
+    { std::declval<storage_type const &>()
+        .template has_all_of<Components ...>(std::declval<entity_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -729,7 +742,8 @@ noexcept(s_noexcept_has_any_of<Components ...>())
   storage_implements_has_any_of
   = requires
   {
-    { std::declval<storage_type const &>().template has_any_of<Components ...>(e) }
+    { std::declval<storage_type const &>()
+        .template has_any_of<Components ...>(std::declval<entity_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -754,7 +768,8 @@ noexcept(s_noexcept_has_none_of<Components ...>())
   storage_implements_has_none_of
   = requires
   {
-    { std::declval<storage_type const &>().template has_none_of<Components ...>(e) }
+    { std::declval<storage_type const &>()
+        .template has_none_of<Components ...>(std::declval<entity_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -794,21 +809,22 @@ template<typename Component>
 constexpr
 Component *
 registry<Storage>
-    ::try_get(entity_type const e)
-noexcept(s_noexcept_try_get<Component>())
+    ::get_if(entity_type const e)
+noexcept(s_noexcept_get_if<Component>())
 {
   static constexpr
   bool
-  storage_implements_try_get
+  storage_implements_get_if
   = requires
   {
-    { std::declval<storage_type &>().template try_get<Component>(e) }
+    { std::declval<storage_type &>()
+        .template get_if<Component>(std::declval<entity_type const>()) }
         -> std::convertible_to<Component *>;
   };
 
   // the storage can implement this method for specific behavior
-  if constexpr (storage_implements_try_get)
-    return m_storage.template try_get<Component>(e);
+  if constexpr (storage_implements_get_if)
+    return m_storage.template get_if<Component>(e);
 
   if (has<Component>(e))
     return std::addressof(get<Component>(e));
@@ -820,16 +836,70 @@ template<typename Component>
 constexpr
 Component const *
 registry<Storage>
+    ::get_if(entity_type const e) const
+noexcept(s_noexcept_get_if_const<Component>())
+{
+  static constexpr
+  bool
+  storage_implements_get_if_const
+  = requires
+  {
+    { std::declval<storage_type const &>()
+        .template get_if<Component>(std::declval<entity_type const>()) }
+        -> std::convertible_to<Component const *>;
+  };
+
+  // the storage can implement this method for specific behavior
+  if constexpr (storage_implements_get_if_const)
+    return m_storage.template get_if<Component>(e);
+
+  if (has<Component>(e))
+    return std::addressof(get<Component>(e));
+  return nullptr;
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+Component &
+registry<Storage>
+    ::try_get(entity_type const e)
+{
+  static constexpr
+  bool
+  storage_implements_try_get
+  = requires
+  {
+    { std::declval<storage_type &>()
+        .template try_get<Component>(std::declval<entity_type const>()) }
+        -> std::convertible_to<Component &>;
+  };
+
+  // the storage can implement this method for specific behavior
+  if constexpr (storage_implements_try_get)
+    return m_storage.template try_get<Component>(e);
+
+  if (has<Component>(e))
+    return get<Component>(e);
+  throw std::out_of_range("registry::try_get");
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+Component const &
+registry<Storage>
     ::try_get(entity_type const e) const
-noexcept(s_noexcept_try_get_const<Component>())
 {
   static constexpr
   bool
   storage_implements_try_get_const
   = requires
   {
-    { std::declval<storage_type const &>().template try_get<Component>(e) }
-        -> std::convertible_to<Component const *>;
+    { std::declval<storage_type const &>()
+        .template try_get<Component>(std::declval<entity_type const>()) }
+        -> std::convertible_to<Component &>;
   };
 
   // the storage can implement this method for specific behavior
@@ -837,8 +907,8 @@ noexcept(s_noexcept_try_get_const<Component>())
     return m_storage.template try_get<Component>(e);
 
   if (has<Component>(e))
-    return std::addressof(get<Component>(e));
-  return nullptr;
+    return get<Component>(e);
+  throw std::out_of_range("registry::try_get");
 }
 
 
