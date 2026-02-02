@@ -200,6 +200,12 @@ private:
   s_noexcept_erase()
   noexcept;
 
+  template<std::size_t ...Is>
+  static constexpr
+  bool
+  s_noexcept_clear(std::index_sequence<Is ...>)
+  noexcept;
+
   static constexpr
   bool
   s_noexcept_swap()
@@ -307,6 +313,11 @@ public:
   erase(entity_type const)
   noexcept(s_noexcept_erase<Component>());
 
+  constexpr
+  void
+  clear()
+  noexcept(s_noexcept_clear(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
+
 
   constexpr
   void
@@ -404,6 +415,20 @@ noexcept
 {
   return noexcept(std::get<s_component_index<Component>>(std::declval<pool_tuple &>())
       .erase(std::declval<entity_type const>()));
+}
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<std::size_t ...Is>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::s_noexcept_clear(std::index_sequence<Is ...>)
+noexcept
+{
+  return (noexcept(std::get<Is>(std::declval<pool_tuple &>()).clear()) && ...);
 }
 
 
@@ -617,7 +642,6 @@ noexcept
 
 
 
-
 template<
     typename Entity,
     typename Allocator,
@@ -646,6 +670,25 @@ storage<Entity, Allocator, ComponentInfoSeq>
 noexcept(s_noexcept_erase<Component>())
 {
   m_pool<Component>().erase(e);
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+constexpr
+void
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::clear()
+noexcept(s_noexcept_clear(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
+{
+  std::apply(
+      [](auto &...pools)
+      {
+        (pools.clear(), ...);
+      },
+      m_pools);
 }
 
 

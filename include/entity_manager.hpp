@@ -158,6 +158,11 @@ public:
   banish(entity_type const)
   noexcept;
 
+  constexpr
+  void
+  banish_all()
+  noexcept;
+
 
   constexpr
   void
@@ -423,6 +428,23 @@ noexcept
   banned = {banned.index(), banned.generation() + 1};
 
   ++m_begin;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+void
+entity_manager<Entity, Allocator>
+    ::banish_all()
+noexcept
+{
+  // we shortcut the individual banish method to avoid unnecessary swap attempts
+  for (entity_type &e : valid())
+    e = {e.index(), e.generation() + 1};
+
+  m_begin += m_entities.size();
 }
 
 
