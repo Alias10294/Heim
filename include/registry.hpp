@@ -68,6 +68,11 @@ private:
   s_noexcept_destroy()
   noexcept;
 
+  static constexpr
+  bool
+  s_noexcept_empty()
+  noexcept;
+
   template<typename Component>
   static constexpr
   bool
@@ -226,6 +231,11 @@ public:
   noexcept(s_noexcept_destroy());
 
 
+  [[nodiscard]] constexpr
+  bool
+  empty() const
+  noexcept(s_noexcept_empty());
+
   template<typename Component>
   [[nodiscard]] constexpr
   bool
@@ -378,6 +388,18 @@ noexcept
       .erase_entity(std::declval<entity_type const>()));
 }
 
+
+template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_empty()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>().empty());
+}
+
+
 template<typename Storage>
 template<typename Component>
 constexpr
@@ -414,7 +436,7 @@ noexcept
         .template has_all_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return noexcept((s_noexcept_has<Components>() && ...));
+  return (s_noexcept_has<Components>() && ...);
 }
 
 
@@ -441,7 +463,7 @@ noexcept
         .template has_any_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return noexcept((s_noexcept_has<Components>() && ...));
+  return (s_noexcept_has<Components>() && ...);
 }
 
 
@@ -468,7 +490,7 @@ noexcept
         .template has_none_of<Components ...>(std::declval<entity_type const>()));
   }
 
-  return noexcept((s_noexcept_has<Components>() && ...));
+  return (s_noexcept_has<Components>() && ...);
 }
 
 
@@ -784,6 +806,21 @@ noexcept(s_noexcept_destroy())
 
 
 template<typename Storage>
+constexpr
+bool
+registry<Storage>
+    ::empty() const
+noexcept(s_noexcept_empty())
+{
+  static_assert(
+      requires { std::declval<storage_type const &>().empty(); },
+      "storage_type must expose a empty method.");
+
+  return m_storage.empty();
+}
+
+
+template<typename Storage>
 template<typename Component>
 constexpr
 bool
@@ -933,6 +970,7 @@ registry<Storage>
 
   if (has<Component>(e))
     return get<Component>(e);
+
   throw std::out_of_range("registry::try_get");
 }
 
@@ -959,6 +997,7 @@ registry<Storage>
 
   if (has<Component>(e))
     return get<Component>(e);
+
   throw std::out_of_range("registry::try_get");
 }
 
@@ -987,6 +1026,7 @@ noexcept(s_noexcept_get_if<Component>())
 
   if (has<Component>(e))
     return std::addressof(get<Component>(e));
+
   return nullptr;
 }
 
@@ -1014,6 +1054,7 @@ noexcept(s_noexcept_get_if_const<Component>())
 
   if (has<Component>(e))
     return std::addressof(get<Component>(e));
+
   return nullptr;
 }
 
