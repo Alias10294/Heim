@@ -1,7 +1,10 @@
 #ifndef HEIM_REGISTRY_HPP
 #define HEIM_REGISTRY_HPP
 
+#include <concepts>
 #include <cstddef>
+#include <iterator>
+#include <ranges>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -182,13 +185,8 @@ public:
 
 
   [[nodiscard]] constexpr
-  storage_type &
-  storage()
-  noexcept;
-
-  [[nodiscard]] constexpr
-  storage_type const &
-  storage() const
+  bool
+  is_valid(entity_type const) const
   noexcept;
 
 
@@ -196,15 +194,36 @@ public:
   entity_type
   create();
 
+  template<
+      typename Iterator,
+      typename Sentinel>
+  constexpr
+  void
+  create(Iterator, Sentinel);
+
+  template<typename Range>
+  constexpr
+  void
+  create(Range &&);
+
   constexpr
   void
   destroy(entity_type const)
   noexcept(s_noexcept_destroy());
 
-  [[nodiscard]] constexpr
-  bool
-  is_valid(entity_type const) const
-  noexcept;
+  template<
+      typename Iterator,
+      typename Sentinel>
+  constexpr
+  void
+  destroy(Iterator, Sentinel)
+  noexcept(s_noexcept_destroy());
+
+  template<typename Range>
+  constexpr
+  void
+  destroy(Range &&)
+  noexcept(s_noexcept_destroy());
 
 
   template<typename Component>
@@ -638,26 +657,13 @@ noexcept
 
 template<typename Storage>
 constexpr
-typename registry<Storage>
-    ::storage_type &
+bool
 registry<Storage>
-    ::storage()
+    ::is_valid(entity_type const e) const
 noexcept
 {
-  return m_storage;
+  return m_entity_mgr.is_valid(e);
 }
-
-template<typename Storage>
-constexpr
-typename registry<Storage>
-    ::storage_type const &
-registry<Storage>
-    ::storage() const
-noexcept
-{
-  return m_storage;
-}
-
 
 
 template<typename Storage>
@@ -687,6 +693,40 @@ registry<Storage>
   return e;
 }
 
+template<typename Storage>
+template<
+    typename Iterator,
+    typename Sentinel>
+constexpr
+void
+registry<Storage>
+    ::create(Iterator first, Sentinel last)
+{
+  static_assert(
+      std::output_iterator<Iterator, entity_type>,
+      "Iterator must be an output iterator for entity_type");
+  static_assert(
+      std::sentinel_for<Sentinel, Iterator>,
+      "Sentinel must be a sentinel for Iterator.");
+
+  for (auto it = first; it != last; ++it)
+    *it = create();
+}
+
+template<typename Storage>
+template<typename Range>
+constexpr
+void
+registry<Storage>
+    ::create(Range &&r)
+{
+  static_assert(
+      std::ranges::output_range<Range, entity_type>,
+      "Range must be an output range for entity_type.");
+
+  create(std::ranges::begin(r), std::ranges::end(r));
+}
+
 
 template<typename Storage>
 constexpr
@@ -703,15 +743,42 @@ noexcept(s_noexcept_destroy())
   m_entity_mgr.banish(e);
 }
 
+template<typename Storage>
+template<
+    typename Iterator,
+    typename Sentinel>
+constexpr
+void
+registry<Storage>
+    ::destroy(Iterator first, Sentinel last)
+noexcept(s_noexcept_destroy())
+{
+  static_assert(
+      std::input_iterator<Iterator>
+   && std::convertible_to<std::iter_reference_t<Iterator>, entity_type>,
+      "Iterator must be an input iterator dereferenceable to a type convertible to entity_type.");
+  static_assert(
+      std::sentinel_for<Sentinel, Iterator>,
+      "Sentinel must be a sentinel for Iterator.");
+
+  for (auto it = first; it != last; ++it)
+    destroy(*it);
+}
 
 template<typename Storage>
+template<typename Range>
 constexpr
-bool
+void
 registry<Storage>
-    ::is_valid(entity_type const e) const
-noexcept
+    ::destroy(Range &&r)
+noexcept(s_noexcept_destroy())
 {
-  return m_entity_mgr.is_valid(e);
+  static_assert(
+      std::ranges::input_range<Range>
+   && std::convertible_to<std::ranges::range_reference_t<Range>, entity_type>,
+      "Range must be an input range with an iterator dereferenceable to a type convertible to entity_type.");
+
+  destroy(std::ranges::begin(r), std::ranges::end(r));
 }
 
 
