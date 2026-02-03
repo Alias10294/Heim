@@ -281,11 +281,6 @@ public:
   noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
-  [[nodiscard]] constexpr
-  bool
-  empty() const
-  noexcept;
-
   template<typename Component>
   [[nodiscard]] constexpr
   bool
@@ -600,25 +595,6 @@ noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool
       m_pools);
 }
 
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::empty() const
-noexcept
-{
-  return std::apply(
-      [](auto &...pools)
-      {
-        return (pools.empty() && ...);
-      },
-      m_pools);
-}
 
 
 template<
