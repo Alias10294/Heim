@@ -147,6 +147,18 @@ private:
   template<typename Component>
   static constexpr
   bool
+  s_noexcept_insert_or_assign_copy()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_insert_or_assign_move()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
   s_noexcept_erase()
   noexcept;
 
@@ -340,6 +352,18 @@ public:
   decltype(auto)
   insert(entity_type const, Component &&)
   noexcept(s_noexcept_insert_move<Component>());
+
+  template<typename Component>
+  constexpr
+  decltype(auto)
+  insert_or_assign(entity_type const, Component const &)
+  noexcept(s_noexcept_insert_or_assign_copy<Component>());
+
+  template<typename Component>
+  constexpr
+  decltype(auto)
+  insert_or_assign(entity_type const, Component &&)
+  noexcept(s_noexcept_insert_or_assign_move<Component>());
 
   template<typename Component>
   constexpr
@@ -698,6 +722,31 @@ noexcept
   }
 
   return s_noexcept_emplace<Component, Component &&>();
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_insert_or_assign_copy()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>()));
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_insert_or_assign_move()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>()));
 }
 
 
@@ -1289,6 +1338,55 @@ noexcept(s_noexcept_insert_move<Component>())
     return m_storage.template insert<Component>(e, std::move(c));
 
   return try_emplace<Component>(e, std::move(c));
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+decltype(auto)
+registry<Storage>
+    ::insert_or_assign(entity_type const e, Component const &c)
+noexcept(s_noexcept_insert_or_assign_copy<Component>())
+{
+  static constexpr
+  bool
+  implements_insert_or_assign_copy
+  = requires
+  {
+    std::declval<storage_type &>()
+        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>());
+  };
+
+  static_assert(
+      implements_insert_or_assign_copy,
+      "storage_type must expose a insert_or_assign method.");
+
+  return m_storage.template insert_or_assign<Component>(e, c);
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+decltype(auto)
+registry<Storage>
+    ::insert_or_assign(entity_type const e, Component &&c)
+noexcept(s_noexcept_insert_or_assign_move<Component>())
+{
+  static constexpr
+  bool
+  implements_insert_or_assign_move
+  = requires
+  {
+    std::declval<storage_type &>()
+        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>());
+  };
+
+  static_assert(
+      implements_insert_or_assign_move,
+      "storage_type must expose a insert_or_assign method.");
+
+  return m_storage.template insert_or_assign<Component>(e, std::move(c));
 }
 
 
