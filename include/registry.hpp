@@ -893,14 +893,14 @@ registry<Storage>
     std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>());
   };
 
-  static constexpr
-  bool
-  noexcept_emplace_entity
-  = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()));
-
   // depending on the storage type it might need to be introduced to the entity
   if constexpr (implements_emplace_entity)
   {
+    static constexpr
+    bool
+    noexcept_emplace_entity
+    = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()));
+
     if constexpr (noexcept_emplace_entity)
       m_storage.emplace_entity(e);
     else
