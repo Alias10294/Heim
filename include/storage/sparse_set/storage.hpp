@@ -307,6 +307,13 @@ public:
   bool
   emplace(entity_type const, Args &&...);
 
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  bool
+  try_emplace(entity_type const, Args &&...);
+
   template<typename Component>
   constexpr
   void
@@ -655,6 +662,22 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::emplace(entity_type const e, Args &&...args)
 {
   return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::try_emplace(entity_type const e, Args &&...args)
+{
+  return emplace(e, std::forward<Args>(args)...);
 }
 
 
