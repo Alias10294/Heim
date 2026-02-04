@@ -281,11 +281,6 @@ public:
   noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
-  [[nodiscard]] constexpr
-  bool
-  empty() const
-  noexcept;
-
   template<typename Component>
   [[nodiscard]] constexpr
   bool
@@ -311,6 +306,13 @@ public:
   constexpr
   bool
   emplace(entity_type const, Args &&...);
+
+  template<
+      typename    Component,
+      typename ...Args>
+  constexpr
+  bool
+  try_emplace(entity_type const, Args &&...);
 
   template<typename Component>
   constexpr
@@ -606,25 +608,6 @@ template<
     typename Entity,
     typename Allocator,
     typename ComponentInfoSeq>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::empty() const
-noexcept
-{
-  return std::apply(
-      [](auto &...pools)
-      {
-        return (pools.empty() && ...);
-      },
-      m_pools);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
 template<typename Component>
 constexpr
 bool
@@ -679,6 +662,22 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::emplace(entity_type const e, Args &&...args)
 {
   return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::try_emplace(entity_type const e, Args &&...args)
+{
+  return emplace(e, std::forward<Args>(args)...);
 }
 
 
