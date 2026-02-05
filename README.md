@@ -28,18 +28,26 @@ providing an elegant API.
 
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
+struct health   { int hp; };
 
 
 using registry
 = heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
-    ::component<velocity>>;
-/* 
-using registry 
+    ::component<velocity>
+    ::component<health  >>;
+/*
+using registry
 = heim::registry<heim::archetype_based::storage<>
     ::component<position>
-    ::component<velocity>>;
+    ::component<velocity>
+    ::component<health  >>;
 */
+
+using query_expression
+= heim::query_expression<>
+    ::include<position, velocity const>
+    ::exclude<health>;
 
 int main()
 {
@@ -51,8 +59,9 @@ int main()
 
   auto e1 = r.create();
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
+  r.emplace<health  >(e1, 10);  
 
-  auto  q  = r.query<position, velocity const>();
+  auto q = r.query<query_expression>();
 
   for (auto &&[e, pos, vel] : q)
   {
