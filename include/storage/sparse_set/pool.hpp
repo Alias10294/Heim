@@ -537,9 +537,9 @@ private:
   class generic_iterator
   {
   public:
-    static constexpr bool is_const = IsConst;
-
     using difference_type = std::ptrdiff_t;
+
+    static constexpr bool is_const = IsConst;
 
     using iterator_category = std::input_iterator_tag;
     using iterator_concept  = std::random_access_iterator_tag;
@@ -559,7 +559,7 @@ private:
 
     public:
       explicit constexpr
-      pointer(reference &&ref)
+      pointer(reference &&)
       noexcept;
 
 
@@ -704,9 +704,9 @@ private:
   };
 
 public:
-  using value_type      = value_container::value_type;
-  using reference       = value_container::reference;
-  using const_reference = value_container::const_reference;
+  using value_type      = typename value_container::value_type;
+  using reference       = typename value_container::reference;
+  using const_reference = typename value_container::const_reference;
 
   using iterator       = generic_iterator<false>;
   using const_iterator = generic_iterator<true >;

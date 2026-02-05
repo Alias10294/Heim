@@ -9,6 +9,7 @@
 #include "allocator.hpp"
 #include "entity.hpp"
 #include "pool.hpp"
+#include "query_expression.hpp"
 #include "type_sequence.hpp"
 #include "utility.hpp"
 
@@ -167,6 +168,41 @@ public:
       entity_type,
       allocator_type,
       typename component_info_sequence_traits::template tagged<TagValue>>;
+
+
+  template<typename Expression>
+  class query
+  {
+  public:
+    using size_type       = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+
+    using expression_type = Expression;
+
+    static_assert(
+        specializes_query_expression_v<expression_type>,
+        "expression_type must be a specialization of query_expression.");
+
+  private:
+    using include_sequence = typename expression_type::include_sequence;
+    using exclude_sequence = typename expression_type::exclude_sequence;
+
+    static_assert(
+        include_sequence
+            ::template map<std::remove_cvref>
+            ::template difference<typename component_info_sequence_traits::component_sequence>
+            ::size
+         == 0,
+        "All included component types must be declared in the storage.");
+    static_assert(
+        exclude_sequence
+            ::template map<std::remove_cvref>
+            ::template difference<typename component_info_sequence_traits::component_sequence>
+            ::size
+         == 0,
+        "All excluded component types must be declared in the storage.");
+  };
 
 private:
   pool_tuple

@@ -53,6 +53,35 @@ struct query_expression
 };
 
 
+
+/*!
+ * @brief Determines whether the given type is a specialization of query_expression.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_query_expression;
+
+template<typename T>
+inline constexpr
+bool
+specializes_query_expression_v
+= specializes_query_expression<T>::value;
+
+template<typename T>
+struct specializes_query_expression
+  : bool_constant<false>
+{ };
+
+template<
+    typename IncludeSeq,
+    typename ExcludeSeq>
+struct specializes_query_expression<
+    query_expression<IncludeSeq, ExcludeSeq>>
+  : bool_constant<true>
+{ };
+
+
 }
 
 #endif // HEIM_QUERY_EXPRESSION_HPP
