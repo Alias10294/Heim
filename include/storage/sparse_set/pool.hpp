@@ -158,6 +158,16 @@ private:
 
     static constexpr
     bool
+    s_noexcept_assign_copy()
+    noexcept;
+
+    static constexpr
+    bool
+    s_noexcept_assign_move()
+    noexcept;
+
+    static constexpr
+    bool
     s_noexcept_overwrite_with_back()
     noexcept;
 
@@ -277,6 +287,16 @@ private:
     constexpr
     void
     emplace_back(entity_type const, Args &&...);
+
+    constexpr
+    void
+    assign(size_type const, component_type const &)
+    noexcept(s_noexcept_assign_copy());
+
+    constexpr
+    void
+    assign(size_type const, component_type &&)
+    noexcept(s_noexcept_assign_move());
 
     constexpr
     void
@@ -910,6 +930,33 @@ public:
   std::pair<iterator, bool>
   emplace(entity_type const, Args &&...);
 
+  template<typename ...Args>
+  constexpr
+  std::pair<iterator, bool>
+  try_emplace(entity_type const, Args &&...);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, component_type const &);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, component_type &&);
+
+  template<typename C>
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, C &&);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert_or_assign(entity_type const, component_type const &);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert_or_assign(entity_type const, component_type &&);
+
+
   constexpr
   bool
   erase(entity_type const)
@@ -1013,6 +1060,40 @@ noexcept
 {
   return (tag_value || noexcept(std::declval<component_vector &>().clear()))
       && noexcept(std::declval<entity_vector &>().clear());
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::s_noexcept_assign_copy()
+noexcept
+{
+  return tag_value || std::is_nothrow_copy_assignable_v<component_type>;
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::s_noexcept_assign_move()
+noexcept
+{
+  return tag_value || std::is_nothrow_move_assignable_v<component_type>;
 }
 
 
@@ -1388,6 +1469,41 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     catch (...)
     { components().pop_back(); throw; }
   }
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::assign(size_type const pos, component_type const &c)
+noexcept(s_noexcept_assign_copy())
+{
+  if constexpr (!tag_value)
+    components()[pos] = c;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::assign(size_type const pos, component_type &&c)
+noexcept(s_noexcept_assign_move())
+{
+  if constexpr (!tag_value)
+    components()[pos] = std::move(c);
 }
 
 
@@ -2993,6 +3109,129 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     return {iterator(this, m_positions[e]), false};
 
   return m_emplace(e, std::forward<Args>(args)...);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename ... Args>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::try_emplace(entity_type const e, Args &&...args)
+{
+  return emplace(e, std::forward<Args>(args)...);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, component_type const &c)
+{
+  return emplace(e, c);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, component_type &&c)
+{
+  return emplace(e, std::move(c));
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename C>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, C &&c)
+{
+  return emplace(e, std::move(c));
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert_or_assign(entity_type const e, component_type const &c)
+{
+  if (contains(e))
+  {
+    size_type const pos = m_positions[e];
+
+    m_values.assign(pos, c);
+    return {iterator(this, pos), false};
+  }
+
+  return m_emplace(e, c);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert_or_assign(entity_type const e, component_type &&c)
+{
+  if (contains(e))
+  {
+    size_type const pos = m_positions[e];
+
+    m_values.assign(pos, std::move(c));
+    return {iterator(this, pos), false};
+  }
+
+  return m_emplace(e, std::move(c));
 }
 
 

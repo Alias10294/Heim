@@ -316,6 +316,16 @@ public:
 
   template<typename Component>
   constexpr
+  bool
+  insert_or_assign(entity_type const, Component const &);
+
+  template<typename Component>
+  constexpr
+  bool
+  insert_or_assign(entity_type const, Component &&);
+
+  template<typename Component>
+  constexpr
   void
   erase(entity_type const)
   noexcept(s_noexcept_erase<Component>());
@@ -677,7 +687,34 @@ bool
 storage<Entity, Allocator, ComponentInfoSeq>
     ::try_emplace(entity_type const e, Args &&...args)
 {
-  return emplace(e, std::forward<Args>(args)...);
+  return m_pool<Component>().try_emplace(e, std::forward<Args>(args)...).second;
+}
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::insert_or_assign(entity_type const e, Component const &c)
+{
+  return m_pool<Component>().insert_or_assign(e, c).second;
+}
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::insert_or_assign(entity_type const e, Component &&c)
+{
+  return m_pool<Component>().insert_or_assign(e, std::move(c)).second;
 }
 
 

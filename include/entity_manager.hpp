@@ -444,7 +444,7 @@ noexcept
   for (entity_type &e : valid())
     e = {e.index(), e.generation() + 1};
 
-  m_begin += m_entities.size();
+  m_begin = m_entities.size();
 }
 
 
