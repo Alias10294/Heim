@@ -569,6 +569,7 @@ private:
       noexcept;
     };
 
+
     friend pool;
     friend generic_iterator<!is_const>;
 

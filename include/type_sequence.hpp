@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include "utility.hpp"
+#include "test/doctest.h"
 
 namespace heim
 {
@@ -787,6 +788,26 @@ struct type_sequence
   = type_sequence_tuple_t<type_sequence>;
 };
 
+
+
+/*!
+ * @brief Determines the type sequence with the same of types as the given std::tuple.
+ *
+ * @tparam Tuple The tuple.
+ */
+template<typename Tuple>
+struct tuple_to_type_sequence;
+
+template<typename Tuple>
+struct tuple_to_type_sequence
+{ };
+
+template<typename ...Ts>
+struct tuple_to_type_sequence<std::tuple<Ts ...>>
+{
+  using type
+  = type_sequence<Ts ...>;
+};
 
 
 
