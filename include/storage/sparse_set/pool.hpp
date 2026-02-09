@@ -2422,7 +2422,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::operator*() const
 noexcept
 {
-  return m_pool->m_values[m_index];
+  return m_pool->m_values[static_cast<size_type>(m_index)];
 }
 
 

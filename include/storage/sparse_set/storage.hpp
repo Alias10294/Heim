@@ -9,9 +9,9 @@
 #include "allocator.hpp"
 #include "entity.hpp"
 #include "pool.hpp"
+#include "query.hpp"
 #include "query_expression.hpp"
 #include "type_sequence.hpp"
-#include "utility.hpp"
 
 namespace heim::sparse_set_based
 {
@@ -116,7 +116,7 @@ private:
         ::template append<
             type_sequence<
                 std::remove_cvref_t<Component>,
-                size_constant<1024>,
+                size_constant<default_pool_page_size<>::value>,
                 std::is_empty<std::remove_cvref_t<Component>>>>;
 
     template<std::size_t PageSize>
@@ -209,108 +209,11 @@ public:
       typename component_info_sequence_traits::template tagged<TagValue>>;
 
 
-  template<typename Expression>
-  class query_type
-  {
-  public:
-    using size_type       = std::size_t;
-    using difference_type = std::ptrdiff_t;
-
-
-    using expression_type = Expression;
-
-    static_assert(
-        specializes_query_expression_v<expression_type>,
-        "expression_type must be a specialization of query_expression.");
-
-  private:
-    using include_component_sequence = typename expression_type::include_sequence;
-    using exclude_component_sequence = typename expression_type::exclude_sequence;
-
-    static_assert(
-        include_component_sequence
-            ::template map<std::remove_cvref>
-            ::template difference<typename component_info_sequence_traits::component_sequence>
-            ::size
-         == 0,
-        "All included component types must be declared in the storage.");
-    static_assert(
-        exclude_component_sequence
-            ::template map<std::remove_cvref>
-            ::template difference<typename component_info_sequence_traits::component_sequence>
-            ::size
-         == 0,
-        "All excluded component types must be declared in the storage.");
-
-  public:
-    using value_type
-    = typename type_sequence<entity_type>::tuple;
-
-    using reference
-    = typename type_sequence<entity_type const &>::tuple;
-
-    using const_reference
-    = typename type_sequence<entity_type const &>::tuple;
-
-  private:
-    template<bool IsConst>
-    class generic_iterator
-    {
-    public:
-      using difference_type = std::ptrdiff_t;
-
-
-      static constexpr bool is_const = IsConst;
-
-
-      using iterator_category = std::input_iterator_tag;
-      using iterator_concept  = std::forward_iterator_tag;
-
-      using value_type = typename query_type::value_type;
-
-      using reference
-      = std::conditional_t<
-          is_const,
-          typename query_type::const_reference,
-          typename query_type::reference>;
-
-      struct pointer
-      {
-      private:
-        reference m_ref;
-
-      public:
-        explicit constexpr
-        pointer(reference &&)
-        noexcept;
-
-
-        constexpr
-        reference *
-        operator->() const
-        noexcept;
-      };
-
-
-      friend query_type;
-      friend generic_iterator<!is_const>;
-
-    private:
-      maybe_const_t<query_type, is_const> *m_query;
-      difference_type                      m_index;
-    };
-
-  public:
-    using iterator       = generic_iterator<false>;
-    using const_iterator = generic_iterator<true >;
-
-  private:
-    // TODO: try to factorise and abstract sequences & pools properly
-  };
+  template<typename, typename>
+  friend class query;
 
 private:
-  pool_tuple
-  m_pools;
+  pool_tuple m_pools;
 
 private:
   static constexpr
@@ -440,6 +343,19 @@ public:
   noexcept;
 
 
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query()
+  noexcept;
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query() const
+  noexcept;
+
+
   template<
       typename    Component,
       typename ...Args>
@@ -495,47 +411,6 @@ public:
   operator==(storage const &, storage const &)
   = default;
 };
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::query_type<Expression>
-    ::generic_iterator<IsConst>
-    ::pointer
-    ::pointer(reference &&r)
-noexcept
-  : m_ref(std::move(r))
-{ }
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template query_type<Expression>
-    ::template generic_iterator<IsConst>
-    ::reference *
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::query_type<Expression>
-    ::generic_iterator<IsConst>
-    ::pointer
-    ::operator->() const
-noexcept
-{
-  return std::addressof(m_ref);
-}
 
 
 
@@ -836,6 +711,36 @@ storage<Entity, Allocator, ComponentInfoSeq>
 noexcept
 {
   return m_pool<Component>()[e];
+}
+
+
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Expression>
+constexpr
+auto
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::query()
+noexcept
+{
+  return query<storage, Expression>(this);
+}
+
+template<
+    typename Entity,
+    typename Allocator,
+    typename ComponentInfoSeq>
+template<typename Expression>
+constexpr
+auto
+storage<Entity, Allocator, ComponentInfoSeq>
+    ::query() const
+noexcept
+{
+  return query<storage, Expression>(this);
 }
 
 
