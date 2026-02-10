@@ -13,9 +13,9 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "allocator.hpp"
-#include "entity.hpp"
-#include "utility.hpp"
+#include "heim/allocator.hpp"
+#include "heim/entity.hpp"
+#include "heim/utility.hpp"
 
 namespace heim::sparse_set_based
 {

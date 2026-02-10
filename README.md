@@ -36,13 +36,6 @@ using registry
     ::component<position>
     ::component<velocity>
     ::component<health  >>;
-/*
-using registry
-= heim::registry<heim::archetype_based::storage<>
-    ::component<position>
-    ::component<velocity>
-    ::component<health  >>;
-*/
 
 using query_expression
 = heim::query_expression<>
@@ -74,5 +67,3 @@ int main()
   r.destroy(e1);
 }
 ```
-As Heim has yet to implement queries and the archetype-based storage, this example is only suggestive, and only serves 
-as an illustratory example.

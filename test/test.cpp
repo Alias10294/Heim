@@ -1,9 +1,6 @@
-#include <iostream>
-#include <ostream>
-
 #include "doctest.h"
-#include "registry.hpp"
-#include "storage/sparse_set/storage.hpp"
+
+#include "heim/heim.hpp"
 
 TEST_CASE("test")
 {

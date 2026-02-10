@@ -6,11 +6,11 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include "allocator.hpp"
-#include "entity.hpp"
+#include "heim/allocator.hpp"
+#include "heim/entity.hpp"
+#include "heim/query_expression.hpp"
+#include "heim/type_sequence.hpp"
 #include "pool.hpp"
-#include "query_expression.hpp"
-#include "type_sequence.hpp"
 
 namespace heim::sparse_set_based
 {
