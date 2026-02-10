@@ -53,13 +53,13 @@ int main()
 {
   registry r;
 
-  auto e0 = r.create();
+  auto const e0 = r.create();
   r.emplace<position>(e0, 0.f, 0.f, 0.f);
   r.emplace<velocity>(e0, 1.f, 0.f, 0.f);
 
-  auto e1 = r.create();
+  auto const e1 = r.create();
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
-  r.emplace<health  >(e1, 10);  
+  r.emplace<health  >(e1, 10);
 
   auto q = r.query<query_expression>();
 

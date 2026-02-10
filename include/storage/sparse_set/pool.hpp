@@ -579,7 +579,7 @@ private:
 
   private:
     constexpr
-    generic_iterator(maybe_const_t<pool, is_const> *, difference_type const)
+    generic_iterator(maybe_const_t<pool, is_const> * const, difference_type const)
     noexcept;
 
   public:
@@ -2251,9 +2251,7 @@ template<bool IsConst>
 constexpr
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
-    ::generic_iterator(
-        maybe_const_t<pool, is_const> *pool,
-        difference_type const          index)
+    ::generic_iterator(maybe_const_t<pool, is_const> * const pool, difference_type const index)
 noexcept
   : m_pool (pool),
     m_index(index)

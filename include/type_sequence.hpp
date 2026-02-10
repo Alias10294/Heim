@@ -435,7 +435,7 @@ template<
 struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
 {
   static_assert(
-      std::is_same_v<decltype(Pred<First>::value), bool>,
+      std::is_same_v<decltype(Pred<First>::value), const bool>,
       "The predicate must expose a static constexpr bool value attribute");
 
   using type
