@@ -1,42 +1,49 @@
+#include <iostream>
+#include <ostream>
+
 #include "doctest.h"
-#include "type_sequence.hpp"
-#include "storage/sparse_set/storage.hpp"
 #include "registry.hpp"
-#include <string>
+#include "storage/sparse_set/storage.hpp"
 
 TEST_CASE("test")
 {
-  using test_t
-  = heim::type_sequence<short, int, long>;
+  struct position { float x, y, z; };
+  struct velocity { float x, y, z; };
+  struct health   { int hp; };
+  struct tag      { };
 
-  CHECK_EQ(test_t::size, 3);
-  CHECK_EQ(test_t::template contains<short >, true );
-  CHECK_EQ(test_t::template contains<int   >, true );
-  CHECK_EQ(test_t::template contains<long  >, true );
-  CHECK_EQ(test_t::template contains<float >, false);
-  CHECK_EQ(test_t::template contains<double>, false);
-  CHECK_EQ(test_t::is_unique, true);
+  using registry
+  = heim::registry<heim::sparse_set_based::storage<>
+      ::component<position>
+      ::component<velocity>
+      ::component<health  >
+      ::component<tag     >>;
 
-  heim::sparse_set_based::pool<std::string> p;
-  CHECK_EQ(p.size (), 0);
-  CHECK_EQ(p.empty(), true);
-  CHECK_EQ(decltype(p)::page_size, 1024);
-  CHECK_EQ(decltype(p)::tag_value, false);
-  CHECK_EQ(p.begin (), p.end ());
-  CHECK_EQ(p.cbegin(), p.cend());
+  using query_expression
+  = heim::query_expression<>
+      ::include<position, velocity const, tag>
+      ::exclude<health>;
 
-  using storage_t
-  = heim::sparse_set_based::storage<>
-      ::component<std::string>::paged<64>::tagged<false>
-      ::component<unsigned   >::paged<0 >::tagged<true >
-      ::component<long double>;
+  registry r;
 
-  storage_t s;
-  storage_t t(s);
+  auto const e0 = r.create();
+  r.emplace<position>(e0, 0.f, 0.f, 0.f);
+  r.emplace<velocity>(e0, 1.f, 0.f, 0.f);
+  r.emplace<tag     >(e0);
 
-  using registry_t
-  = heim::registry<storage_t>;
+  auto const e1 = r.create();
+  r.emplace<position>(e1, 0.f, 1.f, 0.f);
+  r.emplace<health  >(e1, 10);
 
-  registry_t r;
-  registry_t r2(r);
+  auto q = r.query<query_expression>();
+
+  for (auto &&[e, pos, vel] : q)
+  {
+    pos.x += vel.x;
+    pos.y += vel.y;
+    pos.z += vel.z;
+  }
+
+  r.destroy(e0);
+  r.destroy(e1);
 }

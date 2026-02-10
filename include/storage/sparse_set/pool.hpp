@@ -537,9 +537,9 @@ private:
   class generic_iterator
   {
   public:
-    static constexpr bool is_const = IsConst;
-
     using difference_type = std::ptrdiff_t;
+
+    static constexpr bool is_const = IsConst;
 
     using iterator_category = std::input_iterator_tag;
     using iterator_concept  = std::random_access_iterator_tag;
@@ -559,7 +559,7 @@ private:
 
     public:
       explicit constexpr
-      pointer(reference &&ref)
+      pointer(reference &&)
       noexcept;
 
 
@@ -568,6 +568,7 @@ private:
       operator->() const
       noexcept;
     };
+
 
     friend pool;
     friend generic_iterator<!is_const>;
@@ -578,7 +579,7 @@ private:
 
   private:
     constexpr
-    generic_iterator(maybe_const_t<pool, is_const> *pool, difference_type const index)
+    generic_iterator(maybe_const_t<pool, is_const> * const, difference_type const)
     noexcept;
 
   public:
@@ -684,9 +685,7 @@ private:
 
     [[nodiscard]] friend constexpr
     bool
-    operator==(
-        generic_iterator const &lhs,
-        generic_iterator const &rhs)
+    operator==(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
     {
       return lhs.m_index == rhs.m_index;
@@ -694,9 +693,7 @@ private:
 
     [[nodiscard]] friend constexpr
     decltype(auto)
-    operator<=>(
-        generic_iterator const &lhs,
-        generic_iterator const &rhs)
+    operator<=>(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
     {
       return lhs.m_index <=> rhs.m_index;
@@ -704,9 +701,9 @@ private:
   };
 
 public:
-  using value_type      = value_container::value_type;
-  using reference       = value_container::reference;
-  using const_reference = value_container::const_reference;
+  using value_type      = typename value_container::value_type;
+  using reference       = typename value_container::reference;
+  using const_reference = typename value_container::const_reference;
 
   using iterator       = generic_iterator<false>;
   using const_iterator = generic_iterator<true >;
@@ -2254,9 +2251,7 @@ template<bool IsConst>
 constexpr
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
-    ::generic_iterator(
-        maybe_const_t<pool, is_const> *pool,
-        difference_type const          index)
+    ::generic_iterator(maybe_const_t<pool, is_const> * const pool, difference_type const index)
 noexcept
   : m_pool (pool),
     m_index(index)
@@ -2277,7 +2272,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator(generic_iterator<!is_const> it)
 noexcept
   : m_pool (it.m_container),
-    m_index(it.m_index)
+    m_index(it.m_index    )
 {
   static_assert(is_const, "is_const must be true.");
 }
@@ -2421,7 +2416,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::operator*() const
 noexcept
 {
-  return m_pool->m_values[m_index];
+  return m_pool->m_values[static_cast<size_type>(m_index)];
 }
 
 

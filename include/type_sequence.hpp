@@ -435,7 +435,7 @@ template<
 struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
 {
   static_assert(
-      std::is_same_v<decltype(Pred<First>::value), bool>,
+      std::is_same_v<decltype(Pred<First>::value), const bool>,
       "The predicate must expose a static constexpr bool value attribute");
 
   using type
@@ -787,6 +787,26 @@ struct type_sequence
   = type_sequence_tuple_t<type_sequence>;
 };
 
+
+
+/*!
+ * @brief Determines the type sequence with the same of types as the given std::tuple.
+ *
+ * @tparam Tuple The tuple.
+ */
+template<typename Tuple>
+struct tuple_to_type_sequence;
+
+template<typename Tuple>
+struct tuple_to_type_sequence
+{ };
+
+template<typename ...Ts>
+struct tuple_to_type_sequence<std::tuple<Ts ...>>
+{
+  using type
+  = type_sequence<Ts ...>;
+};
 
 
 

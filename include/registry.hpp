@@ -116,6 +116,18 @@ private:
   s_noexcept_get_if_const()
   noexcept;
 
+  template<typename Expression>
+  static constexpr
+  bool
+  s_noexcept_query()
+  noexcept;
+
+  template<typename Expression>
+  static constexpr
+  bool
+  s_noexcept_query_const()
+  noexcept;
+
   template<
       typename    Component,
       typename ...Args>
@@ -303,12 +315,12 @@ public:
   noexcept(s_noexcept_get_const<Component>());
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component &
   try_get(entity_type const);
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component const &
   try_get(entity_type const) const;
 
@@ -319,10 +331,23 @@ public:
   noexcept(s_noexcept_get_if<Component>());
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component const *
   get_if(entity_type const) const
   noexcept(s_noexcept_get_if_const<Component>());
+
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query()
+  noexcept(s_noexcept_query<Expression>());
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query() const
+  noexcept(s_noexcept_query_const<Expression>());
 
 
   template<
@@ -641,6 +666,30 @@ noexcept
 
   return s_noexcept_has      <Component>()
       && s_noexcept_get_const<Component>();
+}
+
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_query()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>().template query<Expression>());
+}
+
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_query_const()
+noexcept
+{
+  return noexcept(std::declval<storage_type const &>().template query<Expression>());
 }
 
 
@@ -1236,6 +1285,53 @@ noexcept(s_noexcept_get_if_const<Component>())
     return std::addressof(get<Component>(e));
 
   return nullptr;
+}
+
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+auto
+registry<Storage>
+    ::query()
+noexcept(s_noexcept_query<Expression>())
+{
+  static constexpr
+  bool
+  implements_query
+  = requires
+  {
+    std::declval<storage_type &>().template query<Expression>();
+  };
+
+  static_assert(
+      implements_query,
+      "storage_type must expose a query method.");
+
+  return m_storage.template query<Expression>();
+}
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+auto
+registry<Storage>
+    ::query() const
+noexcept(s_noexcept_query_const<Expression>())
+{
+  static constexpr
+  bool
+  implements_query_const
+  = requires
+  {
+    std::declval<storage_type const &>().template query<Expression>();
+  };
+
+  static_assert(
+      implements_query_const,
+      "storage_type must expose a query method.");
+
+  return m_storage.template query<Expression>();
 }
 
 

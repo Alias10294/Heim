@@ -425,7 +425,7 @@ noexcept
   }
 
   entity_type &banned = m_entities[pos_begin];
-  banned = {banned.index(), banned.generation() + 1};
+  banned = entity_type(banned.index(), banned.generation() + 1);
 
   ++m_begin;
 }
