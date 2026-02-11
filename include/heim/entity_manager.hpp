@@ -44,10 +44,10 @@ public:
 
   static_assert(
       specializes_entity_v<entity_type>,
-      "entity_type must specialize entity.");
+      "heim::entity_manager: entity_type must specialize entity.");
   static_assert(
       is_an_allocator_for_v<allocator_type, entity_type>,
-      "allocator_type must pass as an allocator of entity_type.");
+      "heim::entity_manager: allocator_type must pass as an allocator of entity_type.");
 
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
@@ -442,7 +442,7 @@ noexcept
 {
   // we shortcut the individual banish method to avoid unnecessary swap attempts
   for (entity_type &e : valid())
-    e = {e.index(), e.generation() + 1};
+    e = entity_type(e.index(), e.generation() + 1);
 
   m_begin = m_entities.size();
 }

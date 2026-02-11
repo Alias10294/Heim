@@ -53,8 +53,8 @@ struct unsigned_integral_for
 
   static_assert(
       0 < digits && digits <= std::numeric_limits<unsigned long long>::digits,
-      "digits must be strictly positive and within the limits of the existing unsigned integral "
-      "types.");
+      "heim::unsigned_integral_for: digits must be strictly positive and within the limits of the existing "
+      "unsigned integral types.");
 
   using type
   = std::conditional_t<
@@ -98,7 +98,7 @@ struct maybe_const
 {
   static_assert(
       std::is_same_v<T, std::remove_const_t<T>>,
-      "T must not already be const-qualified.");
+      "heim::maybe_const: T must not already be const-qualified.");
 
   using type = std::conditional_t<IsConst, T const, T>;
 };

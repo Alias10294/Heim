@@ -51,10 +51,10 @@ public:
 
   static_assert(
       specializes_entity_v<entity_type>,
-      "entity_type must be a specialization of entity.");
+      "heim::sparse_set_based::storage: entity_type must be a specialization of entity.");
   static_assert(
       is_an_allocator_for_v<allocator_type, entity_type>,
-      "allocator_type must pass as an allocator of entity_type.");
+      "heim::sparse_set_based::storage: allocator_type must pass as an allocator of entity_type.");
 
 private:
   struct component_info_sequence_traits
@@ -94,7 +94,8 @@ private:
     };
 
     // makes the last component info index expression dependent, forcing its evaluation to be done
-    // in the second phase of the name lookup, avoiding some obscure errors on ::paged & ::tagged.
+    // in the 2nd phase of the name lookup, avoiding some unintended errors when using ::paged and
+    // ::tagged.
     template<auto>
     static constexpr
     size_type
@@ -110,7 +111,8 @@ private:
         std::is_same_v<
             component_sequence,
             typename component_sequence::template map<std::remove_cvref>>,
-        "component_info_sequence must not contain any reference types.");
+        "heim::sparse_set_based::storage::component_info_sequence_traits: component_info_sequence must "
+        "not contain any reference types.");
 
     using pool_sequence = typename component_info_sequence::template map<to_pool>;
 
@@ -154,7 +156,7 @@ private:
 
     static_assert(
         component_sequence::is_unique,
-        "Component types can only be declared once in the storage.");
+        "heim::sparse_set_based::storage: Component types can only be declared once in the storage.");
 
 
     template<typename Component>
@@ -222,7 +224,8 @@ public:
 
     static_assert(
         specializes_query_expression_v<expression_type>,
-        "expression_type must be a specialization of query_expression.");
+        "heim::sparse_set_based::storage::generic_query:expression_type must be a specialization of "
+        "query_expression.");
 
   private:
     template<typename Component>
@@ -239,17 +242,19 @@ public:
             ::template difference<typename component_info_sequence_traits::component_sequence>
             ::size
          == 0,
-        "All included types included in expression_type must be managed by the storage.");
+        "heim::sparse_set_based::storage::generic_query: All included types in expression_type must "
+        "be managed by the storage.");
     static_assert(
         exclude_sequence
             ::template map<std::remove_cvref>
             ::template difference<typename component_info_sequence_traits::component_sequence>
             ::size
          == 0,
-        "All excluded types included in expression_type must be managed by the storage.");
+        "heim::sparse_set_based::storage::generic_query: All excluded types in expression_type must "
+        "be managed by the storage.");
     static_assert(
         include_sequence::size > 0,
-        "expression_type must at least include one component_type.");
+        "heim::sparse_set_based::storage::generic_query: expression_type must at least include one component_type.");
 
     using value_include_sequence = typename include_sequence::template filter<not_tag>;
     using value_exclude_sequence = typename exclude_sequence::template filter<not_tag>;
@@ -334,8 +339,8 @@ public:
       difference_type                   m_index;
 
     private:
-      // iterating over all entities that match the query with compile-time pools is difficult, we
-      // basically to use "compile-time recursivity" to loop on the pools
+      // iterating over all entities that match the query with pools decided at compile time is difficult,
+      // and we need to use compile-time recursivity to loop on each one
       template<std::size_t = 0>
       [[nodiscard]] constexpr
       bool
@@ -364,8 +369,8 @@ public:
       noexcept;
 
 
-      // to find the best pivot for our query, because the pools' size is runtime information, we
-      // again need to loop over all pools using "compile-time recursivity" to solve the issue.
+      // to find the query's pivot, we need to traverse each pool, so compile-time recursivity is in
+      // order again
       template<std::size_t = 0>
       [[nodiscard]] constexpr
       pivot_info
@@ -384,7 +389,8 @@ public:
       noexcept;
 
 
-      // to construct the reference of the iterator, again "compile-time recursivity".
+      // constructing the reference tuple also requires traversing each pool, so compile-time recursivity
+      // it is
       template<typename Component>
       [[nodiscard]] constexpr
       decltype(auto)
@@ -1159,7 +1165,9 @@ noexcept
     m_pivot  (it.m_pivot  ),
     m_index  (it.m_index  )
 {
-  static_assert(is_const, "is_const must be true.");
+  static_assert(
+      is_const,
+      "heim::sparse_set_based::storage::generic_query::generic_iterator: is_const must be true.");
 }
 
 
@@ -1722,7 +1730,7 @@ noexcept
 {
   static_assert(
       component_info_sequence::size > 0,
-      "A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
 }
 
 template<
@@ -1747,7 +1755,7 @@ storage<Entity, Allocator, ComponentInfoSeq>
 {
   static_assert(
       component_info_sequence::size > 0,
-      "A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
 }
 
 template<
@@ -1762,7 +1770,7 @@ noexcept(s_noexcept_move_alloc_construct())
 {
   static_assert(
       component_info_sequence::size > 0,
-      "A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
 }
 
 
@@ -1779,7 +1787,7 @@ noexcept
 {
   static_assert(
       component_info_sequence::size > 0,
-      "A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
 
   return allocator_type(std::get<0>(m_pools).get_allocator());
 }

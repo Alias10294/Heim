@@ -20,11 +20,11 @@
 namespace heim::sparse_set_based
 {
 /*!
- * @brief Determines the default page size to use for pools of components when used by a storage.
+ * @brief Determines the default page size to use for pools of components.
  *
  * @tparam Redefine The type present for user specialization.
  *
- * @note The actual default value can be customized by specializing the trait using redefine_tag.
+ * @note The actual value can be customized by specializing the trait with redefine_tag.
  */
 template<typename Redefine = redefine_tag>
 struct default_pool_page_size;
@@ -90,10 +90,10 @@ public:
 
   static_assert(
       specializes_entity_v<entity_type>,
-      "entity_type must be a specialization of entity.");
+      "heim::sparse_set_based::pool: entity_type must be a specialization of entity.");
   static_assert(
       is_an_allocator_for_v<allocator_type, entity_type>,
-      "allocator_type must pass as an allocator of entity_type.");
+      "heim::sparse_set_based::pool: allocator_type must pass as an allocator of entity_type.");
 
 private:
   using alloc_traits = std::allocator_traits<allocator_type>;
@@ -1291,7 +1291,9 @@ pool<Component, Entity, Allocator,PageSize, TagValue>
     ::components()
 noexcept
 {
-  static_assert(!tag_value, "tag_value must be false.");
+  static_assert(
+      !tag_value,
+      "heim::sparse_set_based::pool::value_container::components: tag_value must be false.");
 
   return std::get<1>(m_vectors);
 }
@@ -1311,7 +1313,9 @@ pool<Component, Entity, Allocator,PageSize, TagValue>
     ::components() const
 noexcept
 {
-  static_assert(!tag_value, "tag_value must be false.");
+  static_assert(
+      !tag_value,
+      "heim::sparse_set_based::pool::value_container::components: tag_value must be false.");
 
   return std::get<1>(m_vectors);
 }
@@ -1539,6 +1543,7 @@ noexcept(s_noexcept_pop_back())
 {
   if constexpr (!tag_value)
     components().pop_back();
+
   entities().pop_back();
 }
 
@@ -1802,7 +1807,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
   page_allocator alloc(m_vector.get_allocator());
   page          *p    (page_alloc_traits::allocate(alloc, 1));
 
-  // exception safety guarantee
+  // strong exception safety guarantee
   try
   { page_alloc_traits::construct(alloc, p, std::forward<Args>(args)...); }
   catch (...)
@@ -2001,9 +2006,7 @@ noexcept
          : max       * page_size;
   }
   else
-  {
     return m_vector.max_size();
-  }
 }
 
 
@@ -2196,6 +2199,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
 noexcept
 {
   using std::swap;
+
   swap((*this)[e], (*this)[f]);
 }
 
@@ -2274,7 +2278,9 @@ noexcept
   : m_pool (it.m_container),
     m_index(it.m_index    )
 {
-  static_assert(is_const, "is_const must be true.");
+  static_assert(
+      is_const,
+      "heim::sparse_set_based::pool::generic_iterator::generic_iterator: is_const must be true.");
 }
 
 
@@ -3043,10 +3049,10 @@ typename pool<Component, Entity, Allocator, PageSize, TagValue>
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e)
 {
-  if (!contains(e))
-    throw std::out_of_range("generic_pool::at");
+  if (contains(e))
+    return operator[](e);
 
-  return operator[](e);
+  throw std::out_of_range("heim::sparse_set_based::pool::at");
 }
 
 template<
@@ -3062,9 +3068,9 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e) const
 {
   if (!contains(e))
-    throw std::out_of_range("generic_pool::at");
+    return operator[](e);
 
-  return operator[](e);
+  throw std::out_of_range("heim::sparse_set_based::pool::at");
 }
 
 
@@ -3270,6 +3276,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
 noexcept(s_noexcept_swap())
 {
   using std::swap;
+
   swap(m_values   , other.m_values   );
   swap(m_positions, other.m_positions);
 }

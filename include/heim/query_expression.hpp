@@ -28,25 +28,26 @@ struct query_expression
 
   static_assert(
       specializes_type_sequence_v<include_sequence>,
-      "include_sequence must be a specialization of type_sequence.");
+      "heim::query_expression: include_sequence must be a specialization of type_sequence.");
   static_assert(
       specializes_type_sequence_v<exclude_sequence>,
-      "exclude_sequence must be a specialization of type_sequence.");
+      "heim::query_expression: exclude_sequence must be a specialization of type_sequence.");
   static_assert(
       include_sequence::is_unique
    && exclude_sequence::is_unique
    && include_sequence::template difference<exclude_sequence>::size == include_sequence::size,
-      "include_sequence and exclude_sequence must be sequences of different unique component types");
+      "heim::query_expression: include_sequence and exclude_sequence must be sequences of different "
+      "unique component types");
   static_assert(
       std::is_same_v<
           include_sequence,
           typename include_sequence::template map<std::remove_reference>>,
-      "include_sequence must not contain reference types.");
+      "heim::query_expression: include_sequence must not contain reference types.");
   static_assert(
       std::is_same_v<
           exclude_sequence,
           typename exclude_sequence::template map<std::remove_reference>>,
-      "exclude_sequence must not contain reference types.");
+      "heim::query_expression: exclude_sequence must not contain reference types.");
 
 
   template<typename ...Components>

@@ -36,7 +36,7 @@ public:
 
   static_assert(
       std::is_integral_v<underlying_type> && std::is_unsigned_v<underlying_type>,
-      "underlying_type must be an unsigned integral type.");
+      "heim::entity: underlying_type must be an unsigned integral type.");
 
   static constexpr int value_digits      = std::numeric_limits<underlying_type>::digits;
   static constexpr int index_digits      = IndexDigits;

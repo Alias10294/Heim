@@ -1,7 +1,9 @@
 #ifndef HEIM_TYPE_SEQUENCE_HPP
 #define HEIM_TYPE_SEQUENCE_HPP
 
+#include <cstddef>
 #include <tuple>
+#include <type_traits>
 #include "utility.hpp"
 
 namespace heim
@@ -207,7 +209,7 @@ struct type_sequence_get<
 {
   static_assert(
       Index < type_sequence_size_v<type_sequence<First, Rest ...>>,
-      "The index must be within the type sequence's size.");
+      "heim::type_sequence_get: Index must be within the type sequence's size.");
 
   using type
   = type_sequence_get_t<type_sequence<Rest ...>, Index - 1>;
@@ -331,7 +333,7 @@ struct type_sequence_set<
 {
   static_assert(
       Index < type_sequence_size_v<type_sequence<First, Rest ...>>,
-      "The index must be within the type sequence's size.");
+      "heim::type_sequence_get: Index must be within the type sequence's size.");
 
   using type
   = type_sequence_concatenate_t<
@@ -436,7 +438,7 @@ struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
 {
   static_assert(
       std::is_same_v<decltype(Pred<First>::value), const bool>,
-      "The predicate must expose a static constexpr bool value attribute");
+      "heim::type_sequence_filter: Pred must expose a static constexpr bool value attribute");
 
   using type
   = std::conditional_t<
@@ -485,7 +487,8 @@ struct type_sequence_map<
     type_sequence<Ts ...>,
     Meta>
 {
-  using type = type_sequence<typename Meta<Ts>::type ...>;
+  using type
+  = type_sequence<typename Meta<Ts>::type ...>;
 };
 
 
