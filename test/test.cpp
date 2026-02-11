@@ -37,8 +37,7 @@ int main()
   std::cout << "position (before): " << px << py << pz << '\n';
   std::cout << "velocity (before): " << vx << vy << vz << '\n';
 
-  auto q = r.query<query_expression>();
-  for (auto &&[e, pos, vel] : q)
+  for (auto &&[e, pos, vel] : r.query<query_expression>())
   {
     pos.x += vel.x;
     pos.y += vel.y;
