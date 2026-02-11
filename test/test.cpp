@@ -1,8 +1,7 @@
-#include "doctest.h"
-
+#include <iostream>
 #include "heim/heim.hpp"
 
-TEST_CASE("test")
+int main()
 {
   struct position { float x, y, z; };
   struct velocity { float x, y, z; };
@@ -32,14 +31,22 @@ TEST_CASE("test")
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
   r.emplace<health  >(e1, 10);
 
-  auto q = r.query<query_expression>();
+  auto &[px, py, pz] = r.get<position>(e0);
+  auto &[vx, vy, vz] = r.get<velocity>(e0);
 
+  std::cout << "position (before): " << px << py << pz << '\n';
+  std::cout << "velocity (before): " << vx << vy << vz << '\n';
+
+  auto q = r.query<query_expression>();
   for (auto &&[e, pos, vel] : q)
   {
     pos.x += vel.x;
     pos.y += vel.y;
     pos.z += vel.z;
   }
+
+  std::cout << "position (after):  " << px << py << pz << '\n';
+  std::cout << "velocity (after):  " << vx << vy << vz << '\n';
 
   r.destroy(e0);
   r.destroy(e1);
