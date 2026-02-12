@@ -9,7 +9,9 @@ heim_dep = declare_dependency(
 meson.override_dependency('heim', heim_dep)
 
 heim_test_src = files(
-    'test/test.cpp')
+    'test/test.hpp',
+    'test/benchmark.hpp',
+    'test/main.cpp')
 
 heim_test_exe = executable('heim_test',
     heim_test_src,
