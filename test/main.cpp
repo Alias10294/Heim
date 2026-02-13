@@ -3,6 +3,6 @@
 
 int main()
 {
-  test();
-  benchmark();
+  heim::test     ::test();
+  heim::benchmark::benchmark<256, 2, 10'000>();
 }

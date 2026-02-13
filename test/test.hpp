@@ -4,6 +4,8 @@
 #include <iostream>
 #include "heim/heim.hpp"
 
+namespace heim::test
+{
 inline void test()
 {
   std::cout << "TEST:\n";
@@ -59,5 +61,7 @@ inline void test()
   std::cout << '\n';
 }
 
+
+} // namespace heim::test
 
 #endif // HEIM_TEST_HPP
