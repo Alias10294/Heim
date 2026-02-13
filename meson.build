@@ -10,7 +10,6 @@ meson.override_dependency('heim', heim_dep)
 
 heim_test_src = files(
     'test/test.hpp',
-    'test/benchmark.hpp',
     'test/main.cpp')
 
 heim_test_exe = executable('heim_test',
@@ -18,3 +17,8 @@ heim_test_exe = executable('heim_test',
     include_directories: heim_inc)
 
 test('heim_test', heim_test_exe)
+
+
+heim_bench_inc = include_directories('benchmark')
+heim_bench_src = files('benchmark/main.cpp')
+heim_bench_exe = executable('heim_bench', heim_bench_src, include_directories: [heim_inc, heim_bench_inc])

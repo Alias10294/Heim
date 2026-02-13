@@ -1,9 +1,10 @@
-#ifndef HEIM_BENCHMARK_HPP
-#define HEIM_BENCHMARK_HPP
+#ifndef HEIM_BENCHMARK_CREATION_HPP
+#define HEIM_BENCHMARK_CREATION_HPP
 
 #include <random>
 #include <chrono>
 #include <cstdint>
+#include <iostream>
 #include "heim/heim.hpp"
 
 namespace heim::benchmark
@@ -118,5 +119,4 @@ void benchmark()
 
 } // namespace heim::benchmark
 
-
-#endif // HEIM_BENCHMARK_HPP
+#endif // HEIM_BENCHMARK_CREATION_HPP
