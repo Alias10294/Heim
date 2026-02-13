@@ -1,8 +1,16 @@
+#ifndef HEIM_TEST_HPP
+#define HEIM_TEST_HPP
+
 #include <iostream>
 #include "heim/heim.hpp"
 
-int main()
+namespace heim::test
 {
+inline void test()
+{
+  std::cout << "TEST:\n";
+
+
   struct position { float x, y, z; };
   struct velocity { float x, y, z; };
   struct health   { int hp; };
@@ -49,4 +57,11 @@ int main()
 
   r.destroy(e0);
   r.destroy(e1);
+
+  std::cout << '\n';
 }
+
+
+} // namespace heim::test
+
+#endif // HEIM_TEST_HPP
