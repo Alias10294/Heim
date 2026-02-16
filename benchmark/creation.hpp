@@ -79,8 +79,12 @@ void benchmark()
 
   for (std::size_t i = 0; i < N; ++i)
   {
-    registry      reg;
-    entity_vector es (ECount);
+    registry         reg;
+    entity_vector    es     (ECount);
+    std::vector<int> choices(CCount);
+
+    for (auto &choice : choices)
+      choice = pick(rng);
 
     auto start = clock::now(); // START
 
@@ -89,9 +93,6 @@ void benchmark()
 
       es[j] = reg.create();
 
-      std::array<int, CCount> choices;
-      for (auto choice : choices)
-        choice = pick(rng);
       for (auto const choice : choices)
       {
         switch (choice)

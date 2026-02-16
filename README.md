@@ -12,15 +12,20 @@ To install Heim as a cloned repository, follow these commands :
 > meson setup build 
 ```
 
-Once the project is set up, the tests' executable can be compiled and executed using these commands :
+Once the project is set up, the tests' and benchmark's executables can be compiled using this command:
 ```
 > meson compile -C build
+```
+To use either executable, use these commands:
+```
 > ./build/heim_test
+> ./build/heim_benchmark
 ```
 
 ## Introduction
-Heim is a header-only entity-component system library that focuses on usability, customizability and performance, while 
-providing an elegant API.
+Heim is a header-only entity-component-system library that lets you organize your games and simulations in a both 
+user-friendly and data-oriented manner. It focuses in providing an elegant API, allowing for extensive customizability 
+and on delivering highly-performant code.
 
 ## Code Example 
 ```c++
