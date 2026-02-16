@@ -1,2 +1,4 @@
-build/
+build-clang/
+build-gcc/
+meson/
 .idea/

@@ -46,46 +46,6 @@ template<int Digits>
 using unsigned_integral_for_t
 = typename unsigned_integral_for<Digits>::type;
 
-
-
-/*!
- * @brief Determines the type with a conditionally added @c const qualifier.
- *
- * @tparam T       The type to determine for.
- * @tparam IsConst The condition value.
- */
-template<
-    typename T,
-    bool     IsConst>
-struct maybe_const;
-
-template<
-    typename T,
-    bool     IsConst>
-using maybe_const_t
-= typename maybe_const<T, IsConst>::type;
-
-
-
-/*!
- * @brief Determines if the given type is unqualified (i.e. neither @c const, @c volatile nor a
- *   reference).
- *
- * @tparam T The type to determine for.
- */
-template<typename T>
-struct is_unqualified;
-
-template<typename T>
-inline constexpr
-bool
-is_unqualified_v
-= is_unqualified<T>::value;
-
-
-
-
-
 template<int Digits>
 struct unsigned_integral_for
 {
@@ -93,8 +53,8 @@ struct unsigned_integral_for
 
   static_assert(
       0 < digits && digits <= std::numeric_limits<unsigned long long>::digits,
-      "digits must be strictly positive and within the limits of the existing unsigned integral "
-      "types.");
+      "heim::unsigned_integral_for: digits must be strictly positive and within the limits of the existing "
+      "unsigned integral types.");
 
   using type
   = std::conditional_t<
@@ -114,6 +74,23 @@ struct unsigned_integral_for
 
 
 
+/*!
+ * @brief Determines the type with a conditionally added @c const qualifier.
+ *
+ * @tparam T       The type to determine for.
+ * @tparam IsConst The condition value.
+ */
+template<
+    typename T,
+    bool     IsConst>
+struct maybe_const;
+
+template<
+    typename T,
+    bool     IsConst>
+using maybe_const_t
+= typename maybe_const<T, IsConst>::type;
+
 template<
     typename T,
     bool     IsConst>
@@ -121,12 +98,27 @@ struct maybe_const
 {
   static_assert(
       std::is_same_v<T, std::remove_const_t<T>>,
-      "T must not already be const-qualified.");
+      "heim::maybe_const: T must not already be const-qualified.");
 
   using type = std::conditional_t<IsConst, T const, T>;
 };
 
 
+
+/*!
+ * @brief Determines if the given type is unqualified (i.e. neither @c const, @c volatile nor a
+ *   reference).
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct is_unqualified;
+
+template<typename T>
+inline constexpr
+bool
+is_unqualified_v
+= is_unqualified<T>::value;
 
 template<typename T>
 struct is_unqualified

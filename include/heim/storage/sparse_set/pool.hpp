@@ -13,18 +13,18 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "allocator.hpp"
-#include "entity.hpp"
-#include "utility.hpp"
+#include "heim/allocator.hpp"
+#include "heim/entity.hpp"
+#include "heim/utility.hpp"
 
 namespace heim::sparse_set_based
 {
 /*!
- * @brief Determines the default page size to use for pools of components when used by a storage.
+ * @brief Determines the default page size to use for pools of components.
  *
  * @tparam Redefine The type present for user specialization.
  *
- * @note The actual default value can be customized by specializing the trait using redefine_tag.
+ * @note The actual value can be customized by specializing the trait with redefine_tag.
  */
 template<typename Redefine = redefine_tag>
 struct default_pool_page_size;
@@ -90,10 +90,10 @@ public:
 
   static_assert(
       specializes_entity_v<entity_type>,
-      "entity_type must be a specialization of entity.");
+      "heim::sparse_set_based::pool: entity_type must be a specialization of entity.");
   static_assert(
       is_an_allocator_for_v<allocator_type, entity_type>,
-      "allocator_type must pass as an allocator of entity_type.");
+      "heim::sparse_set_based::pool: allocator_type must pass as an allocator of entity_type.");
 
 private:
   using alloc_traits = std::allocator_traits<allocator_type>;
@@ -154,6 +154,16 @@ private:
     static constexpr
     bool
     s_noexcept_clear()
+    noexcept;
+
+    static constexpr
+    bool
+    s_noexcept_assign_copy()
+    noexcept;
+
+    static constexpr
+    bool
+    s_noexcept_assign_move()
     noexcept;
 
     static constexpr
@@ -277,6 +287,16 @@ private:
     constexpr
     void
     emplace_back(entity_type const, Args &&...);
+
+    constexpr
+    void
+    assign(size_type const, component_type const &)
+    noexcept(s_noexcept_assign_copy());
+
+    constexpr
+    void
+    assign(size_type const, component_type &&)
+    noexcept(s_noexcept_assign_move());
 
     constexpr
     void
@@ -517,9 +537,9 @@ private:
   class generic_iterator
   {
   public:
-    static constexpr bool is_const = IsConst;
-
     using difference_type = std::ptrdiff_t;
+
+    static constexpr bool is_const = IsConst;
 
     using iterator_category = std::input_iterator_tag;
     using iterator_concept  = std::random_access_iterator_tag;
@@ -539,7 +559,7 @@ private:
 
     public:
       explicit constexpr
-      pointer(reference &&ref)
+      pointer(reference &&)
       noexcept;
 
 
@@ -548,6 +568,7 @@ private:
       operator->() const
       noexcept;
     };
+
 
     friend pool;
     friend generic_iterator<!is_const>;
@@ -558,7 +579,7 @@ private:
 
   private:
     constexpr
-    generic_iterator(maybe_const_t<pool, is_const> *pool, difference_type const index)
+    generic_iterator(maybe_const_t<pool, is_const> * const, difference_type const)
     noexcept;
 
   public:
@@ -664,9 +685,7 @@ private:
 
     [[nodiscard]] friend constexpr
     bool
-    operator==(
-        generic_iterator const &lhs,
-        generic_iterator const &rhs)
+    operator==(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
     {
       return lhs.m_index == rhs.m_index;
@@ -674,9 +693,7 @@ private:
 
     [[nodiscard]] friend constexpr
     decltype(auto)
-    operator<=>(
-        generic_iterator const &lhs,
-        generic_iterator const &rhs)
+    operator<=>(generic_iterator const &lhs, generic_iterator const &rhs)
     noexcept
     {
       return lhs.m_index <=> rhs.m_index;
@@ -684,9 +701,9 @@ private:
   };
 
 public:
-  using value_type      = value_container::value_type;
-  using reference       = value_container::reference;
-  using const_reference = value_container::const_reference;
+  using value_type      = typename value_container::value_type;
+  using reference       = typename value_container::reference;
+  using const_reference = typename value_container::const_reference;
 
   using iterator       = generic_iterator<false>;
   using const_iterator = generic_iterator<true >;
@@ -910,6 +927,33 @@ public:
   std::pair<iterator, bool>
   emplace(entity_type const, Args &&...);
 
+  template<typename ...Args>
+  constexpr
+  std::pair<iterator, bool>
+  try_emplace(entity_type const, Args &&...);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, component_type const &);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, component_type &&);
+
+  template<typename C>
+  constexpr
+  std::pair<iterator, bool>
+  insert(entity_type const, C &&);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert_or_assign(entity_type const, component_type const &);
+
+  constexpr
+  std::pair<iterator, bool>
+  insert_or_assign(entity_type const, component_type &&);
+
+
   constexpr
   bool
   erase(entity_type const)
@@ -1013,6 +1057,40 @@ noexcept
 {
   return (tag_value || noexcept(std::declval<component_vector &>().clear()))
       && noexcept(std::declval<entity_vector &>().clear());
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::s_noexcept_assign_copy()
+noexcept
+{
+  return tag_value || std::is_nothrow_copy_assignable_v<component_type>;
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+bool
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::s_noexcept_assign_move()
+noexcept
+{
+  return tag_value || std::is_nothrow_move_assignable_v<component_type>;
 }
 
 
@@ -1213,7 +1291,9 @@ pool<Component, Entity, Allocator,PageSize, TagValue>
     ::components()
 noexcept
 {
-  static_assert(!tag_value, "tag_value must be false.");
+  static_assert(
+      !tag_value,
+      "heim::sparse_set_based::pool::value_container::components: tag_value must be false.");
 
   return std::get<1>(m_vectors);
 }
@@ -1233,7 +1313,9 @@ pool<Component, Entity, Allocator,PageSize, TagValue>
     ::components() const
 noexcept
 {
-  static_assert(!tag_value, "tag_value must be false.");
+  static_assert(
+      !tag_value,
+      "heim::sparse_set_based::pool::value_container::components: tag_value must be false.");
 
   return std::get<1>(m_vectors);
 }
@@ -1401,6 +1483,41 @@ constexpr
 void
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::value_container
+    ::assign(size_type const pos, component_type const &c)
+noexcept(s_noexcept_assign_copy())
+{
+  if constexpr (!tag_value)
+    components()[pos] = c;
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
+    ::assign(size_type const pos, component_type &&c)
+noexcept(s_noexcept_assign_move())
+{
+  if constexpr (!tag_value)
+    components()[pos] = std::move(c);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+void
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::value_container
     ::overwrite_with_back(size_type const pos)
 noexcept(s_noexcept_overwrite_with_back())
 {
@@ -1426,6 +1543,7 @@ noexcept(s_noexcept_pop_back())
 {
   if constexpr (!tag_value)
     components().pop_back();
+
   entities().pop_back();
 }
 
@@ -1689,7 +1807,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
   page_allocator alloc(m_vector.get_allocator());
   page          *p    (page_alloc_traits::allocate(alloc, 1));
 
-  // exception safety guarantee
+  // strong exception safety guarantee
   try
   { page_alloc_traits::construct(alloc, p, std::forward<Args>(args)...); }
   catch (...)
@@ -1888,9 +2006,7 @@ noexcept
          : max       * page_size;
   }
   else
-  {
     return m_vector.max_size();
-  }
 }
 
 
@@ -2083,6 +2199,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
 noexcept
 {
   using std::swap;
+
   swap((*this)[e], (*this)[f]);
 }
 
@@ -2138,9 +2255,7 @@ template<bool IsConst>
 constexpr
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator<IsConst>
-    ::generic_iterator(
-        maybe_const_t<pool, is_const> *pool,
-        difference_type const          index)
+    ::generic_iterator(maybe_const_t<pool, is_const> * const pool, difference_type const index)
 noexcept
   : m_pool (pool),
     m_index(index)
@@ -2161,9 +2276,11 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::generic_iterator(generic_iterator<!is_const> it)
 noexcept
   : m_pool (it.m_container),
-    m_index(it.m_index)
+    m_index(it.m_index    )
 {
-  static_assert(is_const, "is_const must be true.");
+  static_assert(
+      is_const,
+      "heim::sparse_set_based::pool::generic_iterator::generic_iterator: is_const must be true.");
 }
 
 
@@ -2305,7 +2422,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::operator*() const
 noexcept
 {
-  return m_pool->m_values[m_index];
+  return m_pool->m_values[static_cast<size_type>(m_index)];
 }
 
 
@@ -2932,10 +3049,10 @@ typename pool<Component, Entity, Allocator, PageSize, TagValue>
 pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e)
 {
-  if (!contains(e))
-    throw std::out_of_range("generic_pool::at");
+  if (contains(e))
+    return operator[](e);
 
-  return operator[](e);
+  throw std::out_of_range("heim::sparse_set_based::pool::at");
 }
 
 template<
@@ -2951,9 +3068,9 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
     ::at(entity_type const e) const
 {
   if (!contains(e))
-    throw std::out_of_range("generic_pool::at");
+    return operator[](e);
 
-  return operator[](e);
+  throw std::out_of_range("heim::sparse_set_based::pool::at");
 }
 
 
@@ -3002,6 +3119,129 @@ template<
     typename    Allocator,
     std::size_t PageSize,
     bool        TagValue>
+template<typename ... Args>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::try_emplace(entity_type const e, Args &&...args)
+{
+  return emplace(e, std::forward<Args>(args)...);
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, component_type const &c)
+{
+  return emplace(e, c);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, component_type &&c)
+{
+  return emplace(e, std::move(c));
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+template<typename C>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert(entity_type const e, C &&c)
+{
+  return emplace(e, std::move(c));
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert_or_assign(entity_type const e, component_type const &c)
+{
+  if (contains(e))
+  {
+    size_type const pos = m_positions[e];
+
+    m_values.assign(pos, c);
+    return {iterator(this, pos), false};
+  }
+
+  return m_emplace(e, c);
+}
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
+constexpr
+std::pair<
+    typename pool<Component, Entity, Allocator, PageSize, TagValue>
+        ::iterator,
+    bool>
+pool<Component, Entity, Allocator, PageSize, TagValue>
+    ::insert_or_assign(entity_type const e, component_type &&c)
+{
+  if (contains(e))
+  {
+    size_type const pos = m_positions[e];
+
+    m_values.assign(pos, std::move(c));
+    return {iterator(this, pos), false};
+  }
+
+  return m_emplace(e, std::move(c));
+}
+
+
+template<
+    typename    Component,
+    typename    Entity,
+    typename    Allocator,
+    std::size_t PageSize,
+    bool        TagValue>
 constexpr
 bool
 pool<Component, Entity, Allocator, PageSize, TagValue>
@@ -3036,6 +3276,7 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
 noexcept(s_noexcept_swap())
 {
   using std::swap;
+
   swap(m_values   , other.m_values   );
   swap(m_positions, other.m_positions);
 }

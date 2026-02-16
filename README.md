@@ -12,15 +12,20 @@ To install Heim as a cloned repository, follow these commands :
 > meson setup build 
 ```
 
-Once the project is set up, the tests' executable can be compiled and executed using these commands :
+Once the project is set up, the tests' and benchmark's executables can be compiled using this command:
 ```
 > meson compile -C build
+```
+To use either executable, use these commands:
+```
 > ./build/heim_test
+> ./build/heim_benchmark
 ```
 
 ## Introduction
-Heim is a header-only entity-component system library that focuses on usability, customizability and performance, while 
-providing an elegant API.
+Heim is a header-only entity-component-system library that lets you organize your games and simulations in a both 
+user-friendly and data-oriented manner. It focuses in providing an elegant API, allowing for extensive customizability 
+and on delivering highly-performant code.
 
 ## Code Example 
 ```c++
@@ -28,31 +33,33 @@ providing an elegant API.
 
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
+struct health   { int hp; };
 
 
 using registry
 = heim::registry<heim::sparse_set_based::storage<>
     ::component<position>
-    ::component<velocity>>;
-/* 
-using registry 
-= heim::registry<heim::archetype_based::storage<>
-    ::component<position>
-    ::component<velocity>>;
-*/
+    ::component<velocity>
+    ::component<health  >>;
+
+using query_expression
+= heim::query_expression<>
+    ::include<position, velocity const>
+    ::exclude<health>;
 
 int main()
 {
   registry r;
 
-  auto e0 = r.create();
+  auto const e0 = r.create();
   r.emplace<position>(e0, 0.f, 0.f, 0.f);
   r.emplace<velocity>(e0, 1.f, 0.f, 0.f);
 
-  auto e1 = r.create();
+  auto const e1 = r.create();
   r.emplace<position>(e1, 0.f, 1.f, 0.f);
+  r.emplace<health  >(e1, 10);
 
-  auto  q  = r.query<position, velocity const>();
+  auto q = r.query<query_expression>();
 
   for (auto &&[e, pos, vel] : q)
   {
@@ -65,5 +72,3 @@ int main()
   r.destroy(e1);
 }
 ```
-As Heim has yet to implement queries and the archetype-based storage, this example is only suggestive, and only serves 
-as an illustratory example.

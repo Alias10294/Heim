@@ -116,6 +116,18 @@ private:
   s_noexcept_get_if_const()
   noexcept;
 
+  template<typename Expression>
+  static constexpr
+  bool
+  s_noexcept_query()
+  noexcept;
+
+  template<typename Expression>
+  static constexpr
+  bool
+  s_noexcept_query_const()
+  noexcept;
+
   template<
       typename    Component,
       typename ...Args>
@@ -142,6 +154,18 @@ private:
   static constexpr
   bool
   s_noexcept_insert_move()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_insert_or_assign_copy()
+  noexcept;
+
+  template<typename Component>
+  static constexpr
+  bool
+  s_noexcept_insert_or_assign_move()
   noexcept;
 
   template<typename Component>
@@ -291,12 +315,12 @@ public:
   noexcept(s_noexcept_get_const<Component>());
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component &
   try_get(entity_type const);
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component const &
   try_get(entity_type const) const;
 
@@ -307,10 +331,23 @@ public:
   noexcept(s_noexcept_get_if<Component>());
 
   template<typename Component>
-  constexpr
+  [[nodiscard]] constexpr
   Component const *
   get_if(entity_type const) const
   noexcept(s_noexcept_get_if_const<Component>());
+
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query()
+  noexcept(s_noexcept_query<Expression>());
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  auto
+  query() const
+  noexcept(s_noexcept_query_const<Expression>());
 
 
   template<
@@ -340,6 +377,18 @@ public:
   decltype(auto)
   insert(entity_type const, Component &&)
   noexcept(s_noexcept_insert_move<Component>());
+
+  template<typename Component>
+  constexpr
+  decltype(auto)
+  insert_or_assign(entity_type const, Component const &)
+  noexcept(s_noexcept_insert_or_assign_copy<Component>());
+
+  template<typename Component>
+  constexpr
+  decltype(auto)
+  insert_or_assign(entity_type const, Component &&)
+  noexcept(s_noexcept_insert_or_assign_move<Component>());
 
   template<typename Component>
   constexpr
@@ -621,6 +670,30 @@ noexcept
 
 
 template<typename Storage>
+template<typename Expression>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_query()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>().template query<Expression>());
+}
+
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_query_const()
+noexcept
+{
+  return noexcept(std::declval<storage_type const &>().template query<Expression>());
+}
+
+
+template<typename Storage>
 template<
     typename    Component,
     typename ...Args>
@@ -698,6 +771,31 @@ noexcept
   }
 
   return s_noexcept_emplace<Component, Component &&>();
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_insert_or_assign_copy()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>()));
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+bool
+registry<Storage>
+    ::s_noexcept_insert_or_assign_move()
+noexcept
+{
+  return noexcept(std::declval<storage_type &>()
+      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>()));
 }
 
 
@@ -844,14 +942,14 @@ registry<Storage>
     std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>());
   };
 
-  static constexpr
-  bool
-  noexcept_emplace_entity
-  = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()));
-
   // depending on the storage type it might need to be introduced to the entity
   if constexpr (implements_emplace_entity)
   {
+    static constexpr
+    bool
+    noexcept_emplace_entity
+    = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()));
+
     if constexpr (noexcept_emplace_entity)
       m_storage.emplace_entity(e);
     else
@@ -878,10 +976,10 @@ registry<Storage>
 {
   static_assert(
       std::output_iterator<Iterator, entity_type>,
-      "Iterator must be an output iterator for entity_type");
+      "heim::registry::create: Iterator must be an output iterator for entity_type");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
-      "Sentinel must be a sentinel for Iterator.");
+      "heim::registry::create: Sentinel must be a sentinel for Iterator.");
 
   for (; first != last; ++first)
     *first = create();
@@ -896,7 +994,7 @@ registry<Storage>
 {
   static_assert(
       std::ranges::output_range<Range, entity_type>,
-      "Range must be an output range for entity_type.");
+      "heim::registry::create: Range must be an output range for entity_type.");
 
   create(std::ranges::begin(r), std::ranges::end(r));
 }
@@ -911,7 +1009,7 @@ noexcept(s_noexcept_destroy())
 {
   static_assert(
       requires { std::declval<storage_type &>().erase_entity(std::declval<entity_type const>()); },
-      "storage_type must expose an erase_entity method.");
+      "heim::registry::destroy: storage_type must expose an erase_entity method.");
 
   m_storage   .erase_entity(e);
   m_entity_mgr.banish(e);
@@ -930,10 +1028,11 @@ noexcept(s_noexcept_destroy())
   static_assert(
       std::input_iterator<Iterator>
    && std::convertible_to<std::iter_reference_t<Iterator>, entity_type>,
-      "Iterator must be an input iterator dereferenceable to a type convertible to entity_type.");
+      "heim::registry::destroy: Iterator must be an input iterator dereferenceable to a type convertible "
+      "to entity_type.");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
-      "Sentinel must be a sentinel for Iterator.");
+      "heim::registry::destroy: Sentinel must be a sentinel for Iterator.");
 
   for (; first != last; ++first)
     destroy(*first);
@@ -950,7 +1049,8 @@ noexcept(s_noexcept_destroy())
   static_assert(
       std::ranges::input_range<Range>
    && std::convertible_to<std::ranges::range_reference_t<Range>, entity_type>,
-      "Range must be an input range with an iterator dereferenceable to a type convertible to entity_type.");
+      "heim::registry::destroy: Range must be an input range with an iterator dereferenceable to a type "
+      "convertible to entity_type.");
 
   destroy(std::ranges::begin(r), std::ranges::end(r));
 }
@@ -977,7 +1077,7 @@ noexcept(s_noexcept_has<Component>())
 
   static_assert(
       implements_has,
-      "storage_type must expose a has method.");
+      "heim::registry::has: storage_type must expose a has method.");
 
   return m_storage.template has<Component>(e);
 }
@@ -1105,7 +1205,7 @@ registry<Storage>
   if (has<Component>(e))
     return get<Component>(e);
 
-  throw std::out_of_range("registry::try_get");
+  throw std::out_of_range("heim::registry::try_get");
 }
 
 template<typename Storage>
@@ -1131,7 +1231,7 @@ registry<Storage>
   if (has<Component>(e))
     return get<Component>(e);
 
-  throw std::out_of_range("registry::try_get");
+  throw std::out_of_range("heim::registry::try_get");
 }
 
 
@@ -1190,6 +1290,53 @@ noexcept(s_noexcept_get_if_const<Component>())
 }
 
 
+template<typename Storage>
+template<typename Expression>
+constexpr
+auto
+registry<Storage>
+    ::query()
+noexcept(s_noexcept_query<Expression>())
+{
+  static constexpr
+  bool
+  implements_query
+  = requires
+  {
+    std::declval<storage_type &>().template query<Expression>();
+  };
+
+  static_assert(
+      implements_query,
+      "heim::registry::query: storage_type must expose a query method.");
+
+  return m_storage.template query<Expression>();
+}
+
+template<typename Storage>
+template<typename Expression>
+constexpr
+auto
+registry<Storage>
+    ::query() const
+noexcept(s_noexcept_query_const<Expression>())
+{
+  static constexpr
+  bool
+  implements_query_const
+  = requires
+  {
+    std::declval<storage_type const &>().template query<Expression>();
+  };
+
+  static_assert(
+      implements_query_const,
+      "heim::registry::query: storage_type must expose a query method.");
+
+  return m_storage.template query<Expression>();
+}
+
+
 
 template<typename Storage>
 template<
@@ -1212,7 +1359,7 @@ noexcept(s_noexcept_emplace<Component, Args ...>())
 
   static_assert(
       implements_emplace,
-      "storage_type must expose a emplace method.");
+      "heim::registry::emplace: storage_type must expose a emplace method.");
 
   return m_storage.template emplace<Component, Args ...>(e, std::forward<Args>(args)...);
 }
@@ -1239,7 +1386,7 @@ noexcept(s_noexcept_try_emplace<Component, Args ...>())
 
   static_assert(
       implements_try_emplace,
-      "storage_type must expose a try_emplace method.");
+      "heim::registry::try_emplace: storage_type must expose a try_emplace method.");
 
   return m_storage.template try_emplace<Component, Args ...>(e, std::forward<Args>(args)...);
 }
@@ -1297,6 +1444,55 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
+    ::insert_or_assign(entity_type const e, Component const &c)
+noexcept(s_noexcept_insert_or_assign_copy<Component>())
+{
+  static constexpr
+  bool
+  implements_insert_or_assign_copy
+  = requires
+  {
+    std::declval<storage_type &>()
+        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>());
+  };
+
+  static_assert(
+      implements_insert_or_assign_copy,
+      "heim::registry::insert_or_assign: storage_type must expose a insert_or_assign method.");
+
+  return m_storage.template insert_or_assign<Component>(e, c);
+}
+
+template<typename Storage>
+template<typename Component>
+constexpr
+decltype(auto)
+registry<Storage>
+    ::insert_or_assign(entity_type const e, Component &&c)
+noexcept(s_noexcept_insert_or_assign_move<Component>())
+{
+  static constexpr
+  bool
+  implements_insert_or_assign_move
+  = requires
+  {
+    std::declval<storage_type &>()
+        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>());
+  };
+
+  static_assert(
+      implements_insert_or_assign_move,
+      "heim::registry::insert_or_assign: storage_type must expose a insert_or_assign method.");
+
+  return m_storage.template insert_or_assign<Component>(e, std::move(c));
+}
+
+
+template<typename Storage>
+template<typename Component>
+constexpr
+decltype(auto)
+registry<Storage>
     ::erase(entity_type const e)
 noexcept(s_noexcept_erase<Component>())
 {
@@ -1310,7 +1506,7 @@ noexcept(s_noexcept_erase<Component>())
 
   static_assert(
       implements_erase,
-      "storage_type must expose an erase method.");
+      "heim::registry::erase: storage_type must expose an erase method.");
 
   return m_storage.template erase<Component>(e);
 }
@@ -1329,10 +1525,11 @@ noexcept(s_noexcept_erase<Component, Iterator,  Sentinel>())
   static_assert(
       std::input_iterator<Iterator>
    && std::convertible_to<std::iter_reference_t<Iterator>, entity_type>,
-      "Iterator must be an input iterator dereferenceable to a type convertible to entity_type.");
+      "heim::registry::erase: Iterator must be an input iterator dereferenceable to a type convertible "
+      "to entity_type.");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
-      "Sentinel must be a sentinel for Iterator.");
+      "heim::registry::erase: Sentinel must be a sentinel for Iterator.");
 
   static constexpr
   bool
@@ -1363,7 +1560,8 @@ noexcept(s_noexcept_erase<Component, std::ranges::iterator_t<Range>, std::ranges
   static_assert(
       std::ranges::input_range<Range>
    && std::convertible_to<std::ranges::range_reference_t<Range>, entity_type>,
-      "Range must be an input range with an iterator dereferenceable to a type convertible to entity_type.");
+      "heim::registry::erase: Range must be an input range with an iterator dereferenceable to a type "
+      "convertible to entity_type.");
 
   erase(std::ranges::begin(r), std::ranges::end(r));
 }
@@ -1383,7 +1581,7 @@ noexcept(s_noexcept_clear())
 
   static_assert(
       implements_clear,
-      "storage_type must expose a clear method.");
+      "heim::registry::clear: storage_type must expose a clear method.");
 
   m_storage   .clear();
   m_entity_mgr.banish_all();
@@ -1402,7 +1600,7 @@ noexcept(s_noexcept_swap())
 
   static_assert(
       std::is_swappable_v<storage_type>,
-      "storage_type must be swappable.");
+      "heim::registry::swap: storage_type must be swappable.");
 
   swap(m_storage   , other.m_storage   );
   swap(m_entity_mgr, other.m_entity_mgr);
