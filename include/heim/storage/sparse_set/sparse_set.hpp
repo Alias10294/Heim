@@ -240,6 +240,154 @@ private:
     }
   };
 
+
+  template<typename Iterator>
+  class generic_iterator
+  {
+  public:
+    using iterator_type   = Iterator;
+    using difference_type = std::ptrdiff_t;
+
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept  = std::contiguous_iterator_tag;
+
+    using value_type = typename iterator_type::value_type;
+    using reference  = typename iterator_type::reference;
+    using pointer    = typename iterator_type::pointer;
+
+
+    friend sparse_set;
+
+  private:
+    iterator_type m_it;
+
+  private:
+    constexpr explicit
+    generic_iterator(iterator_type)
+    noexcept;
+
+  public:
+    constexpr
+    generic_iterator()
+    = default;
+
+    constexpr
+    generic_iterator(generic_iterator const &)
+    = default;
+
+    constexpr
+    generic_iterator(generic_iterator &&)
+    = default;
+
+    constexpr
+    ~generic_iterator()
+    = default;
+
+    constexpr
+    generic_iterator &
+    operator=(generic_iterator const &)
+    = default;
+
+    constexpr
+    generic_iterator &
+    operator=(generic_iterator &&)
+    = default;
+
+
+    constexpr
+    generic_iterator &
+    operator++()
+    noexcept;
+
+    constexpr
+    generic_iterator
+    operator++(int)
+    noexcept;
+
+    constexpr
+    generic_iterator &
+    operator--()
+    noexcept;
+
+    constexpr
+    generic_iterator
+    operator--(int)
+    noexcept;
+
+    constexpr
+    generic_iterator &
+    operator+=(difference_type)
+    noexcept;
+
+    constexpr
+    generic_iterator &
+    operator-=(difference_type)
+    noexcept;
+
+    constexpr
+    reference
+    operator*() const
+    noexcept;
+
+    constexpr
+    pointer
+    operator->() const
+    noexcept;
+
+    constexpr
+    reference
+    operator[](difference_type) const
+    noexcept;
+
+
+    friend constexpr
+    generic_iterator
+    operator+(generic_iterator it, difference_type n)
+    noexcept
+    {
+      generic_iterator r(it += n);
+      return r;
+    }
+
+    friend constexpr
+    generic_iterator
+    operator+(difference_type n, generic_iterator it)
+    noexcept
+    {
+      generic_iterator r(it += n);
+      return r;
+    }
+
+    friend constexpr
+    generic_iterator
+    operator-(generic_iterator it, difference_type n)
+    noexcept
+    {
+      generic_iterator r(it -= n);
+      return r;
+    }
+
+    friend constexpr
+    difference_type
+    operator-(generic_iterator lhs, generic_iterator rhs)
+    noexcept
+    {
+      return rhs.m_it - lhs.m_it;
+    }
+
+    [[nodiscard]]
+    friend constexpr
+    bool
+    operator==(generic_iterator lhs, generic_iterator rhs)
+    = default;
+
+    [[nodiscard]]
+    friend constexpr
+    auto
+    operator<=>(generic_iterator, generic_iterator)
+    = default;
+  };
+
 public:
   using value_type      = typename dense_container::value_type;
   using reference       = typename dense_container::reference;
@@ -247,11 +395,11 @@ public:
   using pointer         = typename dense_container::pointer;
   using const_pointer   = typename dense_container::const_pointer;
 
-  using iterator       = typename dense_container::iterator;
-  using const_iterator = typename dense_container::const_iterator;
+  using iterator       = generic_iterator<typename dense_container::iterator      >;
+  using const_iterator = generic_iterator<typename dense_container::const_iterator>;
 
-  using reverse_iterator       = typename dense_container::reverse_iterator;
-  using const_reverse_iterator = typename dense_container::const_reverse_iterator;
+  using reverse_iterator       = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
   dense_container  m_dense;
@@ -970,6 +1118,177 @@ noexcept
     std::fill(m_container.begin(), m_container.end(), s_null_pos);
 }
 
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>template<typename Iterator>
+constexpr
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::generic_iterator(iterator_type it)
+noexcept
+  :m_it(it)
+{ }
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename
+sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator> &
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator++()
+noexcept
+{
+  --m_it;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename
+sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator>
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator++(int)
+noexcept
+{
+  generic_iterator r(*this);
+  ++*this;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename
+sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator> &
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator--()
+noexcept
+{
+  ++m_it;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename
+sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator>
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator--(int)
+noexcept
+{
+  generic_iterator r(*this);
+  --*this;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator> &
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator+=(difference_type n)
+noexcept
+{
+  m_it -= n;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator> &
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator-=(difference_type n)
+noexcept
+{
+  m_it += n;
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator>
+    ::reference
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator*() const
+noexcept
+{
+  return m_it.operator*();
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator>
+    ::pointer
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator->() const
+noexcept
+{
+  return m_it.operator->();
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<typename Iterator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::template generic_iterator<Iterator>
+    ::reference
+sparse_set<Identifier, PageSize, Allocator>
+    ::generic_iterator<Iterator>
+    ::operator[](difference_type n) const
+noexcept
+{
+  return m_it.operator[](n);
+}
+
 
 template<
     typename    Identifier,
@@ -1146,7 +1465,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin()
 noexcept
 {
-  return m_dense.begin();
+  return generic_iterator(--m_dense.end());
 }
 
 template<
@@ -1160,7 +1479,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin() const
 noexcept
 {
-  return m_dense.begin();
+  return generic_iterator(--m_dense.end());
 }
 
 template<
@@ -1188,7 +1507,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end()
 noexcept
 {
-  return m_dense.end();
+  return generic_iterator(--m_dense.begin());
 }
 
 template<
@@ -1202,7 +1521,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end() const
 noexcept
 {
-  return m_dense.end();
+  return generic_iterator(--m_dense.begin());
 }
 
 template<
@@ -1230,7 +1549,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin()
 noexcept
 {
-  return m_dense.rbegin();
+  return reverse_iterator(end());
 }
 
 template<
@@ -1244,7 +1563,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin() const
 noexcept
 {
-  return m_dense.rbegin();
+  return const_reverse_iterator(end());
 }
 
 template<
@@ -1258,7 +1577,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::crbegin() const
 noexcept
 {
-  return rbegin();
+  return const_reverse_iterator(cend());
 }
 
 template<
@@ -1272,7 +1591,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend()
 noexcept
 {
-  return m_dense.rend();
+  return reverse_iterator(begin());
 }
 
 template<
@@ -1286,7 +1605,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend() const
 noexcept
 {
-  return m_dense.rend();
+  return const_reverse_iterator(begin());
 }
 
 template<
@@ -1300,7 +1619,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::crend() const
 noexcept
 {
-  return rend();
+  return const_reverse_iterator(cbegin());
 }
 
 template<
@@ -1327,7 +1646,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type id)
 noexcept
 {
-  return begin() + m_sparse[id];
+  return iterator(m_dense.begin() + m_sparse[id]);
 }
 
 template<
@@ -1341,7 +1660,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type id) const
 noexcept
 {
-  return begin() + m_sparse[id];
+  return const_iterator(m_dense.begin() + m_sparse[id]);
 }
 
 template<
@@ -1536,8 +1855,10 @@ sparse_set<Identifier, PageSize, Allocator>
     ::erase(iterator first, iterator last)
 noexcept
 {
-  while (first != erase(--last));
-  return last;
+  for (; first != last; ++first)
+    erase(*first);
+
+  return first;
 }
 
 template<
