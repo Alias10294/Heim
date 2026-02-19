@@ -24,12 +24,12 @@ namespace heim
 template<
     typename UInt        = std::uintmax_t,
     int      IndexDigits = std::numeric_limits<UInt>::digits / 2>
-class entity;
+class identifier;
 
 template<
     typename UInt,
     int      IndexDigits>
-class entity
+class identifier
 {
 public:
   using underlying_type = UInt;
@@ -57,46 +57,46 @@ private:
 
 public:
   constexpr
-  entity()
+  identifier()
   noexcept;
 
   constexpr
-  entity(entity const &)
+  identifier(identifier const &)
   = default;
 
   constexpr
-  entity(entity &&)
+  identifier(identifier &&)
   = default;
 
   explicit constexpr
-  entity(value_type const)
+  identifier(value_type)
   noexcept;
 
   constexpr
-  entity(index_type const, generation_type const)
+  identifier(index_type, generation_type)
   noexcept;
 
   constexpr
-  ~entity()
+  ~identifier()
   = default;
 
   constexpr
-  entity &
-  operator=(entity const &)
+  identifier &
+  operator=(identifier const &)
   = default;
 
   constexpr
-  entity &
-  operator=(entity &&)
+  identifier &
+  operator=(identifier &&)
   = default;
 
   constexpr
-  entity &
-  operator=(value_type const)
+  identifier &
+  operator=(value_type)
   noexcept;
 
   constexpr
-  entity &
+  identifier &
   operator=(std::pair<index_type, generation_type> const &)
   noexcept;
 
@@ -119,7 +119,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(entity const &, entity const &)
+  operator==(identifier const &, identifier const &)
   noexcept
   = default;
 };
@@ -130,8 +130,8 @@ template<
     typename UInt,
     int      IndexDigits>
 constexpr
-entity<UInt, IndexDigits>
-    ::entity()
+identifier<UInt, IndexDigits>
+    ::identifier()
 noexcept
   : m_value(null_value)
 { }
@@ -140,8 +140,8 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-entity<UInt, IndexBits>
-    ::entity(value_type const val)
+identifier<UInt, IndexBits>
+    ::identifier(value_type val)
 noexcept
   : m_value(val)
 { }
@@ -150,10 +150,10 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-entity<UInt, IndexBits>
-    ::entity(index_type const idx, generation_type const gen)
+identifier<UInt, IndexBits>
+    ::identifier(index_type idx, generation_type gen)
 noexcept
-  : entity(
+  : identifier(
         (static_cast<value_type>(gen) << index_digits)
       | (static_cast<value_type>(idx)  & index_mask))
 { }
@@ -163,9 +163,9 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-entity<UInt, IndexBits> &
-entity<UInt, IndexBits>
-    ::operator=(value_type const val)
+identifier<UInt, IndexBits> &
+identifier<UInt, IndexBits>
+    ::operator=(value_type val)
 noexcept
 {
   m_value = val;
@@ -176,8 +176,8 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-entity<UInt, IndexBits> &
-entity<UInt, IndexBits>
+identifier<UInt, IndexBits> &
+identifier<UInt, IndexBits>
     ::operator=(std::pair<index_type, generation_type> const &pair)
 noexcept
 {
@@ -193,9 +193,9 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-typename entity<UInt, IndexBits>
+typename identifier<UInt, IndexBits>
     ::value_type
-entity<UInt, IndexBits>
+identifier<UInt, IndexBits>
     ::value() const
 noexcept
 {
@@ -207,9 +207,9 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-typename entity<UInt, IndexBits>
+typename identifier<UInt, IndexBits>
     ::index_type
-entity<UInt, IndexBits>
+identifier<UInt, IndexBits>
     ::index() const
 noexcept
 {
@@ -220,9 +220,9 @@ template<
     typename UInt,
     int      IndexBits>
 constexpr
-typename entity<UInt, IndexBits>
+typename identifier<UInt, IndexBits>
     ::generation_type
-entity<UInt, IndexBits>
+identifier<UInt, IndexBits>
     ::generation() const
 noexcept
 {
@@ -237,24 +237,24 @@ noexcept
  * @tparam T The type to determine for.
  */
 template<typename T>
-struct specializes_entity;
+struct specializes_identifier;
 
 template<typename T>
 inline constexpr
 bool
-specializes_entity_v
-= specializes_entity<T>::value;
+specializes_identifier_v
+= specializes_identifier<T>::value;
 
 template<typename T>
-struct specializes_entity
+struct specializes_identifier
   : bool_constant<false>
 { };
 
 template<
     typename UInt,
     int      IndexBits>
-struct specializes_entity<
-    entity<UInt, IndexBits>>
+struct specializes_identifier<
+    identifier<UInt, IndexBits>>
   : bool_constant<true>
 { };
 

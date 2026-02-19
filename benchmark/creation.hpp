@@ -71,7 +71,7 @@ void benchmark()
 
 
   using entity_vector
-  = std::vector<registry::entity_type>;
+  = std::vector<registry::identifier_type>;
 
   std::mt19937                  rng (std::random_device{}());
   std::uniform_int_distribution pick(0, 4);

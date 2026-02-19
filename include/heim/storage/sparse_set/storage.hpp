@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 #include "heim/allocator.hpp"
-#include "heim/entity.hpp"
+#include "heim/identifier.hpp"
 #include "heim/query_expression.hpp"
 #include "heim/type_sequence.hpp"
 #include "pool.hpp"
@@ -22,20 +22,20 @@ namespace heim::sparse_set_based
  *   separate container. This allows for fast addition and removal of components on entities, and
  *   optimal iteration speed on small sets of component types.
  *
- * @tparam Entity           The entity type.
+ * @tparam Identifier       The identifier type.
  * @tparam Allocator        The allocator type.
  * @tparam ComponentInfoSeq The component information sequence.
  *
  * @note The component information sequence should not be specialized manually.
  */
 template<
-    typename Entity           = entity<>,
-    typename Allocator        = std::allocator<Entity>,
+    typename Identifier       = identifier<>,
+    typename Allocator        = std::allocator<Identifier>,
     typename ComponentInfoSeq = type_sequence<>>
 class storage;
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
     typename ComponentInfoSeq>
 class storage
@@ -45,16 +45,16 @@ public:
   using difference_type = std::ptrdiff_t;
 
 
-  using entity_type             = Entity;
+  using identifier_type         = Identifier;
   using allocator_type          = Allocator;
   using component_info_sequence = ComponentInfoSeq;
 
   static_assert(
-      specializes_entity_v<entity_type>,
-      "heim::sparse_set_based::storage: entity_type must be a specialization of entity.");
+      specializes_identifier_v<identifier_type>,
+      "heim::sparse_set_based::storage: identifier_type must be a specialization of identifier.");
   static_assert(
-      is_an_allocator_for_v<allocator_type, entity_type>,
-      "heim::sparse_set_based::storage: allocator_type must pass as an allocator of entity_type.");
+      is_an_allocator_for_v<allocator_type, identifier_type>,
+      "heim::sparse_set_based::storage: allocator_type must pass as an allocator of identifier_type.");
 
 private:
   struct component_info_sequence_traits
@@ -87,7 +87,7 @@ private:
       using type
       = pool<
           typename ComponentInfo::template get<0>,
-          entity_type,
+          identifier_type,
           allocator_type,
           ComponentInfo::template get<1>::value,
           ComponentInfo::template get<2>::value>;
@@ -195,7 +195,7 @@ public:
   template<typename Component>
   using component
   = storage<
-      entity_type,
+      identifier_type,
       allocator_type,
       typename component_info_sequence_traits::template component<Component>>;
 
@@ -203,7 +203,7 @@ public:
   requires(component_info_sequence::size > 0)
   using paged
   = storage<
-      entity_type,
+      identifier_type,
       allocator_type,
       typename component_info_sequence_traits::template paged<PageSize>>;
 
@@ -211,7 +211,7 @@ public:
   requires(component_info_sequence::size > 0)
   using tagged
   = storage<
-      entity_type,
+      identifier_type,
       allocator_type,
       typename component_info_sequence_traits::template tagged<TagValue>>;
 
@@ -261,21 +261,21 @@ public:
 
   public:
     using value_type
-    = typename type_sequence<entity_type>
+    = typename type_sequence<identifier_type>
         ::template concatenate<
             typename value_include_sequence
                 ::template map<std::remove_cvref>>
         ::tuple;
 
     using reference
-    = typename type_sequence<entity_type const &>
+    = typename type_sequence<identifier_type const &>
         ::template concatenate<
             typename value_include_sequence
                 ::template map<std::add_lvalue_reference>>
         ::tuple;
 
     using const_reference
-    = typename type_sequence<entity_type const &>
+    = typename type_sequence<identifier_type const &>
         ::template concatenate<
             typename value_include_sequence
                 ::template map<std::add_lvalue_reference>
@@ -324,7 +324,7 @@ public:
 
       struct pivot_info
       {
-        entity_type const *entities;
+        identifier_type const *entities;
         size_type          index;
         size_type          size;
       };
@@ -336,7 +336,7 @@ public:
     private:
       maybe_const_t<storage, is_const> *m_storage;
       pivot_info                        m_pivot;
-      difference_type                   m_index;
+      difference_type                   m_index{};
 
     private:
       // iterating over all entities that match the query with pools decided at compile time is difficult,
@@ -344,18 +344,18 @@ public:
       template<std::size_t = 0>
       [[nodiscard]] constexpr
       bool
-      is_included(entity_type const) const
+      is_included(identifier_type) const
       noexcept;
 
       template<std::size_t = 0>
       [[nodiscard]] constexpr
       bool
-      is_excluded(entity_type const) const
+      is_excluded(identifier_type) const
       noexcept;
 
       [[nodiscard]] constexpr
       bool
-      is_verified(entity_type const) const
+      is_verified(identifier_type) const
       noexcept;
 
       constexpr
@@ -394,22 +394,22 @@ public:
       template<typename Component>
       [[nodiscard]] constexpr
       decltype(auto)
-      value_at(entity_type const) const
+      value_at(identifier_type) const
       noexcept;
 
       template<std::size_t = 0>
       [[nodiscard]] constexpr
       auto
-      make_value_tuple(entity_type const) const
+      make_value_tuple(identifier_type) const
       noexcept;
 
 
       constexpr
-      generic_iterator(maybe_const_t<storage, is_const> * const, difference_type const)
+      generic_iterator(maybe_const_t<storage, is_const> *, difference_type)
       noexcept;
 
       explicit constexpr
-      generic_iterator(maybe_const_t<storage, is_const> * const)
+      generic_iterator(maybe_const_t<storage, is_const> *)
       noexcept;
 
     public:
@@ -504,7 +504,7 @@ public:
 
   public:
     explicit constexpr
-    generic_query(storage * const)
+    generic_query(storage *)
     noexcept;
 
     explicit constexpr
@@ -711,26 +711,26 @@ public:
 
   constexpr
   void
-  erase_entity(entity_type const)
+  erase_entity(identifier_type)
   noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
   template<typename Component>
   [[nodiscard]] constexpr
   bool
-  has(entity_type const) const
+  has(identifier_type) const
   noexcept;
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  get(entity_type const)
+  get(identifier_type)
   noexcept;
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  get(entity_type const) const
+  get(identifier_type) const
   noexcept;
 
 
@@ -752,29 +752,29 @@ public:
       typename ...Args>
   constexpr
   bool
-  emplace(entity_type const, Args &&...);
+  emplace(identifier_type, Args &&...);
 
   template<
       typename    Component,
       typename ...Args>
   constexpr
   bool
-  try_emplace(entity_type const, Args &&...);
+  try_emplace(identifier_type, Args &&...);
 
   template<typename Component>
   constexpr
   bool
-  insert_or_assign(entity_type const, Component const &);
+  insert_or_assign(identifier_type, Component const &);
 
   template<typename Component>
   constexpr
   bool
-  insert_or_assign(entity_type const, Component &&);
+  insert_or_assign(identifier_type, Component &&);
 
   template<typename Component>
   constexpr
   void
-  erase(entity_type const)
+  erase(identifier_type)
   noexcept(s_noexcept_erase<Component>());
 
   constexpr
@@ -858,7 +858,7 @@ bool
 storage<Entity, Allocator, ComponentInfoSeq>
     ::generic_query<Expression>
     ::generic_iterator<IsConst>
-    ::is_included(entity_type const e) const
+    ::is_included(identifier_type const e) const
 noexcept
 {
   if constexpr (I == include_sequence::size)
@@ -892,7 +892,7 @@ bool
 storage<Entity, Allocator, ComponentInfoSeq>
     ::generic_query<Expression>
     ::generic_iterator<IsConst>
-    ::is_excluded(entity_type const e) const
+    ::is_excluded(identifier_type const e) const
 noexcept
 {
   if constexpr (I == exclude_sequence::size)
@@ -920,7 +920,7 @@ bool
 storage<Entity, Allocator, ComponentInfoSeq>
     ::generic_query<Expression>
     ::generic_iterator<IsConst>
-    ::is_verified(entity_type const e) const
+    ::is_verified(identifier_type const e) const
 noexcept
 {
   return is_included<>(e) && is_excluded<>(e);
@@ -1066,7 +1066,7 @@ decltype(auto)
 storage<Entity, Allocator, ComponentInfoSeq>
     ::generic_query<Expression>
     ::generic_iterator<IsConst>
-    ::value_at(entity_type const e) const
+    ::value_at(identifier_type const e) const
 noexcept
 {
   static constexpr
@@ -1096,7 +1096,7 @@ auto
 storage<Entity, Allocator, ComponentInfoSeq>
     ::generic_query<Expression>
     ::generic_iterator<IsConst>
-    ::make_value_tuple(entity_type const e) const
+    ::make_value_tuple(identifier_type const e) const
 noexcept
 {
   if constexpr (I == value_include_sequence::size)
@@ -1274,10 +1274,10 @@ storage<Entity, Allocator, ComponentInfoSeq>
     ::operator*() const
 noexcept
 {
-  entity_type const e = m_pivot.entities[m_index];
+  identifier_type const e = m_pivot.entities[m_index];
 
   return std::tuple_cat(
-      std::tuple<entity_type const &>(e),
+      std::tuple<identifier_type const &>(e),
       make_value_tuple<>(e));
 }
 
@@ -1615,7 +1615,7 @@ storage<Entity, Allocator, ComponentInfoSeq>
 noexcept
 {
   return
-     (noexcept(std::get<Is>(std::declval<pool_tuple &>()).erase(std::declval<entity_type const>()))
+     (noexcept(std::get<Is>(std::declval<pool_tuple &>()).erase(std::declval<identifier_type const>()))
    && ...);
 }
 
@@ -1631,7 +1631,7 @@ storage<Entity, Allocator, ComponentInfoSeq>
 noexcept
 {
   return noexcept(std::get<s_component_index<Component>>(std::declval<pool_tuple &>())
-      .erase(std::declval<entity_type const>()));
+      .erase(std::declval<identifier_type const>()));
 }
 
 template<
@@ -1801,7 +1801,7 @@ template<
 constexpr
 void
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase_entity(entity_type const e)
+    ::erase_entity(identifier_type const e)
 noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
 {
   std::apply(
@@ -1822,7 +1822,7 @@ template<typename Component>
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::has(entity_type const e) const
+    ::has(identifier_type const e) const
 noexcept
 {
   return m_pool<Component>().contains(e);
@@ -1837,7 +1837,7 @@ template<typename Component>
 constexpr
 Component &
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::get(entity_type const e)
+    ::get(identifier_type const e)
 noexcept
 {
   return m_pool<Component>()[e];
@@ -1851,7 +1851,7 @@ template<typename Component>
 constexpr
 Component const &
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::get(entity_type const e) const
+    ::get(identifier_type const e) const
 noexcept
 {
   return m_pool<Component>()[e];
@@ -1899,7 +1899,7 @@ template<
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace(entity_type const e, Args &&...args)
+    ::emplace(identifier_type const e, Args &&...args)
 {
   return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
 }
@@ -1915,7 +1915,7 @@ template<
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::try_emplace(entity_type const e, Args &&...args)
+    ::try_emplace(identifier_type const e, Args &&...args)
 {
   return m_pool<Component>().try_emplace(e, std::forward<Args>(args)...).second;
 }
@@ -1929,7 +1929,7 @@ template<typename Component>
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::insert_or_assign(entity_type const e, Component const &c)
+    ::insert_or_assign(identifier_type const e, Component const &c)
 {
   return m_pool<Component>().insert_or_assign(e, c).second;
 }
@@ -1942,9 +1942,9 @@ template<typename Component>
 constexpr
 bool
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::insert_or_assign(entity_type const e, Component &&c)
+    ::insert_or_assign(identifier_type const e, Component &&c)
 {
-  return m_pool<Component>().insert_or_assign(e, std::move(c)).second;
+  return m_pool<Component>().insert_or_assign(e, std::forward<Component>(c)).second;
 }
 
 
@@ -1956,7 +1956,7 @@ template<typename Component>
 constexpr
 void
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase(entity_type const e)
+    ::erase(identifier_type const e)
 noexcept(s_noexcept_erase<Component>())
 {
   m_pool<Component>().erase(e);

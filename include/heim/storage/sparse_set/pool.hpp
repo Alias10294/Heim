@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 #include "heim/allocator.hpp"
-#include "heim/entity.hpp"
+#include "heim/identifier.hpp"
 #include "heim/utility.hpp"
 
 namespace heim::sparse_set_based
@@ -62,7 +62,7 @@ struct default_pool_page_size
  */
 template<
     typename    Component,
-    typename    Entity    = entity<>,
+    typename    Entity    = identifier<>,
     typename    Allocator = std::allocator<Entity>,
     std::size_t PageSize  = default_pool_page_size<>::value,
     bool        TagValue  = std::is_empty_v<Component>>
@@ -89,7 +89,7 @@ public:
   static constexpr bool      tag_value = TagValue;
 
   static_assert(
-      specializes_entity_v<entity_type>,
+      specializes_identifier_v<entity_type>,
       "heim::sparse_set_based::pool: entity_type must be a specialization of entity.");
   static_assert(
       is_an_allocator_for_v<allocator_type, entity_type>,
@@ -1769,7 +1769,9 @@ pool<Component, Entity, Allocator, PageSize, TagValue>
         position_container const &other,
         bool_constant<true>)
   : position_container(alloc_traits::select_on_container_copy_construction(other.m_get_allocator()))
-{ }
+{
+  m_copy_vector(other.m_vector, m_vector);
+}
 
 template<
     typename    Component,

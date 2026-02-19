@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include "entity_manager.hpp"
+#include "identifier_manager.hpp"
 #include "utility.hpp"
 
 namespace heim
@@ -37,14 +37,14 @@ public:
 
   using storage_type = Storage;
 
-  using entity_type    = typename storage_type::entity_type;
+  using identifier_type    = typename storage_type::identifier_type;
   using allocator_type = typename storage_type::allocator_type;
 
 private:
-  using entity_manager_type = entity_manager<entity_type, allocator_type>;
+  using identifier_manager_type = identifier_manager<identifier_type, allocator_type>;
 
 private:
-  entity_manager_type m_entity_mgr;
+  identifier_manager_type m_entity_mgr;
   storage_type        m_storage;
 
 private:
@@ -239,11 +239,11 @@ public:
 
   [[nodiscard]] constexpr
   bool
-  is_valid(entity_type const) const
+  is_valid(identifier_type) const
   noexcept;
 
   [[nodiscard]] constexpr
-  entity_type
+  identifier_type
   create();
 
   template<
@@ -260,7 +260,7 @@ public:
 
   constexpr
   void
-  destroy(entity_type const)
+  destroy(identifier_type)
   noexcept(s_noexcept_destroy());
 
   template<
@@ -281,59 +281,59 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   bool
-  has(entity_type const) const
+  has(identifier_type) const
   noexcept(s_noexcept_has<Component>());
 
   template<typename ...Components>
   [[nodiscard]] constexpr
   bool
-  has_all_of(entity_type const) const
+  has_all_of(identifier_type) const
   noexcept(s_noexcept_has_all_of<Components ...>());
 
   template<typename ...Components>
   [[nodiscard]] constexpr
   bool
-  has_any_of(entity_type const) const
+  has_any_of(identifier_type) const
   noexcept(s_noexcept_has_any_of<Components ...>());
 
   template<typename ...Components>
   [[nodiscard]] constexpr
   bool
-  has_none_of(entity_type const) const
+  has_none_of(identifier_type) const
   noexcept(s_noexcept_has_none_of<Components ...>());
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  get(entity_type const)
+  get(identifier_type)
   noexcept(s_noexcept_get<Component>());
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  get(entity_type const) const
+  get(identifier_type) const
   noexcept(s_noexcept_get_const<Component>());
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  try_get(entity_type const);
+  try_get(identifier_type);
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  try_get(entity_type const) const;
+  try_get(identifier_type) const;
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component *
-  get_if(entity_type const)
+  get_if(identifier_type)
   noexcept(s_noexcept_get_if<Component>());
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const *
-  get_if(entity_type const) const
+  get_if(identifier_type) const
   noexcept(s_noexcept_get_if_const<Component>());
 
 
@@ -355,7 +355,7 @@ public:
       typename ...Args>
   constexpr
   decltype(auto)
-  emplace(entity_type const, Args &&...)
+  emplace(identifier_type, Args &&...)
   noexcept(s_noexcept_emplace<Component, Args ...>());
 
   template<
@@ -363,37 +363,37 @@ public:
       typename ...Args>
   constexpr
   decltype(auto)
-  try_emplace(entity_type const, Args &&...)
+  try_emplace(identifier_type, Args &&...)
   noexcept(s_noexcept_try_emplace<Component, Args ...>());
 
   template<typename Component>
   constexpr
   decltype(auto)
-  insert(entity_type const, Component const &)
+  insert(identifier_type, Component const &)
   noexcept(s_noexcept_insert_copy<Component>());
 
   template<typename Component>
   constexpr
   decltype(auto)
-  insert(entity_type const, Component &&)
+  insert(identifier_type, Component &&)
   noexcept(s_noexcept_insert_move<Component>());
 
   template<typename Component>
   constexpr
   decltype(auto)
-  insert_or_assign(entity_type const, Component const &)
+  insert_or_assign(identifier_type, Component const &)
   noexcept(s_noexcept_insert_or_assign_copy<Component>());
 
   template<typename Component>
   constexpr
   decltype(auto)
-  insert_or_assign(entity_type const, Component &&)
+  insert_or_assign(identifier_type, Component &&)
   noexcept(s_noexcept_insert_or_assign_move<Component>());
 
   template<typename Component>
   constexpr
   decltype(auto)
-  erase(entity_type const)
+  erase(identifier_type )
   noexcept(s_noexcept_erase<Component>());
 
   template<
@@ -473,8 +473,8 @@ noexcept
 {
   return
       std::is_nothrow_constructible_v<
-          entity_manager_type,
-          entity_manager_type &&, allocator_type const &>
+          identifier_manager_type,
+          identifier_manager_type &&, allocator_type const &>
    && std::is_nothrow_constructible_v<
           storage_type,
           storage_type &&, allocator_type const &>;
@@ -489,7 +489,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .erase_entity(std::declval<entity_type const>()));
+      .erase_entity(std::declval<identifier_type const>()));
 }
 
 
@@ -502,7 +502,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type const &>()
-      .template has<Component>(std::declval<entity_type const>()));
+      .template has<Component>(std::declval<identifier_type const>()));
 }
 
 
@@ -520,13 +520,13 @@ noexcept
   = requires
   {
     std::declval<storage_type const &>()
-        .template has_all_of<Components ...>(std::declval<entity_type const>());
+        .template has_all_of<Components ...>(std::declval<identifier_type const>());
   };
 
   if constexpr (implements_has_all_of)
   {
     return noexcept(std::declval<storage_type const &>()
-        .template has_all_of<Components ...>(std::declval<entity_type const>()));
+        .template has_all_of<Components ...>(std::declval<identifier_type const>()));
   }
 
   return (s_noexcept_has<Components>() && ...);
@@ -547,13 +547,13 @@ noexcept
   = requires
   {
     std::declval<storage_type const &>()
-        .template has_any_of<Components ...>(std::declval<entity_type const>());
+        .template has_any_of<Components ...>(std::declval<identifier_type const>());
   };
 
   if constexpr (implements_has_any_of)
   {
     return noexcept(std::declval<storage_type const &>()
-        .template has_any_of<Components ...>(std::declval<entity_type const>()));
+        .template has_any_of<Components ...>(std::declval<identifier_type const>()));
   }
 
   return (s_noexcept_has<Components>() && ...);
@@ -574,13 +574,13 @@ noexcept
   = requires
   {
     std::declval<storage_type const &>()
-        .template has_none_of<Components ...>(std::declval<entity_type const>());
+        .template has_none_of<Components ...>(std::declval<identifier_type const>());
   };
 
   if constexpr (implements_has_none_of)
   {
     return noexcept(std::declval<storage_type const &>()
-        .template has_none_of<Components ...>(std::declval<entity_type const>()));
+        .template has_none_of<Components ...>(std::declval<identifier_type const>()));
   }
 
   return (s_noexcept_has<Components>() && ...);
@@ -596,7 +596,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template get<Component>(std::declval<entity_type const>()));
+      .template get<Component>(std::declval<identifier_type const>()));
 }
 
 
@@ -609,7 +609,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type const &>()
-      .template get<Component>(std::declval<entity_type const>()));
+      .template get<Component>(std::declval<identifier_type const>()));
 }
 
 
@@ -627,13 +627,13 @@ noexcept
   = requires
   {
     std::declval<storage_type &>()
-        .template get_if<Component>(std::declval<entity_type const>());
+        .template get_if<Component>(std::declval<identifier_type const>());
   };
 
   if constexpr (implements_get_if)
   {
     return noexcept(std::declval<storage_type &>()
-        .template get_if<Component>(std::declval<entity_type const>()));
+        .template get_if<Component>(std::declval<identifier_type const>()));
   }
 
   return s_noexcept_has<Component>()
@@ -655,13 +655,13 @@ noexcept
   = requires
   {
     std::declval<storage_type const &>()
-        .template get_if<Component>(std::declval<entity_type const>());
+        .template get_if<Component>(std::declval<identifier_type const>());
   };
 
   if constexpr (implements_get_if_const)
   {
     return noexcept(std::declval<storage_type const &>()
-        .template get_if<Component>(std::declval<entity_type const>()));
+        .template get_if<Component>(std::declval<identifier_type const>()));
   }
 
   return s_noexcept_has      <Component>()
@@ -704,7 +704,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template emplace<Component, Args ...>(std::declval<entity_type const>(), std::declval<Args &&>()...));
+      .template emplace<Component, Args ...>(std::declval<identifier_type const>(), std::declval<Args &&>()...));
 }
 
 template<typename Storage>
@@ -718,7 +718,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-        .template try_emplace<Component, Args ...>(std::declval<entity_type const>(), std::declval<Args &&>()...));
+        .template try_emplace<Component, Args ...>(std::declval<identifier_type const>(), std::declval<Args &&>()...));
 }
 
 template<typename Storage>
@@ -735,13 +735,13 @@ noexcept
   = requires
   {
     std::declval<storage_type &>()
-      .template insert<Component>(std::declval<entity_type const>(), std::declval<Component const &>());
+      .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component const &>());
   };
 
   if constexpr (implements_insert_copy)
   {
     return noexcept(std::declval<storage_type &>()
-        .template insert<Component>(std::declval<entity_type const>(), std::declval<Component const &>()));
+        .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component const &>()));
   }
 
   return s_noexcept_emplace<Component, Component const &>();
@@ -761,13 +761,13 @@ noexcept
   = requires
   {
     std::declval<storage_type &>()
-      .template insert<Component>(std::declval<entity_type const>(), std::declval<Component &&>());
+      .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component &&>());
   };
 
   if constexpr (implements_insert_move)
   {
     return noexcept(std::declval<storage_type &>()
-        .template insert<Component>(std::declval<entity_type const>(), std::declval<Component &&>()));
+        .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component &&>()));
   }
 
   return s_noexcept_emplace<Component, Component &&>();
@@ -782,7 +782,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>()));
+      .template insert_or_assign<Component>(std::declval<identifier_type const>(), std::declval<Component const &>()));
 }
 
 
@@ -795,7 +795,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>()));
+      .template insert_or_assign<Component>(std::declval<identifier_type const>(), std::declval<Component &&>()));
 }
 
 
@@ -808,7 +808,7 @@ registry<Storage>
 noexcept
 {
   return noexcept(std::declval<storage_type &>()
-      .template erase<Component>(std::declval<entity_type const>()));
+      .template erase<Component>(std::declval<identifier_type const>()));
 }
 
 template<typename Storage>
@@ -859,7 +859,7 @@ registry<Storage>
     ::s_noexcept_swap()
 noexcept
 {
-  return std::is_nothrow_swappable_v<entity_manager_type>
+  return std::is_nothrow_swappable_v<identifier_manager_type>
       && std::is_nothrow_swappable_v<storage_type       >;
 }
 
@@ -918,7 +918,7 @@ template<typename Storage>
 constexpr
 bool
 registry<Storage>
-    ::is_valid(entity_type const e) const
+    ::is_valid(identifier_type const e) const
 noexcept
 {
   return m_entity_mgr.is_valid(e);
@@ -928,18 +928,18 @@ noexcept
 template<typename Storage>
 constexpr
 typename registry<Storage>
-    ::entity_type
+    ::identifier_type
 registry<Storage>
     ::create()
 {
-  entity_type const e = m_entity_mgr.summon();
+  identifier_type const e = m_entity_mgr.summon();
 
   static constexpr
   bool
   implements_emplace_entity
   = requires
   {
-    std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>());
+    std::declval<storage_type &>().emplace_entity(std::declval<identifier_type const>());
   };
 
   // depending on the storage type it might need to be introduced to the entity
@@ -948,7 +948,7 @@ registry<Storage>
     static constexpr
     bool
     noexcept_emplace_entity
-    = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<entity_type const>()));
+    = noexcept(std::declval<storage_type &>().emplace_entity(std::declval<identifier_type const>()));
 
     if constexpr (noexcept_emplace_entity)
       m_storage.emplace_entity(e);
@@ -975,8 +975,8 @@ registry<Storage>
     ::create(Iterator first, Sentinel last)
 {
   static_assert(
-      std::output_iterator<Iterator, entity_type>,
-      "heim::registry::create: Iterator must be an output iterator for entity_type");
+      std::output_iterator<Iterator, identifier_type>,
+      "heim::registry::create: Iterator must be an output iterator for identifier_type");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
       "heim::registry::create: Sentinel must be a sentinel for Iterator.");
@@ -993,8 +993,8 @@ registry<Storage>
     ::create(Range &&r)
 {
   static_assert(
-      std::ranges::output_range<Range, entity_type>,
-      "heim::registry::create: Range must be an output range for entity_type.");
+      std::ranges::output_range<Range, identifier_type>,
+      "heim::registry::create: Range must be an output range for identifier_type.");
 
   create(std::ranges::begin(r), std::ranges::end(r));
 }
@@ -1004,11 +1004,11 @@ template<typename Storage>
 constexpr
 void
 registry<Storage>
-    ::destroy(entity_type const e)
+    ::destroy(identifier_type const e)
 noexcept(s_noexcept_destroy())
 {
   static_assert(
-      requires { std::declval<storage_type &>().erase_entity(std::declval<entity_type const>()); },
+      requires { std::declval<storage_type &>().erase_entity(std::declval<identifier_type const>()); },
       "heim::registry::destroy: storage_type must expose an erase_entity method.");
 
   m_storage   .erase_entity(e);
@@ -1027,9 +1027,9 @@ noexcept(s_noexcept_destroy())
 {
   static_assert(
       std::input_iterator<Iterator>
-   && std::convertible_to<std::iter_reference_t<Iterator>, entity_type>,
+   && std::convertible_to<std::iter_reference_t<Iterator>, identifier_type>,
       "heim::registry::destroy: Iterator must be an input iterator dereferenceable to a type convertible "
-      "to entity_type.");
+      "to identifier_type.");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
       "heim::registry::destroy: Sentinel must be a sentinel for Iterator.");
@@ -1048,9 +1048,9 @@ noexcept(s_noexcept_destroy())
 {
   static_assert(
       std::ranges::input_range<Range>
-   && std::convertible_to<std::ranges::range_reference_t<Range>, entity_type>,
+   && std::convertible_to<std::ranges::range_reference_t<Range>, identifier_type>,
       "heim::registry::destroy: Range must be an input range with an iterator dereferenceable to a type "
-      "convertible to entity_type.");
+      "convertible to identifier_type.");
 
   destroy(std::ranges::begin(r), std::ranges::end(r));
 }
@@ -1062,7 +1062,7 @@ template<typename Component>
 constexpr
 bool
 registry<Storage>
-    ::has(entity_type const e) const
+    ::has(identifier_type const e) const
 noexcept(s_noexcept_has<Component>())
 {
   static constexpr
@@ -1071,7 +1071,7 @@ noexcept(s_noexcept_has<Component>())
   = requires
   {
     { std::declval<storage_type const &>()
-        .template has<Component>(std::declval<entity_type const>()) }
+        .template has<Component>(std::declval<identifier_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -1088,7 +1088,7 @@ template<typename ...Components>
 constexpr
 bool
 registry<Storage>
-    ::has_all_of(entity_type const e) const
+    ::has_all_of(identifier_type const e) const
 noexcept(s_noexcept_has_all_of<Components ...>())
 {
   static constexpr
@@ -1097,7 +1097,7 @@ noexcept(s_noexcept_has_all_of<Components ...>())
   = requires
   {
     { std::declval<storage_type const &>()
-        .template has_all_of<Components ...>(std::declval<entity_type const>()) }
+        .template has_all_of<Components ...>(std::declval<identifier_type const>()) }
         -> std::same_as<bool>;
   };
 
@@ -1114,7 +1114,7 @@ template<typename ...Components>
 constexpr
 bool
 registry<Storage>
-    ::has_any_of(entity_type const e) const
+    ::has_any_of(identifier_type const e) const
 noexcept(s_noexcept_has_any_of<Components ...>())
 {
   static constexpr
@@ -1123,7 +1123,7 @@ noexcept(s_noexcept_has_any_of<Components ...>())
   = requires
   {
     { std::declval<storage_type const &>()
-        .template has_any_of<Components ...>(std::declval<entity_type const>()) } -> std::same_as<bool>;
+        .template has_any_of<Components ...>(std::declval<identifier_type const>()) } -> std::same_as<bool>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1139,7 +1139,7 @@ template<typename ...Components>
 constexpr
 bool
 registry<Storage>
-    ::has_none_of(entity_type const e) const
+    ::has_none_of(identifier_type const e) const
 noexcept(s_noexcept_has_none_of<Components ...>())
 {
   static constexpr
@@ -1148,7 +1148,7 @@ noexcept(s_noexcept_has_none_of<Components ...>())
   = requires
   {
     { std::declval<storage_type const &>()
-        .template has_none_of<Components ...>(std::declval<entity_type const>()) } -> std::same_as<bool>;
+        .template has_none_of<Components ...>(std::declval<identifier_type const>()) } -> std::same_as<bool>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1164,7 +1164,7 @@ template<typename Component>
 constexpr
 Component &
 registry<Storage>
-    ::get(entity_type const e)
+    ::get(identifier_type const e)
 noexcept(s_noexcept_get<Component>())
 {
   return m_storage.template get<Component>(e);
@@ -1175,7 +1175,7 @@ template<typename Component>
 constexpr
 Component const &
 registry<Storage>
-    ::get(entity_type const e) const
+    ::get(identifier_type const e) const
 noexcept(s_noexcept_get_const<Component>())
 {
   return m_storage.template get<Component>(e);
@@ -1187,7 +1187,7 @@ template<typename Component>
 constexpr
 Component &
 registry<Storage>
-    ::try_get(entity_type const e)
+    ::try_get(identifier_type const e)
 {
   static constexpr
   bool
@@ -1195,7 +1195,7 @@ registry<Storage>
   = requires
   {
     { std::declval<storage_type &>()
-        .template try_get<Component>(std::declval<entity_type const>()) } -> std::convertible_to<Component &>;
+        .template try_get<Component>(std::declval<identifier_type const>()) } -> std::convertible_to<Component &>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1213,7 +1213,7 @@ template<typename Component>
 constexpr
 Component const &
 registry<Storage>
-    ::try_get(entity_type const e) const
+    ::try_get(identifier_type const e) const
 {
   static constexpr
   bool
@@ -1221,7 +1221,7 @@ registry<Storage>
   = requires
   {
     { std::declval<storage_type const &>()
-        .template try_get<Component>(std::declval<entity_type const>()) } -> std::convertible_to<Component const &>;
+        .template try_get<Component>(std::declval<identifier_type const>()) } -> std::convertible_to<Component const &>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1240,7 +1240,7 @@ template<typename Component>
 constexpr
 Component *
 registry<Storage>
-    ::get_if(entity_type const e)
+    ::get_if(identifier_type const e)
 noexcept(s_noexcept_get_if<Component>())
 {
   static constexpr
@@ -1249,7 +1249,7 @@ noexcept(s_noexcept_get_if<Component>())
   = requires
   {
     { std::declval<storage_type &>()
-        .template get_if<Component>(std::declval<entity_type const>()) } -> std::convertible_to<Component *>;
+        .template get_if<Component>(std::declval<identifier_type const>()) } -> std::convertible_to<Component *>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1267,7 +1267,7 @@ template<typename Component>
 constexpr
 Component const *
 registry<Storage>
-    ::get_if(entity_type const e) const
+    ::get_if(identifier_type const e) const
 noexcept(s_noexcept_get_if_const<Component>())
 {
   static constexpr
@@ -1276,7 +1276,7 @@ noexcept(s_noexcept_get_if_const<Component>())
   = requires
   {
     { std::declval<storage_type const &>()
-        .template get_if<Component>(std::declval<entity_type const>()) } -> std::convertible_to<Component const *>;
+        .template get_if<Component>(std::declval<identifier_type const>()) } -> std::convertible_to<Component const *>;
   };
 
   // the storage can implement this method for specific behavior
@@ -1345,7 +1345,7 @@ template<
 constexpr
 decltype(auto)
 registry<Storage>
-    ::emplace(entity_type const e, Args &&...args)
+    ::emplace(identifier_type const e, Args &&...args)
 noexcept(s_noexcept_emplace<Component, Args ...>())
 {
   static constexpr
@@ -1354,7 +1354,7 @@ noexcept(s_noexcept_emplace<Component, Args ...>())
   = requires
   {
     std::declval<storage_type &>()
-        .template emplace<Component, Args ...>(std::declval<entity_type const>(), std::declval<Args &&>()...);
+        .template emplace<Component, Args ...>(std::declval<identifier_type const>(), std::declval<Args &&>()...);
   };
 
   static_assert(
@@ -1372,7 +1372,7 @@ template<
 constexpr
 decltype(auto)
 registry<Storage>
-    ::try_emplace(entity_type const e, Args &&...args)
+    ::try_emplace(identifier_type const e, Args &&...args)
 noexcept(s_noexcept_try_emplace<Component, Args ...>())
 {
   static constexpr
@@ -1381,7 +1381,7 @@ noexcept(s_noexcept_try_emplace<Component, Args ...>())
   = requires
   {
     std::declval<storage_type &>()
-        .template try_emplace<Component, Args ...>(std::declval<entity_type const>(), std::declval<Args &&>()...);
+        .template try_emplace<Component, Args ...>(std::declval<identifier_type const>(), std::declval<Args &&>()...);
   };
 
   static_assert(
@@ -1397,7 +1397,7 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
-    ::insert(entity_type const e, Component const &c)
+    ::insert(identifier_type const e, Component const &c)
 noexcept(s_noexcept_insert_copy<Component>())
 {
   static constexpr
@@ -1406,7 +1406,7 @@ noexcept(s_noexcept_insert_copy<Component>())
   = requires
   {
     std::declval<storage_type &>()
-        .template insert<Component>(std::declval<entity_type const>(), std::declval<Component const &>());
+        .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component const &>());
   };
 
   if constexpr (implements_insert_copy)
@@ -1420,7 +1420,7 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
-    ::insert(entity_type const e, Component &&c)
+    ::insert(identifier_type const e, Component &&c)
 noexcept(s_noexcept_insert_move<Component>())
 {
   static constexpr
@@ -1429,13 +1429,13 @@ noexcept(s_noexcept_insert_move<Component>())
   = requires
   {
     std::declval<storage_type &>()
-        .template insert<Component>(std::declval<entity_type const>(), std::declval<Component &&>());
+        .template insert<Component>(std::declval<identifier_type const>(), std::declval<Component &&>());
   };
 
   if constexpr (implements_insert_move)
-    return m_storage.template insert<Component>(e, std::move(c));
+    return m_storage.template insert<Component>(e, std::forward<Component>(c));
 
-  return try_emplace<Component>(e, std::move(c));
+  return try_emplace<Component>(e, std::forward<Component>(c));
 }
 
 
@@ -1444,7 +1444,7 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
-    ::insert_or_assign(entity_type const e, Component const &c)
+    ::insert_or_assign(identifier_type const e, Component const &c)
 noexcept(s_noexcept_insert_or_assign_copy<Component>())
 {
   static constexpr
@@ -1453,7 +1453,7 @@ noexcept(s_noexcept_insert_or_assign_copy<Component>())
   = requires
   {
     std::declval<storage_type &>()
-        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component const &>());
+        .template insert_or_assign<Component>(std::declval<identifier_type const>(), std::declval<Component const &>());
   };
 
   static_assert(
@@ -1468,7 +1468,7 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
-    ::insert_or_assign(entity_type const e, Component &&c)
+    ::insert_or_assign(identifier_type const e, Component &&c)
 noexcept(s_noexcept_insert_or_assign_move<Component>())
 {
   static constexpr
@@ -1477,14 +1477,14 @@ noexcept(s_noexcept_insert_or_assign_move<Component>())
   = requires
   {
     std::declval<storage_type &>()
-        .template insert_or_assign<Component>(std::declval<entity_type const>(), std::declval<Component &&>());
+        .template insert_or_assign<Component>(std::declval<identifier_type const>(), std::declval<Component &&>());
   };
 
   static_assert(
       implements_insert_or_assign_move,
       "heim::registry::insert_or_assign: storage_type must expose a insert_or_assign method.");
 
-  return m_storage.template insert_or_assign<Component>(e, std::move(c));
+  return m_storage.template insert_or_assign<Component>(e, std::forward<Component>(c));
 }
 
 
@@ -1493,7 +1493,7 @@ template<typename Component>
 constexpr
 decltype(auto)
 registry<Storage>
-    ::erase(entity_type const e)
+    ::erase(identifier_type const e)
 noexcept(s_noexcept_erase<Component>())
 {
   static constexpr
@@ -1501,7 +1501,7 @@ noexcept(s_noexcept_erase<Component>())
   implements_erase
   = requires
   {
-    std::declval<storage_type &>().template erase<Component>(std::declval<entity_type const>());
+    std::declval<storage_type &>().template erase<Component>(std::declval<identifier_type const>());
   };
 
   static_assert(
@@ -1524,9 +1524,9 @@ noexcept(s_noexcept_erase<Component, Iterator,  Sentinel>())
 {
   static_assert(
       std::input_iterator<Iterator>
-   && std::convertible_to<std::iter_reference_t<Iterator>, entity_type>,
+   && std::convertible_to<std::iter_reference_t<Iterator>, identifier_type>,
       "heim::registry::erase: Iterator must be an input iterator dereferenceable to a type convertible "
-      "to entity_type.");
+      "to identifier_type.");
   static_assert(
       std::sentinel_for<Sentinel, Iterator>,
       "heim::registry::erase: Sentinel must be a sentinel for Iterator.");
@@ -1559,9 +1559,9 @@ noexcept(s_noexcept_erase<Component, std::ranges::iterator_t<Range>, std::ranges
 {
   static_assert(
       std::ranges::input_range<Range>
-   && std::convertible_to<std::ranges::range_reference_t<Range>, entity_type>,
+   && std::convertible_to<std::ranges::range_reference_t<Range>, identifier_type>,
       "heim::registry::erase: Range must be an input range with an iterator dereferenceable to a type "
-      "convertible to entity_type.");
+      "convertible to identifier_type.");
 
   erase(std::ranges::begin(r), std::ranges::end(r));
 }
