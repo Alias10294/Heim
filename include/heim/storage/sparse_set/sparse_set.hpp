@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -16,6 +15,24 @@
 
 namespace heim::sparse_set_based
 {
+/*!
+ * @brief The base associative container optimized for its usage in the context of the entity-component-system
+ *   pattern.
+ *
+ * @details Uses two containers — one contiguous "dense" container to hold the elements, and another
+ *   "sparse" container to keep track of the position of each element.
+ *   By default, this sparse array is paginated to avoid significant memory overhead in most use
+ *   cases. This structure allows for constant-time insertion, removal, access to elements, as well
+ *   as providing optimal iteration speed.
+ *
+ * @tparam Identifier The identifier type.
+ * @tparam PageSize   The size of each internal page of positions.
+ * @tparam Allocator  The allocator type.
+ *
+ * @note Specializing this container with a page size of zero causes the sparse container to not be
+ *   paginated at all. This can be considered a good option if inserted identifiers are expected to
+ *   have low enough index values.
+ */
 template<
     typename    Identifier = heim::identifier<>,
     std::size_t PageSize   = 1024,
@@ -28,22 +45,29 @@ template<
     typename    Allocator>
 class sparse_set
 {
-public:
   using identifier_type = Identifier;
   using allocator_type  = Allocator;
 
-  static constexpr std::size_t page_size = PageSize;
-
   static_assert(
       specializes_identifier_v<identifier_type>,
-      "heim::sparse_set_based::sparse_set: identifier_type must be a specialization of identifier_type.");
+      "heim::sparse_set_based::sparse_set: identifier_type must be a specialization of heim::identifier.");
   static_assert(
       is_an_allocator_for_v<allocator_type, identifier_type>,
-      "heim::sparse_set_based::sparse_set: allocator_type must pass as an allocator of identifier_type.");
+      "heim::sparse_set_based::sparse_set: allocator_type must pass as an allocator for identifier_type.");
+
+  static constexpr
+  std::size_t
+  page_size
+  = PageSize;
 
 
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
+  using value_type      = identifier_type;
+  using reference       = identifier_type &;
+  using const_reference = identifier_type const &;
+  using pointer         = identifier_type *;
+  using const_pointer   = identifier_type const *;
 
 private:
   using dense_container
@@ -53,25 +77,30 @@ private:
   class sparse_container
   {
   private:
-    using alloc_traits = std::allocator_traits<allocator_type>;
+    constexpr static bool            s_is_paged = page_size != 0;
+    constexpr static identifier_type s_null_pos = identifier_type{};
+
+    using alloc_traits
+    = std::allocator_traits<allocator_type>;
 
 
-    static constexpr bool            s_is_paged = PageSize != 0;
-    static constexpr identifier_type s_null_pos = identifier_type{};
+    using page
+    = std::array<identifier_type, page_size>;
 
-    using page              = std::array<identifier_type, page_size>;
     using page_allocator    = alloc_traits::template rebind_alloc <page>;
     using page_alloc_traits = alloc_traits::template rebind_traits<page>;
 
+  private:
     class page_deleter
     {
     private:
       [[no_unique_address]]
-      page_allocator m_allocator;
+      page_allocator
+      m_allocator;
 
     public:
       explicit constexpr
-      page_deleter(allocator_type)
+      page_deleter(allocator_type &&)
       noexcept;
 
       constexpr
@@ -85,9 +114,13 @@ private:
       noexcept;
     };
 
-    using page_pointer              = std::unique_ptr<page, page_deleter>;
+  private:
+    using page_pointer
+    = std::unique_ptr<page, page_deleter>;
+
     using page_pointer_allocator    = alloc_traits::template rebind_alloc <page_pointer>;
     using page_pointer_alloc_traits = alloc_traits::template rebind_traits<page_pointer>;
+
 
     using container_type
     = std::conditional_t<
@@ -95,11 +128,12 @@ private:
         std::vector<page_pointer   , page_pointer_allocator>,
         std::vector<identifier_type, allocator_type        >>;
 
-    using container_allocator
-    = typename container_type::allocator_type;
+    using container_allocator    = typename container_type::allocator_type;
+    using container_alloc_traits = std::allocator_traits<container_allocator>;
 
   private:
-    container_type m_container;
+    container_type
+    m_container;
 
   private:
     constexpr static
@@ -117,11 +151,12 @@ private:
     s_noexcept_swap()
     noexcept;
 
+
     template<typename ...Args>
     [[nodiscard]]
     constexpr
     page_pointer
-    m_make_page_pointer(Args &&...);
+    m_make_page_pointer(Args &&...args);
 
     [[nodiscard]]
     constexpr
@@ -130,7 +165,8 @@ private:
 
     constexpr
     void
-    m_copy_container(container_type const &, container_type &);
+    m_copy_container(container_type const &from, container_type &into);
+
 
     constexpr
     sparse_container(sparse_container const &, allocator_type const &, bool_constant<true >);
@@ -144,14 +180,15 @@ private:
     constexpr
     sparse_container(sparse_container const &, bool_constant<false>);
 
+
     constexpr static
     size_type
-    s_page_nb(size_type)
+    s_page_index(size_type)
     noexcept;
 
     constexpr static
     size_type
-    s_line_nb(size_type)
+    s_line_index(size_type)
     noexcept;
 
   public:
@@ -183,8 +220,7 @@ private:
 
     constexpr
     sparse_container &
-    operator=(sparse_container const &)
-    = default;
+    operator=(sparse_container const &);
 
     constexpr
     sparse_container &
@@ -218,7 +254,7 @@ private:
 
     constexpr
     void
-    prepare(identifier_type);
+    prepare_for(identifier_type);
 
     constexpr
     void
@@ -240,90 +276,94 @@ private:
     }
   };
 
-
-  template<typename Iterator>
-  class generic_iterator
+public:
+  class iterator
   {
   public:
-    using iterator_type   = Iterator;
-    using difference_type = std::ptrdiff_t;
-
-    using iterator_category = std::input_iterator_tag;
-    using iterator_concept  = std::contiguous_iterator_tag;
-
-    using value_type = typename iterator_type::value_type;
-    using reference  = typename iterator_type::reference;
-    using pointer    = typename iterator_type::pointer;
-
-
     friend sparse_set;
 
+  public:
+    using difference_type = sparse_set::difference_type;
+    using value_type      = identifier_type;
+    using reference       = identifier_type const &;
+    using pointer         = identifier_type const *;
+
+    using iterator_category = std::contiguous_iterator_tag;
+    using iterator_concept  = std::contiguous_iterator_tag;
+
   private:
-    iterator_type m_it;
+    using underlying_iterator
+    = typename dense_container::const_iterator;
+
+  private:
+    underlying_iterator
+    m_it;
 
   private:
     constexpr explicit
-    generic_iterator(iterator_type)
+    iterator(underlying_iterator)
     noexcept;
 
   public:
     constexpr
-    generic_iterator()
+    iterator()
     = default;
 
     constexpr
-    generic_iterator(generic_iterator const &)
+    iterator(iterator const &)
     = default;
 
     constexpr
-    generic_iterator(generic_iterator &&)
+    iterator(iterator &&)
     = default;
 
     constexpr
-    ~generic_iterator()
+    ~iterator()
     = default;
 
     constexpr
-    generic_iterator &
-    operator=(generic_iterator const &)
+    iterator &
+    operator=(iterator const &)
     = default;
 
     constexpr
-    generic_iterator &
-    operator=(generic_iterator &&)
+    iterator &
+    operator=(iterator &&)
     = default;
 
 
     constexpr
-    generic_iterator &
+    iterator &
     operator++()
     noexcept;
 
     constexpr
-    generic_iterator
+    iterator
     operator++(int)
     noexcept;
 
     constexpr
-    generic_iterator &
+    iterator &
     operator--()
     noexcept;
 
     constexpr
-    generic_iterator
+    iterator
     operator--(int)
     noexcept;
 
     constexpr
-    generic_iterator &
+    iterator &
     operator+=(difference_type)
     noexcept;
 
     constexpr
-    generic_iterator &
+    iterator &
     operator-=(difference_type)
     noexcept;
 
+
+    [[nodiscard]]
     constexpr
     reference
     operator*() const
@@ -334,6 +374,7 @@ private:
     operator->() const
     noexcept;
 
+    [[nodiscard]]
     constexpr
     reference
     operator[](difference_type) const
@@ -341,35 +382,32 @@ private:
 
 
     friend constexpr
-    generic_iterator
-    operator+(generic_iterator it, difference_type n)
+    iterator
+    operator+(iterator it, difference_type n)
     noexcept
     {
-      generic_iterator r(it += n);
-      return r;
+      return iterator(it.m_it + n);
     }
 
     friend constexpr
-    generic_iterator
-    operator+(difference_type n, generic_iterator it)
+    iterator
+    operator+(difference_type n, iterator it)
     noexcept
     {
-      generic_iterator r(it += n);
-      return r;
+      return iterator(n + it.m_it);
     }
 
     friend constexpr
-    generic_iterator
-    operator-(generic_iterator it, difference_type n)
+    iterator
+    operator-(iterator it, difference_type n)
     noexcept
     {
-      generic_iterator r(it -= n);
-      return r;
+      return iterator(it.m_it - n);
     }
 
     friend constexpr
     difference_type
-    operator-(generic_iterator lhs, generic_iterator rhs)
+    operator-(iterator lhs, iterator rhs)
     noexcept
     {
       return rhs.m_it - lhs.m_it;
@@ -378,28 +416,28 @@ private:
     [[nodiscard]]
     friend constexpr
     bool
-    operator==(generic_iterator lhs, generic_iterator rhs)
+    operator==(iterator, iterator)
     = default;
 
     [[nodiscard]]
     friend constexpr
     auto
-    operator<=>(generic_iterator, generic_iterator)
-    = default;
+    operator<=>(iterator lhs, iterator rhs)
+    noexcept
+    {
+      return rhs.m_it <=> lhs.m_it;
+    }
   };
 
 public:
-  using value_type      = typename dense_container::value_type;
-  using reference       = typename dense_container::reference;
-  using const_reference = typename dense_container::const_reference;
-  using pointer         = typename dense_container::pointer;
-  using const_pointer   = typename dense_container::const_pointer;
-
-  using iterator       = generic_iterator<typename dense_container::iterator      >;
-  using const_iterator = generic_iterator<typename dense_container::const_iterator>;
+  using const_iterator
+  = iterator;
 
   using reverse_iterator       = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+  using container_type
+  = dense_container;
 
 private:
   dense_container  m_dense;
@@ -421,13 +459,13 @@ private:
   s_noexcept_swap()
   noexcept;
 
-protected:
+
   constexpr
   void
   m_emplace(identifier_type);
 
 public:
-  explicit constexpr
+  constexpr explicit
   sparse_set(allocator_type const &)
   noexcept;
 
@@ -439,12 +477,12 @@ public:
   sparse_set(sparse_set const &, allocator_type const &);
 
   constexpr
-  sparse_set(sparse_set &&, allocator_type const &)
-  noexcept(s_noexcept_move_alloc_construct());
-
-  constexpr
   sparse_set(sparse_set const &)
   = default;
+
+  constexpr
+  sparse_set(sparse_set &&, allocator_type const &)
+  noexcept(s_noexcept_move_alloc_construct());
 
   constexpr
   sparse_set(sparse_set &&)
@@ -464,6 +502,7 @@ public:
   operator=(sparse_set &&)
   = default;
 
+  [[nodiscard]]
   constexpr
   allocator_type
   get_allocator() const
@@ -474,17 +513,10 @@ public:
   swap(sparse_set &)
   noexcept(s_noexcept_swap());
 
-
   [[nodiscard]]
   constexpr
-  size_type
-  size() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  bool
-  empty() const
+  container_type const &
+  container() const
   noexcept;
 
 
@@ -560,6 +592,18 @@ public:
   crend() const
   noexcept;
 
+  [[nodiscard]]
+  constexpr
+  size_type
+  size() const
+  noexcept;
+
+  [[nodiscard]]
+  constexpr
+  bool
+  empty() const
+  noexcept;
+
 
   [[nodiscard]]
   constexpr
@@ -594,58 +638,17 @@ public:
 
   template<typename ...Args>
   constexpr
-  void
+  iterator
   emplace(Args &&...);
 
   template<typename ...Args>
   constexpr
-  bool
+  iterator
   try_emplace(Args &&...);
-
-  constexpr
-  bool
-  insert(value_type const &);
-
-  constexpr
-  bool
-  insert(value_type &&);
-
-  template<
-      typename Iterator,
-      typename Sentinel>
-  constexpr
-  void
-  insert_range(Iterator, Sentinel);
-
-  template<typename Range>
-  constexpr
-  void
-  insert_range(Range &&);
-
 
   constexpr
   void
   erase(identifier_type)
-  noexcept;
-
-  constexpr
-  iterator
-  erase(iterator)
-  noexcept;
-
-  constexpr
-  iterator
-  erase(const_iterator)
-  noexcept;
-
-  constexpr
-  iterator
-  erase(iterator, iterator)
-  noexcept;
-
-  constexpr
-  iterator
-  erase(const_iterator, const_iterator)
   noexcept;
 
   constexpr
@@ -673,8 +676,8 @@ public:
   operator==(sparse_set const &lhs, sparse_set const &rhs)
   noexcept
   {
-    if (lhs.size() == rhs.size())
-      return true;
+    if (lhs.size() != rhs.size())
+      return false;
 
     for (auto const id : lhs)
     {
@@ -695,9 +698,9 @@ constexpr
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
     ::page_deleter
-    ::page_deleter(allocator_type alloc)
+    ::page_deleter(allocator_type &&alloc)
 noexcept
-  : m_allocator(alloc)
+  : m_allocator(std::move(alloc))
 { }
 
 template<
@@ -709,11 +712,11 @@ void
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
     ::page_deleter
-    ::operator()(page *p)
+    ::operator()(page *pg)
 noexcept
 {
-  page_alloc_traits::destroy   (m_allocator, p);
-  page_alloc_traits::deallocate(m_allocator, p, 1);
+  page_alloc_traits::destroy   (m_allocator, pg);
+  page_alloc_traits::deallocate(m_allocator, pg, 1);
 }
 
 
@@ -744,7 +747,7 @@ noexcept
 {
   return std::is_nothrow_constructible_v<
       container_type,
-      container_type &&, allocator_type const &>;
+      container_type &&, container_allocator const &>;
 }
 
 template<
@@ -775,15 +778,15 @@ sparse_set<Identifier, PageSize, Allocator>
     ::m_make_page_pointer(Args &&...args)
 {
   page_allocator alloc(m_container.get_allocator());
-  page          *p    (page_alloc_traits::allocate(alloc, 1));
+  page          *pg   (page_alloc_traits::allocate(alloc, 1));
 
   // strong exception safety guarantee
   try
-  { page_alloc_traits::construct (alloc, p, std::forward<Args>(args)...); }
+  { page_alloc_traits::construct (alloc, pg, std::forward<Args>(args)...); }
   catch (...)
-  { page_alloc_traits::deallocate(alloc, p, 1); throw; }
+  { page_alloc_traits::deallocate(alloc, pg, 1); throw; }
 
-  return page_pointer(p, page_deleter(std::move(alloc)));
+  return page_pointer(pg, page_deleter(std::move(alloc)));
 }
 
 template<
@@ -796,9 +799,9 @@ typename sparse_set<Identifier, PageSize, Allocator>
     ::page_pointer
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::m_make_page_pointer(std::nullptr_t p)
+    ::m_make_page_pointer(std::nullptr_t np)
 {
-  return page_pointer(p, page_deleter(page_allocator(m_container.get_allocator())));
+  return page_pointer(np, page_deleter(page_allocator(m_container.get_allocator())));
 }
 
 template<
@@ -812,10 +815,11 @@ sparse_set<Identifier, PageSize, Allocator>
     ::m_copy_container(container_type const &from, container_type &into)
 {
   into.reserve(from.capacity());
-  for (page_pointer &p : from)
+
+  for (page_pointer const &pg : from)
   {
-    if (p) into.emplace_back(m_make_page_pointer(*p     ));
-    else   into.emplace_back(m_make_page_pointer(nullptr));
+    if (pg) into.emplace_back(m_make_page_pointer(*pg    ));
+    else    into.emplace_back(m_make_page_pointer(nullptr));
   }
 }
 
@@ -826,7 +830,7 @@ template<
 constexpr
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::sparse_container(sparse_container const &other, allocator_type const &alloc, bool_constant<true >)
+    ::sparse_container(sparse_container const &other, allocator_type const &alloc, bool_constant<true>)
   : m_container(alloc)
 {
   m_copy_container(other.m_container, m_container);
@@ -850,10 +854,8 @@ template<
 constexpr
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::sparse_container(sparse_container const &other, bool_constant<true >)
-  : m_container(
-        std::allocator_traits<container_allocator>
-            ::select_on_container_copy_construction(other.m_container.get_allocator()))
+    ::sparse_container(sparse_container const &other, bool_constant<true>)
+  : m_container(container_alloc_traits::select_on_container_copy_construction(other.m_container.get_allocator()))
 {
   m_copy_container(other.m_container, m_container);
 }
@@ -878,7 +880,7 @@ typename sparse_set<Identifier, PageSize, Allocator>
     ::size_type
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::s_page_nb(size_type idx)
+    ::s_page_index(size_type idx)
 noexcept
 {
   return idx / page_size;
@@ -893,7 +895,7 @@ typename sparse_set<Identifier, PageSize, Allocator>
     ::size_type
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::s_line_nb(size_type idx)
+    ::s_line_index(size_type idx)
 noexcept
 {
   return idx % page_size;
@@ -920,7 +922,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
     ::sparse_container()
 noexcept(s_noexcept_default_construct())
-  : sparse_container(allocator_type())
+  : sparse_container(allocator_type{})
 { }
 
 template<
@@ -962,6 +964,38 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::sparse_container &
+sparse_set<Identifier, PageSize, Allocator>
+    ::sparse_container
+    ::operator=(sparse_container const &other)
+{
+  if constexpr (s_is_paged)
+  {
+    if (this == std::addressof(other))
+      return *this;
+
+    if constexpr (page_pointer_alloc_traits::propagate_on_container_copy_assignment::value)
+    {
+      std::destroy_at  (&m_container);
+      std::construct_at(&m_container, other.m_container.get_allocator());
+    }
+    else
+      m_container.clear();
+
+    m_copy_container(other.m_container, m_container);
+  }
+  else
+    m_container = other.m_container;
+
+  return *this;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
@@ -981,22 +1015,22 @@ constexpr
 bool
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::contains(identifier_type id) const
+    ::contains(identifier_type const id) const
 noexcept
 {
   size_type const idx = id.index();
 
   if constexpr (s_is_paged)
   {
-    size_type const page_nb = s_page_nb(idx);
-    if (page_nb >= m_container.size())
+    size_type const page_idx = s_page_index(idx);
+    if (page_idx >= m_container.size())
       return false;
 
-    page const *p = m_container[page_nb].get();
-    if (!p)
+    page const *pg = m_container[page_idx].get();
+    if (!pg)
       return false;
 
-    return (*p)[s_line_nb(idx)].generation() == id.generation();
+    return (*pg)[s_line_index(idx)].generation() == id.generation();
   }
   else
   {
@@ -1014,13 +1048,13 @@ typename sparse_set<Identifier, PageSize, Allocator>
     ::identifier_type &
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::operator[](identifier_type id)
+    ::operator[](identifier_type const id)
 noexcept
 {
   size_type const idx = id.index();
 
   if constexpr (s_is_paged)
-    return (*m_container[s_page_nb(idx)])[s_line_nb(idx)];
+    return (*m_container[s_page_index(idx)])[s_line_index(idx)];
   else
     return m_container[idx];
 }
@@ -1034,13 +1068,13 @@ typename sparse_set<Identifier, PageSize, Allocator>
     ::identifier_type
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::operator[](identifier_type id) const
+    ::operator[](identifier_type const id) const
 noexcept
 {
   size_type const idx = id.index();
 
   if constexpr (s_is_paged)
-    return (*m_container[s_page_nb(idx)])[s_line_nb(idx)];
+    return (*m_container[s_page_index(idx)])[s_line_index(idx)];
   else
     return m_container[idx];
 }
@@ -1053,21 +1087,18 @@ constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::prepare(identifier_type id)
+    ::prepare_for(identifier_type const id)
 {
   size_type const idx = id.index();
 
   if constexpr (s_is_paged)
   {
-    size_type const pg_nb = s_page_nb(idx);
+    size_type const pg_idx = s_page_index(idx);
 
-    if (pg_nb >= m_container.size())
-      m_container.reserve(pg_nb + 1);
+    if (pg_idx >= m_container.size())
+      m_container.resize(pg_idx + 1, m_make_page_pointer(nullptr));
 
-    while (pg_nb >= m_container.size())
-      m_container.emplace_back(m_make_page_pointer(nullptr));
-
-    page_pointer &pg = m_container[pg_nb];
+    page_pointer &pg = m_container[pg_idx];
     if (!pg)
     {
       pg = m_make_page_pointer();
@@ -1089,7 +1120,7 @@ constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
-    ::erase(identifier_type id)
+    ::erase(identifier_type const id)
 noexcept
 {
   operator[](id) = s_null_pos;
@@ -1111,36 +1142,35 @@ noexcept
     for (auto const &pg : m_container)
     {
       if (auto * const p = pg.get())
-        std::fill(p->begin(), p->end(), s_null_pos);
+        std::ranges::fill(*p, s_null_pos);
     }
   }
   else
-    std::fill(m_container.begin(), m_container.end(), s_null_pos);
+    std::ranges::fill(m_container, s_null_pos);
 }
+
 
 template<
     typename    Identifier,
     std::size_t PageSize,
-    typename    Allocator>template<typename Iterator>
+    typename    Allocator>
 constexpr
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
-    ::generic_iterator(iterator_type it)
+    ::iterator
+    ::iterator(underlying_iterator const it)
 noexcept
-  :m_it(it)
+  : m_it(it)
 { }
 
 template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
-typename
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator &
 sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator> &
-sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator++()
 noexcept
 {
@@ -1152,32 +1182,28 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
-typename
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator>
-sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator++(int)
 noexcept
 {
-  generic_iterator r(*this);
+  iterator r(*this);
   ++*this;
-  return *this;
+  return r;
 }
 
 template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
-typename
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator &
 sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator> &
-sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator--()
 noexcept
 {
@@ -1189,32 +1215,29 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
-typename
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator>
-sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator--(int)
 noexcept
 {
-  generic_iterator r(*this);
+  iterator r(*this);
   --*this;
-  return *this;
+  return r;
 }
 
 template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator> &
+    ::iterator &
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
-    ::operator+=(difference_type n)
+    ::iterator
+    ::operator+=(difference_type const n)
 noexcept
 {
   m_it -= n;
@@ -1225,13 +1248,12 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator> &
+    ::iterator &
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
-    ::operator-=(difference_type n)
+    ::iterator
+    ::operator-=(difference_type const n)
 noexcept
 {
   m_it += n;
@@ -1242,30 +1264,28 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator>
+    ::iterator
     ::reference
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator*() const
 noexcept
 {
-  return m_it.operator*();
+  return *m_it;
 }
 
 template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator>
+    ::iterator
     ::pointer
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
+    ::iterator
     ::operator->() const
 noexcept
 {
@@ -1276,17 +1296,16 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-template<typename Iterator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::template generic_iterator<Iterator>
+    ::iterator
     ::reference
 sparse_set<Identifier, PageSize, Allocator>
-    ::generic_iterator<Iterator>
-    ::operator[](difference_type n) const
+    ::iterator
+    ::operator[](difference_type const n) const
 noexcept
 {
-  return m_it.operator[](n);
+  return m_it[n];
 }
 
 
@@ -1315,11 +1334,11 @@ noexcept
 {
   return
       std::is_nothrow_constructible_v<
-          sparse_container,
-          sparse_container &&, allocator_type const &>
+          dense_container,
+          dense_container  &&, allocator_type const &>
    && std::is_nothrow_constructible_v<
-          dense_container ,
-          dense_container  &&, allocator_type const &>;
+          sparse_container,
+          sparse_container &&, allocator_type const &>;
 }
 
 template<
@@ -1332,8 +1351,8 @@ sparse_set<Identifier, PageSize, Allocator>
     ::s_noexcept_swap()
 noexcept
 {
-  return std::is_nothrow_swappable_v<sparse_container>
-      && std::is_nothrow_swappable_v<dense_container >;
+  return std::is_nothrow_swappable_v<dense_container >
+      && std::is_nothrow_swappable_v<sparse_container>;
 }
 
 template<
@@ -1343,10 +1362,9 @@ template<
 constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
-    ::m_emplace(identifier_type id)
+    ::m_emplace(identifier_type const id)
 {
-  m_sparse.prepare(id);
-
+  m_sparse.prepare_for (id);
   m_dense .emplace_back(id);
   m_sparse[id] = identifier_type(--m_dense.size(), id.generation());
 }
@@ -1366,7 +1384,7 @@ noexcept
 template<
     typename    Identifier,
     std::size_t PageSize,
-    typename Allocator>
+    typename    Allocator>
 constexpr
 sparse_set<Identifier, PageSize, Allocator>
     ::sparse_set()
@@ -1423,8 +1441,8 @@ noexcept(s_noexcept_swap())
 {
   using std::swap;
 
-  swap(m_sparse, other.m_sparse);
   swap(m_dense , other.m_dense );
+  swap(m_sparse, other.m_sparse);
 }
 
 template<
@@ -1433,25 +1451,12 @@ template<
     typename    Allocator>
 constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
-    ::size_type
+    ::container_type const &
 sparse_set<Identifier, PageSize, Allocator>
-    ::size() const
+    ::container() const
 noexcept
 {
-  return m_dense.size();
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-bool
-sparse_set<Identifier, PageSize, Allocator>
-    ::empty() const
-noexcept
-{
-  return m_dense.empty();
+  return m_dense;
 }
 
 template<
@@ -1465,7 +1470,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin()
 noexcept
 {
-  return generic_iterator(--m_dense.end());
+  return iterator(--m_dense.end());
 }
 
 template<
@@ -1479,7 +1484,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin() const
 noexcept
 {
-  return generic_iterator(--m_dense.end());
+  return const_iterator(--m_dense.end());
 }
 
 template<
@@ -1507,7 +1512,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end()
 noexcept
 {
-  return generic_iterator(--m_dense.begin());
+  return iterator(--m_dense.begin());
 }
 
 template<
@@ -1521,7 +1526,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end() const
 noexcept
 {
-  return generic_iterator(--m_dense.begin());
+  return const_iterator(--m_dense.begin());
 }
 
 template<
@@ -1549,7 +1554,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin()
 noexcept
 {
-  return reverse_iterator(end());
+  return std::make_reverse_iterator(end());
 }
 
 template<
@@ -1563,7 +1568,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin() const
 noexcept
 {
-  return const_reverse_iterator(end());
+  return std::make_reverse_iterator(cend());
 }
 
 template<
@@ -1577,7 +1582,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::crbegin() const
 noexcept
 {
-  return const_reverse_iterator(cend());
+  return rbegin();
 }
 
 template<
@@ -1591,7 +1596,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend()
 noexcept
 {
-  return reverse_iterator(begin());
+  return std::make_reverse_iterator(begin());
 }
 
 template<
@@ -1605,7 +1610,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend() const
 noexcept
 {
-  return const_reverse_iterator(begin());
+  return std::make_reverse_iterator(cbegin());
 }
 
 template<
@@ -1619,7 +1624,34 @@ sparse_set<Identifier, PageSize, Allocator>
     ::crend() const
 noexcept
 {
-  return const_reverse_iterator(cbegin());
+  return rend();
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::size_type
+sparse_set<Identifier, PageSize, Allocator>
+    ::size() const
+noexcept
+{
+  return m_dense.size();
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+bool
+sparse_set<Identifier,PageSize, Allocator>
+    ::empty() const
+noexcept
+{
+  return m_dense.empty();
 }
 
 template<
@@ -1629,7 +1661,7 @@ template<
 constexpr
 bool
 sparse_set<Identifier, PageSize, Allocator>
-    ::contains(identifier_type id) const
+    ::contains(identifier_type const id) const
 noexcept
 {
   return m_sparse.contains(id);
@@ -1643,7 +1675,7 @@ constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
     ::iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::iterate(identifier_type id)
+    ::iterate(identifier_type const id)
 noexcept
 {
   return iterator(m_dense.begin() + m_sparse[id]);
@@ -1657,7 +1689,7 @@ constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
     ::const_iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::iterate(identifier_type id) const
+    ::iterate(identifier_type const id) const
 noexcept
 {
   return const_iterator(m_dense.begin() + m_sparse[id]);
@@ -1671,7 +1703,7 @@ constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
     ::iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::find(identifier_type id)
+    ::find(identifier_type const id)
 noexcept
 {
   return contains(id) ? iterate(id) : end();
@@ -1685,7 +1717,7 @@ constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
     ::const_iterator
 sparse_set<Identifier, PageSize, Allocator>
-    ::find(identifier_type id) const
+    ::find(identifier_type const id) const
 noexcept
 {
   return contains(id) ? iterate(id) : end();
@@ -1697,11 +1729,13 @@ template<
     typename    Allocator>
 template<typename ...Args>
 constexpr
-void
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
 sparse_set<Identifier, PageSize, Allocator>
     ::emplace(Args &&...args)
 {
   m_emplace(identifier_type(std::forward<Args>(args)...));
+  return begin();
 }
 
 template<
@@ -1710,89 +1744,18 @@ template<
     typename    Allocator>
 template<typename ...Args>
 constexpr
-bool
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
 sparse_set<Identifier, PageSize, Allocator>
     ::try_emplace(Args &&...args)
 {
-  identifier_type const id(std::forward<Args>(args)...);
+  identifier_type id(std::forward<Args>(args)...);
 
   if (contains(id))
-    return false;
+    return end();
 
   m_emplace(id);
-  return true;
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-bool
-sparse_set<Identifier, PageSize, Allocator>
-    ::insert(value_type const &id)
-{
-  if (contains(id))
-    return false;
-
-  m_emplace(id);
-  return true;
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-bool
-sparse_set<Identifier, PageSize, Allocator>
-    ::insert(value_type &&id)
-{
-  return try_emplace(std::move(id));
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-template<
-    typename Iterator,
-    typename Sentinel>
-constexpr
-void
-sparse_set<Identifier, PageSize, Allocator>
-    ::insert_range(Iterator first, Sentinel last)
-{
-  static_assert(
-      std::input_iterator<Iterator>
-   && std::convertible_to<std::iter_reference_t<Iterator>, identifier_type>,
-      "heim::sparse_set_based::sparse_set::insert_range: Iterator must be an input iterator dereferenceable "
-      "to a type convertible to identifier_type.");
-  static_assert(
-      std::sentinel_for<Sentinel, Iterator>,
-      "heim::sparse_set_based::sparse_set::insert_range: Sentinel must be a sentinel for Iterator.");
-
-  for (; first != last; ++first)
-    insert(*first);
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-template<typename Range>
-constexpr
-void
-sparse_set<Identifier, PageSize, Allocator>
-    ::insert_range(Range &&r)
-{
-  static_assert(
-      std::ranges::input_range<Range>
-   && std::convertible_to<std::ranges::range_reference_t<Range>, identifier_type>,
-      "heim::sparse_set_based::sparse_set::insert_range: Range must be an input range with an iterator "
-      "dereferenceable to a type convertible to identifier_type.");
-
-  insert_range(std::ranges::begin(r), std::ranges::end(r));
+  return begin();
 }
 
 template<
@@ -1802,13 +1765,15 @@ template<
 constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
-    ::erase(identifier_type id)
+    ::erase(identifier_type const id)
 noexcept
 {
-  if (identifier_type pos = m_sparse[id]; pos.index() != size() - 1)
+  if (identifier_type pos = m_sparse[id]; pos != m_dense.size() - 1)
   {
-    m_dense [pos.index()]          = std::move(m_dense.back());
-    m_sparse[m_dense[pos.index()]] = pos;
+    size_type const idx = pos.index();
+
+    m_dense [idx]          = std::move(m_dense.back());
+    m_sparse[m_dense[idx]] = pos;
   }
 
   m_dense .pop_back();
@@ -1820,69 +1785,9 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
-sparse_set<Identifier, PageSize, Allocator>
-    ::erase(iterator it)
-noexcept
-{
-  erase(*it);
-  return it;
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
-sparse_set<Identifier, PageSize, Allocator>
-    ::erase(const_iterator it)
-noexcept
-{
-  return erase(begin() + (it - cbegin()));
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
-sparse_set<Identifier, PageSize, Allocator>
-    ::erase(iterator first, iterator last)
-noexcept
-{
-  for (; first != last; ++first)
-    erase(*first);
-
-  return first;
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
-sparse_set<Identifier, PageSize, Allocator>
-    ::erase(const_iterator first, const_iterator last)
-noexcept
-{
-  return erase(begin() + (first - cbegin()), begin() + (last - cbegin()));
-}
-
-template<
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
 bool
 sparse_set<Identifier, PageSize, Allocator>
-    ::try_erase(identifier_type id)
+    ::try_erase(identifier_type const id)
 noexcept
 {
   if (contains(id))
@@ -1905,6 +1810,28 @@ noexcept
   m_dense .clear();
   m_sparse.clear();
 }
+
+
+/*!
+ * @brief ...
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_sparse_set;
+
+template<typename T>
+struct specializes_sparse_set
+  : bool_constant<false>
+{ };
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+struct specializes_sparse_set<sparse_set<Identifier, PageSize, Allocator>>
+  : bool_constant<true>
+{ };
 
 
 }
