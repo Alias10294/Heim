@@ -55,7 +55,7 @@ class sparse_set
       is_an_allocator_for_v<allocator_type, identifier_type>,
       "heim::sparse_set_based::sparse_set: allocator_type must pass as an allocator for identifier_type.");
 
-  static constexpr
+  constexpr static
   std::size_t
   page_size
   = PageSize;
@@ -63,6 +63,7 @@ class sparse_set
 
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
+
   using value_type      = identifier_type;
   using reference       = identifier_type &;
   using const_reference = identifier_type const &;
@@ -136,20 +137,9 @@ private:
     m_container;
 
   private:
-    constexpr static
-    bool
-    s_noexcept_default_construct()
-    noexcept;
-
-    constexpr static
-    bool
-    s_noexcept_move_alloc_construct()
-    noexcept;
-
-    constexpr static
-    bool
-    s_noexcept_swap()
-    noexcept;
+    constexpr static bool s_noexcept_default_construct   () noexcept;
+    constexpr static bool s_noexcept_move_alloc_construct() noexcept;
+    constexpr static bool s_noexcept_swap() noexcept;
 
 
     template<typename ...Args>
@@ -168,28 +158,15 @@ private:
     m_copy_container(container_type const &from, container_type &into);
 
 
-    constexpr
-    sparse_container(sparse_container const &, allocator_type const &, bool_constant<true >);
+    constexpr sparse_container(sparse_container const &, allocator_type const &, bool_constant<true >);
+    constexpr sparse_container(sparse_container const &, allocator_type const &, bool_constant<false>);
 
-    constexpr
-    sparse_container(sparse_container const &, allocator_type const &, bool_constant<false>);
-
-    constexpr
-    sparse_container(sparse_container const &, bool_constant<true >);
-
-    constexpr
-    sparse_container(sparse_container const &, bool_constant<false>);
+    constexpr sparse_container(sparse_container const &, bool_constant<true >);
+    constexpr sparse_container(sparse_container const &, bool_constant<false>);
 
 
-    constexpr static
-    size_type
-    s_page_index(size_type)
-    noexcept;
-
-    constexpr static
-    size_type
-    s_line_index(size_type)
-    noexcept;
+    constexpr static size_type s_page_index(size_type) noexcept;
+    constexpr static size_type s_line_index(size_type) noexcept;
 
   public:
     constexpr explicit
@@ -200,11 +177,8 @@ private:
     sparse_container()
     noexcept(s_noexcept_default_construct());
 
-    constexpr
-    sparse_container(sparse_container const &, allocator_type const &);
-
-    constexpr
-    sparse_container(sparse_container const &);
+    constexpr sparse_container(sparse_container const &, allocator_type const &);
+    constexpr sparse_container(sparse_container const &);
 
     constexpr
     sparse_container(sparse_container &&, allocator_type const &)
@@ -218,14 +192,8 @@ private:
     ~sparse_container()
     = default;
 
-    constexpr
-    sparse_container &
-    operator=(sparse_container const &);
-
-    constexpr
-    sparse_container &
-    operator=(sparse_container &&)
-    = default;
+    constexpr sparse_container &operator=(sparse_container const &);
+    constexpr sparse_container &operator=(sparse_container &&     ) = default;
 
     constexpr
     void
@@ -239,17 +207,8 @@ private:
     contains(identifier_type) const
     noexcept;
 
-    [[nodiscard]]
-    constexpr
-    identifier_type &
-    operator[](identifier_type)
-    noexcept;
-
-    [[nodiscard]]
-    constexpr
-    identifier_type
-    operator[](identifier_type) const
-    noexcept;
+    [[nodiscard]] constexpr identifier_type &operator[](identifier_type)       noexcept;
+    [[nodiscard]] constexpr identifier_type  operator[](identifier_type) const noexcept;
 
 
     constexpr
@@ -305,62 +264,25 @@ public:
     noexcept;
 
   public:
-    constexpr
-    iterator()
-    = default;
-
-    constexpr
-    iterator(iterator const &)
-    = default;
-
-    constexpr
-    iterator(iterator &&)
-    = default;
+    constexpr iterator()                 = default;
+    constexpr iterator(iterator const &) = default;
+    constexpr iterator(iterator &&     ) = default;
 
     constexpr
     ~iterator()
     = default;
 
-    constexpr
-    iterator &
-    operator=(iterator const &)
-    = default;
+    constexpr iterator &operator=(iterator const &) = default;
+    constexpr iterator &operator=(iterator &&     ) = default;
 
-    constexpr
-    iterator &
-    operator=(iterator &&)
-    = default;
+    constexpr iterator &operator++()    noexcept;
+    constexpr iterator  operator++(int) noexcept;
 
+    constexpr iterator &operator--()    noexcept;
+    constexpr iterator  operator--(int) noexcept;
 
-    constexpr
-    iterator &
-    operator++()
-    noexcept;
-
-    constexpr
-    iterator
-    operator++(int)
-    noexcept;
-
-    constexpr
-    iterator &
-    operator--()
-    noexcept;
-
-    constexpr
-    iterator
-    operator--(int)
-    noexcept;
-
-    constexpr
-    iterator &
-    operator+=(difference_type)
-    noexcept;
-
-    constexpr
-    iterator &
-    operator-=(difference_type)
-    noexcept;
+    constexpr iterator &operator+=(difference_type) noexcept;
+    constexpr iterator &operator-=(difference_type) noexcept;
 
 
     [[nodiscard]]
@@ -383,7 +305,7 @@ public:
 
     friend constexpr
     iterator
-    operator+(iterator it, difference_type n)
+    operator+(iterator const it, difference_type const n)
     noexcept
     {
       return iterator(it.m_it + n);
@@ -391,7 +313,7 @@ public:
 
     friend constexpr
     iterator
-    operator+(difference_type n, iterator it)
+    operator+(difference_type const n, iterator const it)
     noexcept
     {
       return iterator(n + it.m_it);
@@ -399,7 +321,7 @@ public:
 
     friend constexpr
     iterator
-    operator-(iterator it, difference_type n)
+    operator-(iterator const it, difference_type const n)
     noexcept
     {
       return iterator(it.m_it - n);
@@ -407,7 +329,7 @@ public:
 
     friend constexpr
     difference_type
-    operator-(iterator lhs, iterator rhs)
+    operator-(iterator const lhs, iterator const rhs)
     noexcept
     {
       return rhs.m_it - lhs.m_it;
@@ -444,20 +366,9 @@ private:
   sparse_container m_sparse;
 
 private:
-  constexpr static
-  bool
-  s_noexcept_default_construct()
-  noexcept;
-
-  constexpr static
-  bool
-  s_noexcept_move_alloc_construct()
-  noexcept;
-
-  constexpr static
-  bool
-  s_noexcept_swap()
-  noexcept;
+  constexpr static bool s_noexcept_default_construct   () noexcept;
+  constexpr static bool s_noexcept_move_alloc_construct() noexcept;
+  constexpr static bool s_noexcept_swap() noexcept;
 
 
   constexpr
@@ -492,15 +403,8 @@ public:
   ~sparse_set()
   = default;
 
-  constexpr
-  sparse_set &
-  operator=(sparse_set const &)
-  = default;
-
-  constexpr
-  sparse_set &
-  operator=(sparse_set &&)
-  = default;
+  constexpr sparse_set &operator=(sparse_set const &) = default;
+  constexpr sparse_set &operator=(sparse_set &&     ) = default;
 
   [[nodiscard]]
   constexpr
@@ -520,89 +424,24 @@ public:
   noexcept;
 
 
-  [[nodiscard]]
-  constexpr
-  iterator
-  begin()
-  noexcept;
+  [[nodiscard]] constexpr iterator       begin ()       noexcept;
+  [[nodiscard]] constexpr const_iterator begin () const noexcept;
+  [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
 
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  begin() const
-  noexcept;
+  [[nodiscard]] constexpr iterator       end ()       noexcept;
+  [[nodiscard]] constexpr const_iterator end () const noexcept;
+  [[nodiscard]] constexpr const_iterator cend() const noexcept;
 
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  cbegin() const
-  noexcept;
+  [[nodiscard]] constexpr reverse_iterator       rbegin ()       noexcept;
+  [[nodiscard]] constexpr const_reverse_iterator rbegin () const noexcept;
+  [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
 
-  [[nodiscard]]
-  constexpr
-  iterator
-  end()
-  noexcept;
+  [[nodiscard]] constexpr reverse_iterator       rend ()       noexcept;
+  [[nodiscard]] constexpr const_reverse_iterator rend () const noexcept;
+  [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
 
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  end() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  cend() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  reverse_iterator
-  rbegin()
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_reverse_iterator
-  rbegin() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_reverse_iterator
-  crbegin() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  reverse_iterator
-  rend()
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_reverse_iterator
-  rend() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_reverse_iterator
-  crend() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  size_type
-  size() const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  bool
-  empty() const
-  noexcept;
+  [[nodiscard]] constexpr size_type size () const noexcept;
+  [[nodiscard]] constexpr bool      empty() const noexcept;
 
 
   [[nodiscard]]
@@ -611,50 +450,26 @@ public:
   contains(identifier_type) const
   noexcept;
 
-  [[nodiscard]]
-  constexpr
-  iterator
-  iterate(identifier_type)
-  noexcept;
+  [[nodiscard]] constexpr iterator       iterate(identifier_type)       noexcept;
+  [[nodiscard]] constexpr const_iterator iterate(identifier_type) const noexcept;
 
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  iterate(identifier_type) const
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  iterator
-  find(identifier_type)
-  noexcept;
-
-  [[nodiscard]]
-  constexpr
-  const_iterator
-  find(identifier_type) const
-  noexcept;
+  [[nodiscard]] constexpr iterator       find(identifier_type)       noexcept;
+  [[nodiscard]] constexpr const_iterator find(identifier_type) const noexcept;
 
 
-  template<typename ...Args>
-  constexpr
-  iterator
-  emplace(Args &&...);
+  template<typename ...Args> constexpr std::pair<iterator, bool> emplace    (Args &&...);
+  template<typename ...Args> constexpr std::pair<iterator, bool> try_emplace(Args &&...);
 
-  template<typename ...Args>
-  constexpr
-  iterator
-  try_emplace(Args &&...);
+  constexpr std::pair<iterator, bool> insert(identifier_type const &);
+  constexpr std::pair<iterator, bool> insert(identifier_type &&     );
 
-  constexpr
-  void
-  erase(identifier_type)
-  noexcept;
+  constexpr void     erase(identifier_type   ) noexcept;
+  constexpr iterator erase(iterator          ) noexcept;
+  constexpr iterator erase(iterator, iterator) noexcept;
 
-  constexpr
-  bool
-  try_erase(identifier_type)
-  noexcept;
+  constexpr bool     try_erase(identifier_type   ) noexcept;
+  constexpr iterator try_erase(iterator          ) noexcept;
+  constexpr iterator try_erase(iterator, iterator) noexcept;
 
   constexpr
   void
@@ -1366,7 +1181,7 @@ sparse_set<Identifier, PageSize, Allocator>
 {
   m_sparse.prepare_for (id);
   m_dense .emplace_back(id);
-  m_sparse[id] = identifier_type(--m_dense.size(), id.generation());
+  m_sparse[id] = identifier_type(m_dense.size() - 1, id.generation());
 }
 
 template<
@@ -1568,7 +1383,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin() const
 noexcept
 {
-  return std::make_reverse_iterator(cend());
+  return std::make_reverse_iterator(end());
 }
 
 template<
@@ -1610,7 +1425,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend() const
 noexcept
 {
-  return std::make_reverse_iterator(cbegin());
+  return std::make_reverse_iterator(begin());
 }
 
 template<
@@ -1678,7 +1493,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id)
 noexcept
 {
-  return iterator(m_dense.begin() + m_sparse[id]);
+  return iterator(m_dense.begin() + m_sparse[id].index());
 }
 
 template<
@@ -1692,7 +1507,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id) const
 noexcept
 {
-  return const_iterator(m_dense.begin() + m_sparse[id]);
+  return const_iterator(m_dense.begin() + m_sparse[id].index());
 }
 
 template<
@@ -1729,13 +1544,15 @@ template<
     typename    Allocator>
 template<typename ...Args>
 constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
+std::pair<
+    typename sparse_set<Identifier, PageSize, Allocator>
+        ::iterator,
+    bool>
 sparse_set<Identifier, PageSize, Allocator>
     ::emplace(Args &&...args)
 {
   m_emplace(identifier_type(std::forward<Args>(args)...));
-  return begin();
+  return std::pair(begin(), true);
 }
 
 template<
@@ -1744,18 +1561,58 @@ template<
     typename    Allocator>
 template<typename ...Args>
 constexpr
-typename sparse_set<Identifier, PageSize, Allocator>
-    ::iterator
+std::pair<
+    typename sparse_set<Identifier, PageSize, Allocator>
+        ::iterator,
+    bool>
 sparse_set<Identifier, PageSize, Allocator>
     ::try_emplace(Args &&...args)
 {
   identifier_type id(std::forward<Args>(args)...);
 
   if (contains(id))
-    return end();
+    return std::pair(iterate(id), false);
 
   m_emplace(id);
-  return begin();
+  return std::pair(begin(), true);
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+std::pair<
+    typename sparse_set<Identifier, PageSize, Allocator>
+        ::iterator,
+    bool>
+sparse_set<Identifier, PageSize, Allocator>
+    ::insert(identifier_type const &id)
+{
+  if (contains(id))
+    return std::pair(iterate(id), false);
+
+  m_emplace(id);
+  return std::pair(begin(), true);
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+std::pair<
+    typename sparse_set<Identifier, PageSize, Allocator>
+        ::iterator,
+    bool>
+sparse_set<Identifier, PageSize, Allocator>
+    ::insert(identifier_type &&id)
+{
+  if (contains(id))
+    return std::pair(iterate(id), false);
+
+  m_emplace(std::move(id));
+  return std::pair(begin(), true);
 }
 
 template<
@@ -1768,10 +1625,11 @@ sparse_set<Identifier, PageSize, Allocator>
     ::erase(identifier_type const id)
 noexcept
 {
-  if (identifier_type pos = m_sparse[id]; pos != m_dense.size() - 1)
-  {
-    size_type const idx = pos.index();
+  identifier_type const pos = m_sparse[id];
+  auto            const idx = static_cast<size_type>(pos.index());
 
+  if (pos.index() != m_dense.size() - 1)
+  {
     m_dense [idx]          = std::move(m_dense.back());
     m_sparse[m_dense[idx]] = pos;
   }
@@ -1785,16 +1643,80 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
+sparse_set<Identifier,PageSize, Allocator>
+    ::erase(iterator it)
+noexcept
+{
+  erase(*it);
+  return it + 1;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
+sparse_set<Identifier,PageSize, Allocator>
+    ::erase(iterator first, iterator last)
+noexcept
+{
+  while (first != last)
+    first = erase(first);
+
+  return first;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
 bool
 sparse_set<Identifier, PageSize, Allocator>
     ::try_erase(identifier_type const id)
 noexcept
 {
-  if (contains(id))
+  if (!contains(id))
     return false;
 
   erase(id);
   return true;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
+sparse_set<Identifier, PageSize, Allocator>
+    ::try_erase(iterator it)
+noexcept
+{
+  try_erase(*it);
+  return it + 1;
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+typename sparse_set<Identifier, PageSize, Allocator>
+    ::iterator
+sparse_set<Identifier, PageSize, Allocator>
+    ::try_erase(iterator first, iterator last)
+noexcept
+{
+  while (first != last)
+    first = try_erase(first);
+
+  return first;
 }
 
 template<
@@ -1813,7 +1735,7 @@ noexcept
 
 
 /*!
- * @brief ...
+ * @brief Determines whether the given type is a specialization of sparse_set.
  *
  * @tparam T The type to determine for.
  */
