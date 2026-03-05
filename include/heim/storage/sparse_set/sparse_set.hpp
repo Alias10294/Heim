@@ -236,127 +236,11 @@ private:
   };
 
 public:
-  class iterator
-  {
-  public:
-    friend sparse_set;
+  using iterator       = typename dense_container::const_reverse_iterator;
+  using const_iterator = typename dense_container::const_reverse_iterator;
 
-  public:
-    using difference_type = sparse_set::difference_type;
-    using value_type      = identifier_type;
-    using reference       = identifier_type const &;
-    using pointer         = identifier_type const *;
-
-    using iterator_category = std::contiguous_iterator_tag;
-    using iterator_concept  = std::contiguous_iterator_tag;
-
-  private:
-    using underlying_iterator
-    = typename dense_container::const_iterator;
-
-  private:
-    underlying_iterator
-    m_it;
-
-  private:
-    constexpr explicit
-    iterator(underlying_iterator)
-    noexcept;
-
-  public:
-    constexpr iterator()                 = default;
-    constexpr iterator(iterator const &) = default;
-    constexpr iterator(iterator &&     ) = default;
-
-    constexpr
-    ~iterator()
-    = default;
-
-    constexpr iterator &operator=(iterator const &) = default;
-    constexpr iterator &operator=(iterator &&     ) = default;
-
-    constexpr iterator &operator++()    noexcept;
-    constexpr iterator  operator++(int) noexcept;
-
-    constexpr iterator &operator--()    noexcept;
-    constexpr iterator  operator--(int) noexcept;
-
-    constexpr iterator &operator+=(difference_type) noexcept;
-    constexpr iterator &operator-=(difference_type) noexcept;
-
-
-    [[nodiscard]]
-    constexpr
-    reference
-    operator*() const
-    noexcept;
-
-    constexpr
-    pointer
-    operator->() const
-    noexcept;
-
-    [[nodiscard]]
-    constexpr
-    reference
-    operator[](difference_type) const
-    noexcept;
-
-
-    friend constexpr
-    iterator
-    operator+(iterator const it, difference_type const n)
-    noexcept
-    {
-      return iterator(it.m_it + n);
-    }
-
-    friend constexpr
-    iterator
-    operator+(difference_type const n, iterator const it)
-    noexcept
-    {
-      return iterator(n + it.m_it);
-    }
-
-    friend constexpr
-    iterator
-    operator-(iterator const it, difference_type const n)
-    noexcept
-    {
-      return iterator(it.m_it - n);
-    }
-
-    friend constexpr
-    difference_type
-    operator-(iterator const lhs, iterator const rhs)
-    noexcept
-    {
-      return rhs.m_it - lhs.m_it;
-    }
-
-    [[nodiscard]]
-    friend constexpr
-    bool
-    operator==(iterator, iterator)
-    = default;
-
-    [[nodiscard]]
-    friend constexpr
-    auto
-    operator<=>(iterator lhs, iterator rhs)
-    noexcept
-    {
-      return rhs.m_it <=> lhs.m_it;
-    }
-  };
-
-public:
-  using const_iterator
-  = iterator;
-
-  using reverse_iterator       = std::reverse_iterator<iterator>;
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using reverse_iterator       = typename dense_container::const_iterator;
+  using const_reverse_iterator = typename dense_container::const_iterator;
 
   using container_type
   = dense_container;
@@ -1285,7 +1169,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin()
 noexcept
 {
-  return iterator(--m_dense.end());
+  return m_dense.rbegin();
 }
 
 template<
@@ -1299,7 +1183,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::begin() const
 noexcept
 {
-  return const_iterator(--m_dense.end());
+  return m_dense.rbegin();
 }
 
 template<
@@ -1327,7 +1211,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end()
 noexcept
 {
-  return iterator(--m_dense.begin());
+  return m_dense.rend();
 }
 
 template<
@@ -1341,7 +1225,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::end() const
 noexcept
 {
-  return const_iterator(--m_dense.begin());
+  return m_dense.rend();
 }
 
 template<
@@ -1369,7 +1253,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin()
 noexcept
 {
-  return std::make_reverse_iterator(end());
+  return m_dense.begin();
 }
 
 template<
@@ -1383,7 +1267,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rbegin() const
 noexcept
 {
-  return std::make_reverse_iterator(end());
+  return m_dense.begin();
 }
 
 template<
@@ -1411,7 +1295,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend()
 noexcept
 {
-  return std::make_reverse_iterator(begin());
+  return m_dense.end();
 }
 
 template<
@@ -1425,7 +1309,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::rend() const
 noexcept
 {
-  return std::make_reverse_iterator(begin());
+  return m_dense.end();
 }
 
 template<
@@ -1493,7 +1377,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id)
 noexcept
 {
-  return iterator(m_dense.begin() + m_sparse[id].index());
+  return rend() - m_sparse[id].index() - 1;
 }
 
 template<
@@ -1507,7 +1391,7 @@ sparse_set<Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id) const
 noexcept
 {
-  return const_iterator(m_dense.begin() + m_sparse[id].index());
+  return rend() - m_sparse[id].index() - 1;
 }
 
 template<
