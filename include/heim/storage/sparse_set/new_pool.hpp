@@ -36,7 +36,7 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-class new_pool
+class new_pool final
   : public sparse_set<Identifier, PageSize, Allocator>
 {
 public:
@@ -119,7 +119,7 @@ private:
     };
 
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept  = std::bidirectional_iterator_tag;
+    using iterator_concept  = std::random_access_iterator_tag;
 
   private:
     using identifier_iterator
@@ -128,8 +128,8 @@ private:
     using component_iterator
     = std::conditional_t<
         is_const,
-        typename component_container_type::const_iterator,
-        typename component_container_type::iterator      >;
+        typename component_container_type::const_reverse_iterator,
+        typename component_container_type::reverse_iterator      >;
 
   private:
     identifier_iterator m_identifier_it;
@@ -141,62 +141,26 @@ private:
     noexcept;
 
   public:
-    constexpr
-    generic_iterator()
-    = default;
-
-    constexpr
-    generic_iterator(generic_iterator const &)
-    = default;
-
-    constexpr
-    generic_iterator(generic_iterator &&)
-    = default;
+    constexpr generic_iterator()                         = default;
+    constexpr generic_iterator(generic_iterator const &) = default;
+    constexpr generic_iterator(generic_iterator &&     ) = default;
 
     constexpr
     ~generic_iterator()
     = default;
 
-    constexpr
-    generic_iterator &
-    operator=(generic_iterator const &)
-    = default;
-
-    constexpr
-    generic_iterator &
-    operator=(generic_iterator &&)
-    = default;
+    constexpr generic_iterator &operator=(generic_iterator const &) = default;
+    constexpr generic_iterator &operator=(generic_iterator &&     ) = default;
 
 
-    constexpr
-    generic_iterator &
-    operator++()
-    noexcept;
+    constexpr generic_iterator &operator++()    noexcept;
+    constexpr generic_iterator  operator++(int) noexcept;
 
-    constexpr
-    generic_iterator
-    operator++(int)
-    noexcept;
+    constexpr generic_iterator &operator--()    noexcept;
+    constexpr generic_iterator  operator--(int) noexcept;
 
-    constexpr
-    generic_iterator &
-    operator--()
-    noexcept;
-
-    constexpr
-    generic_iterator
-    operator--(int)
-    noexcept;
-
-    constexpr
-    generic_iterator &
-    operator+=(difference_type)
-    noexcept;
-
-    constexpr
-    generic_iterator &
-    operator-=(difference_type)
-    noexcept;
+    constexpr generic_iterator &operator+=(difference_type) noexcept;
+    constexpr generic_iterator &operator-=(difference_type) noexcept;
 
 
     [[nodiscard]]
@@ -222,7 +186,7 @@ private:
     operator+(generic_iterator const it, difference_type const n)
     noexcept
     {
-      return generic_iterator(it.m_identifier_it + n, it.m_component_it - n);
+      return generic_iterator(it.m_identifier_it + n, it.m_component_it + n);
     }
 
     friend constexpr
@@ -230,7 +194,7 @@ private:
     operator+(difference_type const n, generic_iterator const it)
     noexcept
     {
-      return generic_iterator(n + it.m_identifier_it, it.m_component_it - n);
+      return generic_iterator(n + it.m_identifier_it, n + it.m_component_it);
     }
 
     friend constexpr
@@ -238,7 +202,7 @@ private:
     operator-(generic_iterator const it, difference_type const n)
     noexcept
     {
-      return generic_iterator(it.m_identifier_it - n, it.m_component_it + n);
+      return generic_iterator(it.m_identifier_it - n, it.m_component_it - n);
     }
 
     friend constexpr
@@ -261,7 +225,7 @@ private:
     operator<=>(generic_iterator const lhs, generic_iterator const rhs)
     noexcept
     {
-      return rhs.m_identifier_it <=> lhs.m_identifier_it;
+      return lhs.m_identifier_it <=> rhs.m_identifier_it;
     }
   };
 
@@ -316,15 +280,8 @@ public:
   override
   = default;
 
-  constexpr
-  new_pool &
-  operator=(new_pool const &)
-  = default;
-
-  constexpr
-  new_pool &
-  operator=(new_pool &&)
-  = default;
+  constexpr new_pool &operator=(new_pool const &) = default;
+  constexpr new_pool &operator=(new_pool &&     ) = default;
 
   using base_type
       ::get_allocator;
@@ -377,7 +334,7 @@ public:
   constexpr std::pair<iterator, bool> insert_or_assign(identifier_type, component_type const &);
   constexpr std::pair<iterator, bool> insert_or_assign(identifier_type, component_type &&     );
 
-  constexpr bool     erase(identifier_type) noexcept(s_noexcept_erase());
+  constexpr void     erase(identifier_type) noexcept(s_noexcept_erase());
   constexpr iterator erase(iterator       ) noexcept(s_noexcept_erase());
   constexpr iterator erase(const_iterator ) noexcept(s_noexcept_erase());
   constexpr iterator erase(iterator      , iterator      ) noexcept(s_noexcept_erase());
@@ -492,7 +449,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
 noexcept
 {
   ++m_identifier_it;
-  --m_component_it;
+  ++m_component_it;
   return *this;
 }
 
@@ -530,7 +487,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
 noexcept
 {
   --m_identifier_it;
-  ++m_component_it;
+  --m_component_it;
   return *this;
 }
 
@@ -568,7 +525,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
 noexcept
 {
   m_identifier_it += n;
-  m_component_it  -= n;
+  m_component_it  += n;
   return *this;
 }
 
@@ -587,7 +544,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
 noexcept
 {
   m_identifier_it -= n;
-  m_component_it  += n;
+  m_component_it  -= n;
   return *this;
 }
 
@@ -850,7 +807,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::begin()
 noexcept
 {
-  return iterator(base_type::begin(), --m_components.end());
+  return iterator(base_type::begin(), m_components.rbegin());
 }
 
 template<
@@ -865,7 +822,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::begin() const
 noexcept
 {
-  return const_iterator(base_type::begin(), --m_components.end());
+  return const_iterator(base_type::begin(), m_components.rbegin());
 }
 
 template<
@@ -895,7 +852,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::end()
 noexcept
 {
-  return iterator(base_type::end(), --m_components.begin());
+  return iterator(base_type::end(), m_components.rend());
 }
 
 template<
@@ -910,7 +867,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::end() const
 noexcept
 {
-  return const_iterator(base_type::end(), --m_components.begin());
+  return const_iterator(base_type::end(), m_components.rend());
 }
 
 template<
@@ -1030,7 +987,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id)
 noexcept
 {
-  return iterator(base_type::iterate(id), m_components.begin() + m_sparse()[id].index());
+  return iterator(base_type::iterate(id), m_components.rend() - m_sparse()[id].index() - 1);
 }
 
 template<
@@ -1045,7 +1002,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id) const
 noexcept
 {
-  return iterator(base_type::iterate(id), m_components.begin() + m_sparse()[id].index());
+  return iterator(base_type::iterate(id), m_components.rend() - m_sparse()[id].index() - 1);
 }
 
 template<
@@ -1225,17 +1182,8 @@ new_pool<Component, Identifier, PageSize, Allocator>
 {
   if (contains(id))
   {
-    typename base_type::sparse_container &sparse = m_sparse();
-    typename base_type::dense_container  &dense  = m_dense ();
-
-    auto const pos      = static_cast<size_type      >(sparse[id].index());
-    auto const diff_pos = static_cast<difference_type>(pos);
-
-    m_components[pos] = c;
-
-    return std::pair(
-        iterator(base_type::iterator(dense.begin() + diff_pos), m_components.begin() + diff_pos),
-        false);
+    m_components[m_sparse()[id].index()] = c;
+    return std::pair(iterate(id), false);
   }
 
   return emplace(id, c);
@@ -1253,17 +1201,8 @@ new_pool<Component, Identifier, PageSize, Allocator>
 {
   if (contains(id))
   {
-    typename base_type::sparse_container &sparse = m_sparse();
-    typename base_type::dense_container  &dense  = m_dense ();
-
-    auto const pos      = static_cast<size_type      >(sparse[id].index());
-    auto const diff_pos = static_cast<difference_type>(pos);
-
-    m_components[pos] = std::move(c);
-
-    return std::pair(
-        iterator(base_type::iterator(dense.begin() + diff_pos), m_components.begin() + diff_pos),
-        false);
+    m_components[m_sparse()[id].index()] = std::move(c);
+    return std::pair(iterate(id), false);
   }
 
   return emplace(id, std::move(c));
@@ -1275,7 +1214,7 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
-bool
+void
 new_pool<Component, Identifier, PageSize, Allocator>
     ::erase(identifier_type const id)
 noexcept(s_noexcept_erase())
@@ -1296,7 +1235,6 @@ noexcept(s_noexcept_erase())
   m_components.pop_back();
   dense       .pop_back();
   sparse.erase(id);
-  return true;
 }
 
 template<
@@ -1311,7 +1249,7 @@ new_pool<Component, Identifier, PageSize, Allocator>
     ::erase(iterator const it)
 noexcept(s_noexcept_erase())
 {
-  erase(*it);
+  erase((*it).first);
   return it + 1;
 }
 
@@ -1459,6 +1397,8 @@ noexcept
   m_components.clear();
   base_type  ::clear();
 }
+
+
 }
 
 #endif // HEIM_NEW_POOL_HPP
