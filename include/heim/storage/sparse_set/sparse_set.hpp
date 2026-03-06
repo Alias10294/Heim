@@ -257,7 +257,7 @@ protected:
 
   constexpr
   void
-  m_emplace(identifier_type);
+  p_emplace(identifier_type);
 
 public:
   constexpr explicit
@@ -795,7 +795,10 @@ sparse_set<Identifier, PageSize, Allocator>
     size_type const pg_idx = s_page_index(idx);
 
     if (pg_idx >= m_container.size())
-      m_container.resize(pg_idx + 1, m_make_page_pointer(nullptr));
+      m_container.reserve(pg_idx + 1);
+
+    while (pg_idx >= m_container.size())
+      m_container.emplace_back(m_make_page_pointer(nullptr));
 
     page_pointer &pg = m_container[pg_idx];
     if (!pg)
@@ -901,7 +904,7 @@ template<
 constexpr
 void
 sparse_set<Identifier, PageSize, Allocator>
-    ::m_emplace(identifier_type const id)
+    ::p_emplace(identifier_type const id)
 {
   m_sparse.prepare_for (id);
   m_dense .emplace_back(id);
@@ -1275,7 +1278,7 @@ std::pair<
 sparse_set<Identifier, PageSize, Allocator>
     ::emplace(Args &&...args)
 {
-  m_emplace(identifier_type(std::forward<Args>(args)...));
+  p_emplace(identifier_type(std::forward<Args>(args)...));
   return std::pair(begin(), true);
 }
 
@@ -1297,7 +1300,7 @@ sparse_set<Identifier, PageSize, Allocator>
   if (contains(id))
     return std::pair(iterate(id), false);
 
-  m_emplace(id);
+  p_emplace(id);
   return std::pair(begin(), true);
 }
 
@@ -1316,7 +1319,7 @@ sparse_set<Identifier, PageSize, Allocator>
   if (contains(id))
     return std::pair(iterate(id), false);
 
-  m_emplace(id);
+  p_emplace(id);
   return std::pair(begin(), true);
 }
 
@@ -1335,7 +1338,7 @@ sparse_set<Identifier, PageSize, Allocator>
   if (contains(id))
     return std::pair(iterate(id), false);
 
-  m_emplace(std::move(id));
+  p_emplace(std::move(id));
   return std::pair(begin(), true);
 }
 

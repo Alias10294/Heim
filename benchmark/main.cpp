@@ -2,5 +2,5 @@
 
 int main()
 {
-  heim::benchmark::benchmark<1024, 2, 10'000>();
+  heim::benchmark::benchmark<4096, 2, 100'000>();
 }

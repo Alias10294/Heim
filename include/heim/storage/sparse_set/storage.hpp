@@ -88,9 +88,8 @@ private:
       = pool<
           typename ComponentInfo::template get<0>,
           identifier_type,
-          allocator_type,
           ComponentInfo::template get<1>::value,
-          ComponentInfo::template get<2>::value>;
+          allocator_type>;
     };
 
     // makes the last component info index expression dependent, forcing its evaluation to be done
@@ -123,7 +122,7 @@ private:
         ::template append<
             type_sequence<
                 std::remove_cvref_t<Component>,
-                size_constant<default_pool_page_size<>::value>,
+                size_constant<1024>,
                 std::is_empty<std::remove_cvref_t<Component>>>>;
 
     template<std::size_t PageSize>
@@ -325,8 +324,8 @@ public:
       struct pivot_info
       {
         identifier_type const *entities;
-        size_type          index;
-        size_type          size;
+        size_type index;
+        size_type size;
       };
 
 
@@ -1807,7 +1806,7 @@ noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool
   std::apply(
       [e](auto &...pools)
       {
-        (pools.erase(e), ...);
+        (pools.try_erase(e), ...);
       },
       m_pools);
 }
