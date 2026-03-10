@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "heim/heim.hpp"
+#include "heim/storage/sparse_set/new_storage.hpp"
 
 namespace heim::test
 {
@@ -22,6 +23,13 @@ inline void test()
       ::component<velocity>
       ::component<health  >
       ::component<tag     >>;
+
+  using storage
+  = heim::sparse_set_based::new_storage<>
+      ::component<position>
+      ::component<velocity>
+      ::component<health  >
+      ::component<tag     >;
 
   using query_expression
   = heim::query_expression<>

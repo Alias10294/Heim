@@ -595,8 +595,22 @@ registry<Storage>
     ::s_noexcept_get()
 noexcept
 {
-  return noexcept(std::declval<storage_type &>()
-      .template get<Component>(std::declval<identifier_type const>()));
+  static constexpr
+  bool
+  implements_get
+  = requires
+  {
+    std::declval<storage_type &>()
+        .template get<Component>(std::declval<identifier_type const>());
+  };
+
+  if constexpr (implements_get)
+  {
+    return noexcept(std::declval<storage_type &>()
+        .template get<Component>(std::declval<identifier_type const>()));
+  }
+
+  return true;
 }
 
 
@@ -608,8 +622,22 @@ registry<Storage>
     ::s_noexcept_get_const()
 noexcept
 {
-  return noexcept(std::declval<storage_type const &>()
-      .template get<Component>(std::declval<identifier_type const>()));
+  static constexpr
+  bool
+  implements_get_const
+  = requires
+  {
+    std::declval<storage_type const &>()
+        .template get<Component>(std::declval<identifier_type const>());
+  };
+
+  if constexpr (implements_get_const)
+  {
+    return noexcept(std::declval<storage_type const &>()
+        .template get<Component>(std::declval<identifier_type const>()));
+  }
+
+  return true;
 }
 
 
@@ -1167,6 +1195,18 @@ registry<Storage>
     ::get(identifier_type const e)
 noexcept(s_noexcept_get<Component>())
 {
+  static constexpr
+  bool
+  implements_get
+  = requires
+  {
+    std::declval<storage_type &>().template get<Component>(std::declval<identifier_type const>());
+  };
+
+  static_assert(
+      implements_get,
+      "heim::registry::get: storage_type must expose a get method.");
+
   return m_storage.template get<Component>(e);
 }
 
@@ -1178,6 +1218,17 @@ registry<Storage>
     ::get(identifier_type const e) const
 noexcept(s_noexcept_get_const<Component>())
 {
+  static constexpr
+  bool
+  implements_get_const
+  = requires
+  {
+    std::declval<storage_type const &>().template get<Component>(std::declval<identifier_type const>());
+  };
+
+  static_assert(
+      implements_get_const,
+      "heim::registry::get: storage_type must expose a get method.");
   return m_storage.template get<Component>(e);
 }
 

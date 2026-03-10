@@ -16,6 +16,22 @@
 namespace heim::sparse_set_based
 {
 /*!
+ * @brief The default size for each internal page of positions in sparse-set-based containers.
+ *
+ * @tparam T A placeholder type allowing used for redefinition.
+ *
+ * @note This trait can be customized by redefining default_container_page_size<redefine_tag>.
+ */
+template<typename T = redefine_tag>
+struct default_container_page_size;
+
+template<typename>
+struct default_container_page_size
+  : size_constant<1024>
+{ };
+
+
+/*!
  * @brief The base associative container optimized for its usage in the context of the entity-component-system
  *   pattern.
  *
@@ -347,13 +363,13 @@ public:
   constexpr std::pair<iterator, bool> insert(identifier_type const &);
   constexpr std::pair<iterator, bool> insert(identifier_type &&     );
 
-  constexpr void     erase(identifier_type   ) noexcept;
-  constexpr iterator erase(iterator          ) noexcept;
-  constexpr iterator erase(iterator, iterator) noexcept;
+  virtual constexpr void     erase(identifier_type   ) noexcept;
+  constexpr         iterator erase(iterator          ) noexcept;
+  constexpr         iterator erase(iterator, iterator) noexcept;
 
-  constexpr bool     try_erase(identifier_type   ) noexcept;
-  constexpr iterator try_erase(iterator          ) noexcept;
-  constexpr iterator try_erase(iterator, iterator) noexcept;
+  virtual constexpr bool     try_erase(identifier_type   ) noexcept;
+  constexpr         iterator try_erase(iterator          ) noexcept;
+  constexpr         iterator try_erase(iterator, iterator) noexcept;
 
   constexpr
   void
@@ -1482,7 +1498,8 @@ template<
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-struct specializes_sparse_set<sparse_set<Identifier, PageSize, Allocator>>
+struct specializes_sparse_set<
+    sparse_set<Identifier, PageSize, Allocator>>
   : bool_constant<true>
 { };
 

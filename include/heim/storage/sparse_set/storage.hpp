@@ -1786,7 +1786,7 @@ noexcept
 {
   static_assert(
       component_info_sequence::size > 0,
-      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage: A storage with no component type does not hold any allocator.");
 
   return allocator_type(std::get<0>(m_pools).get_allocator());
 }

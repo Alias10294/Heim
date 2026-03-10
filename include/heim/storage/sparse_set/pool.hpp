@@ -255,10 +255,8 @@ private:
   constexpr static bool s_noexcept_swap () noexcept;
   constexpr static bool s_noexcept_erase() noexcept;
 
-  [[nodiscard]] constexpr typename base_type::sparse_container       &m_sparse()       noexcept;
-  [[nodiscard]] constexpr typename base_type::sparse_container const &m_sparse() const noexcept;
-  [[nodiscard]] constexpr typename base_type::dense_container        &m_dense ()       noexcept;
-  [[nodiscard]] constexpr typename base_type::dense_container  const &m_dense () const noexcept;
+  using base_type::m_dense;
+  using base_type::m_sparse;
 
 public:
   constexpr explicit
@@ -343,15 +341,15 @@ public:
   constexpr std::pair<iterator, bool> insert_or_assign(identifier_type, component_type const &);
   constexpr std::pair<iterator, bool> insert_or_assign(identifier_type, component_type &&     );
 
-  constexpr void     erase(identifier_type) noexcept(s_noexcept_erase());
-  constexpr iterator erase(iterator       ) noexcept(s_noexcept_erase());
-  constexpr iterator erase(const_iterator ) noexcept(s_noexcept_erase());
-  constexpr iterator erase(iterator      , iterator      ) noexcept(s_noexcept_erase());
-  constexpr iterator erase(const_iterator, const_iterator) noexcept(s_noexcept_erase());
+  constexpr void     erase    (identifier_type)                noexcept(s_noexcept_erase()) override;
+  constexpr iterator erase    (iterator       )                noexcept(s_noexcept_erase());
+  constexpr iterator erase    (const_iterator )                noexcept(s_noexcept_erase());
+  constexpr iterator erase    (iterator      , iterator      ) noexcept(s_noexcept_erase());
+  constexpr iterator erase    (const_iterator, const_iterator) noexcept(s_noexcept_erase());
 
-  constexpr bool     try_erase(identifier_type) noexcept(s_noexcept_erase());
-  constexpr iterator try_erase(iterator       ) noexcept(s_noexcept_erase());
-  constexpr iterator try_erase(const_iterator ) noexcept(s_noexcept_erase());
+  constexpr bool     try_erase(identifier_type)                noexcept(s_noexcept_erase()) override;
+  constexpr iterator try_erase(iterator       )                noexcept(s_noexcept_erase());
+  constexpr iterator try_erase(const_iterator )                noexcept(s_noexcept_erase());
   constexpr iterator try_erase(iterator      , iterator      ) noexcept(s_noexcept_erase());
   constexpr iterator try_erase(const_iterator, const_iterator) noexcept(s_noexcept_erase());
 
@@ -378,7 +376,7 @@ public:
     if (lhs.size() != rhs.size())
       return false;
 
-    for (auto const id : lhs.m_dense())
+    for (auto const id : lhs.m_dense)
     {
       if (!rhs.contains(id))
         return false;
@@ -679,70 +677,6 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
-typename pool<Component, Identifier, PageSize, Allocator>
-    ::base_type
-    ::sparse_container &
-pool<Component, Identifier, PageSize, Allocator>
-    ::m_sparse()
-noexcept
-{
-  return base_type::m_sparse;
-}
-
-template<
-    typename    Component,
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename pool<Component, Identifier, PageSize, Allocator>
-    ::base_type
-    ::sparse_container const &
-pool<Component, Identifier, PageSize, Allocator>
-    ::m_sparse() const
-noexcept
-{
-  return base_type::m_sparse;
-}
-
-template<
-    typename    Component,
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename pool<Component, Identifier, PageSize, Allocator>
-    ::base_type
-    ::dense_container &
-pool<Component, Identifier, PageSize, Allocator>
-    ::m_dense()
-noexcept
-{
-  return base_type::m_dense;
-}
-
-template<
-    typename    Component,
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
-typename pool<Component, Identifier, PageSize, Allocator>
-    ::base_type
-    ::dense_container const &
-pool<Component, Identifier, PageSize, Allocator>
-    ::m_dense() const
-noexcept
-{
-  return base_type::m_dense;
-}
-
-template<
-    typename    Component,
-    typename    Identifier,
-    std::size_t PageSize,
-    typename    Allocator>
-constexpr
 pool<Component, Identifier, PageSize, Allocator>
     ::pool(allocator_type const &alloc)
 noexcept
@@ -770,7 +704,7 @@ template<
 constexpr
 pool<Component, Identifier, PageSize, Allocator>
     ::pool(pool const &other, allocator_type const &alloc)
-  : base_type   (static_cast<base_type const &>(other)),
+  : base_type   (static_cast<base_type const &>(other), alloc),
     m_components(other.m_components, component_allocator(alloc))
 { }
 
@@ -783,7 +717,7 @@ constexpr
 pool<Component, Identifier, PageSize, Allocator>
     ::pool(pool &&other, allocator_type const &alloc)
 noexcept(s_noexcept_move_alloc_construct())
-  : base_type   (std::move(static_cast<base_type &&>(other))),
+  : base_type   (std::move(static_cast<base_type &&>(other)), alloc),
     m_components(std::move(other.m_components), component_allocator(alloc))
 { }
 
@@ -996,7 +930,7 @@ pool<Component, Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id)
 noexcept
 {
-  return iterator(base_type::iterate(id), m_components.rend() - m_sparse()[id].index() - 1);
+  return iterator(base_type::iterate(id), m_components.rend() - m_sparse[id].index() - 1);
 }
 
 template<
@@ -1011,7 +945,7 @@ pool<Component, Identifier, PageSize, Allocator>
     ::iterate(identifier_type const id) const
 noexcept
 {
-  return iterator(base_type::iterate(id), m_components.rend() - m_sparse()[id].index() - 1);
+  return const_iterator(base_type::iterate(id), m_components.rend() - m_sparse[id].index() - 1);
 }
 
 template<
@@ -1056,7 +990,7 @@ pool<Component, Identifier, PageSize, Allocator>
     ::operator[](identifier_type const id)
 noexcept
 {
-  return m_components[m_sparse()[id].index()];
+  return m_components[m_sparse[id].index()];
 }
 
 template<
@@ -1071,7 +1005,7 @@ pool<Component, Identifier, PageSize, Allocator>
     ::operator[](identifier_type const id) const
 noexcept
 {
-  return m_components[m_sparse()[id].index()];
+  return m_components[m_sparse[id].index()];
 }
 
 template<
@@ -1119,19 +1053,16 @@ std::pair<typename pool<Component, Identifier, PageSize, Allocator>::iterator, b
 pool<Component, Identifier, PageSize, Allocator>
     ::emplace(identifier_type const id, Args &&...args)
 {
-  typename base_type::sparse_container &sparse = m_sparse();
-  typename base_type::dense_container  &dense  = m_dense ();
-
-  sparse.prepare_for (id);
-  dense .emplace_back(id);
+  m_sparse.prepare_for (id);
+  m_dense .emplace_back(id);
 
   // strong exception safety guarantee
   try
   { m_components.emplace_back(std::forward<Args>(args)...); }
   catch (...)
-  { dense.pop_back(); throw; }
+  { m_dense.pop_back(); throw; }
 
-  sparse[id] = identifier_type(dense.size() - 1, id.generation());
+  m_sparse[id] = identifier_type(m_dense.size() - 1, id.generation());
 
   return std::pair(begin(), true);
 }
@@ -1191,7 +1122,7 @@ pool<Component, Identifier, PageSize, Allocator>
 {
   if (contains(id))
   {
-    m_components[m_sparse()[id].index()] = c;
+    m_components[m_sparse[id].index()] = c;
     return std::pair(iterate(id), false);
   }
 
@@ -1210,7 +1141,7 @@ pool<Component, Identifier, PageSize, Allocator>
 {
   if (contains(id))
   {
-    m_components[m_sparse()[id].index()] = std::move(c);
+    m_components[m_sparse[id].index()] = std::move(c);
     return std::pair(iterate(id), false);
   }
 
@@ -1228,26 +1159,23 @@ pool<Component, Identifier, PageSize, Allocator>
     ::erase(identifier_type const id)
 noexcept(s_noexcept_erase())
 {
-  typename base_type::sparse_container &sparse = m_sparse();
-  typename base_type::dense_container  &dense  = m_dense ();
-
-  identifier_type const pos = sparse[id];
+  identifier_type const pos = m_sparse[id];
   auto            const idx = pos.index();
 
-  if (idx != dense.size() - 1)
+  if (idx != m_dense.size() - 1)
   {
     auto const
     size_idx
     = static_cast<size_type>(idx);
 
     m_components[idx]  = std::move(m_components.back());
-    dense       [idx]  = std::move(dense       .back());
-    sparse[dense[idx]] = identifier_type(idx, dense[size_idx].generation());
+    m_dense     [idx]  = std::move(m_dense     .back());
+    m_sparse[m_dense[idx]] = identifier_type(idx, m_dense[size_idx].generation());
   }
 
   m_components.pop_back();
-  dense       .pop_back();
-  sparse.erase(id);
+  m_dense     .pop_back();
+  m_sparse.erase(id);
 }
 
 template<
@@ -1344,7 +1272,7 @@ pool<Component, Identifier, PageSize, Allocator>
     ::try_erase(iterator const it)
 noexcept(s_noexcept_erase())
 {
-  try_erase(*it);
+  try_erase((*it).first);
   return it + 1;
 }
 
@@ -1410,6 +1338,30 @@ noexcept
   m_components.clear();
   base_type  ::clear();
 }
+
+
+/*!
+ * @brief Determines whether the given type is a specialization of pool.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_pool;
+
+template<typename T>
+struct specializes_pool
+  : bool_constant<false>
+{ };
+
+template<
+    typename    Component,
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+struct specializes_pool<
+    pool<Component, Identifier, PageSize, Allocator>>
+  : bool_constant<true>
+{ };
 
 
 }
