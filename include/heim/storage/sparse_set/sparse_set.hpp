@@ -312,10 +312,8 @@ public:
   get_allocator() const
   noexcept;
 
-  constexpr
-  void
-  swap(sparse_set &)
-  noexcept(s_noexcept_swap());
+  constexpr void swap(sparse_set &)                     noexcept(s_noexcept_swap());
+  constexpr void swap(identifier_type, identifier_type) noexcept;
 
   [[nodiscard]]
   constexpr
@@ -1008,6 +1006,25 @@ template<
     std::size_t PageSize,
     typename    Allocator>
 constexpr
+void
+sparse_set<Identifier, PageSize, Allocator>
+    ::swap(identifier_type const lhs, identifier_type const rhs)
+noexcept
+{
+  using std::swap;
+
+  identifier_type &lhs_pos = m_sparse[lhs];
+  identifier_type &rhs_pos = m_sparse[rhs];
+
+  swap(m_dense[lhs_pos.index()], m_dense[rhs_pos.index()]);
+  swap(lhs_pos                 , rhs_pos                 );
+}
+
+template<
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
 typename sparse_set<Identifier, PageSize, Allocator>
     ::container_type const &
 sparse_set<Identifier, PageSize, Allocator>
@@ -1502,6 +1519,12 @@ struct specializes_sparse_set<
     sparse_set<Identifier, PageSize, Allocator>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_sparse_set_v
+= specializes_sparse_set<T>::value;
 
 
 }

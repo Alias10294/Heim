@@ -57,109 +57,101 @@ public:
   using difference_type = std::ptrdiff_t;
 
 private:
-  struct utility
+  template<auto>
+  static constexpr
+  size_type
+  s_last_component_index
+  = component_info_sequence::size - 1;
+
+
+  template<
+      typename  Component,
+      size_type PageSize,
+      bool      TagValue>
+  using component_info
+  = type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>;
+
+  template<typename ...Components>
+  using group_info
+  = type_sequence<Components ...>;
+
+
+  template<typename ComponentInfo>
+  struct to_component
   {
-    struct component
+    using type
+    = typename ComponentInfo::template get<0>;
+  };
+
+  template<typename ComponentInfo>
+  struct to_container
+  {
+    using type
+    = std::conditional_t<
+        ComponentInfo::template get<2>::value,
+        sparse_set<
+            identifier_type,
+            ComponentInfo::template get<1>::value,
+            allocator_type>,
+        pool<
+            typename to_component<ComponentInfo>::type,
+            identifier_type,
+            ComponentInfo::template get<1>::value,
+            allocator_type>>;
+  };
+
+  template<typename GroupInfo>
+  struct to_group
+  {
+    using type
+    = size_type;
+  };
+
+
+  using component_sequence = typename component_info_sequence::template map<to_component>;
+  using container_sequence = typename component_info_sequence::template map<to_container>;
+  using group_sequence     = typename group_info_sequence    ::template map<to_group    >;
+
+  using container_tuple = typename component_info_sequence::template map<to_container>::tuple;
+  using group_tuple     = typename group_info_sequence    ::template map<to_group    >::tuple;
+
+
+  template<typename Component>
+  struct meta
+  {
+    template<typename ComponentInfo>
+    struct contains
     {
-    private:
-      template<auto>
-      constexpr static
-      size_type
-      s_last_component_index
-      = component_info_sequence::size - 1;
-
-      template<typename CInfo> struct to_component_type { using type = typename CInfo::template get<0>; };
-      template<typename CInfo> struct to_page_size_type { using type = typename CInfo::template get<1>; };
-      template<typename CInfo> struct to_tag_value_type { using type = typename CInfo::template get<2>; };
-
-      template<typename CInfo>
-      struct to_container_type
-      {
-        using type
-        = std::conditional_t<
-            to_tag_value_type<CInfo>::type::value,
-            sparse_set<
-                identifier_type,
-                to_page_size_type<CInfo>::type::value,
-                allocator_type>,
-            pool<
-                to_component_type<CInfo>,
-                identifier_type,
-                to_page_size_type<CInfo>::type::value,
-                allocator_type>>;
-      };
-
-    public:
-      template<
-          typename  Component,
-          size_type PageSize  = default_container_page_size<>::value,
-          bool      TagValue  = std::is_empty_v<Component>>
-      using use_component
-      = typename component_info_sequence
-          ::template append<type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>>;
-
-      template<size_type PageSize>
-      using use_paged
-      = typename component_info_sequence
-          ::template set<
-              s_last_component_index<PageSize>,
-              typename component_info_sequence
-                  ::template get<s_last_component_index<PageSize>>
-                  ::template set<1, size_constant<PageSize>>>;
-
-      template<bool TagValue>
-      using use_tagged
-      = typename component_info_sequence
-          ::template set<
-              s_last_component_index<TagValue>,
-              typename component_info_sequence
-                  ::template get<s_last_component_index<TagValue>>
-                  ::template set<2, bool_constant<TagValue>>>;
-
-
-      using component_sequence = typename component_info_sequence::template map<to_component_type>;
-      using page_size_sequence = typename component_info_sequence::template map<to_page_size_type>;
-      using tag_value_sequence = typename component_info_sequence::template map<to_tag_value_type>;
-      using container_sequence = typename component_info_sequence::template map<to_container_type>;
-
-      template<typename Component>
-      static constexpr
-      size_type
-      component_index
-      = component_sequence::template index<Component>;
-
-      template<typename Component> struct page_size_of : page_size_sequence::template get<component_index<Component>> { };
-      template<typename Component> struct tag_value_of : tag_value_sequence::template get<component_index<Component>> { };
-
-      template<typename Component>
-      struct container_of
-      {
-        using type
-        = typename container_sequence::template get<component_index<Component>>;
-      };
-    };
-
-    struct group
-    {
-    private:
-      template<typename GroupInfo>
-      struct to_group
-      {
-        using type
-        = size_type;
-      };
-
-    public:
-      template<typename ...Components>
-      using use_group
-      = typename group_info_sequence
-          ::template append<type_sequence<Components ...>>;
-
-
-      using group_sequence
-      = typename group_info_sequence::template map<to_group>;
+      using type
+      = std::conditional_t<
+          ComponentInfo::template contains<Component>,
+          bool_constant<true >,
+          bool_constant<false>>;
     };
   };
+
+  template<typename Component>
+  static constexpr
+  size_type
+  component_index
+  = component_sequence::template index<Component>;
+
+  template<typename Component>
+  static constexpr
+  size_type
+  group_index
+  = group_info_sequence
+      ::template map  <meta<Component>::template contains>
+      ::template index<bool_constant<true>>;
+
+
+  template<typename Component>
+  using container_of
+  = typename container_sequence::template get<component_index<Component>>;
+
+  template<typename Component>
+  using group_info_of
+  = typename group_info_sequence::template get<group_index<Component>>;
 
 public:
   template<
@@ -170,7 +162,8 @@ public:
   = new_storage<
       identifier_type,
       allocator_type,
-      typename utility::component::template use_component<Component, PageSize, TagValue>,
+      typename component_info_sequence
+          ::template append<component_info<Component, PageSize, TagValue>>,
       group_info_sequence>;
 
   template<size_type PageSize>
@@ -178,7 +171,12 @@ public:
   = new_storage<
       identifier_type,
       allocator_type,
-      typename utility::component::template use_paged<PageSize>,
+      typename component_info_sequence
+          ::template set<
+              s_last_component_index<PageSize>,
+              typename component_info_sequence
+                  ::template get<s_last_component_index<PageSize>>
+                  ::template set<1, size_constant<PageSize>>>,
       group_info_sequence>;
 
   template<bool TagValue>
@@ -186,7 +184,12 @@ public:
   = new_storage<
       identifier_type,
       allocator_type,
-      typename utility::component::template use_tagged<TagValue>,
+      typename component_info_sequence
+          ::template set<
+              s_last_component_index<TagValue>,
+              typename component_info_sequence
+                  ::template get<s_last_component_index<TagValue>>
+                  ::template set<2, size_constant<TagValue>>>,
       group_info_sequence>;
 
   template<typename ...Components>
@@ -195,11 +198,8 @@ public:
       identifier_type,
       allocator_type,
       component_info_sequence,
-      typename utility::group::template use_group<Components ...>>;
-
-private:
-  using container_tuple = typename utility::component::container_sequence::tuple;
-  using group_tuple     = typename utility::group    ::group_sequence    ::tuple;
+      typename group_info_sequence
+          ::template append<group_info<Components ...>>>;
 
 private:
   container_tuple m_containers;
@@ -214,10 +214,24 @@ private:
   template<typename Component> static constexpr bool s_noexcept_erase    () noexcept;
   template<typename Component> static constexpr bool s_noexcept_try_erase() noexcept;
 
-  template<std::size_t ...Is>
+  template<typename Component>
   static constexpr
   bool
-  s_noexcept_erase(std::index_sequence<Is ...>)
+  s_noexcept_m_group_swap()
+  noexcept;
+
+  template<typename ...Components> static constexpr bool s_noexcept_m_include(group_info<Components ...>) noexcept;
+  template<typename ...Components> static constexpr bool s_noexcept_m_exclude(group_info<Components ...>) noexcept;
+
+  template<typename ...Components>
+  static constexpr
+  bool
+  s_noexcept_m_erase(type_sequence<Components ...>)
+  noexcept;
+
+  static constexpr
+  bool
+  s_noexcept_erase()
   noexcept;
 
 
@@ -227,6 +241,41 @@ private:
 
   template<typename Component> [[nodiscard]] constexpr auto       &m_container()       noexcept;
   template<typename Component> [[nodiscard]] constexpr auto const &m_container() const noexcept;
+
+  template<typename Component> [[nodiscard]] constexpr size_type &m_group()       noexcept;
+  template<typename Component> [[nodiscard]] constexpr size_type  m_group() const noexcept;
+
+
+  template<typename ...Components>
+  [[nodiscard]] constexpr
+  bool
+  m_has(group_info<Components ...>, identifier_type) const
+  noexcept;
+
+  template<typename Component>
+  constexpr
+  void
+  m_group_swap(identifier_type, difference_type)
+  noexcept(s_noexcept_m_group_swap<Component>());
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_include(group_info<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_include(group_info<Components ...>{}));
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_exclude(group_info<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_exclude(group_info<Components ...>{}));
+
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_erase(type_sequence<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_erase(type_sequence<Components ...>{}));
 
 public:
   constexpr explicit
@@ -259,8 +308,7 @@ public:
   constexpr new_storage &operator=(new_storage const &) = default;
   constexpr new_storage &operator=(new_storage &&)      = default;
 
-  [[nodiscard]]
-  constexpr
+  [[nodiscard]] constexpr
   allocator_type
   get_allocator() const
   noexcept;
@@ -272,8 +320,7 @@ public:
 
 
   template<typename Component>
-  [[nodiscard]]
-  constexpr
+  [[nodiscard]] constexpr
   bool
   has(identifier_type) const
   noexcept;
@@ -300,7 +347,7 @@ public:
   constexpr
   void
   erase(identifier_type)
-  noexcept(s_noexcept_erase(std::make_index_sequence<utility::component::container_sequence::size>()));
+  noexcept(s_noexcept_erase());
 
   constexpr
   void
@@ -396,7 +443,7 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_erase()
 noexcept
 {
-  return noexcept(std::declval<typename utility::component::template container_of<Component>::type &>().erase(std::declval<identifier_type>()));
+  return noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
 }
 
 template<
@@ -411,7 +458,7 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_try_erase()
 noexcept
 {
-  return noexcept(std::declval<typename utility::component::template container_of<Component>::type &>().try_erase(std::declval<identifier_type>()));
+  return noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
 }
 
 template<
@@ -419,16 +466,73 @@ template<
     typename Allocator,
     typename ComponentInfoSeq,
     typename GroupInfoSeq>
-template<std::size_t ...Is>
+template<typename Component>
 constexpr
 bool
 new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_erase(std::index_sequence<Is...>)
+    ::s_noexcept_m_group_swap()
 noexcept
 {
-  return
-     (noexcept(std::get<Is>(std::declval<container_tuple &>()).erase(std::declval<identifier_type>()))
-   && ...);
+  return noexcept(std::declval<container_of<Component> &>().swap(std::declval<identifier_type>(), std::declval<identifier_type>()));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_include(group_info<Components ...>)
+noexcept
+{
+  return (s_noexcept_m_group_swap<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_exclude(group_info<Components ...>)
+noexcept
+{
+  return (s_noexcept_m_group_swap<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_erase(type_sequence<Components ...>)
+noexcept
+{
+  return (s_noexcept_try_erase<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_erase()
+noexcept
+{
+  return s_noexcept_m_erase(component_sequence{});
 }
 
 template<
@@ -468,7 +572,7 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::m_container()
 noexcept
 {
-  return std::get<utility::component::template component_index<Component>>(m_containers);
+  return std::get<component_index<Component>>(m_containers);
 }
 
 template<
@@ -483,7 +587,131 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::m_container() const
 noexcept
 {
-  return std::get<utility::component::template component_index<Component>>(m_containers);
+  return std::get<component_index<Component>>(m_containers);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+typename new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::size_type &
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group()
+noexcept
+{
+  return std::get<group_index<Component>>(m_groups);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+typename new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::size_type
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group() const
+noexcept
+{
+  return std::get<group_index<Component>>(m_groups);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_has(group_info<Components ...>, identifier_type const id) const
+noexcept
+{
+  return (m_container<Components>().contains(id) && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+void
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group_swap(identifier_type const id, difference_type const group)
+noexcept(s_noexcept_m_group_swap<Component>())
+{
+  container_of<Component> &
+  container
+  = m_container<Component>();
+
+  if constexpr (specializes_sparse_set_v<container_of<Component>>)
+    container.swap(id, *(container.begin() + group));
+  else
+    container.swap(id, std::get<0>(*(container.begin() + group)));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_include(group_info<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_include(group_info<Components ...>{}))
+{
+  size_type &
+  group
+  = m_group<typename group_info<Components ...>::template get<0>>();
+
+  (m_group_swap<Components>(id, static_cast<difference_type>(group)), ...);
+  ++group;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_exclude(group_info<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_exclude(group_info<Components ...>{}))
+{
+  size_type &
+  group
+  = m_group<typename group_info<Components ...>::template get<0>>();
+
+  (m_group_swap<Components>(id, static_cast<difference_type>(group) - 1), ...);
+  --group;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_erase(type_sequence<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_erase(type_sequence<Components ...>{}))
+{
+  (try_erase<Components>(id), ...);
 }
 
 template<
@@ -632,7 +860,9 @@ auto
 new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::query()
 noexcept
-{ }
+{
+  // TODO: implement
+}
 
 template<
     typename Identifier,
@@ -645,7 +875,9 @@ auto
 new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::query() const
 noexcept
-{ }
+{
+  // TODO: implement
+}
 
 template<
     typename Identifier,
@@ -662,7 +894,8 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
 {
   m_container<Component>().emplace(id, std::forward<Args>(args)...);
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
 }
 
 template<
@@ -682,7 +915,9 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().try_emplace(id, std::forward<Args>(args)...).second;
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
+
   return ret;
 }
 
@@ -701,7 +936,9 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert(id, c).second;
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
+
   return ret;
 }
 
@@ -720,7 +957,9 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert(id, std::forward<Component>(c)).second;
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
+
   return ret;
 }
 
@@ -739,7 +978,9 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert_or_assign(id, c).second;
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
+
   return ret;
 }
 
@@ -758,7 +999,9 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert_or_assign(id, std::forward<Component>(c)).second;
 
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+    m_include(group_info_of<Component>{}, id);
+
   return ret;
 }
 
@@ -774,9 +1017,13 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::erase(identifier_type const id)
 noexcept(s_noexcept_erase<Component>())
 {
-  m_container<Component>().erase(id);
-
-  // TODO: add group logic
+  if (m_has(group_info_of<Component>{}))
+  {
+    m_container<Component>().erase(id);
+    m_exclude(group_info_of<Component>{}, id);
+  }
+  else
+    m_container<Component>().erase(id);
 }
 
 template<
@@ -791,12 +1038,17 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::try_erase(identifier_type const id)
 noexcept(s_noexcept_try_erase<Component>())
 {
-  bool const
-  ret
-  = m_container<Component>().try_erase(id);
+  if (m_has(group_info_of<Component>{}))
+  {
+    bool const
+    ret
+    = m_container<Component>().try_erase(id);
 
-  // TODO: add group logic
-  return ret;
+    m_exclude(group_info_of<Component>{}, id);
+    return ret;
+  }
+
+  return m_container<Component>().try_erase(id);
 }
 
 template<
@@ -808,9 +1060,9 @@ constexpr
 void
 new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::erase(identifier_type const id)
-noexcept(s_noexcept_erase(std::make_index_sequence<utility::component::container_sequence::size>()))
+noexcept(s_noexcept_erase())
 {
-  // TODO: implement with group logic in mind
+  m_erase(component_sequence{}, id);
 }
 
 template<

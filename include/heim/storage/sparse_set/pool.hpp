@@ -252,8 +252,10 @@ private:
 private:
   constexpr static bool s_noexcept_default_construct   () noexcept;
   constexpr static bool s_noexcept_move_alloc_construct() noexcept;
-  constexpr static bool s_noexcept_swap () noexcept;
-  constexpr static bool s_noexcept_erase() noexcept;
+  constexpr static bool s_noexcept_swap        () noexcept;
+  constexpr static bool s_noexcept_swap_entries() noexcept;
+  constexpr static bool s_noexcept_erase       () noexcept;
+
 
   using base_type::m_dense;
   using base_type::m_sparse;
@@ -293,10 +295,8 @@ public:
   using base_type
       ::get_allocator;
 
-  constexpr
-  void
-  swap(pool &)
-  noexcept(s_noexcept_swap());
+  constexpr void swap(pool &)                           noexcept(s_noexcept_swap());
+  constexpr void swap(identifier_type, identifier_type) noexcept(s_noexcept_swap_entries());
 
 
   [[nodiscard]] constexpr iterator       begin ()       noexcept;
@@ -665,6 +665,20 @@ template<
 constexpr
 bool
 pool<Component, Identifier, PageSize, Allocator>
+    ::s_noexcept_swap_entries()
+noexcept
+{
+  return std::is_nothrow_swappable_v<component_type>;
+}
+
+template<
+    typename    Component,
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+bool
+pool<Component, Identifier, PageSize, Allocator>
     ::s_noexcept_erase()
 noexcept
 {
@@ -734,8 +748,32 @@ noexcept(s_noexcept_swap())
 {
   using std::swap;
 
-  base_type::swap(static_cast<base_type &>(other));
   swap(m_components, other.m_components);
+  base_type::swap(static_cast<base_type &>(other));
+}
+
+template<
+    typename    Component,
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+constexpr
+void
+pool<Component, Identifier, PageSize, Allocator>
+    ::swap(identifier_type const lhs, identifier_type const rhs)
+noexcept(s_noexcept_swap_entries())
+{
+  using std::swap;
+
+  identifier_type &lhs_pos = m_sparse[lhs];
+  identifier_type &rhs_pos = m_sparse[rhs];
+
+  auto const lhs_idx = static_cast<size_type>(lhs_pos.idx());
+  auto const rhs_idx = static_cast<size_type>(rhs_pos.idx());
+
+  swap(m_components[lhs_idx], m_components[rhs_idx]);
+  swap(m_dense     [lhs_idx], m_dense     [rhs_idx]);
+  swap(lhs_pos              , rhs_pos              );
 }
 
 template<
@@ -1362,6 +1400,12 @@ struct specializes_pool<
     pool<Component, Identifier, PageSize, Allocator>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_pool_v
+= specializes_pool<T>::value;
 
 
 }
