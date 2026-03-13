@@ -11,6 +11,38 @@
 
 namespace heim::sparse_set_based
 {
+
+template<
+    typename    Component,
+    std::size_t PageSize,
+    bool        TagValue>
+using component_info
+= type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>;
+
+template<typename ...Components>
+using group_info
+= type_sequence<Components ...>;
+
+template<typename T>
+struct is_group_info;
+
+template<typename T>
+struct is_group_info
+  : bool_constant<false>
+{ };
+
+template<
+    typename    First,
+    typename    Second,
+    typename ...Rest>
+struct is_group_info<
+    type_sequence<First, Second, Rest ...>>
+  : bool_constant<true>
+{ };
+
+
+
+
 /*!
  * @brief The main container of components, specialized for usage in the entity-component-system
  *   pattern.
@@ -52,6 +84,12 @@ public:
   static_assert(
       is_an_allocator_for_v<allocator_type, identifier_type>,
       "heim::sparse_set_based::new_storage: allocator_type must pass as an allocator of identifier_type.");
+  static_assert(
+      specializes_type_sequence_v<component_info_sequence>,
+      "heim::sparse_set_based::new_storage: component_info_sequence must be a specialization of type_sequence.");
+  static_assert(
+      specializes_type_sequence_v<group_info_sequence>,
+      "heim::sparse_set_based::new_storage: group_info_sequence must be a specialization of type_sequence.");
 
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
@@ -62,18 +100,6 @@ private:
   size_type
   s_last_component_index
   = component_info_sequence::size - 1;
-
-
-  template<
-      typename  Component,
-      size_type PageSize,
-      bool      TagValue>
-  using component_info
-  = type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>;
-
-  template<typename ...Components>
-  using group_info
-  = type_sequence<Components ...>;
 
 
   template<typename ComponentInfo>
@@ -112,9 +138,39 @@ private:
   using container_sequence = typename component_info_sequence::template map<to_container>;
   using group_sequence     = typename group_info_sequence    ::template map<to_group    >;
 
+  static_assert(
+      std::is_same_v<
+          component_sequence,
+          typename component_sequence::template map<std::remove_cvref>>,
+      "heim::sparse_set_based::new_storage: component types must each neither be const nor contain references.");
+  static_assert(
+      component_sequence::is_unique,
+      "heim::sparse_set_based::new_storage: component types must each be unique.");
+
+  static_assert(
+      std::is_same_v<
+          group_info_sequence,
+          typename group_info_sequence::template filter<specializes_type_sequence>>,
+      "heim::sparse_set_based::new_storage: group_info_sequence must only contain specializations of type_sequence.");
+  static_assert(
+      group_info_sequence::flatten::template difference<component_sequence>::size == 0,
+      "heim::sparse_set_based::new_storage: each component type in group_info types must be unique and "
+          "already managed by the storage.");
+  static_assert(
+      std::is_same_v<
+          group_info_sequence,
+          typename group_info_sequence::template filter<is_group_info>>,
+      "heim::sparse_set_based::new_storage: group_info types in group_info_sequence must contain at least 2 component types.");
+
   using container_tuple = typename component_info_sequence::template map<to_container>::tuple;
   using group_tuple     = typename group_info_sequence    ::template map<to_group    >::tuple;
 
+
+  template<typename Component>
+  static constexpr
+  size_type
+  component_index
+  = component_sequence::template index<Component>;
 
   template<typename Component>
   struct meta
@@ -132,9 +188,11 @@ private:
 
   template<typename Component>
   static constexpr
-  size_type
-  component_index
-  = component_sequence::template index<Component>;
+  bool
+  is_grouped
+  = group_info_sequence
+      ::template map     <meta<Component>::template contains>
+      ::template contains<bool_constant<true>>;
 
   template<typename Component>
   static constexpr
@@ -189,7 +247,7 @@ public:
               s_last_component_index<TagValue>,
               typename component_info_sequence
                   ::template get<s_last_component_index<TagValue>>
-                  ::template set<2, size_constant<TagValue>>>,
+                  ::template set<2, bool_constant<TagValue>>>,
       group_info_sequence>;
 
   template<typename ...Components>
@@ -206,14 +264,6 @@ private:
   group_tuple     m_groups;
 
 private:
-  static constexpr bool s_noexcept_default_construct_false() noexcept;
-  static constexpr bool s_noexcept_default_construct      () noexcept;
-  static constexpr bool s_noexcept_move_alloc_construct   () noexcept;
-  static constexpr bool s_noexcept_swap() noexcept;
-
-  template<typename Component> static constexpr bool s_noexcept_erase    () noexcept;
-  template<typename Component> static constexpr bool s_noexcept_try_erase() noexcept;
-
   template<typename Component>
   static constexpr
   bool
@@ -228,6 +278,14 @@ private:
   bool
   s_noexcept_m_erase(type_sequence<Components ...>)
   noexcept;
+
+  static constexpr bool s_noexcept_default_construct_false() noexcept;
+  static constexpr bool s_noexcept_default_construct      () noexcept;
+  static constexpr bool s_noexcept_move_alloc_construct   () noexcept;
+  static constexpr bool s_noexcept_swap() noexcept;
+
+  template<typename Component> static constexpr bool s_noexcept_erase    () noexcept;
+  template<typename Component> static constexpr bool s_noexcept_try_erase() noexcept;
 
   static constexpr
   bool
@@ -357,7 +415,7 @@ public:
 
   friend constexpr
   void
-  swap(new_storage &lhs, new_storage const &rhs)
+  swap(new_storage &lhs, new_storage &rhs)
   noexcept(s_noexcept_swap())
   {
     lhs.swap(rhs);
@@ -370,96 +428,6 @@ public:
   = default;
 };
 
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_default_construct_false()
-noexcept
-{
-  return std::is_nothrow_default_constructible_v<allocator_type>;
-}
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_default_construct()
-noexcept
-{
-  return component_info_sequence::size == 0
-      || s_noexcept_default_construct_false();
-}
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_move_alloc_construct()
-noexcept
-{
-  return
-      std::is_nothrow_constructible_v<
-          container_tuple,
-          std::allocator_arg_t, allocator_type const &, container_tuple &&>;
-}
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_swap()
-noexcept
-{
-  return std::is_nothrow_swappable_v<container_tuple>;
-}
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-template<typename Component>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_erase()
-noexcept
-{
-  return noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
-}
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename ComponentInfoSeq,
-    typename GroupInfoSeq>
-template<typename Component>
-constexpr
-bool
-new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_try_erase()
-noexcept
-{
-  return noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
-}
 
 template<
     typename Identifier,
@@ -519,6 +487,113 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
 noexcept
 {
   return (s_noexcept_try_erase<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_default_construct_false()
+noexcept
+{
+  return std::is_nothrow_default_constructible_v<allocator_type>;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_default_construct()
+noexcept
+{
+  return component_info_sequence::size == 0
+      || s_noexcept_default_construct_false();
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_move_alloc_construct()
+noexcept
+{
+  return
+      std::is_nothrow_constructible_v<
+          container_tuple,
+          std::allocator_arg_t, allocator_type const &, container_tuple &&>
+   && std::is_nothrow_constructible_v<
+          group_tuple,
+          group_tuple &&>;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_swap()
+noexcept
+{
+  return std::is_nothrow_swappable_v<container_tuple>
+      && std::is_nothrow_swappable_v<group_tuple>;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_erase()
+noexcept
+{
+  if constexpr (is_grouped<Component>)
+  {
+    return s_noexcept_m_exclude(group_info_of<Component>{})
+        && noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
+  }
+  else
+    return noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_try_erase()
+noexcept
+{
+  if constexpr (is_grouped<Component>)
+  {
+    return s_noexcept_m_exclude(group_info_of<Component>{})
+        && noexcept(std::declval<container_of<Component> &>().erase    (std::declval<identifier_type>()))
+        && noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
+  }
+  else
+    return noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
 }
 
 template<
@@ -649,14 +724,14 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::m_group_swap(identifier_type const id, difference_type const group)
 noexcept(s_noexcept_m_group_swap<Component>())
 {
+  using sparse_set_type
+  = sparse_set<identifier_type, container_of<Component>::page_size, allocator_type>;
+
   container_of<Component> &
   container
   = m_container<Component>();
 
-  if constexpr (specializes_sparse_set_v<container_of<Component>>)
-    container.swap(id, *(container.begin() + group));
-  else
-    container.swap(id, std::get<0>(*(container.begin() + group)));
+  container.swap(id, *(static_cast<sparse_set_type &>(container).begin() + group));
 }
 
 template<
@@ -724,7 +799,7 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::new_storage(allocator_type const &alloc)
 noexcept
   : m_containers(std::allocator_arg, alloc),
-    m_groups    (0)
+    m_groups    ()
 {
   static_assert(
       component_info_sequence::size > 0,
@@ -894,8 +969,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
 {
   m_container<Component>().emplace(id, std::forward<Args>(args)...);
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 }
 
 template<
@@ -915,8 +993,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().try_emplace(id, std::forward<Args>(args)...).second;
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 
   return ret;
 }
@@ -936,8 +1017,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert(id, c).second;
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 
   return ret;
 }
@@ -957,8 +1041,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert(id, std::forward<Component>(c)).second;
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 
   return ret;
 }
@@ -978,8 +1065,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert_or_assign(id, c).second;
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 
   return ret;
 }
@@ -999,8 +1089,11 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
   ret
   = m_container<Component>().insert_or_assign(id, std::forward<Component>(c)).second;
 
-  if (m_has(group_info_of<Component>{}))
-    m_include(group_info_of<Component>{}, id);
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
 
   return ret;
 }
@@ -1017,13 +1110,13 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::erase(identifier_type const id)
 noexcept(s_noexcept_erase<Component>())
 {
-  if (m_has(group_info_of<Component>{}))
+  if constexpr (is_grouped<Component>)
   {
-    m_container<Component>().erase(id);
-    m_exclude(group_info_of<Component>{}, id);
+    if (m_has(group_info_of<Component>{}, id))
+      m_exclude(group_info_of<Component>{}, id);
   }
-  else
-    m_container<Component>().erase(id);
+
+  m_container<Component>().erase(id);
 }
 
 template<
@@ -1038,14 +1131,14 @@ new_storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::try_erase(identifier_type const id)
 noexcept(s_noexcept_try_erase<Component>())
 {
-  if (m_has(group_info_of<Component>{}))
+  if constexpr (is_grouped<Component>)
   {
-    bool const
-    ret
-    = m_container<Component>().try_erase(id);
-
-    m_exclude(group_info_of<Component>{}, id);
-    return ret;
+    if (m_has(group_info_of<Component>{}, id))
+    {
+      m_exclude(group_info_of<Component>{}, id);
+      m_container<Component>().erase(id);
+      return true;
+    }
   }
 
   return m_container<Component>().try_erase(id);
