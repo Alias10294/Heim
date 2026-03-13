@@ -710,7 +710,7 @@ public:
 
   constexpr
   void
-  erase_entity(identifier_type)
+  erase(identifier_type)
   noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
 
 
@@ -1800,7 +1800,7 @@ template<
 constexpr
 void
 storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase_entity(identifier_type const e)
+    ::erase(identifier_type const e)
 noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
 {
   std::apply(

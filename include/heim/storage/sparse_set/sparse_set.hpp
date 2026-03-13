@@ -72,7 +72,7 @@ public:
       is_an_allocator_for_v<allocator_type, identifier_type>,
       "heim::sparse_set_based::sparse_set: allocator_type must pass as an allocator for identifier_type.");
 
-  constexpr static
+  static constexpr
   std::size_t
   page_size
   = PageSize;
@@ -95,8 +95,8 @@ protected:
   class sparse_container
   {
   private:
-    constexpr static bool            s_is_paged = page_size != 0;
-    constexpr static identifier_type s_null_pos = identifier_type{};
+    static constexpr bool            s_is_paged = page_size != 0;
+    static constexpr identifier_type s_null_pos = identifier_type{};
 
     using alloc_traits
     = std::allocator_traits<allocator_type>;
@@ -117,7 +117,7 @@ protected:
       m_allocator;
 
     public:
-      explicit constexpr
+      constexpr explicit
       page_deleter(allocator_type &&)
       noexcept;
 
@@ -154,19 +154,17 @@ protected:
     m_container;
 
   private:
-    constexpr static bool s_noexcept_default_construct   () noexcept;
-    constexpr static bool s_noexcept_move_alloc_construct() noexcept;
-    constexpr static bool s_noexcept_swap() noexcept;
+    static constexpr bool s_noexcept_default_construct   () noexcept;
+    static constexpr bool s_noexcept_move_alloc_construct() noexcept;
+    static constexpr bool s_noexcept_swap() noexcept;
 
 
     template<typename ...Args>
-    [[nodiscard]]
-    constexpr
+    [[nodiscard]] constexpr
     page_pointer
     m_make_page_pointer(Args &&...args);
 
-    [[nodiscard]]
-    constexpr
+    [[nodiscard]] constexpr
     page_pointer
     m_make_page_pointer(std::nullptr_t);
 
@@ -182,8 +180,8 @@ protected:
     constexpr sparse_container(sparse_container const &, bool_constant<false>);
 
 
-    constexpr static size_type s_page_index(size_type) noexcept;
-    constexpr static size_type s_line_index(size_type) noexcept;
+    static constexpr size_type s_page_index(size_type) noexcept;
+    static constexpr size_type s_line_index(size_type) noexcept;
 
   public:
     constexpr explicit
@@ -218,8 +216,7 @@ protected:
     noexcept(s_noexcept_swap());
 
 
-    [[nodiscard]]
-    constexpr
+    [[nodiscard]] constexpr
     bool
     contains(identifier_type) const
     noexcept;
@@ -267,9 +264,9 @@ protected:
   sparse_container m_sparse;
 
 protected:
-  constexpr static bool s_noexcept_default_construct   () noexcept;
-  constexpr static bool s_noexcept_move_alloc_construct() noexcept;
-  constexpr static bool s_noexcept_swap() noexcept;
+  static constexpr bool s_noexcept_default_construct   () noexcept;
+  static constexpr bool s_noexcept_move_alloc_construct() noexcept;
+  static constexpr bool s_noexcept_swap() noexcept;
 
   constexpr
   void
@@ -299,15 +296,14 @@ public:
   sparse_set(sparse_set &&)
   = default;
 
-  constexpr virtual
+  virtual constexpr
   ~sparse_set()
   = default;
 
   constexpr sparse_set &operator=(sparse_set const &) = default;
   constexpr sparse_set &operator=(sparse_set &&     ) = default;
 
-  [[nodiscard]]
-  constexpr
+  [[nodiscard]] constexpr
   allocator_type
   get_allocator() const
   noexcept;
@@ -315,8 +311,7 @@ public:
   constexpr void swap(sparse_set &)                     noexcept(s_noexcept_swap());
   constexpr void swap(identifier_type, identifier_type) noexcept;
 
-  [[nodiscard]]
-  constexpr
+  [[nodiscard]] constexpr
   container_type const &
   container() const
   noexcept;
@@ -342,8 +337,7 @@ public:
   [[nodiscard]] constexpr bool      empty() const noexcept;
 
 
-  [[nodiscard]]
-  constexpr
+  [[nodiscard]] constexpr
   bool
   contains(identifier_type) const
   noexcept;
@@ -383,8 +377,7 @@ public:
     lhs.swap(rhs);
   }
 
-  [[nodiscard]]
-  friend constexpr
+  [[nodiscard]] friend constexpr
   bool
   operator==(sparse_set const &lhs, sparse_set const &rhs)
   noexcept

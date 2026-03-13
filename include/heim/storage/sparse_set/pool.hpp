@@ -60,7 +60,7 @@ public:
       is_an_allocator_for_v<allocator_type, identifier_type>,
       "heim::sparse_set_based::pool: allocator_type must pass as an allocator for identifier_type.");
 
-  constexpr static
+  static constexpr
   std::size_t
   page_size
   = PageSize;
@@ -93,7 +93,7 @@ private:
     friend pool;
 
   public:
-    constexpr static
+    static constexpr
     bool
     is_const
     = IsConst;
@@ -172,8 +172,7 @@ private:
     constexpr generic_iterator &operator-=(difference_type) noexcept;
 
 
-    [[nodiscard]]
-    constexpr
+    [[nodiscard]] constexpr
     reference
     operator*() const
     noexcept;
@@ -183,8 +182,7 @@ private:
     operator->() const
     noexcept;
 
-    [[nodiscard]]
-    constexpr
+    [[nodiscard]] constexpr
     reference
     operator[](difference_type) const
     noexcept;
@@ -222,14 +220,12 @@ private:
       return lhs.m_identifier_it - rhs.m_identifier_it;
     }
 
-    [[nodiscard]]
-    friend constexpr
+    [[nodiscard]] friend constexpr
     bool
     operator==(generic_iterator, generic_iterator)
     = default;
 
-    [[nodiscard]]
-    friend constexpr
+    [[nodiscard]] friend constexpr
     auto
     operator<=>(generic_iterator const lhs, generic_iterator const rhs)
     noexcept
@@ -250,11 +246,11 @@ private:
   m_components;
 
 private:
-  constexpr static bool s_noexcept_default_construct   () noexcept;
-  constexpr static bool s_noexcept_move_alloc_construct() noexcept;
-  constexpr static bool s_noexcept_swap        () noexcept;
-  constexpr static bool s_noexcept_swap_entries() noexcept;
-  constexpr static bool s_noexcept_erase       () noexcept;
+  static constexpr bool s_noexcept_default_construct   () noexcept;
+  static constexpr bool s_noexcept_move_alloc_construct() noexcept;
+  static constexpr bool s_noexcept_swap        () noexcept;
+  static constexpr bool s_noexcept_swap_entries() noexcept;
+  static constexpr bool s_noexcept_erase       () noexcept;
 
 
   using base_type::m_dense;
@@ -367,8 +363,7 @@ public:
     lhs.swap(rhs);
   }
 
-  [[nodiscard]]
-  friend constexpr
+  [[nodiscard]] friend constexpr
   bool
   operator==(pool const &lhs, pool const &rhs)
   noexcept

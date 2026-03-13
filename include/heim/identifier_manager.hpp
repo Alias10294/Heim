@@ -63,28 +63,17 @@ private:
   using generation_type = typename identifier_type::generation_type;
 
 private:
-  identifier_vector   m_entities;
-  position_vector m_positions;
-  size_type       m_begin;
+  identifier_vector m_entities;
+  position_vector   m_positions;
+  size_type         m_begin;
 
 private:
-  static constexpr
-  bool
-  s_noexcept_default_construct()
-  noexcept;
-
-  static constexpr
-  bool
-  s_noexcept_move_alloc_construct()
-  noexcept;
-
-  static constexpr
-  bool
-  s_noexcept_swap()
-  noexcept;
+  static constexpr bool s_noexcept_default_construct   () noexcept;
+  static constexpr bool s_noexcept_move_alloc_construct() noexcept;
+  static constexpr bool s_noexcept_swap() noexcept;
 
 public:
-  explicit constexpr
+  constexpr explicit
   identifier_manager(allocator_type const &)
   noexcept;
 
@@ -92,13 +81,8 @@ public:
   identifier_manager()
   noexcept(s_noexcept_default_construct());
 
-  constexpr
-  identifier_manager(identifier_manager const &)
-  = default;
-
-  constexpr
-  identifier_manager(identifier_manager &&)
-  = default;
+  constexpr identifier_manager(identifier_manager const &) = default;
+  constexpr identifier_manager(identifier_manager &&)      = default;
 
   constexpr
   identifier_manager(identifier_manager const &, allocator_type const &);
@@ -111,36 +95,23 @@ public:
   ~identifier_manager()
   = default;
 
-  constexpr
-  identifier_manager &
-  operator=(identifier_manager const &)
-  = default;
-
-  constexpr
-  identifier_manager &
-  operator=(identifier_manager &&)
-  = default;
+  constexpr identifier_manager &operator=(identifier_manager const &) = default;
+  constexpr identifier_manager &operator=(identifier_manager &&)      = default;
 
   [[nodiscard]] constexpr
   allocator_type
   get_allocator() const
   noexcept;
 
+  constexpr
+  void
+  swap(identifier_manager &)
+  noexcept(s_noexcept_swap());
 
-  [[nodiscard]] constexpr
-  auto
-  all() const
-  noexcept;
 
-  [[nodiscard]] constexpr
-  auto
-  valid() const
-  noexcept;
-
-  [[nodiscard]] constexpr
-  auto
-  invalid() const
-  noexcept;
+  [[nodiscard]] constexpr auto all()     const noexcept;
+  [[nodiscard]] constexpr auto valid()   const noexcept;
+  [[nodiscard]] constexpr auto invalid() const noexcept;
 
 
   [[nodiscard]] constexpr
@@ -162,12 +133,6 @@ public:
   void
   banish_all()
   noexcept;
-
-
-  constexpr
-  void
-  swap(identifier_manager &)
-  noexcept(s_noexcept_swap());
 
 
   friend constexpr
@@ -202,8 +167,7 @@ public:
 
     return true;
   }
-}; // class identifier_manager
-
+};
 
 
 template<
@@ -217,7 +181,6 @@ noexcept
 {
   return std::is_nothrow_default_constructible_v<allocator_type>;
 }
-
 
 template<
     typename Entity,
@@ -249,8 +212,6 @@ noexcept
   return std::is_nothrow_swappable_v<identifier_vector>
       && std::is_nothrow_swappable_v<position_vector>;
 }
-
-
 
 template<
     typename Entity,
@@ -297,7 +258,6 @@ noexcept(s_noexcept_move_alloc_construct())
     m_begin    (other.m_begin)
 { }
 
-
 template<
     typename Entity,
     typename Allocator>
@@ -311,7 +271,21 @@ noexcept
   return allocator_type(m_entities.get_allocator());
 }
 
+template<
+    typename Entity,
+    typename Allocator>
+constexpr
+void
+identifier_manager<Entity, Allocator>
+    ::swap(identifier_manager &other)
+noexcept(s_noexcept_swap())
+{
+  using std::swap;
 
+  swap(m_entities , other.m_entities );
+  swap(m_positions, other.m_positions);
+  swap(m_begin    , other.m_begin    );
+}
 
 template<
     typename Entity,
@@ -355,27 +329,23 @@ noexcept
       m_entities.begin() + m_begin);
 }
 
-
-
 template<
     typename Entity,
     typename Allocator>
 constexpr
 bool
 identifier_manager<Entity, Allocator>
-    ::is_valid(identifier_type const e) const
+    ::is_valid(identifier_type const id) const
 noexcept
 {
-  size_type const idx = e.index();
+  size_type const idx = id.index();
   if (idx >= m_positions.size())
     return false;
 
   size_type const pos = m_positions[idx];
   return pos >= m_begin
-      && m_entities[pos] == e;
+      && m_entities[pos] == id;
 }
-
-
 
 template<typename Entity, typename Allocator>
 constexpr
@@ -399,20 +369,19 @@ identifier_manager<Entity, Allocator>
   return m_entities.back();
 }
 
-
 template<
     typename Entity,
     typename Allocator>
 constexpr
 void
 identifier_manager<Entity, Allocator>
-    ::banish(identifier_type const e)
+    ::banish(identifier_type const id)
 noexcept
 {
-  if (!is_valid(e))
+  if (!is_valid(id))
     return;
 
-  size_type const idx_e     = e.index();
+  size_type const idx_e     = id.index();
   size_type const pos_e     = m_positions[idx_e];
   size_type const pos_begin = m_begin;
   size_type const idx_begin = m_entities[pos_begin].index();
@@ -429,7 +398,6 @@ noexcept
 
   ++m_begin;
 }
-
 
 template<
     typename Entity,
@@ -448,23 +416,6 @@ noexcept
 }
 
 
-
-template<
-    typename Entity,
-    typename Allocator>
-constexpr
-void
-identifier_manager<Entity, Allocator>
-    ::swap(identifier_manager &other)
-noexcept(s_noexcept_swap())
-{
-  std::swap(m_entities , other.m_entities );
-  std::swap(m_positions, other.m_positions);
-  std::swap(m_begin    , other.m_begin    );
-}
-
-
-
 /*!
  * @brief Determines whether the given type is a specialization of entity_manager.
  *
@@ -472,12 +423,6 @@ noexcept(s_noexcept_swap())
  */
 template<typename T>
 struct specializes_entity_manager;
-
-template<typename T>
-inline constexpr
-bool
-specializes_entity_manager_v
-= specializes_entity_manager<T>::value;
 
 template<typename T>
 struct specializes_entity_manager
@@ -491,6 +436,12 @@ struct specializes_entity_manager<
     identifier_manager<Entity, Allocator>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_entity_manager_v
+= specializes_entity_manager<T>::value;
 
 
 } // namespace heim

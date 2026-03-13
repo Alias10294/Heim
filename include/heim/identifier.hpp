@@ -32,7 +32,8 @@ template<
 class identifier
 {
 public:
-  using underlying_type = UInt;
+  using underlying_type
+  = UInt;
 
   static_assert(
       std::is_integral_v<underlying_type> && std::is_unsigned_v<underlying_type>,
@@ -47,28 +48,27 @@ public:
   using generation_type = unsigned_integral_for_t<generation_digits>;
 
 private:
-  static constexpr value_type null_value = std::numeric_limits<value_type>::max();
+  static constexpr
+  value_type
+  null_value
+  = std::numeric_limits<value_type>::max();
 
   static constexpr value_type index_mask      = static_cast<value_type>(null_value) >> generation_digits;
   static constexpr value_type generation_mask = static_cast<value_type>(null_value) << index_digits;
 
 private:
-  value_type m_value;
+  value_type
+  m_value;
 
 public:
   constexpr
   identifier()
   noexcept;
 
-  constexpr
-  identifier(identifier const &)
-  = default;
+  constexpr identifier(identifier const &) = default;
+  constexpr identifier(identifier &&)      = default;
 
-  constexpr
-  identifier(identifier &&)
-  = default;
-
-  explicit constexpr
+  constexpr explicit
   identifier(value_type)
   noexcept;
 
@@ -80,15 +80,8 @@ public:
   ~identifier()
   = default;
 
-  constexpr
-  identifier &
-  operator=(identifier const &)
-  = default;
-
-  constexpr
-  identifier &
-  operator=(identifier &&)
-  = default;
+  constexpr identifier &operator=(identifier const &) = default;
+  constexpr identifier &operator=(identifier &&)      = default;
 
   constexpr
   identifier &
@@ -101,20 +94,9 @@ public:
   noexcept;
 
 
-  [[nodiscard]] constexpr
-  value_type
-  value() const
-  noexcept;
-
-  [[nodiscard]] constexpr
-  index_type
-  index() const
-  noexcept;
-
-  [[nodiscard]] constexpr
-  generation_type
-  generation() const
-  noexcept;
+  [[nodiscard]] constexpr value_type      value()      const noexcept;
+  [[nodiscard]] constexpr index_type      index()      const noexcept;
+  [[nodiscard]] constexpr generation_type generation() const noexcept;
 
 
   [[nodiscard]] friend constexpr
@@ -133,7 +115,7 @@ constexpr
 identifier<UInt, IndexDigits>
     ::identifier()
 noexcept
-  : m_value(null_value)
+  : m_value{null_value}
 { }
 
 template<
@@ -141,9 +123,9 @@ template<
     int      IndexBits>
 constexpr
 identifier<UInt, IndexBits>
-    ::identifier(value_type val)
+    ::identifier(value_type const val)
 noexcept
-  : m_value(val)
+  : m_value{val}
 { }
 
 template<
@@ -151,7 +133,7 @@ template<
     int      IndexBits>
 constexpr
 identifier<UInt, IndexBits>
-    ::identifier(index_type idx, generation_type gen)
+    ::identifier(index_type const idx, generation_type const gen)
 noexcept
   : identifier(
         (static_cast<value_type>(gen) << index_digits)
@@ -165,7 +147,7 @@ template<
 constexpr
 identifier<UInt, IndexBits> &
 identifier<UInt, IndexBits>
-    ::operator=(value_type val)
+    ::operator=(value_type const val)
 noexcept
 {
   m_value = val;
@@ -240,12 +222,6 @@ template<typename T>
 struct specializes_identifier;
 
 template<typename T>
-inline constexpr
-bool
-specializes_identifier_v
-= specializes_identifier<T>::value;
-
-template<typename T>
 struct specializes_identifier
   : bool_constant<false>
 { };
@@ -257,6 +233,12 @@ struct specializes_identifier<
     identifier<UInt, IndexBits>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_identifier_v
+= specializes_identifier<T>::value;
 
 
 }

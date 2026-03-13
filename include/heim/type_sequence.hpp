@@ -27,21 +27,21 @@ struct type_sequence;
 template<typename TypeSequence>
 struct type_sequence_size;
 
-template<typename TypeSequence>
-static constexpr
-std::size_t
-type_sequence_size_v
-= type_sequence_size<TypeSequence>::value;
-
 template<typename>
 struct type_sequence_size
 { };
 
 template<typename ...Ts>
-struct type_sequence_size<type_sequence<Ts ...>>
+struct type_sequence_size<
+    type_sequence<Ts ...>>
   : size_constant<sizeof...(Ts)>
 { };
 
+template<typename TypeSequence>
+static constexpr
+std::size_t
+type_sequence_size_v
+= type_sequence_size<TypeSequence>::value;
 
 
 /*!
@@ -58,14 +58,6 @@ struct type_sequence_count;
 template<
     typename TypeSequence,
     typename T>
-inline constexpr
-std::size_t
-type_sequence_count_v
-= type_sequence_count<TypeSequence, T>::value;
-
-template<
-    typename TypeSequence,
-    typename T>
 struct type_sequence_count
 { };
 
@@ -78,6 +70,13 @@ struct type_sequence_count<
   : size_constant<(0 + ... + (std::is_same_v<Ts, T> ? 1 : 0))>
 { };
 
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+std::size_t
+type_sequence_count_v
+= type_sequence_count<TypeSequence, T>::value;
 
 
 /*!
@@ -94,14 +93,6 @@ struct type_sequence_contains;
 template<
     typename TypeSequence,
     typename T>
-inline constexpr
-bool
-type_sequence_contains_v
-= type_sequence_contains<TypeSequence, T>::value;
-
-template<
-    typename TypeSequence,
-    typename T>
 struct type_sequence_contains
 { };
 
@@ -114,6 +105,13 @@ struct type_sequence_contains<
   : bool_constant<(type_sequence_count_v<type_sequence<Ts ...>, T> > 0)>
 { };
 
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+bool
+type_sequence_contains_v
+= type_sequence_contains<TypeSequence, T>::value;
 
 
 /*!
@@ -128,14 +126,6 @@ template<
     typename TypeSequence,
     typename T>
 struct type_sequence_index;
-
-template<
-    typename TypeSequence,
-    typename T>
-inline constexpr
-std::size_t
-type_sequence_index_v
-= type_sequence_index<TypeSequence, T>::value;
 
 template<
     typename TypeSequence,
@@ -160,9 +150,16 @@ struct type_sequence_index<
   : size_constant<
         std::is_same_v<First, T>
           ? 0
-          : 1 + type_sequence_index_v<type_sequence<Rest ...>, T>>
+          : 1 + type_sequence_index<type_sequence<Rest ...>, T>::value>
 { };
 
+template<
+    typename TypeSequence,
+    typename T>
+inline constexpr
+std::size_t
+type_sequence_index_v
+= type_sequence_index<TypeSequence, T>::value;
 
 
 /*!
@@ -175,12 +172,6 @@ template<
     typename    TypeSequence,
     std::size_t Index>
 struct type_sequence_get;
-
-template<
-    typename TypeSequence,
-    std::size_t Index>
-using type_sequence_get_t
-= typename type_sequence_get<TypeSequence, Index>::type;
 
 template<
     typename    TypeSequence,
@@ -212,9 +203,14 @@ struct type_sequence_get<
       "heim::type_sequence_get: Index must be within the type sequence's size.");
 
   using type
-  = type_sequence_get_t<type_sequence<Rest ...>, Index - 1>;
+  = typename type_sequence_get<type_sequence<Rest ...>, Index - 1>::type;
 };
 
+template<
+    typename TypeSequence,
+    std::size_t Index>
+using type_sequence_get_t
+= typename type_sequence_get<TypeSequence, Index>::type;
 
 
 /*!
@@ -227,12 +223,6 @@ template<
     typename Left,
     typename Right>
 struct type_sequence_concatenate;
-
-template<
-    typename Left,
-    typename Right>
-using type_sequence_concatenate_t
-= typename type_sequence_concatenate<Left, Right>::type;
 
 template<
     typename Left,
@@ -251,6 +241,11 @@ struct type_sequence_concatenate<
   = type_sequence<Ls ..., Rs ...>;
 };
 
+template<
+    typename Left,
+    typename Right>
+using type_sequence_concatenate_t
+= typename type_sequence_concatenate<Left, Right>::type;
 
 
 /*!
@@ -267,18 +262,17 @@ struct type_sequence_append;
 template<
     typename    TypeSequence,
     typename ...Ts>
-using type_sequence_append_t
-= typename type_sequence_append<TypeSequence, Ts ...>::type;
-
-template<
-    typename    TypeSequence,
-    typename ...Ts>
 struct type_sequence_append
 {
   using type
   = type_sequence_concatenate_t<TypeSequence, type_sequence<Ts ...>>;
 };
 
+template<
+    typename    TypeSequence,
+    typename ...Ts>
+using type_sequence_append_t
+= typename type_sequence_append<TypeSequence, Ts ...>::type;
 
 
 /*!
@@ -293,13 +287,6 @@ template<
     std::size_t Index,
     typename    T>
 struct type_sequence_set;
-
-template<
-    typename    TypeSequence,
-    std::size_t Index,
-    typename    T>
-using type_sequence_set_t
-= type_sequence_set<TypeSequence, Index, T>::type;
 
 template<
     typename    TypeSequence,
@@ -338,9 +325,15 @@ struct type_sequence_set<
   using type
   = type_sequence_concatenate_t<
       type_sequence<First>,
-      type_sequence_set_t<type_sequence<Rest ...>, Index - 1, T>>;
+      typename type_sequence_set<type_sequence<Rest ...>, Index - 1, T>::type>;
 };
 
+template<
+    typename    TypeSequence,
+    std::size_t Index,
+    typename    T>
+using type_sequence_set_t
+= type_sequence_set<TypeSequence, Index, T>::type;
 
 
 /*!
@@ -353,12 +346,6 @@ template<
     typename TypeSequence,
     typename T>
 struct type_sequence_erase;
-
-template<
-    typename TypeSequence,
-    typename T>
-using type_sequence_erase_t
-= typename type_sequence_erase<TypeSequence, T>::type;
 
 template<
     typename TypeSequence,
@@ -390,11 +377,17 @@ struct type_sequence_erase<
       type_sequence<Rest ...>,
       type_sequence_concatenate_t<
           type_sequence<First>,
-          type_sequence_erase_t<
+          typename type_sequence_erase<
               type_sequence<Rest ...>,
-              T>>>;
+              T>
+              ::type>>;
 };
 
+template<
+    typename TypeSequence,
+    typename T>
+using type_sequence_erase_t
+= typename type_sequence_erase<TypeSequence, T>::type;
 
 
 /*!
@@ -410,12 +403,6 @@ template<
     typename                    TypeSequence,
     template<typename> typename Pred>
 struct type_sequence_filter;
-
-template<
-    typename                    TypeSequence,
-    template<typename> typename Pred>
-using type_sequence_filter_t
-= typename type_sequence_filter<TypeSequence, Pred>::type;
 
 template<
     typename                    TypeSequence,
@@ -445,14 +432,21 @@ struct type_sequence_filter<type_sequence<First, Rest ...>, Pred>
       Pred<First>::value,
       type_sequence_concatenate_t<
           type_sequence<First>,
-          type_sequence_filter_t<
+          typename type_sequence_filter<
               type_sequence<Rest ...>,
-              Pred>>,
-      type_sequence_filter_t<
+              Pred>
+              ::type>,
+      typename type_sequence_filter<
           type_sequence<Rest ...>,
-          Pred>>;
+          Pred>
+          ::type>;
 };
 
+template<
+    typename                    TypeSequence,
+    template<typename> typename Pred>
+using type_sequence_filter_t
+= typename type_sequence_filter<TypeSequence, Pred>::type;
 
 
 /*!
@@ -471,12 +465,6 @@ struct type_sequence_map;
 template<
     typename                    TypeSequence,
     template<typename> typename Meta>
-using type_sequence_map_t
-= typename type_sequence_map<TypeSequence, Meta>::type;
-
-template<
-    typename                    TypeSequence,
-    template<typename> typename Meta>
 struct type_sequence_map
 { };
 
@@ -490,6 +478,12 @@ struct type_sequence_map<
   using type
   = type_sequence<typename Meta<Ts>::type ...>;
 };
+
+template<
+    typename                    TypeSequence,
+    template<typename> typename Meta>
+using type_sequence_map_t
+= typename type_sequence_map<TypeSequence, Meta>::type;
 
 
 
@@ -506,12 +500,6 @@ template<
     typename TypeSequence,
     typename VisitedSequence = type_sequence<>>
 struct type_sequence_unique;
-
-template<
-    typename TypeSequence,
-    typename VisitedSequence = type_sequence<>>
-using type_sequence_unique_t
-= typename type_sequence_unique<TypeSequence, VisitedSequence>::type;
 
 template<
     typename TypeSequence,
@@ -537,14 +525,20 @@ struct type_sequence_unique<
     type_sequence<Visited ...>>
 {
   using type
-  = type_sequence_unique_t<
+  = typename type_sequence_unique<
       type_sequence<Rest ...>,
       std::conditional_t<
           (std::is_same_v<First, Visited> || ...),
           type_sequence<Visited ...>,
-          type_sequence<Visited ..., First>>>;
+          type_sequence<Visited ..., First>>>
+      ::type;
 };
 
+template<
+    typename TypeSequence,
+    typename VisitedSequence = type_sequence<>>
+using type_sequence_unique_t
+= typename type_sequence_unique<TypeSequence, VisitedSequence>::type;
 
 
 /*!
@@ -556,12 +550,6 @@ template<typename TypeSequence>
 struct type_sequence_is_unique;
 
 template<typename TypeSequence>
-inline constexpr
-bool
-type_sequence_is_unique_v
-= type_sequence_is_unique<TypeSequence>::value;
-
-template<typename TypeSequence>
 struct type_sequence_is_unique
   : bool_constant<
         std::is_same_v<
@@ -569,6 +557,11 @@ struct type_sequence_is_unique
             type_sequence_unique_t<TypeSequence>>>
 { };
 
+template<typename TypeSequence>
+inline constexpr
+bool
+type_sequence_is_unique_v
+= type_sequence_is_unique<TypeSequence>::value;
 
 
 /*!
@@ -583,10 +576,6 @@ struct type_sequence_is_unique
  */
 template<typename TypeSequence>
 struct type_sequence_flatten;
-
-template<typename TypeSequence>
-using type_sequence_flatten_t
-= typename type_sequence_flatten<TypeSequence>::type;
 
 template<typename TypeSequence>
 struct type_sequence_flatten
@@ -627,9 +616,12 @@ public:
   using type
   = type_sequence_concatenate_t<
       expand_t<First>,
-      type_sequence_flatten_t<type_sequence<Rest ...>>>;
+      typename type_sequence_flatten<type_sequence<Rest ...>>::type>;
 };
 
+template<typename TypeSequence>
+using type_sequence_flatten_t
+= typename type_sequence_flatten<TypeSequence>::type;
 
 
 /*!
@@ -645,12 +637,6 @@ template<
     typename Left,
     typename Right>
 struct type_sequence_difference;
-
-template<
-    typename Left,
-    typename Right>
-using type_sequence_difference_t
-= typename type_sequence_difference<Left, Right>::type;
 
 template<
     typename Left,
@@ -680,14 +666,21 @@ struct type_sequence_difference<
       type_sequence_contains_v<
           type_sequence<Ls ...>,
           RFirst>,
-      type_sequence_difference_t<
+      typename type_sequence_difference<
           type_sequence_erase_t<type_sequence<Ls ...>, RFirst>,
-          type_sequence<RRest ...>>,
-      type_sequence_difference_t<
+          type_sequence<RRest ...>>
+          ::type,
+      typename type_sequence_difference<
           type_sequence<Ls ...>,
-          type_sequence<RRest ...>>>;
+          type_sequence<RRest ...>>
+          ::type>;
 };
 
+template<
+    typename Left,
+    typename Right>
+using type_sequence_difference_t
+= typename type_sequence_difference<Left, Right>::type;
 
 
 /*!
@@ -697,10 +690,6 @@ struct type_sequence_difference<
  */
 template<typename TypeSequence>
 struct type_sequence_tuple;
-
-template<typename TypeSequence>
-using type_sequence_tuple_t
-= typename type_sequence_tuple<TypeSequence>::type;
 
 template<typename TypeSequence>
 struct type_sequence_tuple
@@ -713,6 +702,9 @@ struct type_sequence_tuple<type_sequence<Ts ...>>
   = std::tuple<Ts ...>;
 };
 
+template<typename TypeSequence>
+using type_sequence_tuple_t
+= typename type_sequence_tuple<TypeSequence>::type;
 
 
 template<typename ...Ts>
@@ -791,11 +783,10 @@ struct type_sequence
 };
 
 
-
 /*!
  * @brief Determines the type sequence with the same of types as the given std::tuple.
  *
- * @tparam Tuple The tuple.
+ * @tparam Tuple The tuple type.
  */
 template<typename Tuple>
 struct tuple_to_type_sequence;
@@ -811,6 +802,9 @@ struct tuple_to_type_sequence<std::tuple<Ts ...>>
   = type_sequence<Ts ...>;
 };
 
+template<typename Tuple>
+using tuple_to_type_sequence_t
+= typename tuple_to_type_sequence<Tuple>::type;
 
 
 /*!
@@ -822,12 +816,6 @@ template<typename T>
 struct specializes_type_sequence;
 
 template<typename T>
-inline constexpr
-bool
-specializes_type_sequence_v
-= specializes_type_sequence<T>::value;
-
-template<typename T>
 struct specializes_type_sequence
   : bool_constant<false>
 { };
@@ -837,6 +825,12 @@ struct specializes_type_sequence<
     type_sequence<Ts ...>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_type_sequence_v
+= specializes_type_sequence<T>::value;
 
 
 }
