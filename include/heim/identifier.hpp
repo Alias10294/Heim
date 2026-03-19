@@ -1,5 +1,5 @@
-#ifndef HEIM_ENTITY_HPP
-#define HEIM_ENTITY_HPP
+#ifndef HEIM_IDENTIFIER_HPP
+#define HEIM_IDENTIFIER_HPP
 
 #include <cstdint>
 #include <type_traits>
@@ -243,4 +243,4 @@ specializes_identifier_v
 
 }
 
-#endif // HEIM_ENTITY_HPP
+#endif // HEIM_IDENTIFIER_HPP

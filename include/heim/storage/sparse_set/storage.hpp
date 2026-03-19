@@ -658,7 +658,7 @@ private:
   template<typename ...Components>
   static constexpr
   bool
-  s_noexcept_m_erase(type_sequence<Components ...>)
+  s_noexcept_m_clear(type_sequence<Components ...>)
   noexcept;
 
   static constexpr bool s_noexcept_default_construct_false() noexcept;
@@ -671,7 +671,7 @@ private:
 
   static constexpr
   bool
-  s_noexcept_erase()
+  s_noexcept_clear()
   noexcept;
 
 
@@ -714,8 +714,8 @@ private:
   template<typename ...Components>
   constexpr
   void
-  m_erase(type_sequence<Components ...>, identifier_type)
-  noexcept(s_noexcept_m_erase(type_sequence<Components ...>{}));
+  m_clear(type_sequence<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_clear(type_sequence<Components ...>{}));
 
 public:
   constexpr explicit
@@ -786,8 +786,8 @@ public:
 
   constexpr
   void
-  erase(identifier_type)
-  noexcept(s_noexcept_erase());
+  clear(identifier_type)
+  noexcept(s_noexcept_clear());
 
   constexpr
   void
@@ -1857,7 +1857,7 @@ template<typename ...Components>
 constexpr
 bool
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_m_erase(type_sequence<Components ...>)
+    ::s_noexcept_m_clear(type_sequence<Components ...>)
 noexcept
 {
   return (s_noexcept_try_erase<Components>() && ...);
@@ -1978,10 +1978,10 @@ template<
 constexpr
 bool
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::s_noexcept_erase()
+    ::s_noexcept_clear()
 noexcept
 {
-  return s_noexcept_m_erase(component_sequence{});
+  return s_noexcept_m_clear(component_sequence{});
 }
 
 template<
@@ -2157,8 +2157,8 @@ template<typename ...Components>
 constexpr
 void
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::m_erase(type_sequence<Components ...>, identifier_type const id)
-noexcept(s_noexcept_m_erase(type_sequence<Components ...>{}))
+    ::m_clear(type_sequence<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_clear(type_sequence<Components ...>{}))
 {
   (try_erase<Components>(id), ...);
 }
@@ -2528,10 +2528,10 @@ template<
 constexpr
 void
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::erase(identifier_type const id)
-noexcept(s_noexcept_erase())
+    ::clear(identifier_type const id)
+noexcept(s_noexcept_clear())
 {
-  m_erase(component_sequence{}, id);
+  m_clear(component_sequence{}, id);
 }
 
 template<
