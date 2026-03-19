@@ -74,12 +74,6 @@ template<typename T>
 struct specializes_query_expression;
 
 template<typename T>
-inline constexpr
-bool
-specializes_query_expression_v
-= specializes_query_expression<T>::value;
-
-template<typename T>
 struct specializes_query_expression
   : bool_constant<false>
 { };
@@ -91,6 +85,12 @@ struct specializes_query_expression<
     query_expression<IncludeSeq, ExcludeSeq>>
   : bool_constant<true>
 { };
+
+template<typename T>
+inline constexpr
+bool
+specializes_query_expression_v
+= specializes_query_expression<T>::value;
 
 
 }

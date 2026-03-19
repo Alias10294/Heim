@@ -7,8 +7,8 @@
 namespace heim
 {
 //! @brief An expressive alias allowing for explicit user redefinition of type traits.
-using redefine_tag = void;
-
+using redefine_tag
+= void;
 
 
 /*!
@@ -32,7 +32,6 @@ using size_constant
 = constant<std::size_t, val>;
 
 
-
 /*!
  * @brief Determines the unsigned integral type which is composed of at least the given number of
  *   bits.
@@ -49,7 +48,10 @@ using unsigned_integral_for_t
 template<int Digits>
 struct unsigned_integral_for
 {
-  static constexpr int digits = Digits;
+  static constexpr
+  int
+  digits
+  = Digits;
 
   static_assert(
       0 < digits && digits <= std::numeric_limits<unsigned long long>::digits,
@@ -71,7 +73,6 @@ struct unsigned_integral_for
                   unsigned long,
                   unsigned long long>>>>;
 };
-
 
 
 /*!
@@ -100,9 +101,9 @@ struct maybe_const
       std::is_same_v<T, std::remove_const_t<T>>,
       "heim::maybe_const: T must not already be const-qualified.");
 
-  using type = std::conditional_t<IsConst, T const, T>;
+  using type
+  = std::conditional_t<IsConst, T const, T>;
 };
-
 
 
 /*!
@@ -115,15 +116,15 @@ template<typename T>
 struct is_unqualified;
 
 template<typename T>
+struct is_unqualified
+  : bool_constant<std::is_same_v<T, std::remove_cvref_t<T>>>
+{ };
+
+template<typename T>
 inline constexpr
 bool
 is_unqualified_v
 = is_unqualified<T>::value;
-
-template<typename T>
-struct is_unqualified
-  : bool_constant<std::is_same_v<T, std::remove_cvref_t<T>>>
-{ };
 
 
 }

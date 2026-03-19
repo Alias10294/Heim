@@ -47,28 +47,31 @@ using query_expression
     ::include<position, velocity const>
     ::exclude<health>;
 
+using entity 
+= heim::entity<registry>;
+
 int main()
 {
   registry r;
 
-  auto const e0 = r.create();
-  r.emplace<position>(e0, 0.f, 0.f, 0.f);
-  r.emplace<velocity>(e0, 1.f, 0.f, 0.f);
+  auto const id0 = r.create();
+  r.emplace<position>(id, 0.f, 0.f, 0.f);
+  r.emplace<velocity>(id, 1.f, 0.f, 0.f);
 
-  auto const e1 = r.create();
-  r.emplace<position>(e1, 0.f, 1.f, 0.f);
-  r.emplace<health  >(e1, 10);
+  entity e0(r);
+  e0.emplace<position>(0.f, 1.f, 0.f);
+  e0.emplace<health  >(10);
 
   auto q = r.query<query_expression>();
 
-  for (auto &&[e, pos, vel] : q)
+  for (auto &&[id, pos, vel] : q)
   {
     pos.x += vel.x;
     pos.y += vel.y;
     pos.z += vel.z;
   }
 
-  r.destroy(e0);
-  r.destroy(e1);
+  r.destroy(id0);
+  e0.destroy();
 }
 ```
