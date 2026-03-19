@@ -2,8 +2,9 @@
 #define HEIM_TEST_HPP
 
 #include <iostream>
+#include <ranges>
 #include "heim/heim.hpp"
-#include "heim/storage/sparse_set/new_storage.hpp"
+#include "heim/storage/sparse_set/storage.hpp"
 
 namespace heim::test
 {
@@ -23,13 +24,13 @@ inline void test()
       ::component<velocity>
       ::component<health  >
       ::component<tag     >>;
-
-  using storage
-  = heim::sparse_set_based::new_storage<>
-      ::component<position>
-      ::component<velocity>
-      ::component<health  >
-      ::component<tag     >;
+  // using registry
+  // = heim::registry<heim::sparse_set_based::storage<>
+  //     ::component<position>
+  //     ::component<velocity>
+  //     ::component<health  >
+  //     ::component<tag     >
+  //     ::group<position, velocity, tag>>;
 
   using query_expression
   = heim::query_expression<>

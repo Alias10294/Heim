@@ -86,24 +86,34 @@ public:
   using component_container_type  = std::vector<component_type, component_allocator>;
 
 private:
-  template<bool IsConst>
+  template<bool IsConstIterator>
   class generic_iterator
   {
   public:
     friend pool;
+    friend generic_iterator<!IsConstIterator>;
 
   public:
     static constexpr
     bool
-    is_const
-    = IsConst;
+    is_const_iterator
+    = IsConstIterator;
 
 
     using difference_type
     = std::ptrdiff_t;
 
-    using value_type = component_type;
-    using reference  = std::conditional_t<is_const, pool::const_reference, pool::reference>;
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept  = std::random_access_iterator_tag;
+
+    using value_type
+    = pool::value_type;
+
+    using reference
+    = std::conditional_t<
+        is_const_iterator,
+        pool::const_reference,
+        pool::reference>;
 
     class pointer
     {
@@ -127,16 +137,13 @@ private:
       noexcept;
     };
 
-    using iterator_category = std::input_iterator_tag;
-    using iterator_concept  = std::random_access_iterator_tag;
-
   private:
     using identifier_iterator
     = typename base_type::const_iterator;
 
     using component_iterator
     = std::conditional_t<
-        is_const,
+        is_const_iterator,
         typename component_container_type::const_reverse_iterator,
         typename component_container_type::reverse_iterator      >;
 
@@ -153,6 +160,10 @@ private:
     constexpr generic_iterator()                         = default;
     constexpr generic_iterator(generic_iterator const &) = default;
     constexpr generic_iterator(generic_iterator &&     ) = default;
+
+    constexpr explicit
+    generic_iterator(generic_iterator<!is_const_iterator>)
+    noexcept;
 
     constexpr
     ~generic_iterator()
@@ -433,8 +444,27 @@ pool<Component, Identifier, PageSize, Allocator>
         component_iterator  const component_it )
 noexcept
   : m_identifier_it(identifier_it),
-    m_component_it (component_it )
+    m_component_it (component_it)
 { }
+
+template<
+    typename    Component,
+    typename    Identifier,
+    std::size_t PageSize,
+    typename    Allocator>
+template<bool IsConst>
+constexpr
+pool<Component, Identifier, PageSize, Allocator>
+    ::generic_iterator<IsConst>
+    ::generic_iterator(generic_iterator<!is_const_iterator> const other)
+noexcept
+  : m_identifier_it(other.m_identifier_it),
+    m_component_it (other.m_component_it)
+{
+  static_assert(
+      is_const_iterator,
+      "heim::sparse_set_based::pool::generic_iterator: is_const must be true.");
+}
 
 template<
     typename    Component,
@@ -763,8 +793,8 @@ noexcept(s_noexcept_swap_entries())
   identifier_type &lhs_pos = m_sparse[lhs];
   identifier_type &rhs_pos = m_sparse[rhs];
 
-  auto const lhs_idx = static_cast<size_type>(lhs_pos.idx());
-  auto const rhs_idx = static_cast<size_type>(rhs_pos.idx());
+  auto const lhs_idx = static_cast<size_type>(lhs_pos.index());
+  auto const rhs_idx = static_cast<size_type>(rhs_pos.index());
 
   swap(m_components[lhs_idx], m_components[rhs_idx]);
   swap(m_dense     [lhs_idx], m_dense     [rhs_idx]);

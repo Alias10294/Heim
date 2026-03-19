@@ -628,7 +628,7 @@ using type_sequence_flatten_t
  * @brief Determines the type sequence obtained by keeping only the type occurrences
  *   present in the left type sequence and absent in the right type sequence.
  *
- * @tparam Left  The type sequence to the left of the subtraction.
+ * @tparam Left  The type sequence to the left  of the subtraction.
  * @tparam Right The type sequence to the right of the subtraction.
  *
  * @note This trait models a typical list difference with multiplicity and stable order.
@@ -707,6 +707,89 @@ using type_sequence_tuple_t
 = typename type_sequence_tuple<TypeSequence>::type;
 
 
+/*!
+ * @brief Determines whether the two given type sequences are the same.
+ *
+ * @tparam Left  The type sequence to the left  of the equality.
+ * @tparam Right The type sequence to the right of the equality.
+ */
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_is_equal;
+
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_is_equal
+{ };
+
+template<
+    typename ...Ls,
+    typename ...Rs>
+struct type_sequence_is_equal<
+    type_sequence<Ls ...>,
+    type_sequence<Rs ...>>
+  : bool_constant<false>
+{ };
+
+template<typename ...Ts>
+struct type_sequence_is_equal<
+    type_sequence<Ts ...>,
+    type_sequence<Ts ...>>
+  : bool_constant<true>
+{ };
+
+template<
+    typename Left,
+    typename Right>
+inline constexpr
+bool
+type_sequence_is_equal_v
+= type_sequence_is_equal<Left, Right>::value;
+
+
+/*!
+ * @brief Determines whether the left and right type sequences contain the exact same types, only in
+ *   a different order.
+ *
+ * @tparam Left  The left  type sequence.
+ * @tparam Right The right type sequence.
+ */
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_is_permutation;
+
+template<
+    typename Left,
+    typename Right>
+struct type_sequence_is_permutation
+{ };
+
+template<
+    typename ...Ls,
+    typename ...Rs>
+struct type_sequence_is_permutation<
+    type_sequence<Ls ...>,
+    type_sequence<Rs ...>>
+  : bool_constant<
+        type_sequence<Ls ...>::size == type_sequence<Rs ...>::size
+     && type_sequence_difference_t<
+            type_sequence<Ls ...>,
+            type_sequence<Rs ...>>
+            ::size == 0>
+{ };
+
+template<
+    typename Left,
+    typename Right>
+inline constexpr
+bool
+type_sequence_is_permutation_v
+= type_sequence_is_permutation<Left, Right>::value;
+
+
 template<typename ...Ts>
 struct type_sequence
 {
@@ -780,6 +863,18 @@ struct type_sequence
 
   using tuple
   = type_sequence_tuple_t<type_sequence>;
+
+  template<typename TypeSequence>
+  static constexpr
+  bool
+  is_equal
+  = type_sequence_is_equal_v<type_sequence, TypeSequence>;
+
+  template<typename TypeSequence>
+  static constexpr
+  bool
+  is_permutation
+  = type_sequence_is_permutation_v<type_sequence, TypeSequence>;
 };
 
 

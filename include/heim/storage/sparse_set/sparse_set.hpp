@@ -724,15 +724,23 @@ sparse_set<Identifier, PageSize, Allocator>
     ::contains(identifier_type const id) const
 noexcept
 {
-  size_type const idx = id.index();
+  size_type const
+  idx
+  = id.index();
 
   if constexpr (s_is_paged)
   {
-    size_type const page_idx = s_page_index(idx);
+    size_type const
+    page_idx
+    = s_page_index(idx);
+
     if (page_idx >= m_container.size())
       return false;
 
-    page const *pg = m_container[page_idx].get();
+    page const *
+    pg
+    = m_container[page_idx].get();
+
     if (!pg)
       return false;
 
@@ -795,11 +803,15 @@ sparse_set<Identifier, PageSize, Allocator>
     ::sparse_container
     ::prepare_for(identifier_type const id)
 {
-  size_type const idx = id.index();
+  size_type const
+  idx
+  = id.index();
 
   if constexpr (s_is_paged)
   {
-    size_type const pg_idx = s_page_index(idx);
+    size_type const
+    pg_idx
+    = s_page_index(idx);
 
     if (pg_idx >= m_container.size())
       m_container.reserve(pg_idx + 1);
@@ -807,8 +819,8 @@ sparse_set<Identifier, PageSize, Allocator>
     while (pg_idx >= m_container.size())
       m_container.emplace_back(m_make_page_pointer(nullptr));
 
-    page_pointer &pg = m_container[pg_idx];
-    if (!pg)
+    if (page_pointer &pg = m_container[pg_idx];
+        !pg)
     {
       pg = m_make_page_pointer();
       pg ->fill(s_null_pos);
