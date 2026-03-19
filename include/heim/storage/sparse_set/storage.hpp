@@ -1,296 +1,462 @@
 #ifndef HEIM_SPARSE_SET_BASED_STORAGE_HPP
 #define HEIM_SPARSE_SET_BASED_STORAGE_HPP
 
+#include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <vector>
 #include "heim/allocator.hpp"
-#include "heim/entity.hpp"
+#include "heim/identifier.hpp"
 #include "heim/query_expression.hpp"
 #include "heim/type_sequence.hpp"
+#include "heim/utility.hpp"
 #include "pool.hpp"
+#include "sparse_set.hpp"
 
 namespace heim::sparse_set_based
 {
+template<
+    typename    Component,
+    std::size_t PageSize,
+    bool        TagValue>
+using component_info
+= type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>;
+
+template<typename ...Components>
+using group_info
+= type_sequence<Components ...>;
+
+template<typename T>
+struct is_group_info;
+
+template<typename T>
+struct is_group_info
+  : bool_constant<false>
+{ };
+
+template<
+    typename    First,
+    typename    Second,
+    typename ...Rest>
+struct is_group_info<
+    type_sequence<First, Second, Rest ...>>
+  : bool_constant<true>
+{ };
+
+
 /*!
- * @brief The main container of components, specialized for usage in the entity-component-system
- *   pattern.
+ * @brief The main container of components, specialized for usage in the entity-component-system pattern.
  *
- * @details Manages single-component optimized pools to hold components of each type in their
- *   separate container. This allows for fast addition and removal of components on entities, and
- *   optimal iteration speed on small sets of component types.
+ * @details Manages single-component optimized pools to hold components of each type in their separate
+ *   container. This allows for fast addition and removal of components on entities, and optimal iteration
+ *   speed on small sets of component types.
  *
- * @tparam Entity           The entity type.
- * @tparam Allocator        The allocator type.
+ * @tparam Identifier       The identifier type.
+ * @tparam Allocator        The allocator  type.
  * @tparam ComponentInfoSeq The component information sequence.
+ * @tparam GroupInfoSeq     The group     information sequence.
  *
- * @note The component information sequence should not be specialized manually.
+ * @note The component and group information sequences should not be specialized manually.
  */
 template<
-    typename Entity           = entity<>,
-    typename Allocator        = std::allocator<Entity>,
-    typename ComponentInfoSeq = type_sequence<>>
+    typename Identifier       = identifier<>,
+    typename Allocator        = std::allocator<Identifier>,
+    typename ComponentInfoSeq = type_sequence<>,
+    typename GroupInfoSeq     = type_sequence<>>
 class storage;
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 class storage
 {
 public:
+  using identifier_type         = Identifier;
+  using allocator_type          = Allocator;
+  using component_info_sequence = ComponentInfoSeq;
+  using group_info_sequence     = GroupInfoSeq;
+
+  static_assert(
+      specializes_identifier_v<identifier_type>,
+      "heim::sparse_set_based::storage: identifier_type must be a specialization of identifier.");
+  static_assert(
+      is_an_allocator_for_v<allocator_type, identifier_type>,
+      "heim::sparse_set_based::storage: allocator_type must pass as an allocator of identifier_type.");
+  static_assert(
+      specializes_type_sequence_v<component_info_sequence>,
+      "heim::sparse_set_based::storage: component_info_sequence must be a specialization of type_sequence.");
+  static_assert(
+      specializes_type_sequence_v<group_info_sequence>,
+      "heim::sparse_set_based::storage: group_info_sequence must be a specialization of type_sequence.");
+
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
 
-
-  using entity_type             = Entity;
-  using allocator_type          = Allocator;
-  using component_info_sequence = ComponentInfoSeq;
-
-  static_assert(
-      specializes_entity_v<entity_type>,
-      "heim::sparse_set_based::storage: entity_type must be a specialization of entity.");
-  static_assert(
-      is_an_allocator_for_v<allocator_type, entity_type>,
-      "heim::sparse_set_based::storage: allocator_type must pass as an allocator of entity_type.");
-
 private:
-  struct component_info_sequence_traits
-  {
-  private:
-    template<typename ComponentInfo>
-    struct to_component
-    {
-      using type
-      = typename ComponentInfo::template get<0>;
-    };
-
-    template<typename ComponentInfo>
-    struct to_page_size
-    {
-      using type
-      = typename ComponentInfo::template get<1>;
-    };
-
-    template<typename ComponentInfo>
-    struct to_tag_value
-    {
-      using type
-      = typename ComponentInfo::template get<2>;
-    };
-
-    template<typename ComponentInfo>
-    struct to_pool
-    {
-      using type
-      = pool<
-          typename ComponentInfo::template get<0>,
-          entity_type,
-          allocator_type,
-          ComponentInfo::template get<1>::value,
-          ComponentInfo::template get<2>::value>;
-    };
-
-    // makes the last component info index expression dependent, forcing its evaluation to be done
-    // in the 2nd phase of the name lookup, avoiding some unintended errors when using ::paged and
-    // ::tagged.
-    template<auto>
-    static constexpr
-    size_type
-    s_dependent_last_index
-    = component_info_sequence::size - 1;
-
-  public:
-    using component_sequence = typename component_info_sequence::template map<to_component>;
-    using page_size_sequence = typename component_info_sequence::template map<to_page_size>;
-    using tag_value_sequence = typename component_info_sequence::template map<to_tag_value>;
-
-    static_assert(
-        std::is_same_v<
-            component_sequence,
-            typename component_sequence::template map<std::remove_cvref>>,
-        "heim::sparse_set_based::storage::component_info_sequence_traits: component_info_sequence must "
-        "not contain any reference types.");
-
-    using pool_sequence = typename component_info_sequence::template map<to_pool>;
-
-
-    template<typename Component>
-    using component
-    = typename component_info_sequence
-        ::template append<
-            type_sequence<
-                std::remove_cvref_t<Component>,
-                size_constant<default_pool_page_size<>::value>,
-                std::is_empty<std::remove_cvref_t<Component>>>>;
-
-    template<std::size_t PageSize>
-    requires(component_info_sequence::size > 0)
-    using paged
-    = typename component_info_sequence
-        ::template set<
-            s_dependent_last_index<PageSize>,
-            typename component_info_sequence
-                ::template get<s_dependent_last_index<PageSize>>
-                ::template set<1, size_constant<PageSize>>>;
-
-    template<bool TagValue>
-    requires(component_info_sequence::size > 0)
-    using tagged
-    = typename component_info_sequence
-        ::template set<
-            s_dependent_last_index<TagValue>,
-            typename component_info_sequence
-                ::template get<s_dependent_last_index<TagValue>>
-                ::template set<2, bool_constant<TagValue>>>;
-
-
-    template<typename Component>
-    requires(component_sequence::template contains<std::remove_cvref_t<Component>>)
-    static constexpr
-    size_type
-    index
-    = component_sequence::template index<std::remove_cvref_t<Component>>;
-
-    static_assert(
-        component_sequence::is_unique,
-        "heim::sparse_set_based::storage: Component types can only be declared once in the storage.");
-
-
-    template<typename Component>
-    struct page_size_of
-      : size_constant<page_size_sequence::template get<index<Component>>::value>
-    { };
-
-    template<typename Component>
-    struct tag_value_of
-      : bool_constant<tag_value_sequence::template get<index<Component>>::value>
-    { };
-
-    template<typename Component>
-    struct pool_for
-    {
-      using type
-      = typename pool_sequence::template get<index<Component>>;
-    };
-
-
-    using pool_tuple = typename pool_sequence::tuple;
-  };
-
-private:
-  using pool_tuple = typename component_info_sequence_traits::pool_tuple;
-
-
-  template<typename Component>
-  requires(requires { component_info_sequence_traits::template index<Component>; })
+  template<auto>
   static constexpr
   size_type
-  s_component_index
-  = component_info_sequence_traits::template index<Component>;
+  s_last_component_index
+  = component_info_sequence::size - 1;
 
-public:
+
+  template<typename ComponentInfo>
+  struct to_component
+  {
+    using type
+    = typename ComponentInfo::template get<0>;
+  };
+
+  template<typename ComponentInfo>
+  struct to_container
+  {
+    using type
+    = std::conditional_t<
+        ComponentInfo::template get<2>::value,
+        sparse_set<
+            identifier_type,
+            ComponentInfo::template get<1>::value,
+            allocator_type>,
+        pool<
+            typename to_component<ComponentInfo>::type,
+            identifier_type,
+            ComponentInfo::template get<1>::value,
+            allocator_type>>;
+  };
+
+  template<typename GroupInfo>
+  struct to_group
+  {
+    using type
+    = size_type;
+  };
+
+
+  using component_sequence = typename component_info_sequence::template map<to_component>;
+  using container_sequence = typename component_info_sequence::template map<to_container>;
+  using group_sequence     = typename group_info_sequence    ::template map<to_group    >;
+
+  static_assert(
+      std::is_same_v<
+          component_sequence,
+          typename component_sequence::template map<std::remove_cvref>>,
+      "heim::sparse_set_based::storage: component types must each neither be const nor contain references.");
+  static_assert(
+      component_sequence::is_unique,
+      "heim::sparse_set_based::storage: component types must each be unique.");
+
+  static_assert(
+      group_info_sequence
+          ::template filter  <specializes_type_sequence>
+          ::template is_equal<group_info_sequence>,
+      "heim::sparse_set_based::storage: group_info_sequence must only contain specializations of type_sequence.");
+  static_assert(
+      group_info_sequence::flatten::template difference<component_sequence>::size == 0,
+      "heim::sparse_set_based::storage: each component type in group_info types must be unique and already "
+          "managed by the storage.");
+  static_assert(
+      group_info_sequence
+          ::template filter  <is_group_info>
+          ::template is_equal<group_info_sequence>,
+      "heim::sparse_set_based::storage: group_info types in group_info_sequence must contain at least "
+          "2 component types.");
+
+  using container_tuple = typename component_info_sequence::template map<to_container>::tuple;
+  using group_tuple     = typename group_info_sequence    ::template map<to_group    >::tuple;
+
+
   template<typename Component>
-  using component
-  = storage<
-      entity_type,
-      allocator_type,
-      typename component_info_sequence_traits::template component<Component>>;
+  static constexpr
+  size_type
+  component_index
+  = component_sequence::template index<Component>;
 
-  template<std::size_t PageSize>
-  requires(component_info_sequence::size > 0)
-  using paged
-  = storage<
-      entity_type,
-      allocator_type,
-      typename component_info_sequence_traits::template paged<PageSize>>;
+  template<typename Component>
+  struct meta
+  {
+    template<typename ComponentInfo>
+    struct contains
+    {
+      using type
+      = std::conditional_t<
+          ComponentInfo::template contains<Component>,
+          bool_constant<true >,
+          bool_constant<false>>;
+    };
+  };
 
-  template<bool TagValue>
-  requires(component_info_sequence::size > 0)
-  using tagged
-  = storage<
-      entity_type,
-      allocator_type,
-      typename component_info_sequence_traits::template tagged<TagValue>>;
+  template<typename Component>
+  static constexpr
+  bool
+  is_grouped
+  = group_info_sequence
+      ::template map     <meta<Component>::template contains>
+      ::template contains<bool_constant<true>>;
+
+  template<typename Component>
+  static constexpr
+  size_type
+  group_index
+  = group_info_sequence
+      ::template map  <meta<Component>::template contains>
+      ::template index<bool_constant<true>>;
 
 
-  template<typename Expression>
+  template<typename Component>
+  using container_of
+  = typename container_sequence::template get<component_index<Component>>;
+
+  template<typename Component>
+  using group_info_of
+  = typename group_info_sequence::template get<group_index<Component>>;
+
+
+  template<
+      bool     IsConstQuery,
+      typename Expression>
   class generic_query
   {
   public:
-    using expression_type = Expression;
+    static constexpr
+    bool
+    is_const_query
+    = IsConstQuery;
+
+    using expression_type
+    = Expression;
 
     static_assert(
         specializes_query_expression_v<expression_type>,
-        "heim::sparse_set_based::storage::generic_query:expression_type must be a specialization of "
-        "query_expression.");
+        "heim::sparse_set_based::storage::generic_query: expression_type must be a specialization of "
+            "query_expression.");
+
+
+    using size_type       = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
   private:
-    template<typename Component>
-    struct not_tag
-      : bool_constant<!component_info_sequence_traits::template tag_value_of<Component>::value>
-    { };
+    using storage_type
+    = maybe_const_t<storage, is_const_query>;
+
 
     using include_sequence = typename expression_type::include_sequence;
     using exclude_sequence = typename expression_type::exclude_sequence;
 
     static_assert(
-        include_sequence
-            ::template map<std::remove_cvref>
-            ::template difference<typename component_info_sequence_traits::component_sequence>
-            ::size
-         == 0,
-        "heim::sparse_set_based::storage::generic_query: All included types in expression_type must "
-        "be managed by the storage.");
-    static_assert(
-        exclude_sequence
-            ::template map<std::remove_cvref>
-            ::template difference<typename component_info_sequence_traits::component_sequence>
-            ::size
-         == 0,
-        "heim::sparse_set_based::storage::generic_query: All excluded types in expression_type must "
-        "be managed by the storage.");
-    static_assert(
         include_sequence::size > 0,
-        "heim::sparse_set_based::storage::generic_query: expression_type must at least include one component_type.");
+        "heim::sparse_set_based::storage::generic_query; expression_type must include at least one component "
+            "type.");
+    static_assert(
+       !is_const_query
+     || include_sequence::template is_equal<typename include_sequence::template map<std::add_const>>,
+        "heim::sparse_set_based::storage::generic_query: expression_type in a const generic_query must "
+            "include only const component types.");
+    static_assert(
+       !is_const_query
+     || exclude_sequence::template is_equal<typename exclude_sequence::template map<std::add_const>>,
+        "heim::sparse_set_based::storage::generic_query: expression_type in a const generic_query must "
+            "exclude only const component types.");
 
-    using value_include_sequence = typename include_sequence::template filter<not_tag>;
-    using value_exclude_sequence = typename exclude_sequence::template filter<not_tag>;
+
+    using bare_include_sequence = typename include_sequence::template map<std::remove_const>;
+    using bare_exclude_sequence = typename exclude_sequence::template map<std::remove_const>;
+
+    static_assert(
+        bare_include_sequence::template difference<component_sequence>::size == 0,
+        "heim::sparse_set_based::storage::generic_query: expression_type must include component types "
+            "that are managed by the storage.");
+    static_assert(
+        bare_exclude_sequence::template difference<component_sequence>::size == 0,
+        "heim::sparse_set_based::storage::generic_query: expression_type must exclude component types "
+            "that are managed by the storage.");
+
+    static constexpr
+    bool
+    is_group_query
+    = []() constexpr
+        -> bool
+    {
+      using anchor
+      = typename bare_include_sequence::template get<0>;
+
+      if constexpr (!is_grouped<anchor>)
+        return false;
+      else
+        return group_info_of<anchor>::template is_permutation<bare_include_sequence>;
+    }();
+
+    template<typename Component>
+    struct not_tagged
+      : bool_constant<
+            !component_info_sequence
+                ::template get<component_index<std::remove_const_t<Component>>>
+                ::template get<2>
+                ::value>
+    { };
+
+    using value_type_sequence
+    = typename bare_include_sequence::template filter<not_tagged>;
+
+    using reference_sequence
+    = typename include_sequence
+        ::template filter<not_tagged>
+        ::template map   <std::add_lvalue_reference>;
+
+    using const_reference_sequence
+    = typename include_sequence
+        ::template filter<not_tagged>
+        ::template map   <std::add_const>
+        ::template map   <std::add_lvalue_reference>;
 
   public:
     using value_type
-    = typename type_sequence<entity_type>
-        ::template concatenate<
-            typename value_include_sequence
-                ::template map<std::remove_cvref>>
+    = typename type_sequence<identifier_type>
+        ::template concatenate<value_type_sequence>
         ::tuple;
 
     using reference
-    = typename type_sequence<entity_type const &>
-        ::template concatenate<
-            typename value_include_sequence
-                ::template map<std::add_lvalue_reference>>
+    = typename type_sequence<identifier_type const &>
+        ::template concatenate<reference_sequence>
         ::tuple;
 
     using const_reference
-    = typename type_sequence<entity_type const &>
-        ::template concatenate<
-            typename value_include_sequence
-                ::template map<std::add_lvalue_reference>
-                ::template map<std::add_const>>
+    = typename type_sequence<identifier_type const &>
+        ::template concatenate<const_reference_sequence>
         ::tuple;
 
   private:
-    template<bool IsConst>
+    class regular_query_driver
+    {
+    private:
+      using pivot_container_type
+      = std::vector<identifier_type, allocator_type>;
+
+    private:
+      pivot_container_type const *
+      m_pivot;
+
+    private:
+      template<typename ...Components>
+      static constexpr
+      pivot_container_type const *
+      find_pivot(type_sequence<Components ...>, storage const *)
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      bool
+      m_matches_all(type_sequence<Components ...>, storage const *, identifier_type)
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      bool
+      m_matches_any(type_sequence<Components ...>, storage const *, identifier_type)
+      noexcept;
+
+      constexpr
+      bool
+      m_matches(storage const *, identifier_type) const
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      typename type_sequence<Components ...>::tuple
+      s_dereference(type_sequence<Components ...>, storage *, identifier_type)
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      typename type_sequence<Components ...>::tuple
+      s_dereference(type_sequence<Components ...>, storage const *, identifier_type)
+      noexcept;
+
+    public:
+      constexpr explicit
+      regular_query_driver(storage const *)
+      noexcept;
+
+      [[nodiscard]] constexpr
+      difference_type
+      size(storage const *) const
+      noexcept;
+
+      [[nodiscard]] constexpr difference_type increment(storage const *, difference_type) const noexcept;
+      [[nodiscard]] constexpr difference_type decrement(storage const *, difference_type) const noexcept;
+
+      [[nodiscard]] constexpr reference       dereference(storage *      , difference_type) const noexcept;
+      [[nodiscard]] constexpr const_reference dereference(storage const *, difference_type) const noexcept;
+    };
+
+
+    class group_query_driver
+    {
+    private:
+      using anchor
+      = typename bare_include_sequence::template get<0>;
+
+    private:
+      template<typename ...Components>
+      static constexpr
+      bool
+      m_matches_any(type_sequence<Components ...>, storage const *, difference_type)
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      typename type_sequence<Components ...>::tuple
+      s_dereference(type_sequence<Components ...>, storage *, difference_type)
+      noexcept;
+
+      template<typename ...Components>
+      static constexpr
+      typename type_sequence<Components ...>::tuple
+      s_dereference(type_sequence<Components ...>, storage const *, difference_type)
+      noexcept;
+
+    public:
+      constexpr explicit
+      group_query_driver(storage const *)
+      noexcept;
+
+      static constexpr
+      difference_type
+      size(storage const *)
+      noexcept;
+
+      static constexpr difference_type increment(storage const *, difference_type) noexcept;
+      static constexpr difference_type decrement(storage const *, difference_type) noexcept;
+
+      static constexpr reference       dereference(storage *      , difference_type) noexcept;
+      static constexpr const_reference dereference(storage const *, difference_type) noexcept;
+    };
+
+
+    using query_driver
+    = std::conditional_t<is_group_query, group_query_driver, regular_query_driver>;
+
+
+    template<bool IsConstIt>
     class generic_iterator
     {
     public:
-      using difference_type = std::ptrdiff_t;
+      friend generic_query;
+
+    public:
+      static constexpr
+      bool
+      is_const_iterator
+      = IsConstIt;
 
 
-      static constexpr bool is_const = IsConst;
+      using difference_type
+      = std::ptrdiff_t;
 
       using iterator_category = std::input_iterator_tag;
       using iterator_concept  = std::bidirectional_iterator_tag;
@@ -300,17 +466,18 @@ public:
 
       using reference
       = std::conditional_t<
-          is_const,
+          is_const_iterator,
           typename generic_query::const_reference,
           typename generic_query::reference>;
 
       struct pointer
       {
       private:
-        reference m_ref;
+        reference
+        m_ref;
 
       public:
-        explicit constexpr
+        constexpr explicit
         pointer(reference &&)
         noexcept;
 
@@ -321,159 +488,48 @@ public:
         noexcept;
       };
 
-
-      struct pivot_info
-      {
-        entity_type const *entities;
-        size_type          index;
-        size_type          size;
-      };
-
-
-      friend generic_query;
-      friend generic_iterator<!is_const>;
+    private:
+      using storage_type
+      = maybe_const_t<storage, is_const_iterator>;
 
     private:
-      maybe_const_t<storage, is_const> *m_storage;
-      pivot_info                        m_pivot;
-      difference_type                   m_index;
+      storage_type   *m_storage;
+      difference_type m_index;
+
+      [[no_unique_address]]
+      query_driver
+      m_driver;
 
     private:
-      // iterating over all entities that match the query with pools decided at compile time is difficult,
-      // and we need to use compile-time recursivity to loop on each one
-      template<std::size_t = 0>
-      [[nodiscard]] constexpr
-      bool
-      is_included(entity_type const) const
-      noexcept;
-
-      template<std::size_t = 0>
-      [[nodiscard]] constexpr
-      bool
-      is_excluded(entity_type const) const
-      noexcept;
-
-      [[nodiscard]] constexpr
-      bool
-      is_verified(entity_type const) const
-      noexcept;
-
-      constexpr
-      void
-      increment()
-      noexcept;
-
-      constexpr
-      void
-      decrement()
-      noexcept;
-
-
-      // to find the query's pivot, we need to traverse each pool, so compile-time recursivity is in
-      // order again
-      template<std::size_t = 0>
-      [[nodiscard]] constexpr
-      pivot_info
-      pivot_at() const
-      noexcept;
-
-      template<std::size_t = 1>
-      constexpr
-      void
-      find_best_pivot(pivot_info &) const
-      noexcept;
-
-      [[nodiscard]] constexpr
-      pivot_info
-      make_pivot() const
-      noexcept;
-
-
-      // constructing the reference tuple also requires traversing each pool, so compile-time recursivity
-      // it is
-      template<typename Component>
-      [[nodiscard]] constexpr
-      decltype(auto)
-      value_at(entity_type const) const
-      noexcept;
-
-      template<std::size_t = 0>
-      [[nodiscard]] constexpr
-      auto
-      make_value_tuple(entity_type const) const
-      noexcept;
-
-
-      constexpr
-      generic_iterator(maybe_const_t<storage, is_const> * const, difference_type const)
-      noexcept;
-
-      explicit constexpr
-      generic_iterator(maybe_const_t<storage, is_const> * const)
-      noexcept;
+      constexpr generic_iterator(storage_type *, difference_type, query_driver) noexcept;
+      constexpr generic_iterator(storage_type *, query_driver)                  noexcept;
 
     public:
       constexpr
       generic_iterator()
-      = default;
-
-      constexpr
-      generic_iterator(generic_iterator const &)
-      = default;
-
-      constexpr
-      generic_iterator(generic_iterator &&)
-      = default;
-
-      explicit constexpr
-      generic_iterator(generic_iterator<!is_const>)
       noexcept;
+
+      constexpr generic_iterator(generic_iterator const &) = default;
+      constexpr generic_iterator(generic_iterator &&)      = default;
 
       constexpr
       ~generic_iterator()
       = default;
 
-      constexpr
-      generic_iterator &
-      operator=(generic_iterator const &)
-      = default;
-
-      constexpr
-      generic_iterator &
-      operator=(generic_iterator &&)
-      = default;
+      constexpr generic_iterator &operator=(generic_iterator const &) = default;
+      constexpr generic_iterator &operator=(generic_iterator &&)      = default;
 
 
-      constexpr
-      generic_iterator &
-      operator++()
-      noexcept;
+      constexpr generic_iterator &operator++()    noexcept;
+      constexpr generic_iterator  operator++(int) noexcept;
 
-      constexpr
-      generic_iterator
-      operator++(int)
-      noexcept;
-
-      constexpr
-      generic_iterator &
-      operator--()
-      noexcept;
-
-      constexpr
-      generic_iterator
-      operator--(int)
-      noexcept;
+      constexpr generic_iterator &operator--()    noexcept;
+      constexpr generic_iterator  operator--(int) noexcept;
 
 
-      constexpr
-      reference
-      operator*() const
-      noexcept;
+      constexpr reference operator* () const noexcept;
+      constexpr pointer   operator->() const noexcept;
 
-      constexpr
-      pointer
-      operator->() const
-      noexcept;
 
       [[nodiscard]] friend constexpr
       bool
@@ -494,181 +550,175 @@ public:
 
   public:
     using iterator       = generic_iterator<false>;
-    using const_iterator = generic_iterator<true >;
+    using const_iterator = generic_iterator<true>;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   private:
-    storage *m_storage;
+    storage_type *
+    m_storage;
 
   public:
-    explicit constexpr
-    generic_query(storage * const)
+    constexpr generic_query()                      = default;
+    constexpr generic_query(generic_query const &) = default;
+    constexpr generic_query(generic_query &&)      = default;
+
+    constexpr explicit
+    generic_query(storage_type *)
     noexcept;
-
-    explicit constexpr
-    generic_query(storage &)
-    noexcept;
-
-    constexpr
-    generic_query()
-    noexcept;
-
-    constexpr
-    generic_query(generic_query const &)
-    = default;
-
-    constexpr
-    generic_query(generic_query &&)
-    = default;
 
     constexpr
     ~generic_query()
     = default;
 
-    constexpr
-    generic_query &
-    operator=(generic_query const &)
-    = default;
-
-    constexpr
-    generic_query &
-    operator=(generic_query &&)
-    = default;
+    constexpr generic_query &operator=(generic_query const &) = default;
+    constexpr generic_query &operator=(generic_query &&)      = default;
 
 
-    [[nodiscard]] constexpr
-    iterator
-    begin()
-    noexcept;
+    [[nodiscard]] constexpr iterator       begin ()       noexcept;
+    [[nodiscard]] constexpr const_iterator begin () const noexcept;
+    [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
 
-    [[nodiscard]] constexpr
-    const_iterator
-    begin() const
-    noexcept;
+    [[nodiscard]] constexpr iterator       end ()       noexcept;
+    [[nodiscard]] constexpr const_iterator end () const noexcept;
+    [[nodiscard]] constexpr const_iterator cend() const noexcept;
 
-    [[nodiscard]] constexpr
-    iterator
-    end()
-    noexcept;
+    [[nodiscard]] constexpr reverse_iterator       rbegin ()       noexcept;
+    [[nodiscard]] constexpr const_reverse_iterator rbegin () const noexcept;
+    [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
 
-    [[nodiscard]] constexpr
-    const_iterator
-    end() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_iterator
-    cbegin() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_iterator
-    cend() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    reverse_iterator
-    rbegin()
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_reverse_iterator
-    rbegin() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    reverse_iterator
-    rend()
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_reverse_iterator
-    rend() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_reverse_iterator
-    crbegin() const
-    noexcept;
-
-    [[nodiscard]] constexpr
-    const_reverse_iterator
-    crend() const
-    noexcept;
+    [[nodiscard]] constexpr reverse_iterator       rend ()       noexcept;
+    [[nodiscard]] constexpr const_reverse_iterator rend () const noexcept;
+    [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
   };
 
+public:
+  template<
+      typename  Component,
+      size_type PageSize  = default_container_page_size<>::value,
+      bool      TagValue  = std::is_empty_v<Component>>
+  using component
+  = storage<
+      identifier_type,
+      allocator_type,
+      typename component_info_sequence
+          ::template append<component_info<Component, PageSize, TagValue>>,
+      group_info_sequence>;
 
-  template<typename>
-  friend class generic_query;
+  template<size_type PageSize>
+  using paged
+  = storage<
+      identifier_type,
+      allocator_type,
+      typename component_info_sequence
+          ::template set<
+              s_last_component_index<PageSize>,
+              typename component_info_sequence
+                  ::template get<s_last_component_index<PageSize>>
+                  ::template set<1, size_constant<PageSize>>>,
+      group_info_sequence>;
+
+  template<bool TagValue>
+  using tagged
+  = storage<
+      identifier_type,
+      allocator_type,
+      typename component_info_sequence
+          ::template set<
+              s_last_component_index<TagValue>,
+              typename component_info_sequence
+                  ::template get<s_last_component_index<TagValue>>
+                  ::template set<2, bool_constant<TagValue>>>,
+      group_info_sequence>;
+
+  template<typename ...Components>
+  using group
+  = storage<
+      identifier_type,
+      allocator_type,
+      component_info_sequence,
+      typename group_info_sequence
+          ::template append<group_info<Components ...>>>;
 
 private:
-  pool_tuple m_pools;
+  container_tuple m_containers;
+  group_tuple     m_groups;
 
 private:
-  static constexpr
-  bool
-  s_noexcept_default_construct_false()
-  noexcept;
-
-  static constexpr
-  bool
-  s_noexcept_default_construct()
-  noexcept;
-
-  static constexpr
-  bool
-  s_noexcept_move_alloc_construct()
-  noexcept;
-
-  template<std::size_t ...Is>
-  static constexpr
-  bool
-  s_noexcept_erase_entity(std::index_sequence<Is ...>)
-  noexcept;
-
   template<typename Component>
   static constexpr
   bool
-  s_noexcept_erase()
+  s_noexcept_m_group_swap()
   noexcept;
 
-  template<std::size_t ...Is>
+  template<typename ...Components> static constexpr bool s_noexcept_m_include(group_info<Components ...>) noexcept;
+  template<typename ...Components> static constexpr bool s_noexcept_m_exclude(group_info<Components ...>) noexcept;
+
+  template<typename ...Components>
   static constexpr
   bool
-  s_noexcept_clear(std::index_sequence<Is ...>)
+  s_noexcept_m_clear(type_sequence<Components ...>)
   noexcept;
+
+  static constexpr bool s_noexcept_default_construct_false() noexcept;
+  static constexpr bool s_noexcept_default_construct      () noexcept;
+  static constexpr bool s_noexcept_move_alloc_construct   () noexcept;
+  static constexpr bool s_noexcept_swap() noexcept;
+
+  template<typename Component> static constexpr bool s_noexcept_erase    () noexcept;
+  template<typename Component> static constexpr bool s_noexcept_try_erase() noexcept;
 
   static constexpr
   bool
-  s_noexcept_swap()
+  s_noexcept_clear()
   noexcept;
 
 
-  explicit constexpr
-  storage(bool_constant<true>)
-  noexcept;
-
-  explicit constexpr
-  storage(bool_constant<false>)
-  noexcept(s_noexcept_default_construct_false());
+  constexpr explicit storage(bool_constant<true >) noexcept;
+  constexpr explicit storage(bool_constant<false>) noexcept(s_noexcept_default_construct_false());
 
 
-  template<typename Component>
+  template<typename Component> [[nodiscard]] constexpr auto       &m_container()       noexcept;
+  template<typename Component> [[nodiscard]] constexpr auto const &m_container() const noexcept;
+
+  template<typename Component> [[nodiscard]] constexpr size_type &m_group()       noexcept;
+  template<typename Component> [[nodiscard]] constexpr size_type  m_group() const noexcept;
+
+
+  template<typename ...Components>
   [[nodiscard]] constexpr
-  auto &
-  m_pool()
+  bool
+  m_has(group_info<Components ...>, identifier_type) const
   noexcept;
 
   template<typename Component>
-  [[nodiscard]] constexpr
-  auto const &
-  m_pool() const
-  noexcept;
+  constexpr
+  void
+  m_group_swap(identifier_type, difference_type)
+  noexcept(s_noexcept_m_group_swap<Component>());
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_include(group_info<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_include(group_info<Components ...>{}));
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_exclude(group_info<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_exclude(group_info<Components ...>{}));
+
+
+  template<typename ...Components>
+  constexpr
+  void
+  m_clear(type_sequence<Components ...>, identifier_type)
+  noexcept(s_noexcept_m_clear(type_sequence<Components ...>{}));
 
 public:
-  explicit constexpr
+  constexpr explicit
   storage(allocator_type const &)
   noexcept;
 
@@ -695,98 +745,54 @@ public:
   ~storage()
   = default;
 
-  constexpr storage &
-  operator=(storage const &)
-  = default;
-
-  constexpr storage &
-  operator=(storage &&)
-  = default;
+  constexpr storage &operator=(storage const &) = default;
+  constexpr storage &operator=(storage &&)      = default;
 
   [[nodiscard]] constexpr
   allocator_type
   get_allocator() const
   noexcept;
 
-
-  constexpr
-  void
-  erase_entity(entity_type const)
-  noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
-
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  bool
-  has(entity_type const) const
-  noexcept;
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component &
-  get(entity_type const)
-  noexcept;
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const &
-  get(entity_type const) const
-  noexcept;
-
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  auto
-  query()
-  noexcept;
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  auto
-  query() const
-  noexcept;
-
-
-  template<
-      typename    Component,
-      typename ...Args>
-  constexpr
-  bool
-  emplace(entity_type const, Args &&...);
-
-  template<
-      typename    Component,
-      typename ...Args>
-  constexpr
-  bool
-  try_emplace(entity_type const, Args &&...);
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(entity_type const, Component const &);
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(entity_type const, Component &&);
-
-  template<typename Component>
-  constexpr
-  void
-  erase(entity_type const)
-  noexcept(s_noexcept_erase<Component>());
-
-  constexpr
-  void
-  clear()
-  noexcept(s_noexcept_clear(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()));
-
-
   constexpr
   void
   swap(storage &)
   noexcept(s_noexcept_swap());
+
+
+  template<typename Component>
+  [[nodiscard]] constexpr
+  bool
+  has(identifier_type) const
+  noexcept;
+
+  template<typename Component> [[nodiscard]] constexpr Component       &get(identifier_type)       noexcept;
+  template<typename Component> [[nodiscard]] constexpr Component const &get(identifier_type) const noexcept;
+
+  template<typename Expression> [[nodiscard]] constexpr generic_query<false, Expression> query()       noexcept;
+  template<typename Expression> [[nodiscard]] constexpr generic_query<true , Expression> query() const noexcept;
+
+
+  template<typename Component, typename ...Args> constexpr void emplace    (identifier_type, Args &&...);
+  template<typename Component, typename ...Args> constexpr bool try_emplace(identifier_type, Args &&...);
+
+  template<typename Component> constexpr bool insert(identifier_type, Component const &);
+  template<typename Component> constexpr bool insert(identifier_type, Component &&     );
+
+  template<typename Component> constexpr bool insert_or_assign(identifier_type, Component const &);
+  template<typename Component> constexpr bool insert_or_assign(identifier_type, Component &&     );
+
+  template<typename Component> constexpr void erase    (identifier_type) noexcept(s_noexcept_erase    <Component>());
+  template<typename Component> constexpr bool try_erase(identifier_type) noexcept(s_noexcept_try_erase<Component>());
+
+  constexpr
+  void
+  clear(identifier_type)
+  noexcept(s_noexcept_clear());
+
+  constexpr
+  void
+  clear()
+  noexcept;
 
 
   friend constexpr
@@ -797,46 +803,539 @@ public:
     lhs.swap(rhs);
   }
 
-  [[nodiscard]] friend constexpr
+  [[nodiscard]]
+  friend constexpr
   bool
   operator==(storage const &, storage const &)
   = default;
 };
 
 
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::pivot_container_type const *
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::find_pivot(type_sequence<Components ...>, storage const * const s)
+noexcept
+{
+  return std::min(
+      {std::addressof(
+          static_cast<sparse_set<identifier_type, container_of<Components>::page_size, allocator_type> const &>(
+              s->template m_container<Components>()).container())
+          ...},
+      [](auto const * const lhs, auto const * const rhs)
+      {
+        return lhs->size() < rhs->size();
+      });
+}
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::m_matches_all(type_sequence<Components ...>, storage const * const s, identifier_type const id)
+noexcept
+{
+  return (s->template m_container<Components>().contains(id) && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::m_matches_any(type_sequence<Components ...>, storage const * const s, identifier_type const id)
+  noexcept
+{
+  return (s->template m_container<Components>().contains(id) || ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::m_matches(storage const * const s, identifier_type const id) const
+noexcept
+{
+  return  m_matches_all(bare_include_sequence{}, s, id)
+      && !m_matches_any(bare_exclude_sequence{}, s, id);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+typename type_sequence<Components ...>::tuple
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::s_dereference(type_sequence<Components ...>, storage * const s, identifier_type const id)
+noexcept
+{
+  return std::forward_as_tuple(
+      s->template m_container<std::remove_cvref_t<Components>>()[id]
+      ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+typename type_sequence<Components ...>::tuple
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::s_dereference(type_sequence<Components ...>, storage const * const s, identifier_type const id)
+noexcept
+{
+  return std::forward_as_tuple(
+      s->template m_container<std::remove_cvref_t<Components>>()[id]
+      ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::regular_query_driver(storage const *s)
+noexcept
+  : m_pivot{find_pivot(bare_include_sequence{}, s)}
+{ }
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::size(storage const *) const
+noexcept
+{
+  return m_pivot->size();
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::increment(storage const * const s, difference_type idx) const
+noexcept
+{
+  do
+    ++idx;
+  while (idx < static_cast<difference_type>(m_pivot->size())
+      && !m_matches(s, m_pivot->rbegin()[idx]));
+
+  return idx;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::decrement(storage const * const s, difference_type idx) const
+noexcept
+{
+  do
+    --idx;
+  while (idx >= 0 && !m_matches(s, m_pivot->rbegin()[idx]));
+
+  return idx;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::reference
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::dereference(storage * const s, difference_type const idx) const
+noexcept
+{
+  identifier_type const &
+  id
+  = m_pivot->rbegin()[idx];
+
+  return std::tuple_cat(
+      std::forward_as_tuple(id),
+      s_dereference(reference_sequence{}, s, id));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::const_reference
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::regular_query_driver
+    ::dereference(storage const * const s, difference_type const idx) const
+noexcept
+{
+  identifier_type const &
+  id
+  = m_pivot->rbegin()[idx];
+
+  return std::tuple_cat(
+      std::forward_as_tuple(id),
+      s_dereference(const_reference_sequence{}, s, id));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::m_matches_any(type_sequence<Components ...>, storage const * const s, difference_type const idx)
+noexcept
+{
+  using sparse_set_type
+  = sparse_set<identifier_type, container_of<anchor>::page_size, allocator_type>;
+
+  auto const           &st = *s;
+  identifier_type const id = static_cast<sparse_set_type const &>(st.template m_container<anchor>()).rbegin()[idx];
+
+  return (st.template m_container<Components>().contains(id) || ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+typename type_sequence<Components ...>::tuple
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::s_dereference(type_sequence<Components ...>, storage * const s, difference_type const idx)
+noexcept
+{
+  return std::forward_as_tuple(
+      s->template m_container<std::remove_cvref_t<Components>>().rbegin()[idx].second
+      ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<typename ...Components>
+constexpr
+typename type_sequence<Components ...>::tuple
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::s_dereference(type_sequence<Components ...>, storage const * const s, difference_type const idx)
+noexcept
+{
+  return std::forward_as_tuple(
+      s->template m_container<std::remove_cvref_t<Components>>().rbegin()[idx].second
+      ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::group_query_driver(storage const *)
+noexcept
+{ }
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::size(storage const * const s)
+noexcept
+{
+  return static_cast<difference_type>(s->template m_group<anchor>());
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::increment(storage const * const s, difference_type idx)
+noexcept
+{
+  do
+    ++idx;
+  while (idx < static_cast<difference_type>(s->template m_group<anchor>())
+      && m_matches_any(bare_exclude_sequence{}, s, idx));
+
+  return idx;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::difference_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::decrement(storage const * const s, difference_type idx)
+noexcept
+{
+  do
+    --idx;
+  while (idx >= 0
+      && matches_any(bare_exclude_sequence{}, s, idx));
+
+  return idx;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::reference
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::dereference(storage * const s, difference_type const idx)
+noexcept
+{
+  using sparse_set_type
+  = sparse_set<identifier_type, container_of<anchor>::page_size, allocator_type>;
+
+  return std::tuple_cat(
+      std::forward_as_tuple(static_cast<sparse_set_type const &>(s->template m_container<anchor>()).rbegin()[idx]),
+      s_dereference(reference_sequence{}, s, idx));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::const_reference
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::group_query_driver
+    ::dereference(storage const * const s, difference_type const idx)
+noexcept
+{
+  using sparse_set_type
+  = sparse_set<identifier_type, container_of<anchor>::page_size, allocator_type>;
+
+  return std::tuple_cat(
+      std::forward_as_tuple(static_cast<sparse_set_type const &>(s->template m_container<anchor>()).rbegin()[idx]),
+      s_dereference(const_reference_sequence{}, s, idx));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
+constexpr
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::pointer
     ::pointer(reference &&ref)
 noexcept
   : m_ref(std::move(ref))
 { }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt>
     ::reference *
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::pointer
     ::operator->() const
 noexcept
@@ -844,409 +1343,156 @@ noexcept
   return std::addressof(m_ref);
 }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<std::size_t I>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::is_included(entity_type const e) const
-noexcept
-{
-  if constexpr (I == include_sequence::size)
-    return true;
-  else
-  {
-    static constexpr
-    size_type
-    index
-    = s_component_index<typename include_sequence::template get<I>>;
-
-    if (index == m_pivot.index)
-      return is_included<I + 1>(e);
-
-    return std::get<index>((*m_storage).m_pools).contains(e)
-        && is_included<I + 1>(e);
-  }
-
-}
-
-
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<std::size_t I>
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::is_excluded(entity_type const e) const
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
+    ::generic_iterator(storage_type * const s, difference_type const idx, query_driver const d)
 noexcept
+  : m_storage{s},
+    m_index  {idx},
+    m_driver {d}
 {
-  if constexpr (I == exclude_sequence::size)
-    return true;
-  else
-  {
-    static constexpr
-    size_type
-    index
-    = s_component_index<typename exclude_sequence::template get<I>>;
-
-    return !std::get<index>((*m_storage).m_pools).contains(e)
-        && is_excluded<I + 1>(e);
-  }
+  m_index = m_driver.increment(m_storage, --m_index);
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::is_verified(entity_type const e) const
-noexcept
-{
-  return is_included<>(e) && is_excluded<>(e);
-}
-
-
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::increment()
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
+    ::generic_iterator(storage_type * const s, query_driver d)
 noexcept
+  : m_storage{s},
+    m_index  {d.size(s)},
+    m_driver (d)
 {
-  while (static_cast<size_type>(++m_index) < m_pivot.size && !is_verified(m_pivot.entities[m_index]));
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::decrement()
-noexcept
-{
-  while (--m_index >= 0 && !is_verified(m_pivot.entities[m_index]));
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<std::size_t I>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
-    ::pivot_info
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::pivot_at() const
-noexcept
-{
-  static constexpr
-  size_type
-  index
-  = s_component_index<typename include_sequence::template get<I>>;
-
-  auto const &
-  pool
-  = std::get<index>((*m_storage).m_pools);
-
-  size_type const
-  size
-  = pool.size();
-
-  return pivot_info(
-      size == 0
-        ? nullptr
-        : std::addressof(std::get<0>(*(pool.begin()))),
-      index,
-      size);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<std::size_t I>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::find_best_pivot(pivot_info &best) const
-noexcept
-{
-  if constexpr (I != include_sequence::size)
-  {
-    pivot_info pivot = pivot_at<I>();
-    if (best.size > pivot.size)
-      best = pivot;
-
-    find_best_pivot<I + 1>(best);
-  }
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
-    ::pivot_info
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::make_pivot() const
-noexcept
-{
-  pivot_info pivot = pivot_at<0>();
-  find_best_pivot(pivot);
-  return pivot;
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<typename Component>
-constexpr
-decltype(auto)
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::value_at(entity_type const e) const
-noexcept
-{
-  static constexpr
-  size_type
-  index
-  = s_component_index<Component>;
-
-  auto &
-  pool
-  = std::get<index>((*m_storage).m_pools);
-
-  if constexpr (std::is_const_v<Component> || is_const)
-    return std::as_const(pool)[e];
-  else
-    return pool[e];
+  m_index = m_driver.increment(m_storage, --m_index);
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-template<std::size_t I>
-constexpr
-auto
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::make_value_tuple(entity_type const e) const
-noexcept
-{
-  if constexpr (I == value_include_sequence::size)
-    return std::tuple();
-  else
-  {
-    using component_type = value_include_sequence::template get<I>;
-
-    return std::tuple_cat(
-        std::tuple<decltype(value_at<component_type>(e))>(value_at<component_type>(e)),
-        make_value_tuple<I + 1>(e));
-  }
-}
-
-
-
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::generic_iterator(maybe_const_t<storage, is_const>* const storage, difference_type const index)
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
+    ::generic_iterator()
 noexcept
-  : m_storage(storage     ),
-    m_pivot  (make_pivot()),
-    m_index  (index       )
+  : m_storage{nullptr},
+    m_index  {0},
+    m_driver {}
 { }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::generic_iterator(maybe_const_t<storage, is_const> * const storage)
-noexcept
-  : m_storage(storage     ),
-    m_pivot  (make_pivot()),
-    m_index  (m_pivot.size)
-{ }
-
-
-
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
-    ::generic_iterator(generic_iterator<!is_const> it)
-noexcept
-  : m_storage(it.m_storage),
-    m_pivot  (it.m_pivot  ),
-    m_index  (it.m_index  )
-{
-  static_assert(
-      is_const,
-      "heim::sparse_set_based::storage::generic_query::generic_iterator: is_const must be true.");
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst> &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt> &
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator++()
 noexcept
 {
-  increment();
+  m_index = m_driver.increment(m_storage, m_index);
   return *this;
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator++(int)
 noexcept
 {
   generic_iterator tmp(*this);
-  ++*this;
+  operator++();
   return tmp;
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst> &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt> &
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator--()
 noexcept
 {
-  decrement();
+  m_index = m_driver.decrement(m_storage, m_index);
   return *this;
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator--(int)
 noexcept
 {
@@ -1255,778 +1501,1055 @@ noexcept
   return tmp;
 }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt>
     ::reference
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator*() const
 noexcept
 {
-  entity_type const e = m_pivot.entities[m_index];
-
-  return std::tuple_cat(
-      std::tuple<entity_type const &>(e),
-      make_value_tuple<>(e));
+  return m_driver.dereference(m_storage, m_index);
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-template<bool IsConst>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+template<bool IsConstIt>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::template generic_iterator<IsConst>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::template generic_iterator<IsConstIt>
     ::pointer
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_iterator<IsConst>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_iterator<IsConstIt>
     ::operator->() const
 noexcept
 {
-  return pointer(**this);
+  return pointer(operator*());
 }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_query(storage * const storage)
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::generic_query(storage_type *storage)
 noexcept
-  : m_storage(storage)
+  : m_storage{storage}
 { }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_query(storage &storage)
-noexcept
-  : generic_query(&storage)
-{ }
-
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::generic_query()
-noexcept
-  : generic_query(nullptr)
-{ }
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::begin()
 noexcept
 {
-  return ++iterator(m_storage, -1);
+  return iterator(m_storage, 0, query_driver(m_storage));
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::begin() const
 noexcept
 {
-  return ++const_iterator(m_storage, -1);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::end()
-noexcept
-{
-  return iterator(m_storage);
+  return const_iterator(m_storage, 0, query_driver(m_storage));
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
-    ::end() const
-noexcept
-{
-  return const_iterator(m_storage);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
-    ::const_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::cbegin() const
 noexcept
 {
   return begin();
 }
 
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::iterator
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::end()
+noexcept
+{
+  return iterator(m_storage, query_driver(m_storage));
+}
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
+    ::end() const
+noexcept
+{
+  return const_iterator(m_storage, query_driver(m_storage));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
+    ::const_iterator
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::cend() const
 noexcept
 {
   return end();
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::rbegin()
 noexcept
 {
-  return reverse_iterator(end());
+  return std::make_reverse_iterator(end());
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::rbegin() const
 noexcept
 {
-  return const_reverse_iterator(end());
+  return std::make_reverse_iterator(end());
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::rend()
 noexcept
 {
-  return reverse_iterator(begin());
+  return std::make_reverse_iterator(begin());
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::rend() const
 noexcept
 {
-  return const_reverse_iterator(begin());
+  return std::make_reverse_iterator(begin());
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::crbegin() const
 noexcept
 {
   return rbegin();
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    bool     IsConstQuery,
+    typename Expression>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
-    ::template generic_query<Expression>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<IsConstQuery, Expression>
     ::const_reverse_iterator
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::generic_query<Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::generic_query<IsConstQuery, Expression>
     ::crend() const
 noexcept
 {
   return rend();
 }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
 constexpr
 bool
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_group_swap()
+noexcept
+{
+  return noexcept(std::declval<container_of<Component> &>().swap(std::declval<identifier_type>(), std::declval<identifier_type>()));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_include(group_info<Components ...>)
+noexcept
+{
+  return (s_noexcept_m_group_swap<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_exclude(group_info<Components ...>)
+noexcept
+{
+  return (s_noexcept_m_group_swap<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_m_clear(type_sequence<Components ...>)
+noexcept
+{
+  return (s_noexcept_try_erase<Components>() && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_default_construct_false()
 noexcept
 {
   return std::is_nothrow_default_constructible_v<allocator_type>;
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
 bool
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_default_construct()
 noexcept
 {
-  return component_info_sequence::size > 0
-      || std::is_nothrow_default_constructible_v<allocator_type>;
+  return component_info_sequence::size == 0
+      || s_noexcept_default_construct_false();
 }
 
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
 bool
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_move_alloc_construct()
 noexcept
 {
-  return std::is_nothrow_constructible_v<
-      pool_tuple,
-      pool_tuple &&, allocator_type const &>;
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<std::size_t ...Is>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::s_noexcept_erase_entity(std::index_sequence<Is...>)
-noexcept
-{
   return
-     (noexcept(std::get<Is>(std::declval<pool_tuple &>()).erase(std::declval<entity_type const>()))
-   && ...);
+      std::is_nothrow_constructible_v<
+          container_tuple,
+          std::allocator_arg_t, allocator_type const &, container_tuple &&>
+   && std::is_nothrow_constructible_v<
+          group_tuple,
+          group_tuple &&>;
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
 bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::s_noexcept_erase()
-noexcept
-{
-  return noexcept(std::get<s_component_index<Component>>(std::declval<pool_tuple &>())
-      .erase(std::declval<entity_type const>()));
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<std::size_t ...Is>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::s_noexcept_clear(std::index_sequence<Is ...>)
-noexcept
-{
-  return (noexcept(std::get<Is>(std::declval<pool_tuple &>()).clear()) && ...);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::s_noexcept_swap()
 noexcept
 {
-  return std::is_nothrow_swappable_v<pool_tuple>;
+  return std::is_nothrow_swappable_v<container_tuple>
+      && std::is_nothrow_swappable_v<group_tuple>;
 }
 
-
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_erase()
+noexcept
+{
+  if constexpr (is_grouped<Component>)
+  {
+    return s_noexcept_m_exclude(group_info_of<Component>{})
+        && noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
+  }
+  else
+    return noexcept(std::declval<container_of<Component> &>().erase(std::declval<identifier_type>()));
+}
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_try_erase()
+noexcept
+{
+  if constexpr (is_grouped<Component>)
+  {
+    return s_noexcept_m_exclude(group_info_of<Component>{})
+        && noexcept(std::declval<container_of<Component> &>().erase    (std::declval<identifier_type>()))
+        && noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
+  }
+  else
+    return noexcept(std::declval<container_of<Component> &>().try_erase(std::declval<identifier_type>()));
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::s_noexcept_clear()
+noexcept
+{
+  return s_noexcept_m_clear(component_sequence{});
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage(bool_constant<true>)
 noexcept
-  : m_pools()
+  : m_containers(),
+    m_groups    ()
 { }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage(bool_constant<false>)
 noexcept(s_noexcept_default_construct_false())
-  : storage(allocator_type())
+  : storage(allocator_type{})
 { }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<typename Component>
 constexpr
 auto &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::m_pool()
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_container()
 noexcept
 {
-  return std::get<s_component_index<Component>>(m_pools);
+  return std::get<component_index<Component>>(m_containers);
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 template<typename Component>
 constexpr
 auto const &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::m_pool() const
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_container() const
 noexcept
 {
-  return std::get<s_component_index<Component>>(m_pools);
+  return std::get<component_index<Component>>(m_containers);
 }
 
-
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::size_type &
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group()
+noexcept
+{
+  return std::get<group_index<Component>>(m_groups);
+}
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::size_type
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group() const
+noexcept
+{
+  return std::get<group_index<Component>>(m_groups);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_has(group_info<Components ...>, identifier_type const id) const
+noexcept
+{
+  return (m_container<Components>().contains(id) && ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_group_swap(identifier_type const id, difference_type const group)
+noexcept(s_noexcept_m_group_swap<Component>())
+{
+  using sparse_set_type
+  = sparse_set<identifier_type, container_of<Component>::page_size, allocator_type>;
+
+  container_of<Component> &
+  container
+  = m_container<Component>();
+
+  container.swap(id, static_cast<sparse_set_type &>(container).rbegin()[group]);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_include(group_info<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_include(group_info<Components ...>{}))
+{
+  size_type &
+  group
+  = m_group<typename group_info<Components ...>::template get<0>>();
+
+  (m_group_swap<Components>(id, static_cast<difference_type>(group)), ...);
+  ++group;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_exclude(group_info<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_exclude(group_info<Components ...>{}))
+{
+  size_type &
+  group
+  = m_group<typename group_info<Components ...>::template get<0>>();
+
+  (m_group_swap<Components>(id, static_cast<difference_type>(group) - 1), ...);
+  --group;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename ...Components>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::m_clear(type_sequence<Components ...>, identifier_type const id)
+noexcept(s_noexcept_m_clear(type_sequence<Components ...>{}))
+{
+  (try_erase<Components>(id), ...);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage(allocator_type const &alloc)
 noexcept
-  : m_pools(std::allocator_arg, alloc)
+  : m_containers(std::allocator_arg, alloc),
+    m_groups    ()
 {
   static_assert(
       component_info_sequence::size > 0,
-      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage::storage: A storage with no component type cannot hold any allocator.");
 }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage()
 noexcept(s_noexcept_default_construct())
-  : storage(bool_constant<(component_info_sequence::size > 0)>())
+  : storage(bool_constant<component_info_sequence::size == 0>{})
 { }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage(storage const &other, allocator_type const &alloc)
-  : m_pools(std::allocator_arg, alloc, other.m_pools)
-{
-  static_assert(
-      component_info_sequence::size > 0,
-      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
-}
+  : m_containers(std::allocator_arg, alloc, other.m_containers),
+    m_groups    (other.m_groups)
+{ }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::storage(storage &&other, allocator_type const &alloc)
 noexcept(s_noexcept_move_alloc_construct())
-  : m_pools(std::allocator_arg, alloc, std::move(other.m_pools))
-{
-  static_assert(
-      component_info_sequence::size > 0,
-      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
-}
-
+  : m_containers(std::allocator_arg, alloc, std::move(other.m_containers)),
+    m_groups    (std::move(other.m_groups))
+{ }
 
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
-typename storage<Entity, Allocator, ComponentInfoSeq>
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::allocator_type
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::get_allocator() const
 noexcept
 {
   static_assert(
       component_info_sequence::size > 0,
-      "heim::sparse_set_based::storage: A storage with no component types does not hold any allocator.");
+      "heim::sparse_set_based::storage::get_allocator: A storage with no component type cannot hold any allocator.");
 
-  return allocator_type(std::get<0>(m_pools).get_allocator());
+  return std::get<0>(m_containers).get_allocator();
 }
 
-
-
 template<
-    typename Entity,
+    typename Identifier,
     typename Allocator,
-    typename ComponentInfoSeq>
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
 constexpr
 void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase_entity(entity_type const e)
-noexcept(s_noexcept_erase_entity(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
-{
-  std::apply(
-      [e](auto &...pools)
-      {
-        (pools.erase(e), ...);
-      },
-      m_pools);
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::has(entity_type const e) const
-noexcept
-{
-  return m_pool<Component>().contains(e);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-Component &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::get(entity_type const e)
-noexcept
-{
-  return m_pool<Component>()[e];
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-Component const &
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::get(entity_type const e) const
-noexcept
-{
-  return m_pool<Component>()[e];
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-auto
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::query()
-noexcept
-{
-  return generic_query<Expression>(this);
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Expression>
-constexpr
-auto
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::query() const
-noexcept
-{
-  return generic_query<Expression>(this);
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<
-    typename    Component,
-    typename ...Args>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::emplace(entity_type const e, Args &&...args)
-{
-  return m_pool<Component>().emplace(e, std::forward<Args>(args)...).second;
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<
-    typename    Component,
-    typename ...Args>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::try_emplace(entity_type const e, Args &&...args)
-{
-  return m_pool<Component>().try_emplace(e, std::forward<Args>(args)...).second;
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::insert_or_assign(entity_type const e, Component const &c)
-{
-  return m_pool<Component>().insert_or_assign(e, c).second;
-}
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-bool
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::insert_or_assign(entity_type const e, Component &&c)
-{
-  return m_pool<Component>().insert_or_assign(e, std::move(c)).second;
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-template<typename Component>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::erase(entity_type const e)
-noexcept(s_noexcept_erase<Component>())
-{
-  m_pool<Component>().erase(e);
-}
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
-    ::clear()
-noexcept(s_noexcept_clear(std::make_index_sequence<std::tuple_size_v<pool_tuple>>()))
-{
-  std::apply(
-      [](auto &...pools)
-      {
-        (pools.clear(), ...);
-      },
-      m_pools);
-}
-
-
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-constexpr
-void
-storage<Entity, Allocator, ComponentInfoSeq>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::swap(storage &other)
 noexcept(s_noexcept_swap())
 {
-  std::swap(m_pools, other.m_pools);
+  using std::swap;
+
+  swap(m_containers, other.m_containers);
+  swap(m_groups    , other.m_groups    );
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::has(identifier_type const id) const
+noexcept
+{
+  return m_container<Component>().contains(id);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+Component &
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::get(identifier_type const id)
+noexcept
+{
+  return m_container<Component>()[id];
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+Component const &
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::get(identifier_type const id) const
+noexcept
+{
+  return m_container<Component>()[id];
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<false, Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::query()
+noexcept
+{
+  return generic_query<false, Expression>(this);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Expression>
+constexpr
+typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::template generic_query<true, Expression>
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::query() const
+noexcept
+{
+  return generic_query<true, Expression>(this);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::emplace(identifier_type const id, Args &&...args)
+{
+  m_container<Component>().emplace(id, std::forward<Args>(args)...);
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<
+    typename    Component,
+    typename ...Args>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::try_emplace(identifier_type const id, Args &&...args)
+{
+  bool const
+  ret
+  = m_container<Component>().try_emplace(id, std::forward<Args>(args)...).second;
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+
+  return ret;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::insert(identifier_type const id, Component const &c)
+{
+  bool const
+  ret
+  = m_container<Component>().insert(id, c).second;
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+
+  return ret;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::insert(identifier_type const id, Component &&c)
+{
+  bool const
+  ret
+  = m_container<Component>().insert(id, std::forward<Component>(c)).second;
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+
+  return ret;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::insert_or_assign(identifier_type const id, Component const &c)
+{
+  bool const
+  ret
+  = m_container<Component>().insert_or_assign(id, c).second;
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+
+  return ret;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::insert_or_assign(identifier_type const id, Component &&c)
+{
+  bool const
+  ret
+  = m_container<Component>().insert_or_assign(id, std::forward<Component>(c)).second;
+
+  if constexpr (is_grouped<Component>)
+  {
+    if (ret && m_has(group_info_of<Component>{}, id))
+      m_include(group_info_of<Component>{}, id);
+  }
+
+  return ret;
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::erase(identifier_type const id)
+noexcept(s_noexcept_erase<Component>())
+{
+  if constexpr (is_grouped<Component>)
+  {
+    if (m_has(group_info_of<Component>{}, id))
+      m_exclude(group_info_of<Component>{}, id);
+  }
+
+  m_container<Component>().erase(id);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+template<typename Component>
+constexpr
+bool
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::try_erase(identifier_type const id)
+noexcept(s_noexcept_try_erase<Component>())
+{
+  if constexpr (is_grouped<Component>)
+  {
+    if (m_has(group_info_of<Component>{}, id))
+    {
+      m_exclude(group_info_of<Component>{}, id);
+      m_container<Component>().erase(id);
+      return true;
+    }
+  }
+
+  return m_container<Component>().try_erase(id);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::clear(identifier_type const id)
+noexcept(s_noexcept_clear())
+{
+  m_clear(component_sequence{}, id);
+}
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename ComponentInfoSeq,
+    typename GroupInfoSeq>
+constexpr
+void
+storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
+    ::clear()
+noexcept
+{
+  std::apply([](auto &...containers) { (containers.clear(), ...); }, m_containers);
+  std::apply([](auto &...groups    ) { ((groups = 0)      , ...); }, m_groups    );
 }
 
 
-
-/*!
- * @brief Determines whether the given type is a specialization of storage.
- *
- * @tparam T The type to determine for.
- */
-template<typename T>
-struct specializes_storage;
-
-template<typename T>
-inline constexpr
-bool
-specializes_storage_v
-= specializes_storage<T>::value;
-
-template<typename T>
-struct specializes_storage
-  : bool_constant<false>
-{ };
-
-template<
-    typename Entity,
-    typename Allocator,
-    typename ComponentInfoSeq>
-struct specializes_storage<
-    storage<Entity, Allocator, ComponentInfoSeq>>
-  : bool_constant<true>
-{ };
-
-
-} // namespace heim::sparse_set_based
+}
 
 #endif // HEIM_SPARSE_SET_BASED_STORAGE_HPP

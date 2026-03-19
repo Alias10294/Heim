@@ -20,11 +20,24 @@ template<typename T>
 struct is_an_allocator;
 
 template<typename T>
+struct is_an_allocator
+  : bool_constant<
+        requires(
+            T                                           &t,
+            typename std::allocator_traits<T>::pointer   ptr,
+            typename std::allocator_traits<T>::size_type n)
+        {
+            typename std::allocator_traits<T>::value_type;
+            { std::allocator_traits<T>::allocate  (t, n)      };
+            { std::allocator_traits<T>::deallocate(t, ptr, n) };
+        }>
+{ };
+
+template<typename T>
 inline constexpr
 bool
 is_an_allocator_v
 = is_an_allocator<T>::value;
-
 
 
 /*!
@@ -41,37 +54,19 @@ struct is_an_allocator_for;
 template<
     typename A,
     typename T>
-inline constexpr
-bool
-is_an_allocator_for_v
-= is_an_allocator_for<A, T>::value;
-
-
-
-template<typename T>
-struct is_an_allocator
-  : bool_constant<
-        requires(
-            T                                           &t,
-            typename std::allocator_traits<T>::pointer   ptr,
-            typename std::allocator_traits<T>::size_type n)
-        {
-          typename std::allocator_traits<T>::value_type;
-          { std::allocator_traits<T>::allocate  (t, n)      };
-          { std::allocator_traits<T>::deallocate(t, ptr, n) };
-        }>
-{ };
-
-
-
-template<
-    typename A,
-    typename T>
 struct is_an_allocator_for
   : bool_constant<
         is_an_allocator_v<A>
      && std::is_same_v<typename A::value_type, T>>
 { };
+
+template<
+    typename A,
+    typename T>
+inline constexpr
+bool
+is_an_allocator_for_v
+= is_an_allocator_for<A, T>::value;
 
 
 }
