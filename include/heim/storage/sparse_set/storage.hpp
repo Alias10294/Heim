@@ -1,5 +1,5 @@
-#ifndef HEIM_SPARSE_SET_BASED_NEW_STORAGE_HPP
-#define HEIM_SPARSE_SET_BASED_NEW_STORAGE_HPP
+#ifndef HEIM_SPARSE_SET_BASED_STORAGE_HPP
+#define HEIM_SPARSE_SET_BASED_STORAGE_HPP
 
 #include <algorithm>
 #include <cstddef>
@@ -2105,7 +2105,6 @@ noexcept(s_noexcept_m_group_swap<Component>())
   container
   = m_container<Component>();
 
-  // TODO: modify (inverse) swap behaviour
   container.swap(id, static_cast<sparse_set_type &>(container).rbegin()[group]);
 }
 
@@ -2553,4 +2552,4 @@ noexcept
 
 }
 
-#endif // HEIM_SPARSE_SET_BASED_NEW_STORAGE_HPP
+#endif // HEIM_SPARSE_SET_BASED_STORAGE_HPP
