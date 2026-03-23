@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 #include "identifier_manager.hpp"
+#include "query_expression.hpp"
 #include "utility.hpp"
 
 namespace heim
@@ -40,6 +41,9 @@ public:
 
   using identifier_type = typename storage_type::identifier_type;
   using allocator_type  = typename storage_type::allocator_type;
+
+  template<typename Expression> using query_type       = typename storage_type::template query_type      <Expression>;
+  template<typename Expression> using const_query_type = typename storage_type::template const_query_type<Expression>;
 
 private:
   using identifier_manager_type
@@ -322,13 +326,13 @@ public:
 
   template<typename Expression>
   [[nodiscard]] constexpr
-  auto
+  query_type<Expression>
   query()
   noexcept(s_noexcept_query<Expression>());
 
   template<typename Expression>
   [[nodiscard]] constexpr
-  auto
+  const_query_type<Expression>
   query() const
   noexcept(s_noexcept_query_const<Expression>());
 
@@ -1571,22 +1575,46 @@ noexcept(s_noexcept_get_if_const<Component>())
 template<typename Storage>
 template<typename Expression>
 constexpr
-auto
+typename registry<Storage>
+    ::template query_type<Expression>
 registry<Storage>
     ::query()
 noexcept(s_noexcept_query<Expression>())
 {
+  static_assert(
+      specializes_query_expression_v<Expression>,
+      "heim::registry::query: Expression must be a specialization of query_expression.");
+
   static constexpr
   bool
   implements_query
   = requires
   {
-    std::declval<storage_type &>().template query<Expression>();
+    { std::declval<storage_type &>().template query<Expression>() } -> std::same_as<query_type<Expression>>;
   };
 
   static_assert(
       implements_query,
       "heim::registry::query: storage_type must expose a query method.");
+
+  static_assert(
+      std::ranges::forward_range<query_type<Expression>>,
+      "heim::registry::query: the returned query type must pass as a forward range.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_value_t<query_type<Expression>>,
+          typename Expression::template value_type<identifier_type>>,
+      "heim::registry::query: the returned query type must expose a coherent value_type alias.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_reference_t<query_type<Expression>>,
+          typename Expression::template reference<identifier_type>>,
+      "heim::registry::query: the returned query type must expose a coherent reference alias.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_const_reference_t<query_type<Expression>>,
+          typename Expression::template const_reference<identifier_type>>,
+      "heim::registry::query: the returned query type must expose a coherent const_reference alias.");
 
   return m_storage.template query<Expression>();
 }
@@ -1594,22 +1622,46 @@ noexcept(s_noexcept_query<Expression>())
 template<typename Storage>
 template<typename Expression>
 constexpr
-auto
+typename registry<Storage>
+    ::template const_query_type<Expression>
 registry<Storage>
     ::query() const
 noexcept(s_noexcept_query_const<Expression>())
 {
+  static_assert(
+      specializes_query_expression_v<Expression>,
+      "heim::registry::query: Expression must be a specialization of query_expression.");
+
   static constexpr
   bool
   implements_query_const
   = requires
   {
-    std::declval<storage_type const &>().template query<Expression>();
+    { std::declval<storage_type const &>().template query<Expression>() } -> std::same_as<const_query_type<Expression>>;
   };
 
   static_assert(
       implements_query_const,
       "heim::registry::query: storage_type must expose a query method.");
+
+  static_assert(
+      std::ranges::forward_range<const_query_type<Expression>>,
+      "heim::registry::query: the returned query type must pass as a forward range.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_value_t<const_query_type<Expression>>,
+          typename Expression::value_type>,
+      "heim::registry::query: the returned query type must expose a coherent value_type alias.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_reference_t<const_query_type<Expression>>,
+          typename Expression::reference>,
+      "heim::registry::query: the returned query type must expose a coherent reference alias.");
+  static_assert(
+      std::is_same_v<
+          std::ranges::range_const_reference_t<const_query_type<Expression>>,
+          typename Expression::const_reference>,
+      "heim::registry::query: the returned query type must expose a coherent const_reference alias.");
 
   return m_storage.template query<Expression>();
 }

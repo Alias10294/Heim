@@ -879,27 +879,36 @@ struct type_sequence
 
 
 /*!
- * @brief Determines the type sequence with the same of types as the given std::tuple.
+ * @brief Determines the type sequence equivalent to the given type.
  *
- * @tparam Tuple The tuple type.
+ * @tparam T The type to transform.
  */
-template<typename Tuple>
-struct tuple_to_type_sequence;
+template<typename T>
+struct to_type_sequence;
 
-template<typename Tuple>
-struct tuple_to_type_sequence
+template<typename T>
+struct to_type_sequence
 { };
 
 template<typename ...Ts>
-struct tuple_to_type_sequence<std::tuple<Ts ...>>
+struct to_type_sequence<std::tuple<Ts ...>>
 {
   using type
   = type_sequence<Ts ...>;
 };
 
-template<typename Tuple>
-using tuple_to_type_sequence_t
-= typename tuple_to_type_sequence<Tuple>::type;
+template<
+    typename T1,
+    typename T2>
+struct to_type_sequence<std::pair<T1, T2>>
+{
+  using type
+  = type_sequence<T1, T2>;
+};
+
+template<typename T>
+using to_type_sequence_t
+= typename to_type_sequence<T>::type;
 
 
 /*!

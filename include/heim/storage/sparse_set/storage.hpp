@@ -16,15 +16,15 @@
 #include "heim/utility.hpp"
 #include "pool.hpp"
 #include "sparse_set.hpp"
+#include "heim/component.hpp"
 
 namespace heim::sparse_set_based
 {
 template<
     typename    Component,
-    std::size_t PageSize,
-    bool        TagValue>
+    std::size_t PageSize>
 using component_info
-= type_sequence<Component, size_constant<PageSize>, bool_constant<TagValue>>;
+= type_sequence<Component, size_constant<PageSize>>;
 
 template<typename ...Components>
 using group_info
@@ -118,13 +118,13 @@ private:
   {
     using type
     = std::conditional_t<
-        ComponentInfo::template get<2>::value,
+        component_tag_value_v<typename ComponentInfo::template get<0>>,
         sparse_set<
             identifier_type,
             ComponentInfo::template get<1>::value,
             allocator_type>,
         pool<
-            typename to_component<ComponentInfo>::type,
+            typename ComponentInfo::template get<0>,
             identifier_type,
             ComponentInfo::template get<1>::value,
             allocator_type>>;
@@ -291,46 +291,16 @@ private:
         return group_info_of<anchor>::template is_permutation<bare_include_sequence>;
     }();
 
-    template<typename Component>
-    struct not_tagged
-      : bool_constant<
-            !component_info_sequence
-                ::template get<component_index<std::remove_const_t<Component>>>
-                ::template get<2>
-                ::value>
-    { };
-
-    using value_type_sequence
-    = typename bare_include_sequence::template filter<not_tagged>;
-
-    using reference_sequence
-    = typename include_sequence
-        ::template filter<not_tagged>
-        ::template map   <std::add_lvalue_reference>;
-
-    using const_reference_sequence
-    = typename include_sequence
-        ::template filter<not_tagged>
-        ::template map   <std::add_const>
-        ::template map   <std::add_lvalue_reference>;
-
   public:
-    using value_type
-    = typename type_sequence<identifier_type>
-        ::template concatenate<value_type_sequence>
-        ::tuple;
-
-    using reference
-    = typename type_sequence<identifier_type const &>
-        ::template concatenate<reference_sequence>
-        ::tuple;
-
-    using const_reference
-    = typename type_sequence<identifier_type const &>
-        ::template concatenate<const_reference_sequence>
-        ::tuple;
+    using value_type      = typename expression_type::template value_type     <identifier_type>;
+    using reference       = typename expression_type::template reference      <identifier_type>;
+    using const_reference = typename expression_type::template const_reference<identifier_type>;
 
   private:
+    using reference_sequence       = typename to_type_sequence_t<reference      >::template erase<identifier_type const &>;
+    using const_reference_sequence = typename to_type_sequence_t<const_reference>::template erase<identifier_type const &>;
+
+
     class regular_query_driver
     {
     private:
@@ -594,16 +564,19 @@ private:
   };
 
 public:
+  template<typename Expression> using query_type       = generic_query<false, Expression>;
+  template<typename Expression> using const_query_type = generic_query<true , Expression>;
+
+
   template<
       typename  Component,
-      size_type PageSize  = default_container_page_size<>::value,
-      bool      TagValue  = std::is_empty_v<Component>>
+      size_type PageSize  = default_container_page_size<>::value>
   using component
   = storage<
       identifier_type,
       allocator_type,
       typename component_info_sequence
-          ::template append<component_info<Component, PageSize, TagValue>>,
+          ::template append<component_info<Component, PageSize>>,
       group_info_sequence>;
 
   template<size_type PageSize>
@@ -617,19 +590,6 @@ public:
               typename component_info_sequence
                   ::template get<s_last_component_index<PageSize>>
                   ::template set<1, size_constant<PageSize>>>,
-      group_info_sequence>;
-
-  template<bool TagValue>
-  using tagged
-  = storage<
-      identifier_type,
-      allocator_type,
-      typename component_info_sequence
-          ::template set<
-              s_last_component_index<TagValue>,
-              typename component_info_sequence
-                  ::template get<s_last_component_index<TagValue>>
-                  ::template set<2, bool_constant<TagValue>>>,
       group_info_sequence>;
 
   template<typename ...Components>
@@ -768,8 +728,8 @@ public:
   template<typename Component> [[nodiscard]] constexpr Component       &get(identifier_type)       noexcept;
   template<typename Component> [[nodiscard]] constexpr Component const &get(identifier_type) const noexcept;
 
-  template<typename Expression> [[nodiscard]] constexpr generic_query<false, Expression> query()       noexcept;
-  template<typename Expression> [[nodiscard]] constexpr generic_query<true , Expression> query() const noexcept;
+  template<typename Expression> [[nodiscard]] constexpr query_type<Expression>       query()       noexcept;
+  template<typename Expression> [[nodiscard]] constexpr const_query_type<Expression> query() const noexcept;
 
 
   template<typename Component, typename ...Args> constexpr void emplace    (identifier_type, Args &&...);
@@ -2265,6 +2225,10 @@ storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::has(identifier_type const id) const
 noexcept
 {
+  static_assert(
+      component_sequence::template contains<Component>,
+      "heim::sparse_set_based::storage::has: Component must be managed by the storage.");
+
   return m_container<Component>().contains(id);
 }
 
@@ -2280,6 +2244,13 @@ storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::get(identifier_type const id)
 noexcept
 {
+  static_assert(
+      component_sequence::template contains<Component>,
+      "heim::sparse_set_based::storage::get: Component must be managed by the storage.");
+  static_assert(
+      !component_tag_value_v<Component>,
+      "heim::sparse_set_based::storage::get: Component must have a tag value of false.");
+
   return m_container<Component>()[id];
 }
 
@@ -2295,6 +2266,13 @@ storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::get(identifier_type const id) const
 noexcept
 {
+  static_assert(
+      component_sequence::template contains<Component>,
+      "heim::sparse_set_based::storage::get: Component must be managed by the storage.");
+  static_assert(
+      !component_tag_value_v<Component>,
+      "heim::sparse_set_based::storage::get: Component must have a tag value of false.");
+
   return m_container<Component>()[id];
 }
 
@@ -2306,12 +2284,12 @@ template<
 template<typename Expression>
 constexpr
 typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::template generic_query<false, Expression>
+    ::template query_type<Expression>
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::query()
 noexcept
 {
-  return generic_query<false, Expression>(this);
+  return query_type<Expression>(this);
 }
 
 template<
@@ -2322,12 +2300,12 @@ template<
 template<typename Expression>
 constexpr
 typename storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
-    ::template generic_query<true, Expression>
+    ::template const_query_type<Expression>
 storage<Identifier, Allocator, ComponentInfoSeq, GroupInfoSeq>
     ::query() const
 noexcept
 {
-  return generic_query<true, Expression>(this);
+  return const_query_type<Expression>(this);
 }
 
 template<
