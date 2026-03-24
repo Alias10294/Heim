@@ -1,7 +1,11 @@
 #ifndef HEIM_QUERY_EXPRESSION_HPP
 #define HEIM_QUERY_EXPRESSION_HPP
 
+#include <type_traits>
+#include "component.hpp"
+#include "identifier.hpp"
 #include "type_sequence.hpp"
+#include "utility.hpp"
 
 namespace heim
 {
@@ -10,7 +14,7 @@ namespace heim
  *
  * @details Uses multiple type sequences in order to describe the query.
  *
- * @tparam IncludeSeq The sequence of component types included in the query.
+ * @tparam IncludeSeq The sequence of component types included in   the query.
  * @tparam ExcludeSeq The sequence of component types excluded from the query.
  */
 template<
@@ -61,8 +65,61 @@ struct query_expression
   = query_expression<
       include_sequence,
       typename exclude_sequence::template append<Components ...>>;
-};
 
+private:
+  template<typename Identifier>
+  struct meta
+  {
+    static_assert(
+        specializes_identifier_v<Identifier>,
+        "heim::query_expression::meta: Identifier must be a specialization of identifier.");
+
+
+    using bare_include_sequence = typename include_sequence::template map<std::remove_const>;
+    using bare_exclude_sequence = typename exclude_sequence::template map<std::remove_const>;
+
+    template<typename Component>
+    struct not_tagged
+      : bool_constant<!component_tag_value_v<Component>>
+    { };
+
+    using value_type_sequence
+    = typename bare_include_sequence::template filter<not_tagged>;
+
+    using reference_sequence
+    = typename include_sequence
+        ::template filter<not_tagged>
+        ::template map   <std::add_lvalue_reference>;
+
+    using const_reference_sequence
+    = typename include_sequence
+        ::template filter<not_tagged>
+        ::template map   <std::add_const>
+        ::template map   <std::add_lvalue_reference>;
+
+
+
+    using value_type
+    = typename type_sequence<Identifier>
+        ::template concatenate<value_type_sequence>
+        ::tuple;
+
+    using reference
+    = typename type_sequence<Identifier const &>
+        ::template concatenate<reference_sequence>
+        ::tuple;
+
+    using const_reference
+    = typename type_sequence<Identifier const &>
+        ::template concatenate<const_reference_sequence>
+        ::tuple;
+  };
+
+public:
+  template<typename Identifier> using value_type      = typename meta<Identifier>::value_type;
+  template<typename Identifier> using reference       = typename meta<Identifier>::reference;
+  template<typename Identifier> using const_reference = typename meta<Identifier>::const_reference;
+};
 
 
 /*!

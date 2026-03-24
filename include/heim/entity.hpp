@@ -94,8 +94,8 @@ public:
   noexcept;
 
 
-  [[nodiscard]] constexpr identifier_type get_identifier() const noexcept;
-  [[nodiscard]] constexpr registry_type  *get_registry  () const noexcept;
+  [[nodiscard]] constexpr identifier_type identifier() const noexcept;
+  [[nodiscard]] constexpr registry_type  &registry  () const noexcept;
 
 
   [[nodiscard]] constexpr
@@ -216,7 +216,7 @@ public:
 
   template<typename Component>
   constexpr
-  void
+  bool
   try_erase()
   noexcept(s_noexcept_try_erase<Component>());
 
@@ -515,7 +515,7 @@ constexpr
 typename entity<Registry>
     ::identifier_type
 entity<Registry>
-    ::get_identifier() const
+    ::identifier() const
 noexcept
 {
   return m_id;
@@ -524,12 +524,12 @@ noexcept
 template<typename Registry>
 constexpr
 typename entity<Registry>
-    ::registry_type *
+    ::registry_type &
 entity<Registry>
-    ::get_registry() const
+    ::registry() const
 noexcept
 {
-  return m_registry;
+  return *m_registry;
 }
 
 template<typename Registry>
@@ -538,7 +538,7 @@ bool
 entity<Registry>::is_valid() const
 noexcept
 {
-  return m_registry->is_valid();
+  return m_registry->is_valid(m_id);
 }
 
 template<typename Registry>
@@ -742,12 +742,12 @@ noexcept(s_noexcept_erase<Component>())
 template<typename Registry>
 template<typename Component>
 constexpr
-void
+bool
 entity<Registry>
     ::try_erase()
 noexcept(s_noexcept_try_erase<Component>())
 {
-  m_registry->template try_erase<Component>(m_id);
+  return m_registry->template try_erase<Component>(m_id);
 }
 
 template<typename Registry>
