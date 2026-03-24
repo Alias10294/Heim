@@ -2,6 +2,7 @@
 #define HEIM_COMPONENT_HPP
 
 #include <type_traits>
+#include "utility.hpp"
 
 namespace heim
 {
@@ -13,13 +14,12 @@ namespace heim
  *
  * @warning This information must be accounted for the implementation of each storage used along the library,
  *   as getters and queries are expected to strictly abide by it.
- * @note This type can be specialized for specific component types in order to circumvent the default
- *   optimization behavior.
+ * @note This type can be redefined globally using redefine_tag, or redefined for specific component types.
  */
-template<typename Component>
+template<typename Component, typename = redefine_tag>
 struct component_tag_value;
 
-template<typename Component>
+template<typename Component, typename>
 struct component_tag_value
   : std::is_empty<Component>
 { };
