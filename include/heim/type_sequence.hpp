@@ -38,10 +38,41 @@ struct type_sequence_size<
 { };
 
 template<typename TypeSequence>
-static constexpr
+inline constexpr
 std::size_t
 type_sequence_size_v
 = type_sequence_size<TypeSequence>::value;
+
+
+/*!
+ * @brief
+ *
+ * @tparam TypeSequence The type sequence.
+ */
+template<typename TypeSequence>
+struct type_sequence_empty;
+
+template<typename>
+struct type_sequence_empty
+{ };
+
+template<>
+struct type_sequence_empty<type_sequence<>>
+  : bool_constant<true>
+{ };
+
+template<
+    typename    T,
+    typename ...Ts>
+struct type_sequence_empty<type_sequence<T, Ts...>>
+  : bool_constant<false>
+{ };
+
+template<typename TypeSequence>
+inline constexpr
+bool
+type_sequence_empty_v
+= type_sequence_empty<TypeSequence>::value;
 
 
 /*!
@@ -216,36 +247,49 @@ using type_sequence_get_t
 /*!
  * @brief Determines the type sequence obtained by concatenating the two given type sequences.
  *
- * @tparam Left  The type sequence on the left.
- * @tparam Right The type sequence on the right.
+ * @tparam TypeSequences The type sequences.
  */
-template<
-    typename Left,
-    typename Right>
+template<typename ...TypeSequences>
 struct type_sequence_concatenate;
 
-template<
-    typename Left,
-    typename Right>
+template<typename ...Ts>
 struct type_sequence_concatenate
 { };
 
-template<
-    typename ...Ls,
-    typename ...Rs>
-struct type_sequence_concatenate<
-    type_sequence<Ls ...>,
-    type_sequence<Rs ...>>
+template<typename ...Ts>
+struct type_sequence_concatenate<type_sequence<Ts ...>>
 {
   using type
-  = type_sequence<Ls ..., Rs ...>;
+  = type_sequence<Ts ...>;
 };
 
 template<
-    typename Left,
-    typename Right>
+    typename ...As,
+    typename ...Bs>
+struct type_sequence_concatenate<
+    type_sequence<As ...>,
+    type_sequence<Bs ...>>
+{
+  using type
+  = type_sequence<As ..., Bs ...>;
+};
+
+template<
+    typename    A,
+    typename    B,
+    typename ...Rest>
+struct type_sequence_concatenate<A, B, Rest ...>
+{
+  using type
+  = typename type_sequence_concatenate<
+      typename type_sequence_concatenate<A, B>::type,
+      Rest ...>
+      ::type;
+};
+
+template<typename ...Ts>
 using type_sequence_concatenate_t
-= typename type_sequence_concatenate<Left, Right>::type;
+= typename type_sequence_concatenate<Ts ...>::type;
 
 
 /*!
@@ -684,6 +728,143 @@ using type_sequence_difference_t
 
 
 /*!
+ * @brief Determines the type sequence formed by the union of the given type sequences.
+ *
+ * @tparam TypeSequences The type sequences.
+ */
+template<typename ...TypeSequences>
+struct type_sequence_unite;
+
+template<typename ...Ts>
+struct type_sequence_unite
+{ };
+
+template<typename ...Ts>
+struct type_sequence_unite<type_sequence<Ts ...>>
+{
+  using type
+  = type_sequence<Ts ...>;
+};
+
+template<typename ...Ts>
+struct type_sequence_unite<
+    type_sequence<>,
+    type_sequence<Ts ...>>
+{
+  using type
+  = type_sequence<Ts ...>;
+};
+
+template<
+    typename    T,
+    typename ...As,
+    typename ...Bs>
+struct type_sequence_unite<
+    type_sequence<T, As ...>,
+    type_sequence<Bs ...>>
+{
+  using type
+  = type_sequence_concatenate_t<
+      type_sequence<T>,
+      typename type_sequence_unite<
+          type_sequence<As ...>,
+          std::conditional_t<
+              type_sequence_contains_v<type_sequence<Bs ...>, T>,
+              type_sequence_erase_t<type_sequence<Bs ...>, T>,
+              type_sequence<Bs ...>>>
+          ::type>;
+};
+
+template<
+    typename    A,
+    typename    B,
+    typename ...Rest>
+struct type_sequence_unite<
+    A,
+    B,
+    Rest ...>
+{
+  using type
+  = typename type_sequence_unite<
+      typename type_sequence_unite<A, B>::type,
+      Rest ...>
+      ::type;
+};
+
+template<typename ...Ts>
+using type_sequence_unite_t
+= typename type_sequence_unite<Ts ...>::type;
+
+/*!
+ * @brief Determines the type sequence formed by the intersection of the given type sequences.
+ *
+ * @tparam TypeSequences The type sequences.
+ */
+template<typename ...TypeSequences>
+struct type_sequence_intersect;
+
+template<typename ...Ts>
+struct type_sequence_intersect
+{ };
+
+template<typename ...Ts>
+struct type_sequence_intersect<type_sequence<Ts ...>>
+{
+  using type
+  = type_sequence<Ts ...>;
+};
+
+template<typename ...Ts>
+struct type_sequence_intersect<
+    type_sequence<>,
+    type_sequence<Ts ...>>
+{
+  using type
+  = type_sequence<>;
+};
+
+template<
+    typename T,
+    typename ...As,
+    typename ...Bs>
+struct type_sequence_intersect<
+    type_sequence<T, As ...>,
+    type_sequence<Bs ...>>
+{
+  using type
+  = std::conditional_t<
+      type_sequence_contains_v<type_sequence<Bs ...>, T>,
+      type_sequence_concatenate_t<
+          type_sequence<T>,
+          typename type_sequence_intersect<
+              type_sequence<As ...>,
+              type_sequence_erase_t<type_sequence<Bs ...>, T>>
+              ::type>,
+      typename type_sequence_intersect<
+          type_sequence<As ...>,
+          type_sequence<Bs ...>>
+          ::type>;
+};
+template<
+    typename    A,
+    typename    B,
+    typename ...Rest>
+struct type_sequence_intersect<
+    A, B, Rest ...>
+{
+  using type
+  = typename type_sequence_intersect<
+      typename type_sequence_intersect<A, B>::type,
+      Rest ...>
+      ::type;
+};
+
+template<typename ...Ts>
+using type_sequence_intersect_t
+= typename type_sequence_intersect<Ts ...>::type;
+
+
+/*!
  * @brief Determines the std::tuple type with the same of types as the given type sequence.
  *
  * @tparam TypeSequence The type sequence.
@@ -798,6 +979,11 @@ struct type_sequence
   size
   = type_sequence_size_v<type_sequence>;
 
+  static constexpr
+  bool
+  empty
+  = type_sequence_empty_v<type_sequence>;
+
   template<typename T>
   static constexpr
   std::size_t
@@ -860,6 +1046,14 @@ struct type_sequence
   template<typename TypeSequence>
   using difference
   = type_sequence_difference_t<type_sequence, TypeSequence>;
+
+  template<typename ...TypeSequences>
+  using unite
+  = type_sequence_unite_t<type_sequence, TypeSequences ...>;
+
+  template<typename ...TypeSequences>
+  using intersect
+  = type_sequence_intersect_t<type_sequence, TypeSequences ...>;
 
   using tuple
   = type_sequence_tuple_t<type_sequence>;
