@@ -19,12 +19,92 @@ struct disjunction_tag
 struct negation_tag
 { };
 
-template<typename ...Expressions> using conjunction = type_sequence<conjunction_tag, Expressions ...>;
-template<typename ...Expressions> using disjunction = type_sequence<disjunction_tag, Expressions ...>;
+
+template<typename ...Expressions>
+using conjunction
+= type_sequence<conjunction_tag, Expressions ...>;
+
+/*!
+ * @brief Determines whether the given type is a specialization of conjunction.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_conjunction;
+
+template<typename>
+struct specializes_conjunction
+  : bool_constant<false>
+{ };
+
+template<typename ...Expressions>
+struct specializes_conjunction<conjunction<Expressions ...>>
+  : bool_constant<true>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+specializes_conjunction_v
+= specializes_conjunction<T>::value;
+
+
+template<typename ...Expressions>
+using disjunction
+= type_sequence<disjunction_tag, Expressions ...>;
+
+/*!
+ * @brief Determines whether the given type is a specialization of disjunction.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_disjunction;
+
+template<typename>
+struct specializes_disjunction
+  : bool_constant<false>
+{ };
+
+template<typename ...Expressions>
+struct specializes_disjunction<disjunction<Expressions ...>>
+  : bool_constant<true>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+specializes_disjunction_v
+= specializes_disjunction<T>::value;
+
 
 template<typename Expression>
 using negation
 = type_sequence<negation_tag, Expression>;
+
+/*!
+ * @brief Determines whether the given type is a specialization of negation.
+ *
+ * @tparam T The type to determine for.
+ */
+template<typename T>
+struct specializes_negation;
+
+template<typename>
+struct specializes_negation
+  : bool_constant<false>
+{ };
+
+template<typename Expression>
+struct specializes_negation<negation<Expression>>
+  : bool_constant<true>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+specializes_negation_v
+= specializes_negation<T>::value;
 
 
 /*!
