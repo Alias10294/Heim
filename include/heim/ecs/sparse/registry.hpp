@@ -1412,6 +1412,7 @@ template<
     typename Expression,
     typename Registry>
 class registry_query
+  : public std::ranges::view_interface<registry_query<Expression, Registry>>
 {
 public:
   using expression_type = Expression;
