@@ -11,14 +11,21 @@
 #include <utility>
 #include <vector>
 #include "heim/ecs/component.hpp"
+#include "heim/ecs/entity.hpp"
 #include "heim/ecs/identifier.hpp"
-#include "heim/ecs/query_expression.hpp"
+#include "heim/ecs/expression.hpp"
 #include "heim/lib/type_sequence.hpp"
 #include "heim/lib/utility.hpp"
 #include "pool.hpp"
 
-namespace heim::sparse
+namespace heim
 {
+namespace sparse
+{
+/*!
+ * \brief
+ *   The main sparse-set-based container for entities and their components.
+ */
 template<
     typename Identifier   = default_identifier_t<>,
     typename Allocator    = std::allocator<Identifier>,
@@ -61,7 +68,7 @@ requires (
  && allocator_for<Allocator, Identifier>)
 class registry_core
 {
-protected:
+public:
   using identifier_type = Identifier;
   using allocator_type  = Allocator;
 
@@ -98,19 +105,19 @@ private:
   noexcept
   { return std::is_nothrow_swappable_v<container_type>; }
 
-protected:
+public:
   explicit constexpr
   registry_core(allocator_type const &alloc)
-    : m_dense (alloc)
-    , m_sparse(alloc)
-    , m_begin (0)
+    : m_dense {alloc}
+    , m_sparse{alloc}
+    , m_begin {0}
   { }
 
   constexpr
   registry_core(registry_core const &other, allocator_type const &alloc)
-    : m_dense (other.m_dense , alloc)
-    , m_sparse(other.m_sparse, alloc)
-    , m_begin (other.m_begin)
+    : m_dense {other.m_dense , alloc}
+    , m_sparse{other.m_sparse, alloc}
+    , m_begin {other.m_begin}
   { }
 
   constexpr
@@ -120,9 +127,9 @@ protected:
   constexpr
   registry_core(registry_core &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_dense (std::move(other.m_dense ), alloc)
-    , m_sparse(std::move(other.m_sparse), alloc)
-    , m_begin (std::move(other.m_begin ))
+    : m_dense {std::move(other.m_dense ), alloc}
+    , m_sparse{std::move(other.m_sparse), alloc}
+    , m_begin {other.m_begin}
   { }
 
   constexpr
@@ -330,7 +337,7 @@ class registry_storage<
     Allocator,
     type_sequence<registry_descriptor<Components, PageSizes> ...>>
 {
-protected:
+public:
   using identifier_type      = Identifier;
   using allocator_type       = Allocator;
   using description_sequence = type_sequence<registry_descriptor<Components, PageSizes> ...>;
@@ -349,7 +356,7 @@ private:
   component_index
   = component_sequence::template index<Component>;
 
-protected:
+public:
   template<typename Component>
   requires (
      !component_sequence::empty
@@ -378,7 +385,7 @@ private:
   { return std::is_nothrow_swappable_v<container_tuple>; }
 
   template<typename ...Expressions>
-  requires (query_expression<Expressions> && ...)
+  requires (expression<Expressions> && ...)
   [[nodiscard]] constexpr
   bool
   m_is_match_conjunction(identifier_type const id, conjunction<Expressions ...>) const
@@ -386,7 +393,7 @@ private:
   { return (is_match<Expressions>(id) && ...); }
 
   template<typename ...Expressions>
-  requires (query_expression<Expressions> && ...)
+  requires (expression<Expressions> && ...)
   [[nodiscard]] constexpr
   bool
   m_is_match_disjunction(identifier_type const id, disjunction<Expressions ...>) const
@@ -394,14 +401,14 @@ private:
   { return (is_match<Expressions>(id) || ...); }
 
   template<typename Expression>
-  requires query_expression<Expression>
+  requires expression<Expression>
   [[nodiscard]] constexpr
   bool
   m_is_match_negation(identifier_type const id, negation<Expression>) const
   noexcept
   { return !is_match<Expression>(id); }
 
-protected:
+public:
   explicit constexpr
   registry_storage(allocator_type const &alloc)
   noexcept
@@ -476,7 +483,7 @@ protected:
   { return std::get<component_index<Component>>(m_containers); }
 
   template<typename Expression>
-  requires query_expression<Expression>
+  requires expression<Expression>
   [[nodiscard]] constexpr
   bool
   is_match(identifier_type const id, Expression const = Expression{}) const
@@ -493,30 +500,20 @@ protected:
   }
 
   template<typename Component>
+  requires (!std::is_empty_v<Component>)
   [[nodiscard]] constexpr
   Component &
   get(identifier_type const id)
   noexcept
-  {
-    static_assert(
-        !std::is_empty_v<Component>,
-        "Component must not be an empty type.");
-
-    return container<Component>()[id];
-  }
+  { return container<Component>()[id]; }
 
   template<typename Component>
+  requires (!std::is_empty_v<Component>)
   [[nodiscard]] constexpr
   Component const &
   get(identifier_type const id) const
   noexcept
-  {
-    static_assert(
-        !std::is_empty_v<Component>,
-        "Component must not be an empty type.");
-
-    return container<Component>()[id];
-  }
+  { return container<Component>()[id]; }
 
   template<typename Component>
   [[nodiscard]] constexpr
@@ -575,26 +572,14 @@ protected:
   template<typename Component>
   constexpr
   bool
-  insert(identifier_type const id, Component const &c)
-  { return container<Component>().insert(id, c); }
-
-  template<typename Component>
-  constexpr
-  bool
   insert(identifier_type const id, Component &&c)
-  { return container<Component>().insert(id, std::move(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(identifier_type const id, Component const &c)
-  { return container<Component>().insert_or_assign(id, c); }
+  { return container<Component>().insert(id, std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
   insert_or_assign(identifier_type const id, Component &&c)
-  { return container<Component>().insert_or_assign(id, std::move(c)); }
+  { return container<Component>().insert_or_assign(id, std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
@@ -623,214 +608,6 @@ protected:
 
 
 template<typename Registry>
-requires specialization_of_registry<std::remove_cvref_t<Registry>>
-class registry_entity
-{
-public:
-  using registry_type   = Registry;
-  using identifier_type = typename registry_type::identifier_type;
-
-private:
-  registry_type  *m_registry;
-  identifier_type m_identifier;
-
-public:
-  constexpr
-  registry_entity()
-  noexcept
-    : m_registry  (nullptr)
-    , m_identifier()
-  { }
-
-  constexpr
-  registry_entity(registry_entity const &)
-  = default;
-
-  constexpr
-  registry_entity(registry_entity &&)
-  = default;
-
-  constexpr
-  registry_entity(registry_type &registry, identifier_type const identifier)
-  noexcept
-    : m_registry  (&registry)
-    , m_identifier(identifier)
-  { }
-
-  explicit constexpr
-  registry_entity(registry_type &registry)
-    : registry_entity(registry, registry.create())
-  { }
-
-  constexpr
-  ~registry_entity()
-  = default;
-
-  constexpr
-  registry_entity &
-  operator=(registry_entity const &)
-  = default;
-
-  constexpr
-  registry_entity &
-  operator=(registry_entity &&)
-  = default;
-
-  constexpr
-  void
-  swap(registry_entity &other)
-  noexcept
-  {
-    using std::swap;
-
-    swap(m_registry  , other.m_registry);
-    swap(m_identifier, other.m_identifier);
-  }
-
-  friend constexpr
-  void
-  swap(registry_entity &lhs, registry_entity &rhs)
-  noexcept
-  { lhs.swap(rhs); }
-
-  [[nodiscard]] friend constexpr
-  bool
-  operator==(registry_entity const &, registry_entity const &)
-  = default;
-
-
-  [[nodiscard]] constexpr
-  registry_type &
-  registry() const
-  noexcept
-  { return *m_registry; }
-
-  [[nodiscard]] constexpr
-  identifier_type
-  identifier() const
-  noexcept
-  { return m_identifier; }
-
-  [[nodiscard]] constexpr
-  bool
-  is_valid() const
-  noexcept
-  { return m_registry->is_valid(m_identifier); }
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  bool
-  is_match(Expression const = Expression{}) const
-  noexcept
-  { return m_registry->template is_match<Expression>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component &
-  get()
-  noexcept
-  { return m_registry->template get<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const &
-  get() const
-  noexcept
-  { return m_registry->template get<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component &
-  try_get()
-  { return m_registry->template try_get<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const &
-  try_get() const
-  { return m_registry->template try_get<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if()
-  noexcept
-  { return m_registry->template get_if<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if() const
-  noexcept
-  { return m_registry->template get_if<Component>(m_identifier); }
-
-
-  constexpr
-  void
-  create()
-  { m_identifier = m_registry->create(); }
-
-  template<typename Component, typename ...Args>
-  constexpr
-  void
-  emplace(Args &&...args)
-  { m_registry->template emplace<Component>(m_identifier, std::forward<Args>(args)...); }
-
-  template<typename Component, typename ...Args>
-  constexpr
-  bool
-  try_emplace(Args &&...args)
-  { return m_registry->template try_emplace<Component>(m_identifier, std::forward<Args>(args)...); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert(Component const &c)
-  { return m_registry->template insert<Component>(m_identifier, c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert(Component &&c)
-  { return m_registry->template insert<Component>(m_identifier, std::move(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(Component const &c)
-  { return m_registry->template insert_or_assign<Component>(m_identifier, c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(Component &&c)
-  { return m_registry->template insert_or_assign<Component>(m_identifier, std::move(c)); }
-
-  template<typename Component>
-  constexpr
-  void
-  erase()
-  { m_registry->template erase<Component>(m_identifier); }
-
-  template<typename Component>
-  constexpr
-  bool
-  try_erase()
-  { return m_registry->template try_erase<Component>(m_identifier); }
-
-  constexpr
-  void
-  clear()
-  { m_registry->clear(m_identifier); }
-
-  constexpr
-  void
-  destroy()
-  { m_registry->destroy(m_identifier); }
-};
-
-
-template<typename Registry>
 class registry_iterator
 { };
 
@@ -844,8 +621,8 @@ public:
 
   using difference_type  = std::ptrdiff_t;
   using iterator_concept = std::random_access_iterator_tag;
-  using value_type       = registry_entity<registry_type>;
-  using reference        = registry_entity<registry_type>;
+  using value_type       = entity<registry_type>;
+  using reference        = entity<registry_type>;
 
 private:
   using iterator_type
@@ -859,8 +636,8 @@ public:
   constexpr
   registry_iterator()
   noexcept
-    : m_registry(nullptr)
-    , m_iterator()
+    : m_registry{nullptr}
+    , m_iterator{}
   { }
 
   constexpr
@@ -874,8 +651,8 @@ public:
   constexpr
   registry_iterator(registry_type &registry, iterator_type const iterator)
   noexcept
-    : m_registry(&registry)
-    , m_iterator(iterator)
+    : m_registry{&registry}
+    , m_iterator{iterator}
   { }
 
   constexpr
@@ -1083,7 +860,7 @@ template<
     typename ...Expressions,
     typename    Registry>
 requires (
-    (query_expression<Expressions> && ...)
+    (expression<Expressions> && ...)
  && specialization_of_registry<std::remove_cvref_t<Registry>>)
 class registry_query_driver<
     conjunction<Expressions ...>,
@@ -1141,7 +918,8 @@ public:
   constexpr
   registry_query_driver()
   noexcept
-    : m_begin{}, m_end{}
+    : m_begin{}
+    , m_end  {}
   { }
 
   constexpr
@@ -1236,7 +1014,7 @@ template<
     typename ...Expressions,
     typename    Registry>
 requires (
-    (query_expression<Expressions> && ...)
+    (expression<Expressions> && ...)
  && specialization_of_registry<std::remove_cvref_t<Registry>>)
 class registry_query_driver<
     disjunction<Expressions ...>,
@@ -1338,7 +1116,7 @@ template<
     typename Expression,
     typename Registry>
 requires (
-    query_expression          <Expression>
+    expression<Expression>
  && specialization_of_registry<std::remove_cvref_t<Registry>>)
 class registry_query_driver<
     negation<Expression>,
@@ -1483,8 +1261,8 @@ public:
 
   using difference_type  = std::ptrdiff_t;
   using iterator_concept = std::bidirectional_iterator_tag;
-  using value_type       = registry_entity<registry_type>;
-  using reference        = registry_entity<registry_type>;
+  using value_type       = entity<registry_type>;
+  using reference        = entity<registry_type>;
 
 private:
   using iterator_type
@@ -1646,7 +1424,8 @@ public:
   constexpr
   registry_query()
   noexcept
-    : m_registry{nullptr}, m_driver{}
+    : m_registry{nullptr}
+    , m_driver  {}
   { }
 
   constexpr
@@ -1742,22 +1521,17 @@ class registry
   using core_type    = detail::registry_core   <Identifier, Allocator>;
   using storage_type = detail::registry_storage<Identifier, Allocator, DescSequence>;
 
-  template<typename>
-  friend class detail::registry_iterator;
-
-  template<typename, typename>
-  friend class detail::registry_query_driver;
-
-  template<typename, typename>
-  friend class detail::registry_query_iterator;
+  template<typename>           friend class detail::registry_iterator;
+  template<typename, typename> friend class detail::registry_query_driver;
+  template<typename, typename> friend class detail::registry_query_iterator;
 
 public:
   using identifier_type      = Identifier;
   using allocator_type       = Allocator;
   using description_sequence = DescSequence;
 
-  using entity       = detail::registry_entity<registry>;
-  using const_entity = detail::registry_entity<registry const>;
+  using entity_type       = entity<registry>;
+  using const_entity_type = entity<registry const>;
 
   using iterator       = detail::registry_iterator<registry>;
   using const_iterator = detail::registry_iterator<registry const>;
@@ -1820,20 +1594,20 @@ public:
   explicit constexpr
   registry(allocator_type const &alloc)
   noexcept
-    : core_type   (alloc)
-    , storage_type(alloc)
+    : core_type   {alloc}
+    , storage_type{alloc}
   { }
 
   constexpr
   registry()
   noexcept(s_noexcept_default_construct())
-    : registry(allocator_type{})
+    : registry{allocator_type{}}
   { }
 
   constexpr
   registry(registry const &other, allocator_type const &alloc)
-    : core_type   (static_cast<core_type    const &>(other), alloc)
-    , storage_type(static_cast<storage_type const &>(other), alloc)
+    : core_type   {static_cast<core_type    const &>(other), alloc}
+    , storage_type{static_cast<storage_type const &>(other), alloc}
   { }
 
   constexpr
@@ -1843,8 +1617,8 @@ public:
   constexpr
   registry(registry &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : core_type   (static_cast<core_type    &&>(other), alloc)
-    , storage_type(static_cast<storage_type &&>(other), alloc)
+    : core_type   {static_cast<core_type    &&>(other), alloc}
+    , storage_type{static_cast<storage_type &&>(other), alloc}
   { }
 
   constexpr
@@ -1950,13 +1724,13 @@ public:
 
   [[nodiscard]] constexpr
   bool
-  is_valid(entity const e) const
+  is_valid(entity_type const e) const
   noexcept
   { return is_valid(e.identifier()); }
 
   [[nodiscard]] constexpr
   bool
-  is_valid(const_entity const ce) const
+  is_valid(const_entity_type const ce) const
   noexcept
   { return is_valid(ce.identifier()); }
 
@@ -1970,14 +1744,14 @@ public:
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(entity const e, Expression const = Expression{}) const
+  is_match(entity_type const e, Expression const = Expression{}) const
   noexcept
   { return is_match<Expression>(e.identifier()); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(const_entity const ce, Expression const = Expression{}) const
+  is_match(const_entity_type const ce, Expression const = Expression{}) const
   noexcept
   { return is_match<Expression>(ce.identifier()); }
 
@@ -2006,14 +1780,14 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  get(entity const e)
+  get(entity_type const e)
   noexcept
   { return get<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  get(const_entity const ce)
+  get(const_entity_type const ce)
   noexcept
   { return get<Component>(ce.identifier()); }
 
@@ -2027,14 +1801,14 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  get(entity const e) const
+  get(entity_type const e) const
   noexcept
   { return get<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  get(const_entity const ce) const
+  get(const_entity_type const ce) const
   noexcept
   { return get<Component>(ce.identifier()); }
 
@@ -2047,13 +1821,13 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  try_get(entity const e)
+  try_get(entity_type const e)
   { return try_get<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component &
-  try_get(const_entity const ce)
+  try_get(const_entity_type const ce)
   { return try_get<Component>(ce.identifier()); }
 
   template<typename Component>
@@ -2065,13 +1839,13 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  try_get(entity const e) const
+  try_get(entity_type const e) const
   { return try_get<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const &
-  try_get(const_entity const ce) const
+  try_get(const_entity_type const ce) const
   { return try_get<Component>(ce.identifier()); }
 
   template<typename Component>
@@ -2084,14 +1858,14 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component *
-  get_if(entity const e)
+  get_if(entity_type const e)
   noexcept
   { return get_if<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component *
-  get_if(const_entity const ce)
+  get_if(const_entity_type const ce)
   noexcept
   { return get_if<Component>(ce.identifier()); }
 
@@ -2105,14 +1879,14 @@ public:
   template<typename Component>
   [[nodiscard]] constexpr
   Component const *
-  get_if(entity const e) const
+  get_if(entity_type const e) const
   noexcept
   { return get_if<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
   Component const *
-  get_if(const_entity const ce) const
+  get_if(const_entity_type const ce) const
   noexcept
   { return get_if<Component>(ce.identifier()); }
 
@@ -2131,13 +1905,13 @@ public:
   template<typename Component, typename ...Args>
   constexpr
   void
-  emplace(entity const e, Args &&...args)
+  emplace(entity_type const e, Args &&...args)
   { emplace<Component>(e.identifier(), std::forward<Args>(args)...); }
 
   template<typename Component, typename ...Args>
   constexpr
   void
-  emplace(const_entity const ce, Args &&...args)
+  emplace(const_entity_type const ce, Args &&...args)
   { emplace<Component>(ce.identifier(), std::forward<Args>(args)...); }
 
   template<typename Component, typename ...Args>
@@ -2149,86 +1923,50 @@ public:
   template<typename Component, typename ...Args>
   constexpr
   bool
-  try_emplace(entity const e, Args &&...args)
+  try_emplace(entity_type const e, Args &&...args)
   { return try_emplace<Component>(e.identifier(), std::forward<Args>(args)...); }
 
   template<typename Component, typename ...Args>
   constexpr
   bool
-  try_emplace(const_entity const ce, Args &&...args)
+  try_emplace(const_entity_type const ce, Args &&...args)
   { return try_emplace<Component>(ce.identifier(), std::forward<Args>(args)...); }
 
   template<typename Component>
   constexpr
   bool
-  insert(identifier_type const id, Component const &c)
-  { return storage_type::template insert<Component>(id, c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert(entity const e, Component const &c)
-  { return insert(e.identifier(), c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert(const_entity const ce, Component const &c)
-  { return insert(ce.identifier(), c); }
-
-  template<typename Component>
-  constexpr
-  bool
   insert(identifier_type const id, Component &&c)
-  { return storage_type::template insert<Component>(id, std::move(c)); }
+  { return storage_type::template insert<Component>(id, std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
-  insert(entity const e, Component &&c)
-  { return insert(e.identifier(), std::move(c)); }
+  insert(entity_type const e, Component &&c)
+  { return insert(e.identifier(), std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
-  insert(const_entity const ce, Component &&c)
-  { return insert(ce.identifier(), std::move(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(identifier_type const id, Component const &c)
-  { return storage_type::template insert_or_assign<Component>(id, c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(entity const e, Component const &c)
-  { return insert_or_assign(e.identifier(), c); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(const_entity const ce, Component const &c)
-  { return insert_or_assign(ce.identifier(), c); }
+  insert(const_entity_type const ce, Component &&c)
+  { return insert(ce.identifier(), std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
   insert_or_assign(identifier_type const id, Component &&c)
-  { return storage_type::template insert_or_assign<Component>(id, std::move(c)); }
+  { return storage_type::template insert_or_assign<Component>(id, std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
-  insert_or_assign(entity const e, Component &&c)
-  { return insert_or_assign(e.identifier(), std::move(c)); }
+  insert_or_assign(entity_type const e, Component &&c)
+  { return insert_or_assign(e.identifier(), std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
   bool
-  insert_or_assign(const_entity const ce, Component &&c)
-  { return insert_or_assign(ce.identifier(), std::move(c)); }
+  insert_or_assign(const_entity_type const ce, Component &&c)
+  { return insert_or_assign(ce.identifier(), std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
@@ -2239,13 +1977,13 @@ public:
   template<typename Component>
   constexpr
   void
-  erase(entity const e)
+  erase(entity_type const e)
   { erase<Component>(e.identifier()); }
 
   template<typename Component>
   constexpr
   void
-  erase(const_entity const ce)
+  erase(const_entity_type const ce)
   { erase<Component>(ce.identifier()); }
 
   template<typename Component>
@@ -2257,13 +1995,13 @@ public:
   template<typename Component>
   constexpr
   bool
-  try_erase(entity const e)
+  try_erase(entity_type const e)
   { return try_erase<Component>(e.identifier()); }
 
   template<typename Component>
   constexpr
   bool
-  try_erase(const_entity const ce)
+  try_erase(const_entity_type const ce)
   { return try_erase<Component>(ce.identifier()); }
 
   constexpr
@@ -2273,12 +2011,12 @@ public:
 
   constexpr
   void
-  clear(entity const e)
+  clear(entity_type const e)
   { clear(e.identifier()); }
 
   constexpr
   void
-  clear(const_entity const ce)
+  clear(const_entity_type const ce)
   { clear(ce.identifier()); }
 
   constexpr
@@ -2301,16 +2039,28 @@ public:
 
   constexpr
   void
-  destroy(entity const e)
+  destroy(entity_type const e)
   { destroy(e.identifier()); }
 
   constexpr
   void
-  destroy(const_entity const ce)
+  destroy(const_entity_type const ce)
   { destroy(ce.identifier()); }
 };
 
+} // namespace sparse
 
-} // namespace heim::sparse
+
+template<
+    typename Identifier,
+    typename Allocator,
+    typename DescSequence>
+struct is_registry<
+    sparse::registry<Identifier, Allocator, DescSequence>>
+  : std::true_type
+{ };
+
+} // namespace heim
+
 
 #endif // HEIM_ECS_SPARSE_REGISTRY_HPP

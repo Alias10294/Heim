@@ -28,7 +28,6 @@ template<typename T>
 concept component
 = is_component_v<T>;
 
-
-}
+} // namespace heim
 
 #endif // HEIM_ECS_COMPONENT_HPP

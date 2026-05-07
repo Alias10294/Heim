@@ -8,6 +8,14 @@
 
 namespace heim
 {
+/*!
+ * \brief
+ *   Determines whether the specializing type is an identifier type.
+ *
+ * \details
+ *   An identifier type, in the context of the entity-component-system (ECS) pattern, is a type able
+ *   to uniquely identify an entity.
+ */
 template<typename T>
 struct is_identifier
   : std::bool_constant<std::is_unsigned_v<T> && std::is_integral_v<T>>
@@ -24,10 +32,15 @@ concept identifier
 = is_identifier_v<T>;
 
 
-template<typename Id>
+template<typename>
 struct identifier_traits
+{ };
+
+template<typename Identifier>
+requires identifier<Identifier>
+struct identifier_traits<Identifier>
 {
-  using identifier_type = Id;
+  using identifier_type = Identifier;
 
   static_assert(
       is_identifier_v<identifier_type>,
@@ -85,7 +98,6 @@ struct default_identifier
 template<typename = void>
 using default_identifier_t
 = typename default_identifier<>::type;
-
 
 } // namespace heim
 

@@ -2,7 +2,7 @@
 #define HEIM_TEST_HPP
 
 #include <iostream>
-#include "heim/ecs/sparse/registry.hpp"
+#include "heim/heim.hpp"
 
 namespace heim::test
 {
@@ -20,7 +20,7 @@ test()
 
   using registry         = heim::sparse::registry<>::with_all<position, velocity, health, tag>;
   using query_expression = heim::conjunction<position, velocity, tag, heim::negation<health>>;
-  using entity           = registry::entity;
+  using entity           = registry::entity_type;
 
   registry r;
 

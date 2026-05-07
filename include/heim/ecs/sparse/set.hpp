@@ -14,7 +14,16 @@
 namespace heim::sparse
 {
 /*!
- * \brief TODO
+ * \brief
+ *   Determines the default size for pages for the sparse container of sets and pools.
+ *
+ * \details
+ *   Each set and pool implements the sparse set data structure, and uses pagination in the sparse container
+ *   to avoid significant memory overhead.
+ *
+ * \note
+ *   Using a value attribute of zero (0) will cause the containers to not be paginated. This can be
+ *   an option to very slightly improve performance when used identifier values are low.
  */
 template<typename = void>
 struct default_page_size
@@ -318,13 +327,6 @@ public:
   using identifier_type = Identifier;
   using allocator_type  = Allocator;
 
-  static_assert(
-      is_identifier_v<identifier_type>,
-      "heim::sparse::set_dense_container: identifier_type must be an identifier type.");
-  static_assert(
-      is_allocator_for_v<allocator_type, identifier_type>,
-      "heim::sparse::set_dense_container: allocator_type must be an allocator type for identifier_type.");
-
 private:
   using container_type
   = std::vector<identifier_type, allocator_type>;
@@ -496,7 +498,18 @@ public:
 
 
 /*!
- * \brief TODO
+ * \brief
+ *   The main underlying container for identifiers.
+ *
+ * \details
+ *   Implements a specialized sparse set data structure, that uses pagination to avoid significant memory
+ *   overhead.
+ *   This data structure allows for constant-time complexity insertion, removal and access to elements,
+ *   as well as providing optimal iteration speed.
+ *
+ * \note
+ *   Using a specializing page size of zero (0) will cause the container to not use pagination. This
+ *   can be an option to very slightly improve performance when used identifier values are low.
  */
 template<
     typename    Identifier = default_identifier_t<>,

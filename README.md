@@ -37,15 +37,13 @@ struct health   { int hp; };
 
 
 using registry
-= heim::registry<heim::sparse_set_based::storage<>
-    ::component<position>
-    ::component<velocity>
-    ::component<health  >>;
+= heim::sparse::registry<>
+    ::with<position>
+    ::with<velocity>
+    ::with<health  >;
 
 using query_expression
-= heim::query_expression<>
-    ::include<position, velocity const>
-    ::exclude<health>;
+= heim::conjunction<position, velocity, negation<health>>;
 
 using entity 
 = heim::entity<registry>;
@@ -64,8 +62,11 @@ int main()
 
   auto q = r.query<query_expression>();
 
-  for (auto &&[id, pos, vel] : q)
+  for (auto e : q)
   {
+    auto       &pos = e.get<position>();
+    auto const &vel = e.get<velocity>();  
+      
     pos.x += vel.x;
     pos.y += vel.y;
     pos.z += vel.z;

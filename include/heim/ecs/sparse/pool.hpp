@@ -7,24 +7,49 @@
 
 namespace heim::sparse
 {
-namespace detail
-{
+/*!
+ * \brief
+ *   The main underlying container for identifiers and a specific component type.
+ *
+ * \details
+ *   Implements a specialized sparse set data structure, that uses pagination to avoid significant memory
+ *   overhead. \n
+ *   This data structure allows for constant-time complexity insertion, removal and access to elements,
+ *   as well as providing optimal iteration speed.
+ *
+ * \note
+ *   Using a specializing page size of zero (0) will cause the container to not use pagination. This
+ *   can be an option to very slightly improve performance when used identifier values are low.
+ */
 template<
     typename    Component,
     typename    Identifier = default_identifier_t<>,
     std::size_t PageSize   = default_page_size_v<>,
-    typename    Allocator  = std::allocator<Identifier>,
-    bool        IsTag      = std::is_empty_v<Component>>
-class pool_impl
+    typename    Allocator  = std::allocator<Identifier>>
+class pool
 { };
 
+/*!
+ * \brief
+ *   The main underlying container for identifiers and a specific component type.
+ *
+ * \details
+ *   Implements a specialized sparse set data structure, that uses pagination to avoid significant memory
+ *   overhead. \n
+ *   This data structure allows for constant-time complexity insertion, removal and access to elements,
+ *   as well as providing optimal iteration speed.
+ *
+ * \note
+ *   Using a specializing page size of zero (0) will cause the container to not use pagination. This
+ *   can be an option to very slightly improve performance when used identifier values are low.
+ */
 template<
     typename    Component,
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-requires component<Component>
-class pool_impl<Component, Identifier, PageSize, Allocator, true>
+requires (component<Component> && std::is_empty_v<Component>)
+class pool<Component, Identifier, PageSize, Allocator>
   : public set<Identifier, PageSize, Allocator>
 {
 protected:
@@ -49,6 +74,8 @@ public:
 };
 
 
+namespace detail
+{
 template<
     typename Component,
     typename Allocator>
@@ -178,18 +205,35 @@ public:
   { m_container.clear(); }
 };
 
+} // namespace detail
 
+
+/*!
+ * \brief
+ *   The main underlying container for identifiers and a specific component type.
+ *
+ * \details
+ *   Implements a specialized sparse set data structure, that uses pagination to avoid significant memory
+ *   overhead. \n
+ *   This data structure allows for constant-time complexity insertion, removal and access to elements,
+ *   as well as providing optimal iteration speed.
+ *
+ * \note
+ *   Using a specializing page size of zero (0) will cause the container to not use pagination. This
+ *   can be an option to very slightly improve performance when used identifier values are low.
+ */
 template<
     typename    Component,
     typename    Identifier,
     std::size_t PageSize,
     typename    Allocator>
-class pool_impl<Component, Identifier, PageSize, Allocator, false>
-  : protected pool_component_container<Component, Allocator>
+requires (component<Component> && !std::is_empty_v<Component>)
+class pool<Component, Identifier, PageSize, Allocator>
+  : protected detail::pool_component_container<Component, Allocator>
   , protected set<Identifier, PageSize, Allocator>
 {
 protected:
-  using component_container = pool_component_container<Component, Allocator>;
+  using component_container = detail::pool_component_container<Component, Allocator>;
   using set_type            = set<Identifier, PageSize, Allocator>;
 
 public:
@@ -246,56 +290,56 @@ private:
 
 public:
   explicit constexpr
-  pool_impl(allocator_type const &alloc)
+  pool(allocator_type const &alloc)
   noexcept
     : component_container(alloc)
     , set_type           (alloc)
   { }
 
   constexpr
-  pool_impl()
+  pool()
   noexcept(s_noexcept_default_construct())
-    : pool_impl(allocator_type())
+    : pool(allocator_type())
   { }
 
   constexpr
-  pool_impl(pool_impl const &other, allocator_type const &alloc)
+  pool(pool const &other, allocator_type const &alloc)
     : component_container(static_cast<component_container const &>(other), alloc)
     , set_type           (static_cast<set_type            const &>(other), alloc)
   { }
 
   constexpr
-  pool_impl(pool_impl const &)
+  pool(pool const &)
   = default;
 
   constexpr
-  pool_impl(pool_impl &&other, allocator_type const &alloc)
+  pool(pool &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : component_container(static_cast<component_container &&>(other), alloc)
     , set_type           (static_cast<set_type            &&>(other), alloc)
   { }
 
   constexpr
-  pool_impl(pool_impl &&)
+  pool(pool &&)
   = default;
 
   constexpr
-  ~pool_impl() override
+  ~pool() override
   = default;
 
   constexpr
-  pool_impl &
-  operator=(pool_impl const &)
+  pool &
+  operator=(pool const &)
   = default;
 
   constexpr
-  pool_impl &
-  operator=(pool_impl &&)
+  pool &
+  operator=(pool &&)
   = default;
 
   constexpr
   void
-  swap(pool_impl &other)
+  swap(pool &other)
   noexcept(s_noexcept_swap())
   {
     component_container::swap(static_cast<component_container &>(other));
@@ -304,7 +348,7 @@ public:
 
   friend constexpr
   void
-  swap(pool_impl &lhs, pool_impl &rhs)
+  swap(pool &lhs, pool &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
@@ -324,7 +368,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(pool_impl const &lhs, pool_impl const &rhs)
+  operator==(pool const &lhs, pool const &rhs)
   noexcept
   {
     if (lhs.size() != rhs.size())
@@ -477,29 +521,6 @@ public:
     set_type           ::clear();
   }
 };
-
-} // namespace detail
-
-
-/*!
- * \brief TODO
- */
-template<
-    typename    Component,
-    typename    Identifier = default_identifier_t<>,
-    std::size_t PageSize   = default_page_size_v<>,
-    typename    Allocator  = std::allocator<Identifier>>
-class pool
-  : public detail::pool_impl<Component, Identifier, PageSize, Allocator>
-{
-  using impl_type
-  = detail::pool_impl<Component, Identifier, PageSize, Allocator>;
-
-public:
-  using impl_type::impl_type;
-  using impl_type::operator=;
-};
-
 
 } // namespace heim::sparse
 

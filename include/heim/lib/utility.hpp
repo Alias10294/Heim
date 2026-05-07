@@ -104,38 +104,30 @@ concept allocator_for
  *   value.
  */
 template<int Digits>
+requires(
+    Digits >  0
+ && Digits <= std::numeric_limits<unsigned long long>::digits)
 struct unsigned_integral_for
-{
-  static constexpr int digits
-  = Digits;
-
-  static_assert(
-      0 < digits && digits <= std::numeric_limits<unsigned long long>::digits,
-      "heim::utility::unsigned_integral_for: digits must be strictly positive and within the limits "
-          "of the existing unsigned integral types.");
-
-
-  using type
-  = std::conditional_t<
-      digits <= std::numeric_limits<unsigned char>::digits,
-      unsigned char,
-      std::conditional_t<
-          digits <= std::numeric_limits<unsigned short>::digits,
-          unsigned short,
-          std::conditional_t<
-              digits <= std::numeric_limits<unsigned int>::digits,
-              unsigned int,
-              std::conditional_t<
-                  digits <= std::numeric_limits<unsigned long>::digits,
-                  unsigned long,
-                  unsigned long long>>>>;
-};
+  : std::type_identity<
+        std::conditional_t<
+            Digits <= std::numeric_limits<unsigned char>::digits,
+            unsigned char,
+            std::conditional_t<
+                Digits <= std::numeric_limits<unsigned short>::digits,
+                unsigned short,
+                std::conditional_t<
+                    Digits <= std::numeric_limits<unsigned int>::digits,
+                    unsigned int,
+                    std::conditional_t<
+                        Digits <= std::numeric_limits<unsigned long>::digits,
+                        unsigned long,
+                        unsigned long long>>>>>
+{ };
 
 template<int Digits>
 using unsigned_integral_for_t
 = typename unsigned_integral_for<Digits>::type;
 
-
-}
+} // namespace heim
 
 #endif // HEIM_LIB_UTILITY_HPP

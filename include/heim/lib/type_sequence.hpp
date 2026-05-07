@@ -1598,6 +1598,10 @@ struct type_sequence_sort<
 { };
 
 
+/*!
+ * \brief
+ *   A type describing a non-empty pack of types.
+ */
 template<typename T, typename ...Ts>
 struct type_sequence<T, Ts ...>
 {
@@ -1656,6 +1660,10 @@ struct type_sequence<T, Ts ...>
 };
 
 
+/*!
+ * \brief
+ *   A type describing an empty pack of types.
+ */
 template<>
 struct type_sequence<>
 {
@@ -1787,8 +1795,8 @@ struct type_sequence_array_impl
             ::type>
 { };
 
+} // namespace detail
 
-}
 
 template<
     typename    T,
@@ -1835,7 +1843,6 @@ struct to_type_sequence<
   : type_sequence_array<T, N>
 { };
 
-
-}
+} // namespace heim
 
 #endif // HEIM_TYPE_SEQUENCE_HPP
