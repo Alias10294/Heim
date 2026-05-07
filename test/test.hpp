@@ -2,6 +2,7 @@
 #define HEIM_TEST_HPP
 
 #include <iostream>
+#include <ranges>
 #include "heim/heim.hpp"
 
 namespace heim::test
@@ -39,7 +40,7 @@ test()
   std::cout << "position (before): " << px << py << pz << '\n';
   std::cout << "velocity (before): " << vx << vy << vz << '\n';
 
-  for (auto e : r.query<query_expression>())
+  for (auto e : r.query<query_expression>() | std::views::reverse)
   {
     auto       &[pos_x, pos_y, pos_z] = e.get<position>();
     auto const &[vel_x, vel_y, vel_z] = e.get<velocity>();

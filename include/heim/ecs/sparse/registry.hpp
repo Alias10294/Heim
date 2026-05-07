@@ -912,6 +912,7 @@ private:
   {
     std::size_t size = registry->core_type::size();
     (m_initialize_unfold<Components>(registry, size), ...);
+    m_begin = increment(registry, m_begin);
   }
 
 public:
@@ -989,7 +990,7 @@ public:
 
   constexpr
   iterator_type
-  increment(registry_type const * const registry, iterator_type iterator)
+  increment(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
     while (iterator != m_end && !registry->template is_match<expression_type>(*iterator))
@@ -1000,7 +1001,7 @@ public:
 
   constexpr
   iterator_type
-  decrement(registry_type const * const registry, iterator_type iterator)
+  decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
     while (iterator != m_begin && !registry->template is_match<expression_type>(*iterator))
@@ -1034,10 +1035,15 @@ private:
   using iterator_type
   = typename registry_core_type::const_iterator;
 
+private:
+  iterator_type m_begin;
+
 public:
   constexpr
   registry_query_driver()
-  = default;
+  noexcept
+    : m_begin{}
+  { }
 
   constexpr
   registry_query_driver(registry_query_driver const &)
@@ -1048,8 +1054,9 @@ public:
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const)
+  registry_query_driver(registry_type const * const registry)
   noexcept
+    : m_begin{increment(registry, registry->core_type::begin())}
   { }
 
   constexpr
@@ -1072,11 +1079,11 @@ public:
   = default;
 
 public:
-  static constexpr
+  constexpr
   iterator_type
-  begin(registry_type const * const registry)
+  begin(registry_type const * const) const
   noexcept
-  { return registry->core_type::begin(); }
+  { return m_begin; }
 
   static constexpr
   iterator_type
@@ -1098,14 +1105,12 @@ public:
     return iterator;
   }
 
-  static constexpr
+  constexpr
   iterator_type
-  decrement(registry_type const * const registry, iterator_type iterator)
+  decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    iterator_type const first = begin(registry);
-
-    while (iterator != first && !registry->template is_match<expression_type>(*iterator))
+    while (iterator != m_begin && !registry->template is_match<expression_type>(*iterator))
       --iterator;
 
     return iterator;
@@ -1136,10 +1141,15 @@ private:
   using iterator_type
   = typename registry_core_type::const_iterator;
 
+private:
+  iterator_type m_begin;
+
 public:
   constexpr
   registry_query_driver()
-  = default;
+  noexcept
+    : m_begin{}
+  { }
 
   constexpr
   registry_query_driver(registry_query_driver const &)
@@ -1150,8 +1160,9 @@ public:
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const)
+  registry_query_driver(registry_type const * const registry)
   noexcept
+    : m_begin{increment(registry, registry->core_type::begin())}
   { }
 
   constexpr
@@ -1174,11 +1185,11 @@ public:
   = default;
 
 public:
-  static constexpr
+  constexpr
   iterator_type
-  begin(registry_type const * const registry)
+  begin(registry_type const * const) const
   noexcept
-  { return registry->core_type::begin(); }
+  { return m_begin; }
 
   static constexpr
   iterator_type
@@ -1200,14 +1211,12 @@ public:
     return iterator;
   }
 
-  static constexpr
+  constexpr
   iterator_type
-  decrement(registry_type const * const registry, iterator_type iterator)
+  decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    iterator_type const first = begin(registry);
-
-    while (iterator != first && registry->template is_match<Expression>(*iterator))
+    while (iterator != m_begin && registry->template is_match<Expression>(*iterator))
       --iterator;
 
     return iterator;
@@ -1300,7 +1309,7 @@ public:
   noexcept
     : m_driver  {driver}
     , m_registry{registry}
-    , m_iterator{m_driver.increment(m_registry, m_driver.begin(m_registry))}
+    , m_iterator{m_driver.begin(m_registry)}
   { }
 
   constexpr
@@ -1445,6 +1454,16 @@ public:
 
   constexpr
   ~registry_query()
+  = default;
+
+  constexpr
+  registry_query &
+  operator=(registry_query const &)
+  = default;
+
+  constexpr
+  registry_query &
+  operator=(registry_query &&)
   = default;
 
   constexpr

@@ -42,7 +42,7 @@ using registry
     ::with<velocity>
     ::with<health  >;
 
-using query_expression
+using expression
 = heim::conjunction<position, velocity, negation<health>>;
 
 using entity 
@@ -56,13 +56,11 @@ int main()
   r.emplace<position>(id, 0.f, 0.f, 0.f);
   r.emplace<velocity>(id, 1.f, 0.f, 0.f);
 
-  entity e0(r);
+  entity e0{r};
   e0.emplace<position>(0.f, 1.f, 0.f);
   e0.emplace<health  >(10);
 
-  auto q = r.query<query_expression>();
-
-  for (auto e : q)
+  for (auto e : r.query<expression>())
   {
     auto       &pos = e.get<position>();
     auto const &vel = e.get<velocity>();  
