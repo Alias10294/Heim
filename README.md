@@ -33,21 +33,18 @@ and on delivering highly-performant code.
 
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
-struct health   { int hp; };
+struct tag      { };
 
 
 using registry
-= heim::registry<heim::sparse_set_based::storage<>
-    ::component<position>
-    ::component<velocity>
-    ::component<health  >>;
+= heim::sparse::registry<>
+    ::with_all<position, velocity>
+    ::with    <tag, 0>;
 
-using query_expression
-= heim::query_expression<>
-    ::include<position, velocity const>
-    ::exclude<health>;
+using expression
+= heim::conjunction<position, velocity, heim::negation<tag>>;
 
-using entity 
+using entity
 = heim::entity<registry>;
 
 int main()
@@ -55,23 +52,24 @@ int main()
   registry r;
 
   auto const id0 = r.create();
-  r.emplace<position>(id, 0.f, 0.f, 0.f);
-  r.emplace<velocity>(id, 1.f, 0.f, 0.f);
+  r.emplace<position>(id0, 0.f, 0.f, 0.f);
+  r.emplace<velocity>(id0, 1.f, 0.f, 0.f);
 
-  entity e0(r);
+  entity e0{r};
   e0.emplace<position>(0.f, 1.f, 0.f);
-  e0.emplace<health  >(10);
+  e0.emplace<tag>     ();
 
-  auto q = r.query<query_expression>();
-
-  for (auto &&[id, pos, vel] : q)
+  for (auto e : r.query<expression>())
   {
-    pos.x += vel.x;
-    pos.y += vel.y;
-    pos.z += vel.z;
+    auto       &[px, py, pz] = e.get<position>();
+    auto const &[vx, vy, vz] = e.get<velocity>();
+
+    px += vx;
+    py += vy;
+    pz += vz;
   }
 
-  r.destroy(id0);
+  r .destroy(id0);
   e0.destroy();
 }
 ```

@@ -1,8 +1,7 @@
 #ifndef HEIM_HEIM_HPP
 #define HEIM_HEIM_HPP
 
-#include "entity.hpp"
-#include "registry.hpp"
-#include "storage/sparse_set/storage.hpp"
+#include "ecs.hpp"
+#include "lib.hpp"
 
 #endif // HEIM_HEIM_HPP
