@@ -1,17 +1,17 @@
 #ifndef HEIM_ENTITY_HPP
 #define HEIM_ENTITY_HPP
 
-#include "registry.hpp"
+#include <type_traits>
+#include <utility>
 
 namespace heim
 {
 template<typename Registry>
-requires registry<std::remove_cvref_t<Registry>>
 class entity
 {
 public:
   using registry_type   = Registry;
-  using identifier_type = typename registry_type::identifier_type;
+  using identifier_type = typename Registry::identifier_type;
 
 private:
   registry_type  *m_registry;
@@ -21,7 +21,7 @@ public:
   constexpr
   entity()
   noexcept
-    : m_registry  {nullptr}
+    : m_registry  {}
     , m_identifier{}
   { }
 
@@ -42,6 +42,7 @@ public:
 
   explicit constexpr
   entity(registry_type &registry)
+  requires (!std::is_const_v<registry_type>)
     : entity{registry, registry.create()}
   { }
 
@@ -84,6 +85,13 @@ public:
 
   [[nodiscard]] constexpr
   registry_type &
+  registry()
+  noexcept
+  requires (!std::is_const_v<registry_type>)
+  { return *m_registry; }
+
+  [[nodiscard]] constexpr
+  registry_type const &
   registry() const
   noexcept
   { return *m_registry; }
@@ -112,6 +120,7 @@ public:
   Component &
   get()
   noexcept
+  requires (!std::is_const_v<registry_type>)
   { return m_registry->template get<Component>(m_identifier); }
 
   template<typename Component>
@@ -131,71 +140,53 @@ public:
   [[nodiscard]] constexpr
   Component const &
   try_get() const
+  requires (!std::is_const_v<registry_type>)
   { return m_registry->template try_get<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if()
-  noexcept
-  { return m_registry->template get_if<Component>(m_identifier); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if() const
-  noexcept
-  { return m_registry->template get_if<Component>(m_identifier); }
 
 
   constexpr
   void
   create()
+  requires (!std::is_const_v<registry_type>)
   { m_identifier = m_registry->create(); }
 
   template<typename Component, typename ...Args>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   void
   emplace(Args &&...args)
   { m_registry->template emplace<Component>(m_identifier, std::forward<Args>(args)...); }
 
   template<typename Component, typename ...Args>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   bool
   try_emplace(Args &&...args)
   { return m_registry->template try_emplace<Component>(m_identifier, std::forward<Args>(args)...); }
 
   template<typename Component>
-  constexpr
-  bool
-  insert(Component const &c)
-  { return m_registry->template insert<Component>(m_identifier, c); }
-
-  template<typename Component>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   bool
   insert(Component &&c)
-  { return m_registry->template insert<Component>(m_identifier, std::move(c)); }
+  { return m_registry->template insert<Component>(m_identifier, std::forward<Component>(c)); }
 
   template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(Component const &c)
-  { return m_registry->template insert_or_assign<Component>(m_identifier, c); }
-
-  template<typename Component>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   bool
   insert_or_assign(Component &&c)
-  { return m_registry->template insert_or_assign<Component>(m_identifier, std::move(c)); }
+  { return m_registry->template insert_or_assign<Component>(m_identifier, std::forward<Component>(c)); }
 
   template<typename Component>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   void
   erase()
   { m_registry->template erase<Component>(m_identifier); }
 
   template<typename Component>
+  requires (!std::is_const_v<registry_type>)
   constexpr
   bool
   try_erase()
@@ -204,11 +195,13 @@ public:
   constexpr
   void
   clear()
+  requires (!std::is_const_v<registry_type>)
   { m_registry->clear(m_identifier); }
 
   constexpr
   void
   destroy()
+  requires (!std::is_const_v<registry_type>)
   { m_registry->destroy(m_identifier); }
 };
 

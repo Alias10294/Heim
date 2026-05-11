@@ -10,7 +10,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "heim/ecs/component.hpp"
 #include "heim/ecs/entity.hpp"
 #include "heim/ecs/identifier.hpp"
 #include "heim/ecs/expression.hpp"
@@ -18,9 +17,7 @@
 #include "heim/lib/utility.hpp"
 #include "pool.hpp"
 
-namespace heim
-{
-namespace sparse
+namespace heim::sparse
 {
 /*!
  * \brief
@@ -110,7 +107,7 @@ public:
   registry_core(allocator_type const &alloc)
     : m_dense {alloc}
     , m_sparse{alloc}
-    , m_begin {0}
+    , m_begin {}
   { }
 
   constexpr
@@ -385,7 +382,6 @@ private:
   { return std::is_nothrow_swappable_v<container_tuple>; }
 
   template<typename ...Expressions>
-  requires (expression<Expressions> && ...)
   [[nodiscard]] constexpr
   bool
   m_is_match_conjunction(identifier_type const id, conjunction<Expressions ...>) const
@@ -393,7 +389,6 @@ private:
   { return (is_match<Expressions>(id) && ...); }
 
   template<typename ...Expressions>
-  requires (expression<Expressions> && ...)
   [[nodiscard]] constexpr
   bool
   m_is_match_disjunction(identifier_type const id, disjunction<Expressions ...>) const
@@ -401,7 +396,6 @@ private:
   { return (is_match<Expressions>(id) || ...); }
 
   template<typename Expression>
-  requires expression<Expression>
   [[nodiscard]] constexpr
   bool
   m_is_match_negation(identifier_type const id, negation<Expression>) const
@@ -483,7 +477,6 @@ public:
   { return std::get<component_index<Component>>(m_containers); }
 
   template<typename Expression>
-  requires expression<Expression>
   [[nodiscard]] constexpr
   bool
   is_match(identifier_type const id, Expression const = Expression{}) const
@@ -533,28 +526,6 @@ public:
     if (is_match<Component>(id))
       return get<Component>(id);
     throw std::out_of_range("heim::sparse::detail::registry_storage::try_get");
-  }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if(identifier_type const id)
-  noexcept
-  {
-    if (is_match<Component>(id))
-      return std::addressof(get<Component>(id));
-    return nullptr;
-  }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(identifier_type const id) const
-  noexcept
-  {
-    if (is_match<Component>(id))
-      return std::addressof(get<Component>(id));
-    return nullptr;
   }
 
   template<typename Component, typename ...Args>
@@ -636,7 +607,7 @@ public:
   constexpr
   registry_iterator()
   noexcept
-    : m_registry{nullptr}
+    : m_registry{}
     , m_iterator{}
   { }
 
@@ -859,9 +830,7 @@ public:
 template<
     typename ...Expressions,
     typename    Registry>
-requires (
-    (expression<Expressions> && ...)
- && specialization_of_registry<std::remove_cvref_t<Registry>>)
+requires specialization_of_registry<std::remove_cvref_t<Registry>>
 class registry_query_driver<
     conjunction<Expressions ...>,
     Registry>
@@ -1014,9 +983,7 @@ public:
 template<
     typename ...Expressions,
     typename    Registry>
-requires (
-    (expression<Expressions> && ...)
- && specialization_of_registry<std::remove_cvref_t<Registry>>)
+requires specialization_of_registry<std::remove_cvref_t<Registry>>
 class registry_query_driver<
     disjunction<Expressions ...>,
     Registry>
@@ -1120,9 +1087,7 @@ public:
 template<
     typename Expression,
     typename Registry>
-requires (
-    expression<Expression>
- && specialization_of_registry<std::remove_cvref_t<Registry>>)
+requires specialization_of_registry<std::remove_cvref_t<Registry>>
 class registry_query_driver<
     negation<Expression>,
     Registry>
@@ -1289,7 +1254,7 @@ public:
   registry_query_iterator()
   noexcept
     : m_driver  {}
-    , m_registry{nullptr}
+    , m_registry{}
     , m_iterator{}
   { }
 
@@ -1434,7 +1399,7 @@ public:
   constexpr
   registry_query()
   noexcept
-    : m_registry{nullptr}
+    : m_registry{}
     , m_driver  {}
   { }
 
@@ -1868,48 +1833,6 @@ public:
   try_get(const_entity_type const ce) const
   { return try_get<Component>(ce.identifier()); }
 
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if(identifier_type const id)
-  noexcept
-  { return storage_type::template get_if<Component>(id); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if(entity_type const e)
-  noexcept
-  { return get_if<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if(const_entity_type const ce)
-  noexcept
-  { return get_if<Component>(ce.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(identifier_type const id) const
-  noexcept
-  { return storage_type::template get_if<Component>(id); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(entity_type const e) const
-  noexcept
-  { return get_if<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(const_entity_type const ce) const
-  noexcept
-  { return get_if<Component>(ce.identifier()); }
-
 
   [[nodiscard]] constexpr
   identifier_type
@@ -2068,19 +1991,6 @@ public:
   { destroy(ce.identifier()); }
 };
 
-} // namespace sparse
-
-
-template<
-    typename Identifier,
-    typename Allocator,
-    typename DescSequence>
-struct is_registry<
-    sparse::registry<Identifier, Allocator, DescSequence>>
-  : std::true_type
-{ };
-
-} // namespace heim
-
+} // namespace heim::sparse
 
 #endif // HEIM_ECS_SPARSE_REGISTRY_HPP

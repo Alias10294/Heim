@@ -2,11 +2,29 @@
 #define HEIM_ECS_SPARSE_POOL_HPP
 
 #include "heim/ecs/identifier.hpp"
-#include "heim/ecs/component.hpp"
 #include "set.hpp"
 
 namespace heim::sparse
 {
+template<typename T>
+struct is_component
+  : std::bool_constant<
+         std ::is_object_v   <T>
+     && !heim::is_qualified_v<T>
+     &&  std ::is_move_assignable_v<T>>
+{ };
+
+template<typename T>
+inline constexpr
+bool
+is_component_v
+= is_component<T>::value;
+
+template<typename T>
+concept component
+= is_component_v<T>;
+
+
 /*!
  * \brief
  *   The main underlying container for identifiers and a specific component type.
@@ -126,12 +144,12 @@ public:
   explicit constexpr
   pool_component_container(allocator_type const &alloc)
   noexcept
-    : m_container(component_allocator(alloc))
+    : m_container(component_allocator{alloc})
   { }
 
   constexpr
   pool_component_container(pool_component_container const &other, allocator_type const &alloc)
-    : m_container(other.m_container, component_allocator(alloc))
+    : m_container(other.m_container, component_allocator{alloc})
   { }
 
   constexpr
@@ -141,7 +159,7 @@ public:
   constexpr
   pool_component_container(pool_component_container &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_container(std::move(other.m_container), component_allocator(alloc))
+    : m_container(std::move(other.m_container), component_allocator{alloc})
   { }
 
   constexpr
@@ -166,13 +184,13 @@ public:
 
 
   [[nodiscard]] constexpr
-  component_type &
+  decltype(auto)
   get(std::size_t const idx)
   noexcept
   { return m_container[idx]; }
 
   [[nodiscard]] constexpr
-  component_type const &
+  decltype(auto)
   get(std::size_t const idx) const
   noexcept
   { return m_container[idx]; }
@@ -292,20 +310,20 @@ public:
   explicit constexpr
   pool(allocator_type const &alloc)
   noexcept
-    : component_container(alloc)
-    , set_type           (alloc)
+    : component_container{alloc}
+    , set_type           {alloc}
   { }
 
   constexpr
   pool()
   noexcept(s_noexcept_default_construct())
-    : pool(allocator_type())
+    : pool{allocator_type{}}
   { }
 
   constexpr
   pool(pool const &other, allocator_type const &alloc)
-    : component_container(static_cast<component_container const &>(other), alloc)
-    , set_type           (static_cast<set_type            const &>(other), alloc)
+    : component_container{static_cast<component_container const &>(other), alloc}
+    , set_type           {static_cast<set_type            const &>(other), alloc}
   { }
 
   constexpr
@@ -315,8 +333,8 @@ public:
   constexpr
   pool(pool &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : component_container(static_cast<component_container &&>(other), alloc)
-    , set_type           (static_cast<set_type            &&>(other), alloc)
+    : component_container{static_cast<component_container &&>(other), alloc}
+    , set_type           {static_cast<set_type            &&>(other), alloc}
   { }
 
   constexpr
@@ -397,7 +415,7 @@ public:
   using set_type::find;
 
   [[nodiscard]] constexpr
-  component_type &
+  decltype(auto)
   operator[](identifier_type const id)
   noexcept
   {
@@ -406,7 +424,7 @@ public:
   }
 
   [[nodiscard]] constexpr
-  component_type const &
+  decltype(auto)
   operator[](identifier_type const id) const
   noexcept
   {
