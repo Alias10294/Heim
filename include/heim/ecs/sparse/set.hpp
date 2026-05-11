@@ -355,12 +355,12 @@ public:
   explicit constexpr
   set_dense_container(allocator_type const &alloc)
   noexcept
-    : m_container(alloc)
+    : m_container{alloc}
   { }
 
   constexpr
   set_dense_container(set_dense_container const &other, allocator_type const &alloc)
-    : m_container(other.m_container, alloc)
+    : m_container{other.m_container, alloc}
   { }
 
   constexpr
@@ -369,7 +369,7 @@ public:
 
   constexpr
   set_dense_container(set_dense_container &&other, allocator_type const &alloc)
-    : m_container(std::move(other.m_container), alloc)
+    : m_container{std::move(other.m_container), alloc}
   { }
 
   constexpr
@@ -578,13 +578,13 @@ public:
   constexpr
   set()
   noexcept(s_noexcept_default_construct())
-    : set(allocator_type())
+    : set{allocator_type{}}
   { }
 
   constexpr
   set(set const &other, allocator_type const &alloc)
-    : dense_container (static_cast<dense_container  const &>(other), alloc)
-    , sparse_container(static_cast<sparse_container const &>(other), alloc)
+    : dense_container {static_cast<dense_container  const &>(other), alloc}
+    , sparse_container{static_cast<sparse_container const &>(other), alloc}
   { }
 
   constexpr
@@ -593,8 +593,8 @@ public:
 
   constexpr
   set(set &&other, allocator_type const &alloc)
-    : dense_container (static_cast<dense_container  &&>(other), alloc)
-    , sparse_container(static_cast<sparse_container &&>(other), alloc)
+    : dense_container {static_cast<dense_container  &&>(other), alloc}
+    , sparse_container{static_cast<sparse_container &&>(other), alloc}
   { }
 
   constexpr
@@ -711,7 +711,7 @@ public:
     using index_type
     = typename id_traits::index_type;
 
-    identifier_type const id(std::forward<Args>(args)...);
+    identifier_type const id{std::forward<Args>(args)...};
 
     sparse_container::reserve_for(id);
     dense_container ::insert     (id);
@@ -752,7 +752,7 @@ public:
     if (auto const idx = static_cast<std::size_t>(id_traits::index(sparse_container::position(id)));
         idx != size() - 1)
     {
-      identifier_type const back = dense_container::back();
+      identifier_type const back{dense_container::back()};
 
       dense_container ::overwrite_with_back(idx);
       sparse_container::position(back) = id_traits::from(static_cast<index_type>(idx), id_traits::generation(back));

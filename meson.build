@@ -6,3 +6,6 @@ heim_inc = include_directories('include')
 
 heim_dep = declare_dependency(include_directories: heim_inc)
 meson.override_dependency('heim', heim_dep)
+
+heim_src = files('test/main.cpp')
+heim_exe = executable('heim_test', heim_src, include_directories: heim_inc)

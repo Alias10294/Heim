@@ -3,34 +3,9 @@
 
 #include <type_traits>
 #include "heim/lib/type_sequence.hpp"
-#include "component.hpp"
 
 namespace heim
 {
-/*!
- * \brief
- *   Determines whether the specializing type is a valid expression type.
- *
- * \details
- *   An expression type, in the context of the entity-component-system (ECS) pattern, is a type describing
- *   an expression to which an entity can match to depending on what component(s) it possesses. \n
- *   Such expressions can either be: a singular component type; the conjunction or disjunction of multiple
- *   sub-expressions; or the negation of a sub-expression.
- */
-template<typename>
-struct is_expression;
-
-template<typename T>
-inline constexpr
-bool
-is_expression_v
-= is_expression<T>::value;
-
-template<typename T>
-concept expression
-= is_expression_v<T>;
-
-
 struct conjunction_tag { };
 struct disjunction_tag { };
 struct negation_tag    { };
@@ -43,7 +18,7 @@ struct negation_tag    { };
  *   For an entity to match a conjunction of sub-expressions, it must match all the sub-expressions.
  */
 template<typename ...Expressions>
-requires (sizeof...(Expressions) > 0 && (expression<Expressions> && ...))
+requires (sizeof...(Expressions) > 0)
 using conjunction
 = type_sequence<conjunction_tag, Expressions ...>;
 
@@ -84,7 +59,7 @@ struct is_specialization_of_conjunction<
  *   For an entity to match a disjunction of sub-expressions, it must match at least one of the sub-expressions.
  */
 template<typename ...Expressions>
-requires (sizeof...(Expressions) > 0 && (expression<Expressions> && ...))
+requires (sizeof...(Expressions) > 0)
 using disjunction
 = type_sequence<disjunction_tag, Expressions ...>;
 
@@ -125,7 +100,6 @@ struct is_specialization_of_disjunction<
  *   For an entity to match the negation of a sub-expression, it must not match the sub-expression.
  */
 template<typename Expression>
-requires expression<Expression>
 using negation
 = type_sequence<negation_tag, Expression>;
 
@@ -163,27 +137,6 @@ struct is_expression
   : std::false_type
 { };
 
-template<typename C>
-requires component<C>
-struct is_expression<C>
-  : std::true_type
-{ };
-
-template<typename ...Expressions>
-struct is_expression<conjunction<Expressions ...>>
-  : std::bool_constant<(is_expression_v<Expressions> && ...)>
-{ };
-
-template<typename ...Expressions>
-struct is_expression<disjunction<Expressions ...>>
-  : std::bool_constant<(is_expression_v<Expressions> && ...)>
-{ };
-
-template<typename Expression>
-struct is_expression<negation<Expression>>
-  : is_expression<Expression>
-{ };
-
 
 /*!
  * \brief
@@ -191,11 +144,9 @@ struct is_expression<negation<Expression>>
  *   the specializing expression type.
  */
 template<typename>
-struct guaranteed
-{ };
+struct guaranteed;
 
 template<typename E>
-requires expression<E>
 using guaranteed_t
 = typename guaranteed<E>::type;
 
@@ -235,9 +186,7 @@ struct guaranteed_disjunction<First, Rest ...>
 
 
 template<typename C>
-requires component<C>
-struct guaranteed<
-    C>
+struct guaranteed
   : std::type_identity<
         type_sequence<C>>
 { };
