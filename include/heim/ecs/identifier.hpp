@@ -18,7 +18,7 @@ namespace heim
  */
 template<typename T>
 struct is_identifier
-  : std::bool_constant<std::is_unsigned_v<T> && std::is_integral_v<T>>
+  : std::bool_constant<std::unsigned_integral<T>>
 { };
 
 template<typename T>
@@ -41,11 +41,6 @@ requires identifier<Identifier>
 struct identifier_traits<Identifier>
 {
   using identifier_type = Identifier;
-
-  static_assert(
-      is_identifier_v<identifier_type>,
-      "heim::identifier_traits: identifier_type must be an identifier type.");
-
 
   static constexpr int index_digits      = std::numeric_limits<identifier_type>::digits / 2;
   static constexpr int generation_digits = std::numeric_limits<identifier_type>::digits / 2;

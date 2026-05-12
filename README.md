@@ -39,15 +39,18 @@ struct tag      { };
 using registry 
 = heim::sparse::registry::with_all<position, velocity, tag>;
 
-using identifier = typename registry::identifier_type;
-using entity     = heim::entity<registry>;
+using identifier 
+= typename registry::identifier_type;
+
+using entity 
+= heim::entity<registry>;
 
 
 int main()
 {
   registry reg;
 
-  identifier const id0 = reg.create();
+  identifier const id0{reg.create()};
   reg.emplace<position>(id0, 0.f, 0.f, 0.f);
   reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
   

@@ -104,16 +104,16 @@ public:
 
   [[nodiscard]] constexpr
   bool
-  is_valid() const
+  expired() const
   noexcept
-  { return m_registry->is_valid(m_identifier); }
+  { return m_registry->expired(m_identifier); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(Expression const = Expression{}) const
+  matches(Expression const = Expression{}) const
   noexcept
-  { return m_registry->template is_match<Expression>(m_identifier); }
+  { return m_registry->template matches<Expression>(m_identifier); }
 
   template<typename Component>
   [[nodiscard]] constexpr

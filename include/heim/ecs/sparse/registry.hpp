@@ -224,18 +224,18 @@ public:
 
   [[nodiscard]] constexpr
   bool
-  is_valid(identifier_type const id) const
+  expired(identifier_type const id) const
   noexcept
   {
     auto const idx = static_cast<std::size_t>(id_traits::index(id));
 
     if (idx >= m_sparse.size())
-      return false;
+      return true;
 
     identifier_type const pos = m_sparse[idx];
 
-    return id_traits::index     (pos) >= m_begin
-        && id_traits::generation(pos) == id_traits::generation(id);
+    return id_traits::index     (pos) < m_begin
+        || id_traits::generation(pos) != id_traits::generation(id);
   }
 
 
@@ -388,23 +388,23 @@ private:
   template<typename ...Expressions>
   [[nodiscard]] constexpr
   bool
-  m_is_match_conjunction(identifier_type const id, conjunction<Expressions ...>) const
+  m_matches_conjunction(identifier_type const id, conjunction<Expressions ...>) const
   noexcept
-  { return (is_match<Expressions>(id) && ...); }
+  { return (matches<Expressions>(id) && ...); }
 
   template<typename ...Expressions>
   [[nodiscard]] constexpr
   bool
-  m_is_match_disjunction(identifier_type const id, disjunction<Expressions ...>) const
+  m_matches_disjunction(identifier_type const id, disjunction<Expressions ...>) const
   noexcept
-  { return (is_match<Expressions>(id) || ...); }
+  { return (matches<Expressions>(id) || ...); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  m_is_match_negation(identifier_type const id, negation<Expression>) const
+  m_matches_negation(identifier_type const id, negation<Expression>) const
   noexcept
-  { return !is_match<Expression>(id); }
+  { return !matches<Expression>(id); }
 
 public:
   explicit constexpr
@@ -483,15 +483,15 @@ public:
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(identifier_type const id, Expression const = Expression{}) const
+  matches(identifier_type const id, Expression const = Expression{}) const
   noexcept
   {
     if      constexpr (is_specialization_of_conjunction_v<Expression>)
-      return m_is_match_conjunction(id, Expression{});
+      return m_matches_conjunction(id, Expression{});
     else if constexpr (is_specialization_of_disjunction_v<Expression>)
-      return m_is_match_disjunction(id, Expression{});
+      return m_matches_disjunction(id, Expression{});
     else if constexpr (is_specialization_of_negation_v   <Expression>)
-      return m_is_match_negation   (id, Expression{});
+      return m_matches_negation   (id, Expression{});
     else
       return container<Expression>().contains(id);
   }
@@ -517,9 +517,10 @@ public:
   Component &
   try_get(identifier_type const id)
   {
-    if (is_match<Component>(id))
+    if (matches<Component>(id))
       return get<Component>(id);
-    throw std::out_of_range("heim::sparse::detail::generic_registry_storage::try_get");
+
+    throw std::out_of_range{"heim::sparse::detail::generic_registry_storage::try_get"};
   }
 
   template<typename Component>
@@ -527,9 +528,10 @@ public:
   Component const &
   try_get(identifier_type const id) const
   {
-    if (is_match<Component>(id))
+    if (matches<Component>(id))
       return get<Component>(id);
-    throw std::out_of_range("heim::sparse::detail::generic_registry_storage::try_get");
+
+    throw std::out_of_range{"heim::sparse::detail::generic_registry_storage::try_get"};
   }
 
   template<typename Component, typename ...Args>
@@ -676,7 +678,7 @@ public:
   reference
   operator*() const
   noexcept
-  { return reference(*m_registry, *m_iterator); }
+  { return reference{*m_registry, *m_iterator}; }
 
   [[nodiscard]] constexpr
   reference
@@ -701,13 +703,13 @@ public:
   generic_registry_iterator
   operator++(int)
   noexcept
-  { generic_registry_iterator tmp(*this); ++*this; return tmp; }
+  { generic_registry_iterator tmp{*this}; ++*this; return tmp; }
 
   constexpr
   generic_registry_iterator
   operator--(int)
   noexcept
-  { generic_registry_iterator tmp(*this); --*this; return tmp; }
+  { generic_registry_iterator tmp{*this}; --*this; return tmp; }
 
   constexpr
   generic_registry_iterator &
@@ -966,7 +968,7 @@ public:
   increment(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    while (iterator != m_end && !registry->template is_match<expression_type>(*iterator))
+    while (iterator != m_end && !registry->template matches<expression_type>(*iterator))
       ++iterator;
 
     return iterator;
@@ -977,7 +979,7 @@ public:
   decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    while (iterator != m_begin && !registry->template is_match<expression_type>(*iterator))
+    while (iterator != m_begin && !registry->template matches<expression_type>(*iterator))
       --iterator;
 
     return iterator;
@@ -1070,7 +1072,7 @@ public:
   {
     iterator_type const last = end(registry);
 
-    while (iterator != last && !registry->template is_match<expression_type>(*iterator))
+    while (iterator != last && !registry->template matches<expression_type>(*iterator))
       ++iterator;
 
     return iterator;
@@ -1081,7 +1083,7 @@ public:
   decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    while (iterator != m_begin && !registry->template is_match<expression_type>(*iterator))
+    while (iterator != m_begin && !registry->template matches<expression_type>(*iterator))
       --iterator;
 
     return iterator;
@@ -1174,7 +1176,7 @@ public:
   {
     iterator_type const last = end(registry);
 
-    while (iterator != last && registry->template is_match<Expression>(*iterator))
+    while (iterator != last && registry->template matches<Expression>(*iterator))
       ++iterator;
 
     return iterator;
@@ -1185,7 +1187,7 @@ public:
   decrement(registry_type const * const registry, iterator_type iterator) const
   noexcept
   {
-    while (iterator != m_begin && registry->template is_match<Expression>(*iterator))
+    while (iterator != m_begin && registry->template matches<Expression>(*iterator))
       --iterator;
 
     return iterator;
@@ -1334,7 +1336,7 @@ public:
   reference
   operator*() const
   noexcept
-  { return reference(*m_registry, *m_iterator); }
+  { return reference{*m_registry, *m_iterator}; }
 
 
   constexpr
@@ -1360,7 +1362,7 @@ public:
   operator++(int)
   noexcept
   {
-    generic_registry_query_iterator tmp(*this);
+    generic_registry_query_iterator tmp{*this};
     ++*this;
     return tmp;
   }
@@ -1370,7 +1372,7 @@ public:
   operator--(int)
   noexcept
   {
-    generic_registry_query_iterator tmp(*this);
+    generic_registry_query_iterator tmp{*this};
     --*this;
     return tmp;
   }
@@ -1707,42 +1709,42 @@ public:
 
   [[nodiscard]] constexpr
   bool
-  is_valid(identifier_type const id) const
+  expired(identifier_type const id) const
   noexcept
-  { return core_type::is_valid(id); }
+  { return core_type::expired(id); }
 
   [[nodiscard]] constexpr
   bool
-  is_valid(entity_type const e) const
+  expired(entity_type const e) const
   noexcept
-  { return is_valid(e.identifier()); }
+  { return expired(e.identifier()); }
 
   [[nodiscard]] constexpr
   bool
-  is_valid(const_entity_type const ce) const
+  expired(const_entity_type const ce) const
   noexcept
-  { return is_valid(ce.identifier()); }
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  bool
-  is_match(identifier_type const id, Expression const = Expression{}) const
-  noexcept
-  { return storage_type::template is_match<Expression>(id); }
+  { return expired(ce.identifier()); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(entity_type const e, Expression const = Expression{}) const
+  matches(identifier_type const id, Expression const = Expression{}) const
   noexcept
-  { return is_match<Expression>(e.identifier()); }
+  { return storage_type::template matches<Expression>(id); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
-  is_match(const_entity_type const ce, Expression const = Expression{}) const
+  matches(entity_type const e, Expression const = Expression{}) const
   noexcept
-  { return is_match<Expression>(ce.identifier()); }
+  { return matches<Expression>(e.identifier()); }
+
+  template<typename Expression>
+  [[nodiscard]] constexpr
+  bool
+  matches(const_entity_type const ce, Expression const = Expression{}) const
+  noexcept
+  { return matches<Expression>(ce.identifier()); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
@@ -1976,7 +1978,7 @@ public:
   bool
   destroy(identifier_type const id)
   {
-    if (!is_valid(id))
+    if (expired(id))
       return false;
 
     clear(id);
