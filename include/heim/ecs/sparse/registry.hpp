@@ -27,11 +27,11 @@ template<
     typename Identifier   = default_identifier_t<>,
     typename Allocator    = std::allocator<Identifier>,
     typename DescSequence = type_sequence<>>
-class registry;
+class generic_registry;
 
 
 template<typename>
-struct is_specialization_of_registry
+struct is_specialization_of_generic_registry
   : std::false_type
 { };
 
@@ -39,20 +39,24 @@ template<
     typename Identifier,
     typename Allocator,
     typename DescSequence>
-struct is_specialization_of_registry<
-    registry<Identifier, Allocator, DescSequence>>
+struct is_specialization_of_generic_registry<
+    generic_registry<Identifier, Allocator, DescSequence>>
   : std::true_type
 { };
 
 template<typename T>
 inline constexpr
 bool
-is_specialization_of_registry_v
-= is_specialization_of_registry<T>::value;
+is_specialization_of_generic_registry_v
+= is_specialization_of_generic_registry<T>::value;
 
 template<typename T>
-concept specialization_of_registry
-= is_specialization_of_registry_v<T>;
+concept specialization_of_generic_registry
+= is_specialization_of_generic_registry_v<T>;
+
+
+using registry
+= generic_registry<>;
 
 
 namespace detail
@@ -63,7 +67,7 @@ template<
 requires (
     identifier   <Identifier>
  && allocator_for<Allocator, Identifier>)
-class registry_core
+class generic_registry_core
 {
 public:
   using identifier_type = Identifier;
@@ -104,25 +108,25 @@ private:
 
 public:
   explicit constexpr
-  registry_core(allocator_type const &alloc)
+  generic_registry_core(allocator_type const &alloc)
     : m_dense {alloc}
     , m_sparse{alloc}
     , m_begin {}
   { }
 
   constexpr
-  registry_core(registry_core const &other, allocator_type const &alloc)
+  generic_registry_core(generic_registry_core const &other, allocator_type const &alloc)
     : m_dense {other.m_dense , alloc}
     , m_sparse{other.m_sparse, alloc}
     , m_begin {other.m_begin}
   { }
 
   constexpr
-  registry_core(registry_core const &)
+  generic_registry_core(generic_registry_core const &)
   = default;
 
   constexpr
-  registry_core(registry_core &&other, allocator_type const &alloc)
+  generic_registry_core(generic_registry_core &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_dense {std::move(other.m_dense ), alloc}
     , m_sparse{std::move(other.m_sparse), alloc}
@@ -130,26 +134,26 @@ public:
   { }
 
   constexpr
-  registry_core(registry_core &&)
+  generic_registry_core(generic_registry_core &&)
   = default;
 
   constexpr
-  ~registry_core()
+  ~generic_registry_core()
   = default;
 
   constexpr
-  registry_core &
-  operator=(registry_core const &)
+  generic_registry_core &
+  operator=(generic_registry_core const &)
   = default;
 
   constexpr
-  registry_core &
-  operator=(registry_core &&)
+  generic_registry_core &
+  operator=(generic_registry_core &&)
   = default;
 
   constexpr
   void
-  swap(registry_core &other)
+  swap(generic_registry_core &other)
   noexcept(s_noexcept_swap())
   {
     std::swap(m_dense , other.m_dense);
@@ -159,7 +163,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_core const &lhs, registry_core const &rhs)
+  operator==(generic_registry_core const &lhs, generic_registry_core const &rhs)
   = default;
 
   [[nodiscard]] constexpr
@@ -265,8 +269,8 @@ public:
     using index_type
     = typename id_traits::index_type;
 
-    identifier_type &pos        = m_sparse[static_cast<std::size_t>(id_traits::index(id))];
-    auto const       pos_idx    = id_traits::index(pos);
+    identifier_type &pos     = m_sparse[static_cast<std::size_t>(id_traits::index(id))];
+    auto const       pos_idx = id_traits::index(pos);
 
     identifier_type &dense_begin = m_dense[m_begin];
     identifier_type &dense_id    = m_dense[static_cast<std::size_t>(pos_idx)];
@@ -294,7 +298,7 @@ public:
     for (identifier_type &id : valid)
     {
       identifier_type &pos = m_sparse[static_cast<std::size_t>(id_traits::index(id))];
-      
+
       id  = id_traits::next(id);
       pos = id_traits::next(pos);
     }
@@ -308,7 +312,7 @@ template<
     typename    Component,
     std::size_t PageSize  = default_page_size_v<>>
 requires component<Component>
-using registry_descriptor
+using generic_registry_descriptor
 = type_sequence<Component, std::integral_constant<std::size_t, PageSize>>;
 
 
@@ -316,7 +320,7 @@ template<
     typename Identifier   = default_identifier_t<>,
     typename Allocator    = std::allocator<Identifier>,
     typename DescSequence = type_sequence<>>
-class registry_storage
+class generic_registry_storage
 { };
 
 template<
@@ -329,15 +333,15 @@ requires (
  && allocator_for<Allocator, Identifier>
  && (component   <Components> && ...)
  && type_sequence<Components ...>::is_unique)
-class registry_storage<
+class generic_registry_storage<
     Identifier,
     Allocator,
-    type_sequence<registry_descriptor<Components, PageSizes> ...>>
+    type_sequence<generic_registry_descriptor<Components, PageSizes> ...>>
 {
 public:
   using identifier_type      = Identifier;
   using allocator_type       = Allocator;
-  using description_sequence = type_sequence<registry_descriptor<Components, PageSizes> ...>;
+  using description_sequence = type_sequence<generic_registry_descriptor<Components, PageSizes> ...>;
 
 private:
   using component_sequence = type_sequence<Components ...>;
@@ -404,59 +408,59 @@ private:
 
 public:
   explicit constexpr
-  registry_storage(allocator_type const &alloc)
+  generic_registry_storage(allocator_type const &alloc)
   noexcept
     : m_containers{std::allocator_arg, alloc}
   { }
 
   constexpr
-  registry_storage(registry_storage const &other, allocator_type const &alloc)
+  generic_registry_storage(generic_registry_storage const &other, allocator_type const &alloc)
     : m_containers{std::allocator_arg, alloc, other.m_containers}
   { }
 
   constexpr
-  registry_storage(registry_storage const &)
+  generic_registry_storage(generic_registry_storage const &)
   = default;
 
   constexpr
-  registry_storage(registry_storage &&other, allocator_type const &alloc)
+  generic_registry_storage(generic_registry_storage &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_containers{std::allocator_arg, alloc, std::move(other.m_containers)}
   { }
 
   constexpr
-  registry_storage(registry_storage &&)
+  generic_registry_storage(generic_registry_storage &&)
   = default;
 
   constexpr
-  ~registry_storage()
+  ~generic_registry_storage()
   = default;
 
   constexpr
-  registry_storage &
-  operator=(registry_storage const &)
+  generic_registry_storage &
+  operator=(generic_registry_storage const &)
   = default;
 
   constexpr
-  registry_storage &
-  operator=(registry_storage &&)
+  generic_registry_storage &
+  operator=(generic_registry_storage &&)
   = default;
 
   constexpr
   void
-  swap(registry_storage &other)
+  swap(generic_registry_storage &other)
   noexcept(s_noexcept_swap())
   { std::swap(m_containers, other.m_containers); }
 
   friend constexpr
   void
-  swap(registry_storage &lhs, registry_storage &rhs)
+  swap(generic_registry_storage &lhs, generic_registry_storage &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_storage const &, registry_storage const &)
+  operator==(generic_registry_storage const &, generic_registry_storage const &)
   = default;
 
 
@@ -515,7 +519,7 @@ public:
   {
     if (is_match<Component>(id))
       return get<Component>(id);
-    throw std::out_of_range("heim::sparse::detail::registry_storage::try_get");
+    throw std::out_of_range("heim::sparse::detail::generic_registry_storage::try_get");
   }
 
   template<typename Component>
@@ -525,7 +529,7 @@ public:
   {
     if (is_match<Component>(id))
       return get<Component>(id);
-    throw std::out_of_range("heim::sparse::detail::registry_storage::try_get");
+    throw std::out_of_range("heim::sparse::detail::generic_registry_storage::try_get");
   }
 
   template<typename Component, typename ...Args>
@@ -579,12 +583,12 @@ public:
 
 
 template<typename Registry>
-class registry_iterator
+class generic_registry_iterator
 { };
 
 template<typename Registry>
-requires specialization_of_registry<std::remove_cvref_t<Registry>>
-class registry_iterator<Registry>
+requires specialization_of_generic_registry<std::remove_cvref_t<Registry>>
+class generic_registry_iterator<Registry>
 {
 public:
   using registry_type
@@ -605,44 +609,44 @@ private:
 
 public:
   constexpr
-  registry_iterator()
+  generic_registry_iterator()
   noexcept
     : m_registry{}
     , m_iterator{}
   { }
 
   constexpr
-  registry_iterator(registry_iterator const &)
+  generic_registry_iterator(generic_registry_iterator const &)
   = default;
 
   constexpr
-  registry_iterator(registry_iterator &&)
+  generic_registry_iterator(generic_registry_iterator &&)
   = default;
 
   constexpr
-  registry_iterator(registry_type &registry, iterator_type const iterator)
+  generic_registry_iterator(registry_type &registry, iterator_type const iterator)
   noexcept
     : m_registry{&registry}
     , m_iterator{iterator}
   { }
 
   constexpr
-  ~registry_iterator()
+  ~generic_registry_iterator()
   = default;
 
   constexpr
-  registry_iterator &
-  operator=(registry_iterator const &)
+  generic_registry_iterator &
+  operator=(generic_registry_iterator const &)
   = default;
 
   constexpr
-  registry_iterator &
-  operator=(registry_iterator &&)
+  generic_registry_iterator &
+  operator=(generic_registry_iterator &&)
   = default;
 
   constexpr
   void
-  swap(registry_iterator &other)
+  swap(generic_registry_iterator &other)
   noexcept
   {
     using std::swap;
@@ -653,18 +657,18 @@ public:
 
   friend constexpr
   void
-  swap(registry_iterator &lhs, registry_iterator &rhs)
+  swap(generic_registry_iterator &lhs, generic_registry_iterator &rhs)
   noexcept
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_iterator const &, registry_iterator const &)
+  operator==(generic_registry_iterator const &, generic_registry_iterator const &)
   = default;
 
   [[nodiscard]] friend constexpr
   auto
-  operator<=>(registry_iterator const &, registry_iterator const &)
+  operator<=>(generic_registry_iterator const &, generic_registry_iterator const &)
   = default;
 
 
@@ -682,60 +686,60 @@ public:
 
 
   constexpr
-  registry_iterator &
+  generic_registry_iterator &
   operator++()
   noexcept
   { ++m_iterator; return *this; }
 
   constexpr
-  registry_iterator &
+  generic_registry_iterator &
   operator--()
   noexcept
   { --m_iterator; return *this; }
 
   constexpr
-  registry_iterator
+  generic_registry_iterator
   operator++(int)
   noexcept
-  { registry_iterator tmp(*this); ++*this; return tmp; }
+  { generic_registry_iterator tmp(*this); ++*this; return tmp; }
 
   constexpr
-  registry_iterator
+  generic_registry_iterator
   operator--(int)
   noexcept
-  { registry_iterator tmp(*this); --*this; return tmp; }
+  { generic_registry_iterator tmp(*this); --*this; return tmp; }
 
   constexpr
-  registry_iterator &
+  generic_registry_iterator &
   operator+=(difference_type const n)
   { m_iterator += n; return *this; }
 
   constexpr
-  registry_iterator &
+  generic_registry_iterator &
   operator-=(difference_type const n)
   { m_iterator -= n; return *this; }
 
   friend constexpr
-  registry_iterator
-  operator+(registry_iterator it, difference_type const n)
+  generic_registry_iterator
+  operator+(generic_registry_iterator it, difference_type const n)
   noexcept
   { it += n; return it; }
 
   friend constexpr
-  registry_iterator
-  operator+(difference_type const n, registry_iterator it)
+  generic_registry_iterator
+  operator+(difference_type const n, generic_registry_iterator it)
   noexcept
   { it += n; return it; }
 
   friend constexpr
-  registry_iterator
-  operator-(registry_iterator it, difference_type const n)
+  generic_registry_iterator
+  operator-(generic_registry_iterator it, difference_type const n)
   noexcept
   { it -= n; return it; }
 
   friend constexpr
   difference_type
-  operator-(registry_iterator const lhs, registry_iterator const rhs)
+  operator-(generic_registry_iterator const lhs, generic_registry_iterator const rhs)
   noexcept
   { return lhs.m_iterator - rhs.m_iterator; }
 };
@@ -744,7 +748,7 @@ public:
 template<
     typename Expression,
     typename Registry>
-class registry_query_driver
+class generic_registry_query_driver
 { };
 
 template<
@@ -752,8 +756,8 @@ template<
     typename Registry>
 requires (
     component                 <Component>
- && specialization_of_registry<std::remove_cvref_t<Registry>>)
-class registry_query_driver<Component, Registry>
+ && specialization_of_generic_registry<std::remove_cvref_t<Registry>>)
+class generic_registry_query_driver<Component, Registry>
 {
 public:
   using expression_type = Component;
@@ -765,39 +769,39 @@ private:
 
 public:
   constexpr
-  registry_query_driver()
+  generic_registry_query_driver()
   = default;
 
   constexpr
-  registry_query_driver(registry_query_driver const &)
+  generic_registry_query_driver(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver(registry_query_driver &&)
+  generic_registry_query_driver(generic_registry_query_driver &&)
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const)
+  generic_registry_query_driver(registry_type const * const)
   noexcept
   { }
 
   constexpr
-  ~registry_query_driver()
+  ~generic_registry_query_driver()
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver const &)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver &&)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver &&)
   = default;
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query_driver const &, registry_query_driver const &)
+  operator==(generic_registry_query_driver const &, generic_registry_query_driver const &)
   = default;
 
 public:
@@ -830,8 +834,8 @@ public:
 template<
     typename ...Expressions,
     typename    Registry>
-requires specialization_of_registry<std::remove_cvref_t<Registry>>
-class registry_query_driver<
+requires specialization_of_generic_registry<std::remove_cvref_t<Registry>>
+class generic_registry_query_driver<
     conjunction<Expressions ...>,
     Registry>
 {
@@ -886,44 +890,44 @@ private:
 
 public:
   constexpr
-  registry_query_driver()
+  generic_registry_query_driver()
   noexcept
     : m_begin{}
     , m_end  {}
   { }
 
   constexpr
-  registry_query_driver(registry_query_driver const &)
+  generic_registry_query_driver(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver(registry_query_driver &&)
+  generic_registry_query_driver(generic_registry_query_driver &&)
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const registry)
+  generic_registry_query_driver(registry_type const * const registry)
   noexcept
     : m_begin{registry->core_type::begin()}
     , m_end  {registry->core_type::end  ()}
   { m_initialize(registry, guaranteed_t<expression_type>{}); }
 
   constexpr
-  ~registry_query_driver()
+  ~generic_registry_query_driver()
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver const &)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver &&)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver &&)
   = default;
 
   constexpr
   void
-  swap(registry_query_driver &other)
+  swap(generic_registry_query_driver &other)
   noexcept
   {
     using std::swap;
@@ -934,13 +938,13 @@ public:
 
   friend constexpr
   void
-  swap(registry_query_driver &lhs, registry_query_driver &rhs)
+  swap(generic_registry_query_driver &lhs, generic_registry_query_driver &rhs)
   noexcept
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query_driver const &, registry_query_driver const &)
+  operator==(generic_registry_query_driver const &, generic_registry_query_driver const &)
   = default;
 
 
@@ -983,8 +987,8 @@ public:
 template<
     typename ...Expressions,
     typename    Registry>
-requires specialization_of_registry<std::remove_cvref_t<Registry>>
-class registry_query_driver<
+requires specialization_of_generic_registry<std::remove_cvref_t<Registry>>
+class generic_registry_query_driver<
     disjunction<Expressions ...>,
     Registry>
 {
@@ -1007,42 +1011,42 @@ private:
 
 public:
   constexpr
-  registry_query_driver()
+  generic_registry_query_driver()
   noexcept
     : m_begin{}
   { }
 
   constexpr
-  registry_query_driver(registry_query_driver const &)
+  generic_registry_query_driver(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver(registry_query_driver &&)
+  generic_registry_query_driver(generic_registry_query_driver &&)
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const registry)
+  generic_registry_query_driver(registry_type const * const registry)
   noexcept
     : m_begin{increment(registry, registry->core_type::begin())}
   { }
 
   constexpr
-  ~registry_query_driver()
+  ~generic_registry_query_driver()
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver const &)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver &&)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver &&)
   = default;
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query_driver const &, registry_query_driver const &)
+  operator==(generic_registry_query_driver const &, generic_registry_query_driver const &)
   = default;
 
 public:
@@ -1087,8 +1091,8 @@ public:
 template<
     typename Expression,
     typename Registry>
-requires specialization_of_registry<std::remove_cvref_t<Registry>>
-class registry_query_driver<
+requires specialization_of_generic_registry<std::remove_cvref_t<Registry>>
+class generic_registry_query_driver<
     negation<Expression>,
     Registry>
 {
@@ -1111,42 +1115,42 @@ private:
 
 public:
   constexpr
-  registry_query_driver()
+  generic_registry_query_driver()
   noexcept
     : m_begin{}
   { }
 
   constexpr
-  registry_query_driver(registry_query_driver const &)
+  generic_registry_query_driver(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver(registry_query_driver &&)
+  generic_registry_query_driver(generic_registry_query_driver &&)
   = default;
 
   explicit constexpr
-  registry_query_driver(registry_type const * const registry)
+  generic_registry_query_driver(registry_type const * const registry)
   noexcept
     : m_begin{increment(registry, registry->core_type::begin())}
   { }
 
   constexpr
-  ~registry_query_driver()
+  ~generic_registry_query_driver()
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver const &)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver const &)
   = default;
 
   constexpr
-  registry_query_driver &
-  operator=(registry_query_driver &&)
+  generic_registry_query_driver &
+  operator=(generic_registry_query_driver &&)
   = default;
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query_driver const &, registry_query_driver const &)
+  operator==(generic_registry_query_driver const &, generic_registry_query_driver const &)
   = default;
 
 public:
@@ -1190,42 +1194,42 @@ public:
 
 
 template<typename>
-struct is_specialization_of_registry_query_driver
+struct is_specialization_of_generic_registry_query_driver
   : std::false_type
 { };
 
 template<
     typename Expression,
     typename Registry>
-struct is_specialization_of_registry_query_driver<
-    registry_query_driver<Expression, Registry>>
+struct is_specialization_of_generic_registry_query_driver<
+    generic_registry_query_driver<Expression, Registry>>
   : std::true_type
 { };
 
 template<typename T>
 inline constexpr
 bool
-is_specialization_of_registry_query_driver_v
-= is_specialization_of_registry_query_driver<T>::value;
+is_specialization_of_generic_registry_query_driver_v
+= is_specialization_of_generic_registry_query_driver<T>::value;
 
 template<typename T>
-concept specialization_of_registry_query_driver
-= is_specialization_of_registry_query_driver_v<T>;
+concept specialization_of_generic_registry_query_driver
+= is_specialization_of_generic_registry_query_driver_v<T>;
 
 
 template<
     typename Driver,
     typename Registry>
-class registry_query_iterator
+class generic_registry_query_iterator
 { };
 
 template<
     typename Driver,
     typename Registry>
 requires (
-    specialization_of_registry_query_driver<std::remove_cvref_t<Driver>>
+    specialization_of_generic_registry_query_driver<std::remove_cvref_t<Driver>>
  && std::same_as<typename Driver::registry_type, std::remove_const_t<Registry>>)
-class registry_query_iterator<
+class generic_registry_query_iterator<
     Driver,
     Registry>
 {
@@ -1251,7 +1255,7 @@ private:
 
 public:
   constexpr
-  registry_query_iterator()
+  generic_registry_query_iterator()
   noexcept
     : m_driver  {}
     , m_registry{}
@@ -1259,15 +1263,15 @@ public:
   { }
 
   constexpr
-  registry_query_iterator(registry_query_iterator const &)
+  generic_registry_query_iterator(generic_registry_query_iterator const &)
   = default;
 
   constexpr
-  registry_query_iterator(registry_query_iterator &&)
+  generic_registry_query_iterator(generic_registry_query_iterator &&)
   = default;
 
   constexpr
-  registry_query_iterator(
+  generic_registry_query_iterator(
       driver_type              const driver,
       registry_type *          const registry,
       std::bool_constant<true> const)
@@ -1278,7 +1282,7 @@ public:
   { }
 
   constexpr
-  registry_query_iterator(
+  generic_registry_query_iterator(
       driver_type               const driver,
       registry_type *           const registry,
       std::bool_constant<false> const)
@@ -1289,22 +1293,22 @@ public:
   { }
 
   constexpr
-  ~registry_query_iterator()
+  ~generic_registry_query_iterator()
   = default;
 
   constexpr
-  registry_query_iterator &
-  operator=(registry_query_iterator const &)
+  generic_registry_query_iterator &
+  operator=(generic_registry_query_iterator const &)
   = default;
 
   constexpr
-  registry_query_iterator &
-  operator=(registry_query_iterator &&)
+  generic_registry_query_iterator &
+  operator=(generic_registry_query_iterator &&)
   = default;
 
   constexpr
   void
-  swap(registry_query_iterator &other)
+  swap(generic_registry_query_iterator &other)
   noexcept
   {
     using std::swap;
@@ -1316,13 +1320,13 @@ public:
 
   friend constexpr
   void
-  swap(registry_query_iterator &lhs, registry_query_iterator &rhs)
+  swap(generic_registry_query_iterator &lhs, generic_registry_query_iterator &rhs)
   noexcept
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query_iterator const &lhs, registry_query_iterator const &rhs)
+  operator==(generic_registry_query_iterator const &lhs, generic_registry_query_iterator const &rhs)
   = default;
 
 
@@ -1334,7 +1338,7 @@ public:
 
 
   constexpr
-  registry_query_iterator &
+  generic_registry_query_iterator &
   operator++()
   noexcept
   {
@@ -1343,7 +1347,7 @@ public:
   }
 
   constexpr
-  registry_query_iterator &
+  generic_registry_query_iterator &
   operator--()
   noexcept
   {
@@ -1352,21 +1356,21 @@ public:
   }
 
   constexpr
-  registry_query_iterator
+  generic_registry_query_iterator
   operator++(int)
   noexcept
   {
-    registry_query_iterator tmp(*this);
+    generic_registry_query_iterator tmp(*this);
     ++*this;
     return tmp;
   }
 
   constexpr
-  registry_query_iterator
+  generic_registry_query_iterator
   operator--(int)
   noexcept
   {
-    registry_query_iterator tmp(*this);
+    generic_registry_query_iterator tmp(*this);
     --*this;
     return tmp;
   }
@@ -1376,8 +1380,8 @@ public:
 template<
     typename Expression,
     typename Registry>
-class registry_query
-  : public std::ranges::view_interface<registry_query<Expression, Registry>>
+class generic_registry_query
+  : public std::ranges::view_interface<generic_registry_query<Expression, Registry>>
 {
 public:
   using expression_type = Expression;
@@ -1385,11 +1389,11 @@ public:
 
 private:
   using driver_type
-  = registry_query_driver<expression_type, registry_type>;
+  = generic_registry_query_driver<expression_type, registry_type>;
 
 public:
-  using iterator       = registry_query_iterator<driver_type, registry_type>;
-  using const_iterator = registry_query_iterator<driver_type, registry_type const>;
+  using iterator       = generic_registry_query_iterator<driver_type, registry_type>;
+  using const_iterator = generic_registry_query_iterator<driver_type, registry_type const>;
 
 private:
   registry_type *m_registry;
@@ -1397,44 +1401,44 @@ private:
 
 public:
   constexpr
-  registry_query()
+  generic_registry_query()
   noexcept
     : m_registry{}
     , m_driver  {}
   { }
 
   constexpr
-  registry_query(registry_query const &)
+  generic_registry_query(generic_registry_query const &)
   = default;
 
   constexpr
-  registry_query(registry_query &&)
+  generic_registry_query(generic_registry_query &&)
   = default;
 
   explicit constexpr
-  registry_query(registry_type &registry)
+  generic_registry_query(registry_type &registry)
   noexcept
     : m_registry{&registry}
     , m_driver  {m_registry}
   { }
 
   constexpr
-  ~registry_query()
+  ~generic_registry_query()
   = default;
 
   constexpr
-  registry_query &
-  operator=(registry_query const &)
+  generic_registry_query &
+  operator=(generic_registry_query const &)
   = default;
 
   constexpr
-  registry_query &
-  operator=(registry_query &&)
+  generic_registry_query &
+  operator=(generic_registry_query &&)
   = default;
 
   constexpr
   void
-  swap(registry_query &other)
+  swap(generic_registry_query &other)
   noexcept
   {
     using std::swap;
@@ -1445,13 +1449,13 @@ public:
 
   friend constexpr
   void
-  swap(registry_query &lhs, registry_query &rhs)
+  swap(generic_registry_query &lhs, generic_registry_query &rhs)
   noexcept
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry_query const &, registry_query const &)
+  operator==(generic_registry_query const &, generic_registry_query const &)
   = default;
 
 
@@ -1499,51 +1503,51 @@ template<
     typename Identifier,
     typename Allocator,
     typename DescSequence>
-class registry
-  : protected detail::registry_core   <Identifier, Allocator>
-  , protected detail::registry_storage<Identifier, Allocator, DescSequence>
+class generic_registry
+  : protected detail::generic_registry_core   <Identifier, Allocator>
+  , protected detail::generic_registry_storage<Identifier, Allocator, DescSequence>
 {
-  using core_type    = detail::registry_core   <Identifier, Allocator>;
-  using storage_type = detail::registry_storage<Identifier, Allocator, DescSequence>;
+  using core_type    = detail::generic_registry_core   <Identifier, Allocator>;
+  using storage_type = detail::generic_registry_storage<Identifier, Allocator, DescSequence>;
 
-  template<typename>           friend class detail::registry_iterator;
-  template<typename, typename> friend class detail::registry_query_driver;
-  template<typename, typename> friend class detail::registry_query_iterator;
+  template<typename>           friend class detail::generic_registry_iterator;
+  template<typename, typename> friend class detail::generic_registry_query_driver;
+  template<typename, typename> friend class detail::generic_registry_query_iterator;
 
 public:
   using identifier_type      = Identifier;
   using allocator_type       = Allocator;
   using description_sequence = DescSequence;
 
-  using entity_type       = entity<registry>;
-  using const_entity_type = entity<registry const>;
+  using entity_type       = entity<generic_registry>;
+  using const_entity_type = entity<generic_registry const>;
 
-  using iterator       = detail::registry_iterator<registry>;
-  using const_iterator = detail::registry_iterator<registry const>;
+  using iterator       = detail::generic_registry_iterator<generic_registry>;
+  using const_iterator = detail::generic_registry_iterator<generic_registry const>;
 
-  template<typename Expression> using query_for       = detail::registry_query<Expression, registry>;
-  template<typename Expression> using const_query_for = detail::registry_query<Expression, registry const>;
+  template<typename Expression> using query_for       = detail::generic_registry_query<Expression, generic_registry>;
+  template<typename Expression> using const_query_for = detail::generic_registry_query<Expression, generic_registry const>;
 
 
   template<
       typename    Component,
       std::size_t PageSize  = default_page_size_v<>>
   using with
-  = registry<
+  = generic_registry<
       identifier_type,
       allocator_type,
       type_sequence_append_t<
           description_sequence,
-          detail::registry_descriptor<Component, PageSize>>>;
+          detail::generic_registry_descriptor<Component, PageSize>>>;
 
   template<typename ...Components>
   using with_all
-  = registry<
+  = generic_registry<
       identifier_type,
       allocator_type,
       type_sequence_append_t<
           description_sequence,
-          detail::registry_descriptor<Components> ...>>;
+          detail::generic_registry_descriptor<Components> ...>>;
 
 private:
   static constexpr
@@ -1577,56 +1581,56 @@ private:
 
 public:
   explicit constexpr
-  registry(allocator_type const &alloc)
+  generic_registry(allocator_type const &alloc)
   noexcept
     : core_type   {alloc}
     , storage_type{alloc}
   { }
 
   constexpr
-  registry()
+  generic_registry()
   noexcept(s_noexcept_default_construct())
-    : registry{allocator_type{}}
+    : generic_registry{allocator_type{}}
   { }
 
   constexpr
-  registry(registry const &other, allocator_type const &alloc)
+  generic_registry(generic_registry const &other, allocator_type const &alloc)
     : core_type   {static_cast<core_type    const &>(other), alloc}
     , storage_type{static_cast<storage_type const &>(other), alloc}
   { }
 
   constexpr
-  registry(registry const &)
+  generic_registry(generic_registry const &)
   = default;
 
   constexpr
-  registry(registry &&other, allocator_type const &alloc)
+  generic_registry(generic_registry &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : core_type   {static_cast<core_type    &&>(other), alloc}
     , storage_type{static_cast<storage_type &&>(other), alloc}
   { }
 
   constexpr
-  registry(registry &&)
+  generic_registry(generic_registry &&)
   = default;
 
   constexpr
-  ~registry()
+  ~generic_registry()
   = default;
 
   constexpr
-  registry &
-  operator=(registry const &)
+  generic_registry &
+  operator=(generic_registry const &)
   = default;
 
   constexpr
-  registry &
-  operator=(registry &&)
+  generic_registry &
+  operator=(generic_registry &&)
   = default;
 
   constexpr
   void
-  swap(registry &other)
+  swap(generic_registry &other)
   noexcept(s_noexcept_swap())
   {
     core_type   ::swap(static_cast<core_type    &>(other));
@@ -1635,13 +1639,13 @@ public:
 
   friend constexpr
   void
-  swap(registry &lhs, registry &rhs)
+  swap(generic_registry &lhs, generic_registry &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry const &, registry const &)
+  operator==(generic_registry const &, generic_registry const &)
   = default;
 
   [[nodiscard]] constexpr

@@ -7,35 +7,32 @@ struct tag      { };
 
 
 using registry
-= heim::sparse::registry<>
-    ::with_all<position, velocity>
-    ::with    <tag, 0>;
+= heim::sparse::registry::with_all<position, velocity, tag>;
 
-using expression
-= heim::conjunction<position, velocity, heim::negation<tag>>;
+using identifier = typename registry::identifier_type;
+using entity     = heim::entity<registry>;
 
-using entity
-= heim::entity<registry>;
 
 int main()
 {
-  registry r;
+  registry reg;
 
-  auto const id0 = r.create();
-  r.emplace<position>(id0, 0.f, 0.f, 0.f);
-  r.emplace<velocity>(id0, 1.f, 0.f, 0.f);
+  identifier const id0{reg.create()};
+  entity           e0 {reg};
 
-  entity e0{r};
+  reg.emplace<position>(id0, 0.f, 0.f, 0.f);
+  reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
+
   e0.emplace<position>(0.f, 1.f, 0.f);
   e0.emplace<tag>     ();
 
-  auto const &pos = r.get<position>(id0);
-  auto const &vel = r.get<velocity>(id0);
+  auto const &pos = reg.get<position>(id0);
+  auto const &vel = reg.get<velocity>(id0);
 
   std::cout << "id0's position(before): " << pos.x << ' ' << pos.y << ' ' << pos.z << std::endl;
   std::cout << "id0's velocity(before): " << vel.x << ' ' << vel.y << ' ' << vel.z << std::endl;
 
-  for (auto e : r.query<expression>())
+  for (auto e : reg.query<heim::conjunction<position, velocity, heim::negation<tag>>>())
   {
     auto       &[px, py, pz] = e.get<position>();
     auto const &[vx, vy, vz] = e.get<velocity>();
@@ -48,6 +45,6 @@ int main()
   std::cout << "id0's position(after):  " << pos.x << ' ' << pos.y << ' ' << pos.z << std::endl;
   std::cout << "id0's velocity(after):  " << vel.x << ' ' << vel.y << ' ' << vel.z << std::endl;
 
-  r .destroy(id0);
-  e0.destroy();
+  reg.destroy(id0);
+  e0 .destroy();
 }
