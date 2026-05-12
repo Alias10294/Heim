@@ -36,30 +36,29 @@ struct velocity { float x, y, z; };
 struct tag      { };
 
 
-using registry
-= heim::sparse::registry<>
-    ::with_all<position, velocity>
-    ::with    <tag, 0>;
+using registry 
+= heim::sparse::registry::with_all<position, velocity, tag>;
 
-using expression
-= heim::conjunction<position, velocity, heim::negation<tag>>;
+using identifier 
+= typename registry::identifier_type;
 
-using entity
+using entity 
 = heim::entity<registry>;
+
 
 int main()
 {
-  registry r;
+  registry reg;
 
-  auto const id0 = r.create();
-  r.emplace<position>(id0, 0.f, 0.f, 0.f);
-  r.emplace<velocity>(id0, 1.f, 0.f, 0.f);
-
-  entity e0{r};
+  identifier const id0{reg.create()};
+  reg.emplace<position>(id0, 0.f, 0.f, 0.f);
+  reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
+  
+  entity e0{reg};
   e0.emplace<position>(0.f, 1.f, 0.f);
   e0.emplace<tag>     ();
 
-  for (auto e : r.query<expression>())
+  for (auto e : reg.query<heim::conjunction<position, velocity, heim::negation<tag>>>())
   {
     auto       &[px, py, pz] = e.get<position>();
     auto const &[vx, vy, vz] = e.get<velocity>();
@@ -69,7 +68,7 @@ int main()
     pz += vz;
   }
 
-  r .destroy(id0);
-  e0.destroy();
+  reg.destroy(id0);
+  e0 .destroy();
 }
 ```
