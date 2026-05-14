@@ -514,24 +514,24 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  try_get(identifier_type const id)
+  Component *
+  get_if(identifier_type const id)
+  noexcept
   {
     if (matches<Component>(id))
-      return get<Component>(id);
-
-    throw std::out_of_range{"heim::sparse::detail::generic_registry_storage::try_get"};
+      return std::addressof(get<Component>(id));
+    return nullptr;
   }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component const &
-  try_get(identifier_type const id) const
+  Component const *
+  get_if(identifier_type const id) const
+  noexcept
   {
     if (matches<Component>(id))
-      return get<Component>(id);
-
-    throw std::out_of_range{"heim::sparse::detail::generic_registry_storage::try_get"};
+      return std::addressof(get<Component>(id));
+    return nullptr;
   }
 
   template<typename Component, typename ...Args>
@@ -1805,39 +1805,45 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  try_get(identifier_type const id)
-  { return storage_type::template try_get<Component>(id); }
+  Component *
+  get_if(identifier_type const id)
+  noexcept
+  { return storage_type::template get_if<Component>(id); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  try_get(entity_type const e)
-  { return try_get<Component>(e.identifier()); }
+  Component *
+  get_if(entity_type const e)
+  noexcept
+  { return get_if<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  try_get(const_entity_type const ce)
-  { return try_get<Component>(ce.identifier()); }
+  Component *
+  get_if(const_entity_type const ce)
+  noexcept
+  { return get_if<Component>(ce.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component const &
-  try_get(identifier_type const id) const
-  { return storage_type::template try_get<Component>(id); }
+  Component const *
+  get_if(identifier_type const id) const
+  noexcept
+  { return storage_type::template get_if<Component>(id); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component const &
-  try_get(entity_type const e) const
-  { return try_get<Component>(e.identifier()); }
+  Component const *
+  get_if(entity_type const e) const
+  noexcept
+  { return get_if<Component>(e.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component const &
-  try_get(const_entity_type const ce) const
-  { return try_get<Component>(ce.identifier()); }
+  Component const *
+  get_if(const_entity_type const ce) const
+  noexcept
+  { return get_if<Component>(ce.identifier()); }
 
 
   [[nodiscard]] constexpr
@@ -1987,14 +1993,14 @@ public:
   }
 
   constexpr
-  void
+  bool
   destroy(entity_type const e)
-  { destroy(e.identifier()); }
+  { return destroy(e.identifier()); }
 
   constexpr
-  void
+  bool
   destroy(const_entity_type const ce)
-  { destroy(ce.identifier()); }
+  { return destroy(ce.identifier()); }
 };
 
 } // namespace heim::sparse

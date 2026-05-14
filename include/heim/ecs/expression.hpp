@@ -132,12 +132,6 @@ struct is_specialization_of_negation<
 { };
 
 
-template<typename>
-struct is_expression
-  : std::false_type
-{ };
-
-
 /*!
  * \brief
  *   Determines the sequence of component types guaranteed to be possessed by an entity matching
