@@ -132,16 +132,18 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  try_get()
-  { return m_registry->template try_get<Component>(m_identifier); }
+  Component *
+  get_if()
+  noexcept
+  requires (!std::is_const_v<registry_type>)
+  { return m_registry->template get_if<Component>(m_identifier); }
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component const &
-  try_get() const
-  requires (!std::is_const_v<registry_type>)
-  { return m_registry->template try_get<Component>(m_identifier); }
+  Component const *
+  get_if() const
+  noexcept
+  { return m_registry->template get_if<Component>(m_identifier); }
 
 
   constexpr
