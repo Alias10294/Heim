@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "heim/ecs/identifier.hpp"
+#include "identifier.hpp"
 #include "heim/lib/unique_allocator_aware_ptr.hpp"
 
 namespace heim::sparse

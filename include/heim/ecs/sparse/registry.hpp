@@ -10,11 +10,11 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "heim/ecs/entity.hpp"
-#include "heim/ecs/identifier.hpp"
+#include "identifier.hpp"
 #include "heim/ecs/expression.hpp"
 #include "heim/lib/type_sequence.hpp"
 #include "heim/lib/utility.hpp"
+#include "entity.hpp"
 #include "pool.hpp"
 
 namespace heim::sparse
@@ -1713,38 +1713,12 @@ public:
   noexcept
   { return core_type::expired(id); }
 
-  [[nodiscard]] constexpr
-  bool
-  expired(entity_type const e) const
-  noexcept
-  { return expired(e.identifier()); }
-
-  [[nodiscard]] constexpr
-  bool
-  expired(const_entity_type const ce) const
-  noexcept
-  { return expired(ce.identifier()); }
-
   template<typename Expression>
   [[nodiscard]] constexpr
   bool
   matches(identifier_type const id, Expression const = Expression{}) const
   noexcept
   { return storage_type::template matches<Expression>(id); }
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  bool
-  matches(entity_type const e, Expression const = Expression{}) const
-  noexcept
-  { return matches<Expression>(e.identifier()); }
-
-  template<typename Expression>
-  [[nodiscard]] constexpr
-  bool
-  matches(const_entity_type const ce, Expression const = Expression{}) const
-  noexcept
-  { return matches<Expression>(ce.identifier()); }
 
   template<typename Expression>
   [[nodiscard]] constexpr
@@ -1770,38 +1744,10 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component &
-  get(entity_type const e)
-  noexcept
-  { return get<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component &
-  get(const_entity_type const ce)
-  noexcept
-  { return get<Component>(ce.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
   Component const &
   get(identifier_type const id) const
   noexcept
   { return storage_type::template get<Component>(id); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const &
-  get(entity_type const e) const
-  noexcept
-  { return get<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const &
-  get(const_entity_type const ce) const
-  noexcept
-  { return get<Component>(ce.identifier()); }
 
   template<typename Component>
   [[nodiscard]] constexpr
@@ -1812,44 +1758,16 @@ public:
 
   template<typename Component>
   [[nodiscard]] constexpr
-  Component *
-  get_if(entity_type const e)
-  noexcept
-  { return get_if<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component *
-  get_if(const_entity_type const ce)
-  noexcept
-  { return get_if<Component>(ce.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
   Component const *
   get_if(identifier_type const id) const
   noexcept
   { return storage_type::template get_if<Component>(id); }
 
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(entity_type const e) const
-  noexcept
-  { return get_if<Component>(e.identifier()); }
-
-  template<typename Component>
-  [[nodiscard]] constexpr
-  Component const *
-  get_if(const_entity_type const ce) const
-  noexcept
-  { return get_if<Component>(ce.identifier()); }
-
 
   [[nodiscard]] constexpr
-  identifier_type
+  entity_type
   create()
-  { return core_type::create(); }
+  { return entity_type{*this, core_type::create()}; }
 
   template<typename Component, typename ...Args>
   constexpr
@@ -1859,33 +1777,9 @@ public:
 
   template<typename Component, typename ...Args>
   constexpr
-  void
-  emplace(entity_type const e, Args &&...args)
-  { emplace<Component>(e.identifier(), std::forward<Args>(args)...); }
-
-  template<typename Component, typename ...Args>
-  constexpr
-  void
-  emplace(const_entity_type const ce, Args &&...args)
-  { emplace<Component>(ce.identifier(), std::forward<Args>(args)...); }
-
-  template<typename Component, typename ...Args>
-  constexpr
   bool
   try_emplace(identifier_type const id, Args &&...args)
   { return storage_type::template try_emplace<Component>(id, std::forward<Args>(args)...); }
-
-  template<typename Component, typename ...Args>
-  constexpr
-  bool
-  try_emplace(entity_type const e, Args &&...args)
-  { return try_emplace<Component>(e.identifier(), std::forward<Args>(args)...); }
-
-  template<typename Component, typename ...Args>
-  constexpr
-  bool
-  try_emplace(const_entity_type const ce, Args &&...args)
-  { return try_emplace<Component>(ce.identifier(), std::forward<Args>(args)...); }
 
   template<typename Component>
   constexpr
@@ -1896,32 +1790,8 @@ public:
   template<typename Component>
   constexpr
   bool
-  insert(entity_type const e, Component &&c)
-  { return insert(e.identifier(), std::forward<Component>(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert(const_entity_type const ce, Component &&c)
-  { return insert(ce.identifier(), std::forward<Component>(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
   insert_or_assign(identifier_type const id, Component &&c)
   { return storage_type::template insert_or_assign<Component>(id, std::forward<Component>(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(entity_type const e, Component &&c)
-  { return insert_or_assign(e.identifier(), std::forward<Component>(c)); }
-
-  template<typename Component>
-  constexpr
-  bool
-  insert_or_assign(const_entity_type const ce, Component &&c)
-  { return insert_or_assign(ce.identifier(), std::forward<Component>(c)); }
 
   template<typename Component>
   constexpr
@@ -1931,48 +1801,14 @@ public:
 
   template<typename Component>
   constexpr
-  void
-  erase(entity_type const e)
-  { erase<Component>(e.identifier()); }
-
-  template<typename Component>
-  constexpr
-  void
-  erase(const_entity_type const ce)
-  { erase<Component>(ce.identifier()); }
-
-  template<typename Component>
-  constexpr
   bool
   try_erase(identifier_type const id)
   { return storage_type::template try_erase<Component>(id); }
-
-  template<typename Component>
-  constexpr
-  bool
-  try_erase(entity_type const e)
-  { return try_erase<Component>(e.identifier()); }
-
-  template<typename Component>
-  constexpr
-  bool
-  try_erase(const_entity_type const ce)
-  { return try_erase<Component>(ce.identifier()); }
 
   constexpr
   void
   clear(identifier_type const id)
   { storage_type::clear(id); }
-
-  constexpr
-  void
-  clear(entity_type const e)
-  { clear(e.identifier()); }
-
-  constexpr
-  void
-  clear(const_entity_type const ce)
-  { clear(ce.identifier()); }
 
   constexpr
   void
@@ -1991,16 +1827,6 @@ public:
     core_type::destroy(id);
     return true;
   }
-
-  constexpr
-  bool
-  destroy(entity_type const e)
-  { return destroy(e.identifier()); }
-
-  constexpr
-  bool
-  destroy(const_entity_type const ce)
-  { return destroy(ce.identifier()); }
 };
 
 } // namespace heim::sparse

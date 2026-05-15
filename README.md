@@ -29,46 +29,39 @@ and on delivering highly-performant code.
 
 ## Code Example 
 ```c++
-#include <heim/heim.hpp>
+#include <heim/registry.hpp>
 
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
 struct tag      { };
 
-
-using registry 
-= heim::sparse::registry::with_all<position, velocity, tag>;
-
-using identifier 
-= typename registry::identifier_type;
-
-using entity 
-= heim::entity<registry>;
+using registry = heim::sparse::registry::with_all<position, velocity, tag>;
+using entity   = typename registry::entity_type;
 
 
 int main()
 {
-  registry reg;
-
-  identifier const id0{reg.create()};
-  reg.emplace<position>(id0, 0.f, 0.f, 0.f);
-  reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
+  registry reg{};
+  entity   e0 {reg.create()};
+  entity   e1 {reg.create()};
   
-  entity e0{reg};
-  e0.emplace<position>(0.f, 1.f, 0.f);
-  e0.emplace<tag>     ();
+  e0.emplace<position>(0.f, 0.f, 0.f);
+  e0.emplace<velocity>(1.f, 0.f, 0.f);
+  
+  e1.emplace<position>(0.f, 1.f, 0.f);
+  e1.emplace<tag>     ();
 
   for (auto e : reg.query<heim::conjunction<position, velocity, heim::negation<tag>>>())
   {
-    auto       &[px, py, pz] = e.get<position>();
-    auto const &[vx, vy, vz] = e.get<velocity>();
+    auto       &[px, py, pz]{e.get<position>()};
+    auto const &[vx, vy, vz]{e.get<velocity>()};
 
     px += vx;
     py += vy;
     pz += vz;
   }
 
-  reg.destroy(id0);
-  e0 .destroy();
+  e0.destroy();
+  e1.destroy();
 }
 ```

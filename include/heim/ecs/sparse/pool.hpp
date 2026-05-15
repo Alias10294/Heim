@@ -1,7 +1,7 @@
 #ifndef HEIM_ECS_SPARSE_POOL_HPP
 #define HEIM_ECS_SPARSE_POOL_HPP
 
-#include "heim/ecs/identifier.hpp"
+#include "identifier.hpp"
 #include "set.hpp"
 
 namespace heim::sparse
