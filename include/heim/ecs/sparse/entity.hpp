@@ -1,10 +1,10 @@
-#ifndef HEIM_ENTITY_HPP
-#define HEIM_ENTITY_HPP
+#ifndef HEIM_ECS_SPARSE_ENTITY_HPP
+#define HEIM_ECS_SPARSE_ENTITY_HPP
 
 #include <type_traits>
 #include <utility>
 
-namespace heim
+namespace heim::sparse
 {
 template<typename Registry>
 class entity
@@ -207,6 +207,6 @@ public:
   { m_registry->destroy(m_identifier); }
 };
 
-} // namespace heim
+} // namespace heim::sparse
 
-#endif // HEIM_ENTITY_HPP
+#endif // HEIM_ECS_SPARSE_ENTITY_HPP
