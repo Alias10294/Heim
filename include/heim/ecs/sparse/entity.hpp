@@ -6,6 +6,10 @@
 
 namespace heim::sparse
 {
+/*!
+ * \brief
+ *   A handle designating a logical entity object of an instance of the specializing registry type.
+ */
 template<typename Registry>
 class entity
 {

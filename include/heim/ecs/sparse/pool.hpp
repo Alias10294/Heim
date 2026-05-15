@@ -1,6 +1,13 @@
 #ifndef HEIM_ECS_SPARSE_POOL_HPP
 #define HEIM_ECS_SPARSE_POOL_HPP
 
+#include <concepts>
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#include "heim/lib/utility.hpp"
 #include "identifier.hpp"
 #include "set.hpp"
 
