@@ -4,15 +4,15 @@ struct position { float x, y, z; };
 struct velocity { float x, y, z; };
 struct tag      { };
 
-using registry = heim::sparse::registry::with_all<position, velocity, tag>;
-using entity   = typename registry::entity_type;
+using registry
+= heim::sparse::static_registry::with_all<position, velocity, tag>;
 
 
 int main()
 {
   registry reg{};
-  entity   e0 {reg.create()};
-  entity   e1 {reg.create()};
+  auto     e0 {reg.entity()};
+  auto     e1 {reg.entity()};
   
   e0.emplace<position>(0.f, 0.f, 0.f);
   e0.emplace<velocity>(1.f, 0.f, 0.f);
