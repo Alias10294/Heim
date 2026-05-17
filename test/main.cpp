@@ -7,7 +7,7 @@ struct tag      { };
 
 
 using registry
-= heim::sparse::registry::with_all<position, velocity, tag>;
+= heim::sparse::static_registry::with_all<position, velocity, tag>;
 
 using expression
 = heim::conjunction<position, velocity, heim::negation<tag>>;
@@ -18,7 +18,7 @@ using entity
 int main()
 {
   registry reg{};
-  entity   e0 {reg.create()};
+  entity   e0 {reg.entity()};
 
   e0.emplace<position>(0.f, 0.f, 0.f);
   e0.emplace<velocity>(1.f, 0.f, 0.f);

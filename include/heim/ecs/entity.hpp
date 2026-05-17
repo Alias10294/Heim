@@ -1,11 +1,15 @@
-#ifndef HEIM_ECS_SPARSE_ENTITY_HPP
-#define HEIM_ECS_SPARSE_ENTITY_HPP
+#ifndef HEIM_ECS_ENTITY_HPP
+#define HEIM_ECS_ENTITY_HPP
 
 #include <type_traits>
 #include <utility>
 
-namespace heim::sparse
+namespace heim
 {
+/*!
+ * \brief
+ *   A handle designating a logical entity object of an instance of the specializing registry type.
+ */
 template<typename Registry>
 class entity
 {
@@ -43,7 +47,7 @@ public:
   explicit constexpr
   entity(registry_type &registry)
   requires (!std::is_const_v<registry_type>)
-    : entity{registry, registry.create()}
+    : entity{registry.entity()}
   { }
 
   constexpr
@@ -207,6 +211,6 @@ public:
   { m_registry->destroy(m_identifier); }
 };
 
-} // namespace heim::sparse
+} // namespace heim
 
-#endif // HEIM_ECS_SPARSE_ENTITY_HPP
+#endif // HEIM_ECS_ENTITY_HPP
