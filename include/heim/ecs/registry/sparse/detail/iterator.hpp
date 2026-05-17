@@ -9,7 +9,7 @@
 namespace heim::sparse::detail
 {
 template<typename Registry>
-class generic_static_registry_iterator
+class registry_iterator
 {
 public:
   using registry_type
@@ -30,44 +30,44 @@ private:
 
 public:
   constexpr
-  generic_static_registry_iterator()
+  registry_iterator()
   noexcept
     : m_registry{}
     , m_iterator{}
   { }
 
   constexpr
-  generic_static_registry_iterator(generic_static_registry_iterator const &)
+  registry_iterator(registry_iterator const &)
   = default;
 
   constexpr
-  generic_static_registry_iterator(generic_static_registry_iterator &&)
+  registry_iterator(registry_iterator &&)
   = default;
 
   constexpr
-  generic_static_registry_iterator(registry_type &registry, iterator_type const iterator)
+  registry_iterator(registry_type &registry, iterator_type const iterator)
   noexcept
     : m_registry{&registry}
     , m_iterator{iterator}
   { }
 
   constexpr
-  ~generic_static_registry_iterator()
+  ~registry_iterator()
   = default;
 
   constexpr
-  generic_static_registry_iterator &
-  operator=(generic_static_registry_iterator const &)
+  registry_iterator &
+  operator=(registry_iterator const &)
   = default;
 
   constexpr
-  generic_static_registry_iterator &
-  operator=(generic_static_registry_iterator &&)
+  registry_iterator &
+  operator=(registry_iterator &&)
   = default;
 
   constexpr
   void
-  swap(generic_static_registry_iterator &other)
+  swap(registry_iterator &other)
   noexcept
   {
     using std::swap;
@@ -78,18 +78,18 @@ public:
 
   friend constexpr
   void
-  swap(generic_static_registry_iterator &lhs, generic_static_registry_iterator &rhs)
+  swap(registry_iterator &lhs, registry_iterator &rhs)
   noexcept
   { lhs.swap(rhs); }
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(generic_static_registry_iterator const &, generic_static_registry_iterator const &)
+  operator==(registry_iterator const &, registry_iterator const &)
   = default;
 
   [[nodiscard]] friend constexpr
   auto
-  operator<=>(generic_static_registry_iterator const &, generic_static_registry_iterator const &)
+  operator<=>(registry_iterator const &, registry_iterator const &)
   = default;
 
 
@@ -107,68 +107,68 @@ public:
 
 
   constexpr
-  generic_static_registry_iterator &
+  registry_iterator &
   operator++()
   noexcept
   { ++m_iterator; return *this; }
 
   constexpr
-  generic_static_registry_iterator &
+  registry_iterator &
   operator--()
   noexcept
   { --m_iterator; return *this; }
 
   constexpr
-  generic_static_registry_iterator
+  registry_iterator
   operator++(int)
   noexcept
   {
-    generic_static_registry_iterator tmp{*this};
+    registry_iterator tmp{*this};
     ++*this;
     return tmp;
   }
 
   constexpr
-  generic_static_registry_iterator
+  registry_iterator
   operator--(int)
   noexcept
   {
-    generic_static_registry_iterator tmp{*this};
+    registry_iterator tmp{*this};
     --*this;
     return tmp;
   }
 
   constexpr
-  generic_static_registry_iterator &
+  registry_iterator &
   operator+=(difference_type const n)
   { m_iterator += n; return *this; }
 
   constexpr
-  generic_static_registry_iterator &
+  registry_iterator &
   operator-=(difference_type const n)
   { m_iterator -= n; return *this; }
 
   friend constexpr
-  generic_static_registry_iterator
-  operator+(generic_static_registry_iterator it, difference_type const n)
+  registry_iterator
+  operator+(registry_iterator it, difference_type const n)
   noexcept
   { it += n; return it; }
 
   friend constexpr
-  generic_static_registry_iterator
-  operator+(difference_type const n, generic_static_registry_iterator it)
+  registry_iterator
+  operator+(difference_type const n, registry_iterator it)
   noexcept
   { it += n; return it; }
 
   friend constexpr
-  generic_static_registry_iterator
-  operator-(generic_static_registry_iterator it, difference_type const n)
+  registry_iterator
+  operator-(registry_iterator it, difference_type const n)
   noexcept
   { it -= n; return it; }
 
   friend constexpr
   difference_type
-  operator-(generic_static_registry_iterator const lhs, generic_static_registry_iterator const rhs)
+  operator-(registry_iterator const lhs, registry_iterator const rhs)
   noexcept
   { return lhs.m_iterator - rhs.m_iterator; }
 };

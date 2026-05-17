@@ -202,8 +202,8 @@ public:
     if (ptr == pointer{})
       return;
 
-    auto * const first = std::to_address(ptr);
-    auto        *last  = first + m_size;
+    auto * const first{std::to_address(ptr)};
+    auto        *last {first + m_size};
 
     while (first != last)
       std::allocator_traits<allocator_type>::destroy(m_allocator, --last);
@@ -237,17 +237,17 @@ make_unique_allocator_aware(Allocator const &a, Args &&...args)
   using alloc_traits   = std::allocator_traits<allocator_type>;
   using pointer        = typename alloc_traits::pointer;
 
-  auto    alloc = allocator_type{a};
-  pointer ptr   = alloc_traits::allocate(alloc, 1);
+  auto    alloc{allocator_type{a}};
+  pointer ptr  {alloc_traits::allocate(alloc, 1)};
 
   try
   { alloc_traits::construct(alloc, std::to_address(ptr), std::forward<Args>(args)...); }
   catch (...)
   { alloc_traits::deallocate(alloc, ptr, 1); throw; }
 
-  return unique_allocator_aware_ptr<T, Allocator>(
+  return unique_allocator_aware_ptr<T, Allocator>{
       ptr,
-      allocator_aware_deleter<T, Allocator>(std::move(alloc)));
+      allocator_aware_deleter<T, Allocator>{std::move(alloc)}};
 }
 
 /*!
@@ -266,19 +266,19 @@ make_unique_allocator_aware(Allocator const &a, std::size_t size)
   using alloc_traits   = std::allocator_traits<allocator_type>;
   using pointer        = typename alloc_traits::pointer;
 
-  auto alloc = allocator_type{a};
+  auto alloc{allocator_type{a}};
 
   if (size == 0)
   {
-    return unique_allocator_aware_ptr<T, Allocator>(
+    return unique_allocator_aware_ptr<T, Allocator>{
         pointer{},
-        allocator_aware_deleter<T, Allocator>(std::move(alloc), 0));
+        allocator_aware_deleter<T, Allocator>{std::move(alloc), 0}};
   }
 
-  pointer      ptr   = alloc_traits::allocate(alloc, size);
-  auto * const begin = std::to_address(ptr);
-  auto * const end   = begin + size;
-  auto        *curr  = begin;
+  pointer      ptr  {alloc_traits::allocate(alloc, size)};
+  auto * const begin{std::to_address(ptr)};
+  auto * const end  {begin + size};
+  auto        *curr {begin};
 
   try
   {
@@ -294,9 +294,9 @@ make_unique_allocator_aware(Allocator const &a, std::size_t size)
     throw;
   }
 
-  return unique_allocator_aware_ptr<T, Allocator>(
+  return unique_allocator_aware_ptr<T, Allocator>{
       ptr,
-      allocator_aware_deleter<T, Allocator>(std::move(alloc), size));
+      allocator_aware_deleter<T, Allocator>{std::move(alloc), size}};
 }
 
 template<
@@ -325,17 +325,17 @@ make_unique_allocator_aware_for_overwrite(Allocator const &a)
   using alloc_traits   = std::allocator_traits<allocator_type>;
   using pointer        = typename alloc_traits::pointer;
 
-  auto    alloc = allocator_type{a};
-  pointer ptr   = alloc_traits::allocate(alloc, 1);
+  auto    alloc{allocator_type{a}};
+  pointer ptr  {alloc_traits::allocate(alloc, 1)};
 
   try
   { ::new(static_cast<void *>(std::to_address(ptr))) T; }
   catch (...)
   { alloc_traits::deallocate(alloc, ptr, 1); throw; }
 
-  return unique_allocator_aware_ptr<T, Allocator>(
+  return unique_allocator_aware_ptr<T, Allocator>{
       ptr,
-      allocator_aware_deleter<T, Allocator>(std::move(alloc)));
+      allocator_aware_deleter<T, Allocator>{std::move(alloc)}};
 }
 
 /*!
@@ -355,19 +355,19 @@ make_unique_allocator_aware_for_overwrite(Allocator const &a, std::size_t size)
   using alloc_traits   = std::allocator_traits<allocator_type>;
   using pointer        = typename alloc_traits::pointer;
 
-  auto alloc = allocator_type{a};
+  auto alloc{allocator_type{a}};
 
   if (size == 0)
   {
-    return unique_allocator_aware_ptr<T, Allocator>(
+    return unique_allocator_aware_ptr<T, Allocator>{
         pointer{},
-        allocator_aware_deleter<T, Allocator>(std::move(alloc), 0));
+        allocator_aware_deleter<T, Allocator>{std::move(alloc), 0}};
   }
 
-  pointer      ptr   = alloc_traits::allocate(alloc, size);
-  auto * const begin = std::to_address(ptr);
-  auto * const end   = begin + size;
-  auto        *curr  = begin;
+  pointer      ptr  {alloc_traits::allocate(alloc, size)};
+  auto * const begin{std::to_address(ptr)};
+  auto * const end  {begin + size};
+  auto        *curr {begin};
 
   try
   {
@@ -383,9 +383,9 @@ make_unique_allocator_aware_for_overwrite(Allocator const &a, std::size_t size)
     throw;
   }
 
-  return unique_allocator_aware_ptr<T, Allocator>(
+  return unique_allocator_aware_ptr<T, Allocator>{
       ptr,
-      allocator_aware_deleter<T, Allocator>(std::move(alloc), size));
+      allocator_aware_deleter<T, Allocator>{std::move(alloc), size}};
 }
 
 template<

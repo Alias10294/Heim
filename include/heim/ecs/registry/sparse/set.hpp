@@ -121,7 +121,7 @@ private:
     for (page_pointer const &ptr : container)
     {
       if (ptr)
-        m_container.emplace_back(make_unique_allocator_aware<page>(page_allocator(m_container.get_allocator()), *ptr));
+        m_container.emplace_back(make_unique_allocator_aware<page>(page_allocator{m_container.get_allocator()}, *ptr));
       else
         m_container.emplace_back(page_pointer{});
     }
@@ -129,45 +129,45 @@ private:
 
   constexpr
   set_sparse_container(set_sparse_container const &other, allocator_type const &alloc, std::bool_constant<true>)
-    : m_container(container_allocator(alloc))
+    : m_container{container_allocator(alloc)}
   { m_copy(other.m_container); }
 
   constexpr
   set_sparse_container(set_sparse_container const &other, allocator_type const &alloc, std::bool_constant<false>)
-    : m_container(other.m_container, container_allocator(alloc))
+    : m_container{other.m_container, container_allocator{alloc}}
   { }
 
   constexpr
   set_sparse_container(set_sparse_container const &other, std::bool_constant<true>)
-    : m_container(container_alloc_traits::select_on_container_copy_construction(other.m_container.get_allocator()))
+    : m_container{container_alloc_traits::select_on_container_copy_construction(other.m_container.get_allocator())}
   { m_copy(other.m_container); }
 
   constexpr
   set_sparse_container(set_sparse_container const &other, std::bool_constant<false>)
-    : m_container(other.m_container)
+    : m_container{other.m_container}
   { }
 
 public:
   explicit constexpr
   set_sparse_container(allocator_type const &alloc)
   noexcept
-    : m_container(container_allocator(alloc))
+    : m_container{container_allocator{alloc}}
   { }
 
   constexpr
   set_sparse_container(set_sparse_container const &other, allocator_type const &alloc)
-    : set_sparse_container(other, alloc, std::bool_constant<is_paged>{})
+    : set_sparse_container{other, alloc, std::bool_constant<is_paged>{}}
   { }
 
   constexpr
   set_sparse_container(set_sparse_container const &other)
-    : set_sparse_container(other, std::bool_constant<is_paged>{})
+    : set_sparse_container{other, std::bool_constant<is_paged>{}}
   { }
 
   constexpr
   set_sparse_container(set_sparse_container &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_container(std::move(other.m_container), alloc)
+    : m_container{std::move(other.m_container), alloc}
   { }
 
   constexpr
@@ -189,7 +189,7 @@ public:
 
       if constexpr (page_pointer_alloc_traits::propagate_on_container_copy_assignment::value)
       {
-        container_type *ptr = std::addressof(m_container);
+        container_type *ptr{std::addressof(m_container)};
 
         std::destroy_at  (ptr);
         std::construct_at(ptr, other.m_container.get_allocator());
@@ -233,16 +233,16 @@ public:
   contains(identifier_type const id) const
   noexcept
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(id));
+    auto const idx{static_cast<std::size_t>(id_traits::index(id))};
 
     if constexpr (is_paged)
     {
-      std::size_t const pg_idx = s_page_index(idx);
+      std::size_t const pg_idx{s_page_index(idx)};
 
       if (pg_idx >= m_container.size())
         return false;
 
-      page_pointer const &ptr = m_container[pg_idx];
+      page_pointer const &ptr{m_container[pg_idx]};
 
       if (!ptr)
         return false;
@@ -262,7 +262,7 @@ public:
   position(identifier_type const id)
   noexcept
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(id));
+    auto const idx{static_cast<std::size_t>(id_traits::index(id))};
 
     if constexpr (is_paged)
       return (*m_container[s_page_index(idx)])[s_line_index(idx)];
@@ -275,7 +275,7 @@ public:
   position(identifier_type const id) const
   noexcept
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(id));
+    auto const idx{static_cast<std::size_t>(id_traits::index(id))};
 
     if constexpr (is_paged)
       return (*m_container[s_page_index(idx)])[s_line_index(idx)];
@@ -287,11 +287,11 @@ public:
   void
   reserve_for(identifier_type const id)
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(id));
+    auto const idx{static_cast<std::size_t>(id_traits::index(id))};
 
     if constexpr (is_paged)
     {
-      std::size_t const pg_idx = s_page_index(idx);
+      std::size_t const pg_idx{s_page_index(idx)};
 
       if (pg_idx >= m_container.size())
         m_container.reserve(pg_idx + 1);
@@ -299,7 +299,7 @@ public:
       while (pg_idx >= m_container.size())
         m_container.emplace_back(page_pointer{});
 
-      if (page_pointer &ptr = m_container[pg_idx];
+      if (page_pointer &ptr{m_container[pg_idx]};
           !ptr)
       {
         ptr = make_unique_allocator_aware<page>(page_allocator(m_container.get_allocator()));
@@ -572,7 +572,7 @@ public:
   explicit constexpr
   set(allocator_type const &alloc)
   noexcept
-    : dense_container(alloc), sparse_container(alloc)
+    : dense_container{alloc}, sparse_container{alloc}
   { }
 
   constexpr
@@ -637,8 +637,8 @@ public:
   {
     using std::swap;
 
-    auto const lhs_idx = static_cast<std::size_t>(id_traits::index(sparse_container::position(lhs)));
-    auto const rhs_idx = static_cast<std::size_t>(id_traits::index(sparse_container::position(rhs)));
+    auto const lhs_idx{static_cast<std::size_t>(id_traits::index(sparse_container::position(lhs)))};
+    auto const rhs_idx{static_cast<std::size_t>(id_traits::index(sparse_container::position(rhs)))};
 
     dense_container ::swap(lhs_idx, rhs_idx);
     sparse_container::swap(lhs    , rhs);
@@ -676,7 +676,7 @@ public:
   iterator_to(identifier_type const id)
   noexcept
   {
-    auto const idx = static_cast<std::ptrdiff_t>(id_traits::index(sparse_container::position(id)) + 1);
+    auto const idx{static_cast<std::ptrdiff_t>(id_traits::index(sparse_container::position(id)) + 1)};
     return end() - idx;
   }
 
@@ -685,7 +685,7 @@ public:
   iterator_to(identifier_type const id) const
   noexcept
   {
-    auto const idx = static_cast<std::ptrdiff_t>(id_traits::index(sparse_container::position(id)) + 1);
+    auto const idx{static_cast<std::ptrdiff_t>(id_traits::index(sparse_container::position(id)) + 1)};
     return end() - idx;
   }
 
@@ -749,7 +749,7 @@ public:
     using index_type
     = typename id_traits::index_type;
 
-    if (auto const idx = static_cast<std::size_t>(id_traits::index(sparse_container::position(id)));
+    if (auto const idx{static_cast<std::size_t>(id_traits::index(sparse_container::position(id)))};
         idx != size() - 1)
     {
       identifier_type const back{dense_container::back()};
@@ -782,7 +782,7 @@ public:
     for (identifier_type const id : *this)
       sparse_container::position(id) = id_traits::null;
 
-    dense_container ::clear();
+    dense_container::clear();
   }
 };
 

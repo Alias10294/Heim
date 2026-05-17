@@ -1015,13 +1015,13 @@ template<
     typename Allocator    = std::allocator<Identifier>,
     typename DescSequence = type_sequence<>>
 class generic_static_registry
-  : protected detail::generic_static_registry_core<Identifier, Allocator>
+  : protected detail::registry_core                  <Identifier, Allocator>
   , protected detail::generic_static_registry_storage<Identifier, Allocator, DescSequence>
 {
-  using core_type    = detail::generic_static_registry_core<Identifier, Allocator>;
+  using core_type    = detail::registry_core                  <Identifier, Allocator>;
   using storage_type = detail::generic_static_registry_storage<Identifier, Allocator, DescSequence>;
 
-  template<typename>           friend class detail::generic_static_registry_iterator;
+  template<typename>           friend class detail::registry_iterator;
   template<typename, typename> friend class detail::generic_static_registry_query_driver;
   template<typename, typename> friend class detail::generic_static_registry_query_iterator;
 
@@ -1033,8 +1033,8 @@ public:
   using entity_type       = entity<generic_static_registry>;
   using const_entity_type = entity<generic_static_registry const>;
 
-  using iterator       = detail::generic_static_registry_iterator<generic_static_registry>;
-  using const_iterator = detail::generic_static_registry_iterator<generic_static_registry const>;
+  using iterator       = detail::registry_iterator<generic_static_registry>;
+  using const_iterator = detail::registry_iterator<generic_static_registry const>;
 
   template<typename Expression> using query_for       = detail::generic_static_registry_query<Expression, generic_static_registry>;
   template<typename Expression> using const_query_for = detail::generic_static_registry_query<Expression, generic_static_registry const>;
