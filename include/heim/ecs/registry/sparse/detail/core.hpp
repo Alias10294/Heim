@@ -19,7 +19,7 @@ template<
 requires (
     identifier   <Identifier>
  && allocator_for<Allocator, Identifier>)
-class generic_static_registry_core
+class registry_core
 {
 public:
   using identifier_type = Identifier;
@@ -60,25 +60,25 @@ private:
 
 public:
   explicit constexpr
-  generic_static_registry_core(allocator_type const &alloc)
+  registry_core(allocator_type const &alloc)
     : m_dense {alloc}
     , m_sparse{alloc}
     , m_begin {}
   { }
 
   constexpr
-  generic_static_registry_core(generic_static_registry_core const &other, allocator_type const &alloc)
+  registry_core(registry_core const &other, allocator_type const &alloc)
     : m_dense {other.m_dense , alloc}
     , m_sparse{other.m_sparse, alloc}
     , m_begin {other.m_begin}
   { }
 
   constexpr
-  generic_static_registry_core(generic_static_registry_core const &)
+  registry_core(registry_core const &)
   = default;
 
   constexpr
-  generic_static_registry_core(generic_static_registry_core &&other, allocator_type const &alloc)
+  registry_core(registry_core &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_dense {std::move(other.m_dense ), alloc}
     , m_sparse{std::move(other.m_sparse), alloc}
@@ -86,26 +86,26 @@ public:
   { }
 
   constexpr
-  generic_static_registry_core(generic_static_registry_core &&)
+  registry_core(registry_core &&)
   = default;
 
   constexpr
-  ~generic_static_registry_core()
+  ~registry_core()
   = default;
 
   constexpr
-  generic_static_registry_core &
-  operator=(generic_static_registry_core const &)
+  registry_core &
+  operator=(registry_core const &)
   = default;
 
   constexpr
-  generic_static_registry_core &
-  operator=(generic_static_registry_core &&)
+  registry_core &
+  operator=(registry_core &&)
   = default;
 
   constexpr
   void
-  swap(generic_static_registry_core &other)
+  swap(registry_core &other)
   noexcept(s_noexcept_swap())
   {
     std::swap(m_dense , other.m_dense);
@@ -115,7 +115,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(generic_static_registry_core const &, generic_static_registry_core const &)
+  operator==(registry_core const &, registry_core const &)
   = default;
 
   [[nodiscard]] constexpr
