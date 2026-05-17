@@ -1,12 +1,12 @@
-#ifndef HEIM_ECS_SPARSE_IDENTIFIER_HPP
-#define HEIM_ECS_SPARSE_IDENTIFIER_HPP
+#ifndef HEIM_ECS_IDENTIFIER_HPP
+#define HEIM_ECS_IDENTIFIER_HPP
 
 #include <cstdint>
 #include <limits>
 #include <type_traits>
 #include "heim/lib/utility.hpp"
 
-namespace heim::sparse
+namespace heim
 {
 /*!
  * \brief
@@ -94,6 +94,6 @@ template<typename = void>
 using default_identifier_t
 = typename default_identifier<>::type;
 
-} // namespace heim::sparse
+} // namespace heim
 
-#endif // HEIM_ECS_SPARSE_IDENTIFIER_HPP
+#endif // HEIM_ECS_IDENTIFIER_HPP

@@ -1,5 +1,5 @@
-#ifndef HEIM_ECS_SPARSE_SET_HPP
-#define HEIM_ECS_SPARSE_SET_HPP
+#ifndef HEIM_ECS_REGISTRY_SPARSE_SET_HPP
+#define HEIM_ECS_REGISTRY_SPARSE_SET_HPP
 
 #include <algorithm>
 #include <array>
@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "identifier.hpp"
+#include "heim/ecs/identifier.hpp"
 #include "heim/lib/unique_allocator_aware_ptr.hpp"
 
 namespace heim::sparse
@@ -788,4 +788,4 @@ public:
 
 } // namespace heim::sparse
 
-#endif // HEIM_ECS_SPARSE_SET_HPP
+#endif // HEIM_ECS_REGISTRY_SPARSE_SET_HPP

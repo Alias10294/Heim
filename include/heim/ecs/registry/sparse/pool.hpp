@@ -1,5 +1,5 @@
-#ifndef HEIM_ECS_SPARSE_POOL_HPP
-#define HEIM_ECS_SPARSE_POOL_HPP
+#ifndef HEIM_ECS_REGISTRY_SPARSE_POOL_HPP
+#define HEIM_ECS_REGISTRY_SPARSE_POOL_HPP
 
 #include <concepts>
 #include <cstddef>
@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "heim/ecs/identifier.hpp"
 #include "heim/lib/utility.hpp"
-#include "identifier.hpp"
 #include "set.hpp"
 
 namespace heim::sparse
@@ -549,4 +549,4 @@ public:
 
 } // namespace heim::sparse
 
-#endif // HEIM_ECS_SPARSE_POOL_HPP
+#endif // HEIM_ECS_REGISTRY_SPARSE_POOL_HPP
