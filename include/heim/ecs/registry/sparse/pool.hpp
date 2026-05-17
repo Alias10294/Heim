@@ -151,12 +151,12 @@ public:
   explicit constexpr
   pool_component_container(allocator_type const &alloc)
   noexcept
-    : m_container(component_allocator{alloc})
+    : m_container{component_allocator{alloc}}
   { }
 
   constexpr
   pool_component_container(pool_component_container const &other, allocator_type const &alloc)
-    : m_container(other.m_container, component_allocator{alloc})
+    : m_container{other.m_container, component_allocator{alloc}}
   { }
 
   constexpr
@@ -166,7 +166,7 @@ public:
   constexpr
   pool_component_container(pool_component_container &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_container(std::move(other.m_container), component_allocator{alloc})
+    : m_container{std::move(other.m_container), component_allocator{alloc}}
   { }
 
   constexpr
@@ -383,8 +383,8 @@ public:
   {
     using std::swap;
 
-    auto const lhs_idx = static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(lhs)));
-    auto const rhs_idx = static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(rhs)));
+    auto const lhs_idx{static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(lhs)))};
+    auto const rhs_idx{static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(rhs)))};
 
     component_container       ::swap(lhs_idx, rhs_idx);
     set_type::dense_container ::swap(lhs_idx, rhs_idx);
@@ -426,7 +426,7 @@ public:
   operator[](identifier_type const id)
   noexcept
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)));
+    auto const idx{static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)))};
     return component_container::get(idx);
   }
 
@@ -435,7 +435,7 @@ public:
   operator[](identifier_type const id) const
   noexcept
   {
-    auto const idx = static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)));
+    auto const idx{static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)))};
     return component_container::get(idx);
   }
 
@@ -511,10 +511,10 @@ public:
     using index_type
     = typename id_traits::index_type;
 
-    if (auto const idx = static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)));
+    if (auto const idx{static_cast<std::size_t>(id_traits::index(set_type::sparse_container::position(id)))};
         idx != size() - 1)
     {
-      identifier_type const back = set_type::dense_container::back();
+      identifier_type const back{set_type::dense_container::back()};
 
       component_container       ::overwrite_with_back(idx);
       set_type::dense_container ::overwrite_with_back(idx);
