@@ -12,13 +12,11 @@ using registry
 using expression
 = heim::conjunction<position, velocity, heim::negation<tag>>;
 
-using entity
-= typename registry::entity_type;
 
 int main()
 {
   registry reg{};
-  entity   e0 {reg.entity()};
+  auto     e0 {reg.entity()};
 
   e0.emplace<position>(0.f, 0.f, 0.f);
   e0.emplace<velocity>(1.f, 0.f, 0.f);
