@@ -22,7 +22,7 @@ public:
 
 private:
   using iterator_type
-  = typename registry_type::manager_type::const_iterator;
+  = typename registry_type::core_type::const_iterator;
 
 private:
   registry_type *m_registry;

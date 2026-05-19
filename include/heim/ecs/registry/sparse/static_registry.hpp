@@ -1010,6 +1010,7 @@ public:
 
 } // namespace detail
 
+
 template<
     typename Identifier   = default_identifier_t<>,
     typename Allocator    = std::allocator<Identifier>,
@@ -1030,14 +1031,8 @@ public:
   using allocator_type       = Allocator;
   using description_sequence = DescSequence;
 
-  using entity_type       = entity<generic_static_registry>;
-  using const_entity_type = entity<generic_static_registry const>;
-
   using iterator       = detail::registry_iterator<generic_static_registry>;
   using const_iterator = detail::registry_iterator<generic_static_registry const>;
-
-  template<typename Expression> using query_for       = detail::generic_static_registry_query<Expression, generic_static_registry>;
-  template<typename Expression> using const_query_for = detail::generic_static_registry_query<Expression, generic_static_registry const>;
 
 
   template<
@@ -1231,18 +1226,27 @@ public:
 
   template<typename Expression>
   [[nodiscard]] constexpr
-  query_for<Expression>
+  auto
   query()
   noexcept
-  { return query_for<Expression>{*this}; }
+  {
+    return detail::generic_static_registry_query<
+        Expression,
+        generic_static_registry>
+        {*this};
+  }
 
   template<typename Expression>
   [[nodiscard]] constexpr
-  const_query_for<Expression>
+  auto
   query() const
   noexcept
-  { return const_query_for<Expression>{*this}; }
-
+  {
+    return detail::generic_static_registry_query<
+        Expression,
+        generic_static_registry const>
+        {*this};
+  }
 
   template<typename Component>
   [[nodiscard]] constexpr
@@ -1274,9 +1278,9 @@ public:
 
 
   [[nodiscard]] constexpr
-  entity_type
+  auto
   entity()
-  { return entity_type{*this, core_type::create()}; }
+  { return heim::entity<generic_static_registry>{*this, core_type::create()}; }
 
   template<typename Component, typename ...Args>
   constexpr
