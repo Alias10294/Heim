@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstddef>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -19,8 +20,17 @@ struct adjacency_list_vertex_descriptor
   T value;
 
 
-  friend constexpr bool operator== (adjacency_list_vertex_descriptor, adjacency_list_vertex_descriptor) noexcept = default;
-  friend constexpr auto operator<=>(adjacency_list_vertex_descriptor, adjacency_list_vertex_descriptor) noexcept = default;
+  friend constexpr
+  bool
+  operator== (adjacency_list_vertex_descriptor, adjacency_list_vertex_descriptor)
+  noexcept
+  = default;
+
+  friend constexpr
+  auto
+  operator<=>(adjacency_list_vertex_descriptor, adjacency_list_vertex_descriptor)
+  noexcept
+  = default;
 };
 
 
@@ -34,8 +44,17 @@ struct adjacency_list_edge_descriptor<T, false>
   T value, tail, head;
 
 
-  friend constexpr bool operator== (adjacency_list_edge_descriptor, adjacency_list_edge_descriptor) noexcept = default;
-  friend constexpr auto operator<=>(adjacency_list_edge_descriptor, adjacency_list_edge_descriptor) noexcept = default;
+  friend constexpr
+  bool
+  operator== (adjacency_list_edge_descriptor, adjacency_list_edge_descriptor)
+  noexcept
+  = default;
+
+  friend constexpr
+  auto
+  operator<=>(adjacency_list_edge_descriptor, adjacency_list_edge_descriptor)
+  noexcept
+  = default;
 };
 
 template<typename T>
@@ -44,22 +63,28 @@ struct adjacency_list_edge_descriptor<T, true>
   T value;
 
 
-  friend constexpr bool operator== (adjacency_list_edge_descriptor, adjacency_list_edge_descriptor) noexcept = default;
-  friend constexpr auto operator<=>(adjacency_list_edge_descriptor, adjacency_list_edge_descriptor) noexcept = default;
+  friend constexpr
+  bool
+  operator== (adjacency_list_edge_descriptor, adjacency_list_edge_descriptor)
+  noexcept
+  = default;
+
+  friend constexpr
+  auto
+  operator<=>(adjacency_list_edge_descriptor, adjacency_list_edge_descriptor)
+  noexcept
+  = default;
 };
 
 
-template<
-    typename T,
-    bool     IsOutIncident,
-    bool     IsInIncident>
+template<typename T, bool IsDirected>
 struct adjacency_list_incident_edge_descriptor
 { };
 
 template<typename T>
-struct adjacency_list_incident_edge_descriptor<T, true , false>
+struct adjacency_list_incident_edge_descriptor<T, false>
 {
-  T value, head;
+  T value, vertex;
 
 
   friend constexpr
@@ -76,20 +101,20 @@ struct adjacency_list_incident_edge_descriptor<T, true , false>
 };
 
 template<typename T>
-struct adjacency_list_incident_edge_descriptor<T, false, true>
+struct adjacency_list_incident_edge_descriptor<T, true>
 {
-  T value, tail;
+  T value;
 
 
   friend constexpr
   bool
-  operator== (adjacency_list_incident_edge_descriptor const &, adjacency_list_incident_edge_descriptor const &)
+  operator== (adjacency_list_incident_edge_descriptor, adjacency_list_incident_edge_descriptor)
   noexcept
   = default;
 
   friend constexpr
   auto
-  operator<=>(adjacency_list_incident_edge_descriptor const &, adjacency_list_incident_edge_descriptor const &)
+  operator<=>(adjacency_list_incident_edge_descriptor, adjacency_list_incident_edge_descriptor)
   noexcept
   = default;
 };
@@ -97,21 +122,22 @@ struct adjacency_list_incident_edge_descriptor<T, false, true>
 
 template<
     typename T,
+    bool     IsDirected,
     bool     IsOutIncident,
     bool     IsInIncident,
     typename Allocator>
 struct adjacency_list_incident_edge_container
 { };
 
-template<typename T, typename Allocator>
-struct adjacency_list_incident_edge_container<T, true, false, Allocator>
+template<typename T, bool IsDirected, typename Allocator>
+struct adjacency_list_incident_edge_container<T, IsDirected, true, false, Allocator>
 {
 private:
   using container_type
   = std::vector<
-      adjacency_list_incident_edge_descriptor<T, true, false>,
+      adjacency_list_incident_edge_descriptor<T, IsDirected>,
       typename std::allocator_traits<Allocator>::template rebind_alloc<
-          adjacency_list_incident_edge_descriptor<T, true, false>>>;
+          adjacency_list_incident_edge_descriptor<T, IsDirected>>>;
 
 public:
   container_type out;
@@ -130,15 +156,15 @@ public:
   = default;
 };
 
-template<typename T, typename Allocator>
-struct adjacency_list_incident_edge_container<T, false, true, Allocator>
+template<typename T, bool IsDirected, typename Allocator>
+struct adjacency_list_incident_edge_container<T, IsDirected, false, true, Allocator>
 {
 private:
   using container_type
   = std::vector<
-      adjacency_list_incident_edge_descriptor<T, false, true>,
+      adjacency_list_incident_edge_descriptor<T, IsDirected>,
       typename std::allocator_traits<Allocator>::template rebind_alloc<
-          adjacency_list_incident_edge_descriptor<T, false, true>>>;
+          adjacency_list_incident_edge_descriptor<T, IsDirected>>>;
 
 public:
   container_type in;
@@ -157,25 +183,18 @@ public:
   = default;
 };
 
-template<typename T, typename Allocator>
-struct adjacency_list_incident_edge_container<T, true, true, Allocator>
+template<typename T, bool IsDirected, typename Allocator>
+struct adjacency_list_incident_edge_container<T, IsDirected, true, true, Allocator>
 {
 private:
-  using out_container_type
+  using container_type
   = std::vector<
-      adjacency_list_incident_edge_descriptor<T, true, false>,
+      adjacency_list_incident_edge_descriptor<T, IsDirected>,
       typename std::allocator_traits<Allocator>::template rebind_alloc<
-          adjacency_list_incident_edge_descriptor<T, true, false>>>;
-
-  using in_container_type
-  = std::vector<
-      adjacency_list_incident_edge_descriptor<T, false, true>,
-      typename std::allocator_traits<Allocator>::template rebind_alloc<
-          adjacency_list_incident_edge_descriptor<T, false, true>>>;
+          adjacency_list_incident_edge_descriptor<T, IsDirected>>>;
 
 public:
-  out_container_type out;
-  in_container_type  in;
+  container_type out, in;
 
 
   friend constexpr
@@ -194,14 +213,15 @@ public:
 
 template<
     typename T,
+    bool     IsDirected,
     bool     IsOutIncident,
     bool     IsInIncident,
     typename Allocator>
 using adjacency_list_vertex_container
 = std::vector<
-    adjacency_list_incident_edge_container<T, IsOutIncident, IsInIncident, Allocator>,
+    adjacency_list_incident_edge_container<T, IsDirected, IsOutIncident, IsInIncident, Allocator>,
     typename std::allocator_traits<Allocator>::template rebind_alloc<
-        adjacency_list_incident_edge_container<T, IsOutIncident, IsInIncident, Allocator>>>;
+        adjacency_list_incident_edge_container<T, IsDirected, IsOutIncident, IsInIncident, Allocator>>>;
 
 
 template<typename T, typename Allocator>
@@ -243,8 +263,17 @@ public:
   using edge_descriptor   = detail::adjacency_list_edge_descriptor  <value_type, is_directed>;
 
 private:
-  using vertex_container = detail::adjacency_list_vertex_container<value_type, is_out_incident, is_in_incident, allocator_type>;
-  using edge_container   = detail::adjacency_list_edge_container  <value_type, allocator_type>;
+  using vertex_container
+  = detail::adjacency_list_vertex_container<
+      value_type,
+      is_directed,
+      is_out_incident,
+      is_in_incident,
+      allocator_type>;
+
+  using edge_container
+  = detail::adjacency_list_edge_container  <value_type, allocator_type>;
+
 
   using vertex_allocator = typename vertex_container::allocator_type;
   using edge_allocator   = typename edge_container  ::allocator_type;
@@ -358,6 +387,114 @@ public:
   get_allocator() const
   noexcept
   { return allocator_type{m_vertices.get_allocator()}; }
+
+
+  [[nodiscard]] constexpr
+  auto
+  vertices() const
+  noexcept
+  {
+    return std::views::iota(value_type{}, m_edges.size())
+         | std::views::transform(
+               [](value_type val)
+               { return vertex_descriptor{val}; });
+  }
+
+  [[nodiscard]] constexpr
+  auto
+  edges() const
+  noexcept
+  {
+    return std::views::iota(value_type{}, m_edges.size())
+         | std::views::transform(
+               [this](value_type const val)
+               {
+                 if constexpr (is_directed)
+                   return edge_descriptor{val};
+                 else
+                 {
+                   auto ends{m_edges[val]};
+
+                   return edge_descriptor{val, ends.first.value, ends.second.value};
+                 }
+               });
+  }
+
+  [[nodiscard]] constexpr
+  std::size_t
+  edge_count() const
+  noexcept
+  { return m_edges.size(); }
+
+  [[nodiscard]] constexpr
+  std::size_t
+  vertex_count() const
+  noexcept
+  { return m_vertices.size(); }
+
+  [[nodiscard]]
+  constexpr
+  auto
+  out_edges(vertex_descriptor const v) const
+  noexcept
+  requires is_out_incident
+  {
+    if constexpr (is_directed)
+    {
+      return m_vertices[v.value].out
+          | std::views::transform(
+                [](auto const &ie)
+                { return edge_descriptor{ie.value}; });
+    }
+    else
+    {
+      auto idx{v.value};
+
+      return m_vertices[idx].out
+           | std::views::transform(
+                 [idx](auto const &ie)
+                 { return edge_descriptor{ie.value, idx, ie.vertex}; });
+    }
+  }
+
+  [[nodiscard]]
+  constexpr
+  auto
+  in_edges(vertex_descriptor const v) const
+  noexcept
+  requires is_in_incident
+  {
+    if constexpr (is_directed)
+    {
+      return m_vertices[v.value].in
+          | std::views::transform(
+                [](auto const &ie)
+                { return edge_descriptor{ie.value}; });
+    }
+    else
+    {
+      auto idx{v.value};
+
+      return m_vertices[idx].in
+           | std::views::transform(
+                 [idx](auto const &ie)
+                 { return edge_descriptor{ie.value, ie.vertex, idx}; });
+    }
+  }
+
+  [[nodiscard]] constexpr
+  std::size_t
+  out_degree(vertex_descriptor const v) const
+  noexcept
+  requires is_out_incident
+  { return m_vertices[v.value].out.size(); }
+
+  [[nodiscard]] constexpr
+  std::size_t
+  in_degree (vertex_descriptor const v) const
+  noexcept
+  requires is_in_incident
+  { return m_vertices[v.value].in .size(); }
 };
 
 } // namespace heim::graphs
