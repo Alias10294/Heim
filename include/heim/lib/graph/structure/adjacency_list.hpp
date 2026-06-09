@@ -394,7 +394,7 @@ public:
   vertices() const
   noexcept
   {
-    return std::views::iota(value_type{}, m_edges.size())
+    return std::views::iota(value_type{}, m_vertices.size())
          | std::views::transform(
                [](value_type val)
                { return vertex_descriptor{val}; });
@@ -422,15 +422,15 @@ public:
 
   [[nodiscard]] constexpr
   std::size_t
-  edge_count() const
-  noexcept
-  { return m_edges.size(); }
-
-  [[nodiscard]] constexpr
-  std::size_t
   vertex_count() const
   noexcept
   { return m_vertices.size(); }
+
+  [[nodiscard]] constexpr
+  std::size_t
+  edge_count() const
+  noexcept
+  { return m_edges.size(); }
 
   [[nodiscard]]
   constexpr
