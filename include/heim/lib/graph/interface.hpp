@@ -3,11 +3,63 @@
 
 #include <concepts>
 #include <ranges>
+#include <type_traits>
 #include <utility>
-#include "primitives.hpp"
 
 namespace heim::graphs
 {
+template<typename G>
+struct vertex_descriptor
+  : std::type_identity<typename std::remove_cvref_t<G>::vertex_descriptor>
+{ };
+
+template<typename G>
+using vertex_descriptor_t
+= typename vertex_descriptor<G>::type;
+
+
+template<typename G>
+struct edge_descriptor
+  : std::type_identity<typename std::remove_cvref_t<G>::edge_descriptor>
+{ };
+
+template<typename G>
+using edge_descriptor_t
+= typename edge_descriptor<G>::type;
+
+
+template<typename G>
+struct is_directed
+  : std::bool_constant<std::remove_cvref_t<G>::is_directed>
+{ };
+
+template<typename G>
+inline constexpr
+bool
+is_directed_v
+= is_directed<G>::value;
+
+template<typename G>
+concept directed
+= is_directed_v<G>;
+
+
+template<typename G>
+struct is_multigraph
+  : std::bool_constant<std::remove_cvref_t<G>::is_multigraph>
+{ };
+
+template<typename G>
+inline constexpr
+bool
+is_multigraph_v
+= is_multigraph<G>::value;
+
+template<typename G>
+concept multigraph
+= is_multigraph_v<G>;
+
+
 namespace detail
 {
 template<typename R, typename G>
