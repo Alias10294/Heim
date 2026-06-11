@@ -223,6 +223,34 @@ struct guaranteed<
   : guaranteed<conjunction<negation<Expressions> ...>>
 { };
 
+
+template<typename>
+struct mentioned;
+
+template<typename Expr>
+using mentioned_t
+= typename mentioned<Expr>::type;
+
+template<typename C>
+struct mentioned
+  : std::type_identity<type_sequence<C>>
+{ };
+
+template<typename ...Expr>
+struct mentioned<conjunction<Expr ...>>
+  : std::type_identity<typename type_sequence<mentioned_t<Expr> ...>::join::unique>
+{ };
+
+template<typename ...Expr>
+struct mentioned<disjunction<Expr ...>>
+  : std::type_identity<typename type_sequence<mentioned_t<Expr> ...>::join::unique>
+{ };
+
+template<typename Expr>
+struct mentioned<negation<Expr>>
+  : mentioned<Expr>
+{ };
+
 } // namespace heim
 
 #endif // HEIM_ECS_EXPRESSION_HPP
