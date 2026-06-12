@@ -64,14 +64,14 @@ public:
 
   constexpr
   registry(registry const &other, allocator_type const alloc)
-    : m_manager{other.m_storage, alloc}
+    : m_manager{other.m_manager, alloc}
     , m_storage{other.m_storage, alloc}
   { }
 
   constexpr
   registry(registry &&other, allocator_type const alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_manager{std::move(other.m_storage), alloc}
+    : m_manager{std::move(other.m_manager), alloc}
     , m_storage{std::move(other.m_storage), alloc}
   { }
 
@@ -217,7 +217,7 @@ public:
   constexpr
   std::pair<bool, C &>
   insert_or_assign(identifier_type const id, C &&c)
-  { return m_storage.template insert<C>(id, std::forward<C>(c)); }
+  { return m_storage.template insert_or_assign<C>(id, std::forward<C>(c)); }
 
   template<typename C>
   constexpr
