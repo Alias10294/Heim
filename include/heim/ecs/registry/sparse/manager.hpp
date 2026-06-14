@@ -2,7 +2,6 @@
 #define HEIM_ECS_REGISTRY_SPARSE_MANAGER_HPP
 
 #include <cstddef>
-#include <memory>
 #include <ranges>
 #include <type_traits>
 #include <utility>
@@ -13,7 +12,7 @@ namespace heim::ecs::sparse
 {
 template<
     typename Id,
-    typename Alloc = std::allocator<Id>>
+    typename Alloc>
 class manager
 {
 public:

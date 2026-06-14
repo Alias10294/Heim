@@ -1,7 +1,6 @@
 #ifndef HEIM_ECS_REGISTRY_SPARSE_ECS_REGISTRY_HPP
 #define HEIM_ECS_REGISTRY_SPARSE_ECS_REGISTRY_HPP
 
-#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <ranges>
@@ -9,214 +8,15 @@
 #include <utility>
 #include "heim/ecs/expression.hpp"
 #include "heim/ecs/identifier.hpp"
-#include "detail/pool.hpp"
-#include "detail/set.hpp"
 #include "manager.hpp"
 
 namespace heim::ecs::sparse
 {
 template<
-    typename    Id,
-    typename    Alloc  = std::allocator<Id>,
-    std::size_t PageSz = 1024>
-class auto_storage
-{
-public:
-  using identifier_type = Id;
-  using allocator_type  = Alloc;
-
-  static constexpr std::size_t page_size
-  = PageSz;
-
-private:
-  using alloc_traits
-  = std::allocator_traits<Alloc>;
-
-  using set_type      = heim::sparse::set<Id, PageSz, Alloc>;
-  using set_allocator = typename alloc_traits::template rebind_alloc<set_type>;
-
-  using set_pointer           = std::shared_ptr<set_type>;
-  using set_pointer_allocator = typename alloc_traits::template rebind_alloc<set_pointer>;
-  using set_pointer_container = std::vector<set_pointer, set_pointer_allocator>;
-
-  template<typename C>
-  using pool_for_type
-  = heim::sparse::pool<C, Id, PageSz, Alloc>;
-
-private:
-  set_pointer_container m_container;
-
-private:
-  static constexpr
-  bool
-  s_noexcept_move_alloc_construct()
-  noexcept
-  {
-    return std::is_nothrow_constructible_v<
-        set_pointer_container,
-        set_pointer_container, set_pointer_allocator>;
-  }
-
-  static constexpr
-  bool
-  s_noexcept_default_construct()
-  noexcept
-  { return std::is_nothrow_constructible_v<allocator_type>; }
-
-  static constexpr
-  bool
-  s_noexcept_swap()
-  noexcept
-  { return std::is_nothrow_swappable_v<set_pointer_container>; }
-
-
-  static constexpr
-  std::size_t
-  s_next_index()
-  noexcept
-  {
-    static std::atomic_size_t counter{0};
-
-    return counter.fetch_add(std::size_t{1}, std::memory_order_relaxed);
-  }
-
-  template<typename C>
-  requires (!qualified<C>)
-  static constexpr
-  std::size_t
-  s_index()
-  noexcept
-  {
-    static std::size_t const idx{s_next_index()};
-
-    return idx;
-  }
-
-public:
-  explicit constexpr
-  auto_storage(allocator_type const alloc)
-  noexcept
-    : m_container{alloc}
-  { }
-
-  constexpr
-  auto_storage(auto_storage const &other, allocator_type const alloc)
-    : m_container{other.m_container, alloc}
-  { }
-
-  constexpr
-  auto_storage(auto_storage &&other, allocator_type const alloc)
-  noexcept(s_noexcept_move_alloc_construct())
-    : m_container{std::move(other.m_container), alloc}
-  { }
-
-  constexpr
-  auto_storage()
-  noexcept(s_noexcept_default_construct())
-    : auto_storage{allocator_type{}}
-  { }
-
-  constexpr
-  auto_storage(auto_storage const &)
-  = default;
-
-  constexpr
-  auto_storage(auto_storage &&)
-  = default;
-
-  constexpr
-  ~auto_storage()
-  = default;
-
-  constexpr
-  auto_storage &
-  operator=(auto_storage const &)
-  = default;
-
-  constexpr
-  auto_storage &
-  operator=(auto_storage &&)
-  = default;
-
-  constexpr
-  void
-  swap(auto_storage &other)
-  noexcept(s_noexcept_swap())
-  {
-    using std::swap;
-
-    swap(m_container, other.m_container);
-  }
-
-  friend constexpr
-  void
-  swap(auto_storage &lhs, auto_storage &rhs)
-  noexcept(s_noexcept_swap())
-  { lhs.swap(rhs); }
-
-  [[nodiscard]] constexpr
-  allocator_type
-  get_allocator() const
-  noexcept
-  { return allocator_type{m_container.get_allocator()}; }
-
-  [[nodiscard]] friend constexpr
-  bool
-  operator==(auto_storage const &, auto_storage const &)
-  = default;
-
-
-  template<typename C>
-  requires (!qualified<C>)
-  [[nodiscard]] constexpr
-  pool_for_type<C> &
-  assure()
-  {
-    std::size_t const idx{s_index<C>()};
-
-    if (m_container.size() <= idx) [[unlikely]]
-      m_container.resize(idx + 1);
-
-    if (allocator_type alloc{get_allocator()}; !m_container[idx]) [[unlikely]]
-      m_container[idx] = std::allocate_shared<pool_for_type<C>>(alloc, alloc);
-
-    return static_cast<pool_for_type<C> &>(*m_container[idx]);
-  }
-
-  template<typename C>
-  requires (!qualified<C>)
-  [[nodiscard]] constexpr
-  pool_for_type<C> &
-  pool()
-  noexcept
-  { return static_cast<pool_for_type<C> &>(*m_container[s_index<C>()]); }
-
-  template<typename C>
-  requires (!qualified<C>)
-  [[nodiscard]] constexpr
-  pool_for_type<C> const &
-  pool() const
-  noexcept
-  { return static_cast<pool_for_type<C> &>(*m_container[s_index<C>()]); }
-
-
-  constexpr
-  void
-  clear(identifier_type const id)
-  { for (auto &pool : m_container) pool->try_erase(id); }
-
-  constexpr
-  void
-  clear()
-  { for (auto &pool : m_container) pool->clear(); }
-};
-
-
-template<
-    typename Id      = default_identifier_t<>,
-    typename Alloc   = std::allocator<Id>,
-    typename Storage = auto_storage<Id, Alloc>>
-class registry
+    typename Id,
+    typename Alloc,
+    typename Storage>
+class generic_registry
 {
 public:
   using identifier_type = Id;
@@ -349,56 +149,56 @@ private:
 
 public:
   explicit constexpr
-  registry(allocator_type const alloc)
+  generic_registry(allocator_type const alloc)
   noexcept
     : m_manager{alloc}
     , m_storage{alloc}
   { }
 
   constexpr
-  registry(registry const &other, allocator_type const alloc)
+  generic_registry(generic_registry const &other, allocator_type const alloc)
     : m_manager{other.m_manager, alloc}
     , m_storage{other.m_storage, alloc}
   { }
 
   constexpr
-  registry(registry &&other, allocator_type const alloc)
+  generic_registry(generic_registry &&other, allocator_type const alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_manager{std::move(other.m_manager), alloc}
     , m_storage{std::move(other.m_storage), alloc}
   { }
 
   constexpr
-  registry()
+  generic_registry()
   noexcept(s_noexcept_default_construct())
-    : registry{allocator_type{}}
+    : generic_registry{allocator_type{}}
   { }
 
   constexpr
-  registry(registry const &)
+  generic_registry(generic_registry const &)
   = default;
 
   constexpr
-  registry(registry &&)
+  generic_registry(generic_registry &&)
   = default;
 
   constexpr
-  ~registry()
+  ~generic_registry()
   = default;
 
   constexpr
-  registry &
-  operator=(registry const &)
+  generic_registry &
+  operator=(generic_registry const &)
   = default;
 
   constexpr
-  registry &
-  operator=(registry &&)
+  generic_registry &
+  operator=(generic_registry &&)
   = default;
 
   constexpr
   void
-  swap(registry &other)
+  swap(generic_registry &other)
   noexcept(s_noexcept_swap())
   {
     using std::swap;
@@ -409,7 +209,7 @@ public:
 
   friend constexpr
   void
-  swap(registry &lhs, registry &rhs)
+  swap(generic_registry &lhs, generic_registry &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
@@ -422,21 +222,21 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(registry const &, registry const &)
+  operator==(generic_registry const &, generic_registry const &)
   = default;
 
 
-  [[nodiscard]] constexpr auto begin() noexcept       { return std::ranges::begin (m_manager); }
-  [[nodiscard]] constexpr auto begin() const noexcept { return std::ranges::cbegin(m_manager); }
+  [[nodiscard]] constexpr auto begin() noexcept       { return m_manager.begin(); }
+  [[nodiscard]] constexpr auto begin() const noexcept { return m_manager.begin(); }
 
-  [[nodiscard]] constexpr auto end() noexcept       { return std::ranges::end (m_manager); }
-  [[nodiscard]] constexpr auto end() const noexcept { return std::ranges::cend(m_manager); }
+  [[nodiscard]] constexpr auto end() noexcept       { return m_manager.end(); }
+  [[nodiscard]] constexpr auto end() const noexcept { return m_manager.end(); }
 
   [[nodiscard]] constexpr auto cbegin() const noexcept { return begin(); }
   [[nodiscard]] constexpr auto cend  () const noexcept { return end  (); }
 
-  [[nodiscard]] constexpr auto size () const noexcept { return std::ranges::size (m_manager); }
-  [[nodiscard]] constexpr bool empty() const noexcept { return std::ranges::empty(m_manager); }
+  [[nodiscard]] constexpr auto size () const noexcept { return m_manager.size (); }
+  [[nodiscard]] constexpr bool empty() const noexcept { return m_manager.empty(); }
 
 
   template<typename C>
@@ -621,10 +421,6 @@ public:
     m_manager.destroy_all();
   }
 };
-
-
-using auto_registry
-= registry<>;
 
 } // namespace heim::ecs::sparse
 

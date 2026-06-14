@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "heim/lib/type_sequence.hpp"
 
-namespace heim
+namespace heim::ecs
 {
 struct conjunction_tag { };
 struct disjunction_tag { };
