@@ -13,8 +13,8 @@
 #include "heim/lib/type_sequence.hpp"
 #include "detail/core.hpp"
 #include "detail/iterator.hpp"
-#include "pool.hpp"
-#include "set.hpp"
+#include "detail/pool.hpp"
+#include "detail/set.hpp"
 
 namespace heim::sparse
 {

@@ -13,17 +13,19 @@ namespace heim::ecs::sparse
 {
 template<
     typename Id,
-    typename Cont = std::vector<Id>>
+    typename Alloc = std::allocator<Id>>
 class manager
 {
 public:
   using identifier_type = Id;
-  using container_type  = Cont;
-  using allocator_type  = typename container_type::allocator_type;
+  using allocator_type  = Alloc;
 
 private:
   using id_traits
   = identifier_traits<Id>;
+
+  using container_type
+  = std::vector<Id, Alloc>;
 
 private:
   container_type m_dense;

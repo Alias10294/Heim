@@ -36,7 +36,7 @@ private:
   m_base()
   noexcept
   {
-    return m_reg
+    return *m_reg
          | std::views::filter(
                [this](auto const id)
                { return m_reg->template matches<Expr>(id); });
@@ -60,13 +60,13 @@ public:
   auto
   begin()
   noexcept
-  { return std::ranges::begin(m_base()); }
+  { return m_base().begin(); }
 
   [[nodiscard]] constexpr
   auto
   end()
   noexcept
-  { return std::ranges::end(m_base()); }
+  { return m_base().end(); }
 };
 
 
@@ -94,8 +94,6 @@ detail::match_fn<Expr>
 match;
 
 } // namespace views
-
-
 } // namespace heim::ecs
 
 #endif // HEIM_ECS_REGISTRY_VIEW_HPP
