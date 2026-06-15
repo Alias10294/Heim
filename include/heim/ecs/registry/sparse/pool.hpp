@@ -12,8 +12,8 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-class pool
-  : public set<Id, PageSz, Alloc>
+class generic_pool
+  : public generic_set<Id, PageSz, Alloc>
 { };
 
 template<
@@ -22,8 +22,8 @@ template<
     std::size_t PageSz,
     typename    Alloc>
 requires std::is_empty_v<C>
-class pool
-  : public set<Id, PageSz, Alloc>
+class generic_pool
+  : public generic_set<Id, PageSz, Alloc>
 { };
 
 } // namespace heim::ecs::sparse

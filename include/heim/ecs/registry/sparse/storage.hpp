@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 #include "heim/lib/utility.hpp"
+#include "pool.hpp"
+#include "set.hpp"
 
 namespace heim::ecs::sparse
 {
@@ -15,7 +17,7 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-class automatic_storage
+class generic_automatic_storage
 {
 public:
   using identifier_type = Id;
@@ -28,7 +30,7 @@ private:
   using alloc_traits
   = std::allocator_traits<Alloc>;
 
-  using set_type      = set<Id, PageSz, Alloc>;
+  using set_type      = generic_set<Id, PageSz, Alloc>;
   using set_allocator = typename alloc_traits::template rebind_alloc<set_type>;
 
   using set_pointer           = std::shared_ptr<set_type>;
@@ -37,7 +39,7 @@ private:
 
   template<typename C>
   using pool_for_type
-  = pool<C, Id, PageSz, Alloc>;
+  = generic_pool<C, Id, PageSz, Alloc>;
 
 private:
   set_pointer_container m_container;
@@ -90,53 +92,53 @@ private:
 
 public:
   explicit constexpr
-  automatic_storage(allocator_type const alloc)
+  generic_automatic_storage(allocator_type const &alloc)
   noexcept
     : m_container{alloc}
   { }
 
   constexpr
-  automatic_storage(automatic_storage const &other, allocator_type const alloc)
+  generic_automatic_storage(generic_automatic_storage const &other, allocator_type const &alloc)
     : m_container{other.m_container, alloc}
   { }
 
   constexpr
-  automatic_storage(automatic_storage &&other, allocator_type const alloc)
+  generic_automatic_storage(generic_automatic_storage &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_container{std::move(other.m_container), alloc}
   { }
 
   constexpr
-  automatic_storage()
+  generic_automatic_storage()
   noexcept(s_noexcept_default_construct())
-    : automatic_storage{allocator_type{}}
+    : generic_automatic_storage{allocator_type{}}
   { }
 
   constexpr
-  automatic_storage(automatic_storage const &)
+  generic_automatic_storage(generic_automatic_storage const &)
   = default;
 
   constexpr
-  automatic_storage(automatic_storage &&)
+  generic_automatic_storage(generic_automatic_storage &&)
   = default;
 
   constexpr
-  ~automatic_storage()
+  ~generic_automatic_storage()
   = default;
 
   constexpr
-  automatic_storage &
-  operator=(automatic_storage const &)
+  generic_automatic_storage &
+  operator=(generic_automatic_storage const &)
   = default;
 
   constexpr
-  automatic_storage &
-  operator=(automatic_storage &&)
+  generic_automatic_storage &
+  operator=(generic_automatic_storage &&)
   = default;
 
   constexpr
   void
-  swap(automatic_storage &other)
+  swap(generic_automatic_storage &other)
   noexcept(s_noexcept_swap())
   {
     using std::swap;
@@ -146,7 +148,7 @@ public:
 
   friend constexpr
   void
-  swap(automatic_storage &lhs, automatic_storage &rhs)
+  swap(generic_automatic_storage &lhs, generic_automatic_storage &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
@@ -158,7 +160,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(automatic_storage const &, automatic_storage const &)
+  operator==(generic_automatic_storage const &, generic_automatic_storage const &)
   = default;
 
 

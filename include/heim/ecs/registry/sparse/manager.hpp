@@ -13,7 +13,7 @@ namespace heim::ecs::sparse
 template<
     typename Id,
     typename Alloc>
-class manager
+class generic_manager
 {
 public:
   using identifier_type = Id;
@@ -52,7 +52,7 @@ private:
 
 public:
   explicit constexpr
-  manager(allocator_type const alloc)
+  generic_manager(allocator_type const &alloc)
   noexcept
     : m_dense {alloc}
     , m_sparse{alloc}
@@ -60,14 +60,14 @@ public:
   { }
 
   constexpr
-  manager(manager const &other, allocator_type const alloc)
+  generic_manager(generic_manager const &other, allocator_type const &alloc)
     : m_dense {other.m_dense , alloc}
     , m_sparse{other.m_sparse, alloc}
     , m_begin {other.m_begin}
   { }
 
   constexpr
-  manager(manager &&other, allocator_type const alloc)
+  generic_manager(generic_manager &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_dense {std::move(other.m_dense ), alloc}
     , m_sparse{std::move(other.m_sparse), alloc}
@@ -75,36 +75,36 @@ public:
   { }
 
   constexpr
-  manager()
+  generic_manager()
   noexcept(s_noexcept_default_construct())
-    : manager{allocator_type{}}
+    : generic_manager{allocator_type{}}
   { }
 
   constexpr
-  manager(manager const &)
+  generic_manager(generic_manager const &)
   = default;
 
   constexpr
-  manager(manager &&)
+  generic_manager(generic_manager &&)
   = default;
 
   constexpr
-  ~manager()
+  ~generic_manager()
   = default;
 
   constexpr
-  manager &
-  operator=(manager const &)
+  generic_manager &
+  operator=(generic_manager const &)
   = default;
 
   constexpr
-  manager &
-  operator=(manager &&)
+  generic_manager &
+  operator=(generic_manager &&)
   = default;
 
   constexpr
   void
-  swap(manager &other)
+  swap(generic_manager &other)
   noexcept(s_noexcept_swap())
   {
     using std::swap;
@@ -116,7 +116,7 @@ public:
 
   friend constexpr
   void
-  swap(manager &lhs, manager &rhs)
+  swap(generic_manager &lhs, generic_manager &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
@@ -128,7 +128,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(manager const &, manager const &)
+  operator==(generic_manager const &, generic_manager const &)
   = default;
 
 

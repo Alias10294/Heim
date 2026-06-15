@@ -9,7 +9,7 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-class set
+class generic_set
 { };
 
 } // namespace heim::ecs::sparse

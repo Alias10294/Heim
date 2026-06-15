@@ -1,5 +1,5 @@
-#ifndef HEIM_ECS_REGISTRY_VIEW_HPP
-#define HEIM_ECS_REGISTRY_VIEW_HPP
+#ifndef HEIM_ECS_REGISTRY_VIEWS_HPP
+#define HEIM_ECS_REGISTRY_VIEWS_HPP
 
 #include <compare>
 #include <concepts>
@@ -96,4 +96,4 @@ match;
 } // namespace views
 } // namespace heim::ecs
 
-#endif // HEIM_ECS_REGISTRY_VIEW_HPP
+#endif // HEIM_ECS_REGISTRY_VIEWS_HPP

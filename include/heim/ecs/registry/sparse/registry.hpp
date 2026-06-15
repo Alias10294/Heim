@@ -1,5 +1,5 @@
-#ifndef HEIM_ECS_REGISTRY_SPARSE_ECS_REGISTRY_HPP
-#define HEIM_ECS_REGISTRY_SPARSE_ECS_REGISTRY_HPP
+#ifndef HEIM_ECS_REGISTRY_SPARSE_REGISTRY_HPP
+#define HEIM_ECS_REGISTRY_SPARSE_REGISTRY_HPP
 
 #include <cstddef>
 #include <memory>
@@ -63,11 +63,11 @@ private:
   s_noexcept_matches()
   noexcept
   {
-    if      constexpr (is_specialization_of_conjunction_v<Expr>)
+    if      constexpr (specialization_of_conjunction<Expr>)
       return s_noexcept_matches_conjunction(Expr{});
-    else if constexpr (is_specialization_of_disjunction_v<Expr>)
+    else if constexpr (specialization_of_disjunction<Expr>)
       return s_noexcept_matches_disjunction(Expr{});
-    else if constexpr (is_specialization_of_negation_v   <Expr>)
+    else if constexpr (specialization_of_negation   <Expr>)
       return s_noexcept_matches_negation   (Expr{});
     else
       return noexcept(std::declval<storage_type &>().template assure<Expr>());
@@ -149,20 +149,20 @@ private:
 
 public:
   explicit constexpr
-  generic_registry(allocator_type const alloc)
+  generic_registry(allocator_type const &alloc)
   noexcept
     : m_manager{alloc}
     , m_storage{alloc}
   { }
 
   constexpr
-  generic_registry(generic_registry const &other, allocator_type const alloc)
+  generic_registry(generic_registry const &other, allocator_type const &alloc)
     : m_manager{other.m_manager, alloc}
     , m_storage{other.m_storage, alloc}
   { }
 
   constexpr
-  generic_registry(generic_registry &&other, allocator_type const alloc)
+  generic_registry(generic_registry &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_manager{std::move(other.m_manager), alloc}
     , m_storage{std::move(other.m_storage), alloc}
@@ -310,11 +310,11 @@ public:
   matches(identifier_type const id)
   noexcept(s_noexcept_matches<Expr>())
   {
-    if      constexpr (is_specialization_of_conjunction_v<Expr>)
+    if      constexpr (specialization_of_conjunction<Expr>)
       return m_matches_conjunction(id, Expr{});
-    else if constexpr (is_specialization_of_disjunction_v<Expr>)
+    else if constexpr (specialization_of_disjunction<Expr>)
       return m_matches_disjunction(id, Expr{});
-    else if constexpr (is_specialization_of_negation_v   <Expr>)
+    else if constexpr (specialization_of_negation   <Expr>)
       return m_matches_negation   (id, Expr{});
     else
       return assure<Expr>().contains(id);
@@ -327,11 +327,11 @@ public:
   matches(identifier_type const id) const
   noexcept
   {
-    if      constexpr (is_specialization_of_conjunction_v<Expr>)
+    if      constexpr (specialization_of_conjunction<Expr>)
       return m_matches_conjunction(id, Expr{});
-    else if constexpr (is_specialization_of_disjunction_v<Expr>)
+    else if constexpr (specialization_of_disjunction<Expr>)
       return m_matches_disjunction(id, Expr{});
-    else if constexpr (is_specialization_of_negation_v   <Expr>)
+    else if constexpr (specialization_of_negation   <Expr>)
       return m_matches_negation   (id, Expr{});
     else
       return pool<Expr>().contains(id);
@@ -424,4 +424,4 @@ public:
 
 } // namespace heim::ecs::sparse
 
-#endif // HEIM_ECS_REGISTRY_SPARSE_ECS_REGISTRY_HPP
+#endif // HEIM_ECS_REGISTRY_SPARSE_REGISTRY_HPP
