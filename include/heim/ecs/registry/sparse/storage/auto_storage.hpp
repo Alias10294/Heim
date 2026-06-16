@@ -1,5 +1,5 @@
-#ifndef HEIM_ECS_REGISTRY_SPARSE_STORAGE_HPP
-#define HEIM_ECS_REGISTRY_SPARSE_STORAGE_HPP
+#ifndef HEIM_ECS_REGISTRY_SPARSE_STORAGE_AUTO_STORAGE_HPP
+#define HEIM_ECS_REGISTRY_SPARSE_STORAGE_AUTO_STORAGE_HPP
 
 #include <atomic>
 #include <cstddef>
@@ -17,7 +17,7 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-class generic_automatic_storage
+class generic_auto_storage
 {
 public:
   using identifier_type = Id;
@@ -92,53 +92,53 @@ private:
 
 public:
   explicit constexpr
-  generic_automatic_storage(allocator_type const &alloc)
+  generic_auto_storage(allocator_type const &alloc)
   noexcept
     : m_container{alloc}
   { }
 
   constexpr
-  generic_automatic_storage(generic_automatic_storage const &other, allocator_type const &alloc)
+  generic_auto_storage(generic_auto_storage const &other, allocator_type const &alloc)
     : m_container{other.m_container, alloc}
   { }
 
   constexpr
-  generic_automatic_storage(generic_automatic_storage &&other, allocator_type const &alloc)
+  generic_auto_storage(generic_auto_storage &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_container{std::move(other.m_container), alloc}
   { }
 
   constexpr
-  generic_automatic_storage()
+  generic_auto_storage()
   noexcept(s_noexcept_default_construct())
-    : generic_automatic_storage{allocator_type{}}
+    : generic_auto_storage{allocator_type{}}
   { }
 
   constexpr
-  generic_automatic_storage(generic_automatic_storage const &)
+  generic_auto_storage(generic_auto_storage const &)
   = default;
 
   constexpr
-  generic_automatic_storage(generic_automatic_storage &&)
+  generic_auto_storage(generic_auto_storage &&)
   = default;
 
   constexpr
-  ~generic_automatic_storage()
+  ~generic_auto_storage()
   = default;
 
   constexpr
-  generic_automatic_storage &
-  operator=(generic_automatic_storage const &)
+  generic_auto_storage &
+  operator=(generic_auto_storage const &)
   = default;
 
   constexpr
-  generic_automatic_storage &
-  operator=(generic_automatic_storage &&)
+  generic_auto_storage &
+  operator=(generic_auto_storage &&)
   = default;
 
   constexpr
   void
-  swap(generic_automatic_storage &other)
+  swap(generic_auto_storage &other)
   noexcept(s_noexcept_swap())
   {
     using std::swap;
@@ -148,7 +148,7 @@ public:
 
   friend constexpr
   void
-  swap(generic_automatic_storage &lhs, generic_automatic_storage &rhs)
+  swap(generic_auto_storage &lhs, generic_auto_storage &rhs)
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
@@ -160,7 +160,7 @@ public:
 
   [[nodiscard]] friend constexpr
   bool
-  operator==(generic_automatic_storage const &, generic_automatic_storage const &)
+  operator==(generic_auto_storage const &, generic_auto_storage const &)
   = default;
 
 
@@ -211,4 +211,4 @@ public:
 
 } // namespace heim::ecs::sparse
 
-#endif // HEIM_ECS_REGISTRY_SPARSE_STORAGE_HPP
+#endif // HEIM_ECS_REGISTRY_SPARSE_STORAGE_AUTO_STORAGE_HPP
