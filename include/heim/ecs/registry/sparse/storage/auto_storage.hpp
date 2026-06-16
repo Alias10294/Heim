@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -16,7 +17,7 @@ namespace heim::ecs::sparse
 template<
     typename    Id,
     std::size_t PageSz,
-    typename    Alloc>
+    typename    Alloc  = std::allocator<Id>>
 class generic_auto_storage
 {
 public:
@@ -98,9 +99,8 @@ public:
   { }
 
   constexpr
-  generic_auto_storage(generic_auto_storage const &other, allocator_type const &alloc)
-    : m_container{other.m_container, alloc}
-  { }
+  generic_auto_storage(generic_auto_storage const &, allocator_type const &)
+  = delete;
 
   constexpr
   generic_auto_storage(generic_auto_storage &&other, allocator_type const &alloc)
@@ -116,7 +116,7 @@ public:
 
   constexpr
   generic_auto_storage(generic_auto_storage const &)
-  = default;
+  = delete;
 
   constexpr
   generic_auto_storage(generic_auto_storage &&)
@@ -129,7 +129,7 @@ public:
   constexpr
   generic_auto_storage &
   operator=(generic_auto_storage const &)
-  = default;
+  = delete;
 
   constexpr
   generic_auto_storage &
@@ -161,7 +161,7 @@ public:
   [[nodiscard]] friend constexpr
   bool
   operator==(generic_auto_storage const &, generic_auto_storage const &)
-  = default;
+  = delete;
 
 
   template<typename C>
@@ -195,18 +195,30 @@ public:
   pool_for_type<C> const &
   pool() const
   noexcept
-  { return static_cast<pool_for_type<C> &>(*m_container[s_index<C>()]); }
+  { return static_cast<pool_for_type<C> const &>(*m_container[s_index<C>()]); }
 
 
   constexpr
   void
   clear(identifier_type const id)
-  { for (auto &pool : m_container) pool->try_erase(id); }
+  {
+    for (auto &pool : m_container)
+    {
+      if (pool)
+        pool->try_erase(id);
+    }
+  }
 
   constexpr
   void
   clear()
-  { for (auto &pool : m_container) pool->clear(); }
+  {
+    for (auto &pool : m_container)
+    {
+      if (pool)
+        pool->clear();
+    }
+  }
 };
 
 } // namespace heim::ecs::sparse
