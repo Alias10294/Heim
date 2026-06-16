@@ -37,8 +37,8 @@ private:
   s_noexcept_move_alloc_construct()
   noexcept
   {
-    return std::is_nothrow_constructible_v<manager_type, manager_type, allocator_type>
-        && std::is_nothrow_constructible_v<storage_type, storage_type, allocator_type>;
+    return std::is_nothrow_constructible_v<manager_type, manager_type &&, allocator_type const &>
+        && std::is_nothrow_constructible_v<storage_type, storage_type &&, allocator_type const &>;
   }
 
   static constexpr
@@ -348,21 +348,21 @@ public:
   template<typename C, typename ...Args>
   requires (!qualified<C>)
   constexpr
-  std::pair<bool, C &>
+  std::pair<C &, bool>
   try_emplace(identifier_type const id, Args &&...args)
   { return assure<C>().try_emplace(id, std::forward<Args>(args)...); }
 
   template<typename C>
   requires (!qualified<C>)
   constexpr
-  std::pair<bool, C &>
+  std::pair<C &, bool>
   insert(identifier_type const id, C &&c)
   { return assure<C>().insert(id, std::forward<C>(c)); }
 
   template<typename C>
   requires (!qualified<C>)
   constexpr
-  std::pair<bool, C &>
+  std::pair<C &, bool>
   insert_or_assign(identifier_type const id, C &&c)
   { return assure<C>().insert_or_assign(id, std::forward<C>(c)); }
 

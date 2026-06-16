@@ -1,6 +1,7 @@
 #ifndef HEIM_ECS_REGISTRY_SPARSE_SET_HPP
 #define HEIM_ECS_REGISTRY_SPARSE_SET_HPP
 
+#include <algorithm>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
@@ -34,8 +35,8 @@ private:
   s_noexcept_move_alloc_construct()
   noexcept
   {
-    return std::is_nothrow_constructible_v<sparse_container, sparse_container, Alloc const &>
-        && std::is_nothrow_constructible_v<dense_container , dense_container , Alloc const &>;
+    return std::is_nothrow_constructible_v<sparse_container, sparse_container &&, Alloc const &>
+        && std::is_nothrow_constructible_v<dense_container , dense_container  &&, Alloc const &>;
   }
 
   static constexpr

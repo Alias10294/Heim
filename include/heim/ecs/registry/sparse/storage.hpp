@@ -52,7 +52,7 @@ private:
   {
     return std::is_nothrow_constructible_v<
         set_pointer_container,
-        set_pointer_container, set_pointer_allocator>;
+        set_pointer_container &&, set_pointer_allocator const &>;
   }
 
   static constexpr

@@ -36,7 +36,7 @@ private:
   bool
   s_noexcept_move_alloc_construct()
   noexcept
-  { return std::is_nothrow_constructible_v<container_type, container_type, allocator_type>; }
+  { return std::is_nothrow_constructible_v<container_type, container_type &&, Alloc const &>; }
 
   static constexpr
   bool
