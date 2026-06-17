@@ -183,6 +183,18 @@ public:
   { return iterator{m_reg, std::ranges::end(*m_reg)}; }
 
   [[nodiscard]] constexpr
+  registry_type &
+  base()
+  noexcept
+  { return *m_reg; }
+
+  [[nodiscard]] constexpr
+  registry_type const &
+  base() const
+  noexcept
+  { return *m_reg; }
+
+  [[nodiscard]] constexpr
   auto
   reserve_hint() const
   noexcept
