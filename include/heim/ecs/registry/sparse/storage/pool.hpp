@@ -36,7 +36,7 @@ template<
     typename    Id     = default_identifier_t,
     std::size_t PageSz = default_page_size_v,
     typename    Alloc  = std::allocator<Id>>
-requires (component<C> && identifier<Id> && allocator_for<Alloc, Id>)
+requires (component<C> && std::unsigned_integral<Id> && allocator_for<Alloc, Id>)
 class generic_pool
   : public generic_set<Id, PageSz, Alloc>
 {
@@ -326,7 +326,7 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-requires (component<C> && identifier<Id> && allocator_for<Alloc, C>
+requires (component<C> && std::unsigned_integral<Id> && allocator_for<Alloc, Id>
       &&  std::is_empty_v<C>)
 class generic_pool<C, Id, PageSz, Alloc>
   : public generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>

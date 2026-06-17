@@ -73,7 +73,7 @@ private:
     else if constexpr (specialization_of_negation   <Expr>)
       return s_noexcept_matches_negation   (Expr{});
     else
-      return noexcept(assure<Expr>());
+      return noexcept(std::declval<storage_type &>().template assure<Expr>());
   }
 
   template<typename ...Expr>
@@ -334,27 +334,27 @@ public:
 
   template<typename C, typename ...Args>
   constexpr
-  C &
+  void
   emplace(identifier_type const id, Args &&...args)
-  { return assure<C>().emplace(id, std::forward<Args>(args)...); }
+  { assure<C>().emplace(id, std::forward<Args>(args)...); }
 
   template<typename C, typename ...Args>
   constexpr
-  std::pair<C &, bool>
+  bool
   try_emplace(identifier_type const id, Args &&...args)
-  { return assure<C>().try_emplace(id, std::forward<Args>(args)...); }
+  { return assure<C>().try_emplace(id, std::forward<Args>(args)...).second; }
 
   template<typename C>
   constexpr
-  std::pair<C &, bool>
+  bool
   insert(identifier_type const id, C &&c)
-  { return assure<C>().insert(id, std::forward<C>(c)); }
+  { return assure<C>().insert(id, std::forward<C>(c)).second; }
 
   template<typename C>
   constexpr
-  std::pair<C &, bool>
+  bool
   insert_or_assign(identifier_type const id, C &&c)
-  { return assure<C>().insert_or_assign(id, std::forward<C>(c)); }
+  { return assure<C>().insert_or_assign(id, std::forward<C>(c)).second; }
 
   template<typename C>
   constexpr

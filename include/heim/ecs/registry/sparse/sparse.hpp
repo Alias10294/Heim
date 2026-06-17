@@ -4,9 +4,9 @@
 #include <cstddef>
 #include <memory>
 #include "heim/ecs/identifier.hpp"
+#include "registry.hpp"
 #include "storage/auto_storage.hpp"
 #include "storage/static_storage.hpp"
-#include "registry.hpp"
 
 namespace heim::ecs::sparse
 {

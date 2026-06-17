@@ -20,7 +20,7 @@ struct default_page_size
 { };
 
 inline constexpr std::size_t default_page_size_v
-= default_page_size<>;
+= default_page_size<>::value;
 
 
 namespace detail

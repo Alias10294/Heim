@@ -41,7 +41,7 @@ template<
 class generic_static_storage<
     Id,
     Alloc,
-    type_sequence<static_storage_descriptor<Id, PageSzs> ...>>
+    type_sequence<static_storage_descriptor<Cs, PageSzs> ...>>
 {
 public:
   using identifier_type      = Id;
