@@ -1,50 +1,64 @@
 #include <iostream>
-#include <heim/registry.hpp>
+#include <heim/heim.hpp>
 
-struct position { float x, y, z; };
-struct velocity { float x, y, z; };
+
+struct position { int x, y; };
+struct velocity { int x, y; };
 struct tag      { };
 
-
 using registry
-= heim::sparse::static_registry::with_all<position, velocity, tag>;
+= heim::ecs::sparse::auto_registry;
 
 using expression
-= heim::conjunction<position, velocity, heim::negation<tag>>;
+= heim::ecs::conjunction<position, velocity, heim::ecs::negation<tag>>;
 
 
 int main()
 {
-  registry reg{};
-  auto     e0 {reg.entity()};
+  registry   reg{};
+  auto const id0{reg.make()};
+  auto const id1{reg.make()};
 
-  e0.emplace<position>(0.f, 0.f, 0.f);
-  e0.emplace<velocity>(1.f, 0.f, 0.f);
+  // DEBUG
+  std::cout << "expired before: " << reg.expired(id0) << std::endl; // 0
+  std::cout << "expired before: " << reg.expired(id1) << std::endl; // 0
+  // DEBUG
 
-  std::cout << "e0 expired: " << e0.expired()             << std::endl; // 0
-  std::cout << "e0 matches: " << e0.matches<expression>() << std::endl; // 1
+  reg.emplace<position>(id0, 0, 0);
+  reg.emplace<velocity>(id0, 1, 0);
 
-  auto &pos{e0.get<position>()};
-  auto &vel{e0.get<velocity>()};
+  reg.emplace<position>(id1, 0, 1);
+  reg.emplace<tag     >(id1);
 
-  std::cout << "e0's position (before): " << pos.x << ' ' << pos.y << ' ' << pos.z << std::endl;
-  std::cout << "e0's velocity (before): " << vel.x << ' ' << vel.y << ' ' << vel.z << std::endl;
+  // DEBUG
+  std::cout << "id0 matches: " << reg.matches<heim::ecs::conjunction<position, velocity>>(id0) << std::endl; // 1
+  std::cout << "id1 matches: " << reg.matches<heim::ecs::conjunction<position, tag     >>(id1) << std::endl; // 1
 
-  for (auto e : reg.query<expression>())
+  position const &p{reg.get<position>(id0)};
+  velocity const &v{reg.get<velocity>(id0)};
+  std::cout << "position before: " << p.x << ' ' << p.y << std::endl; // 0 0
+  std::cout << "velocity before: " << v.x << ' ' << v.y << std::endl; // 1 0
+  // DEBUG
+
+  for (auto const id : reg | heim::ecs::views::match<expression>)
   {
-    auto       &[px, py, pz]{e.get<position>()};
-    auto const &[vx, vy, vz]{e.get<velocity>()};
+    auto       &[px, py]{reg.get<position>(id)};
+    auto const &[vx, vy]{reg.get<velocity>(id)};
 
     px += vx;
     py += vy;
-    pz += vz;
   }
 
-  std::cout << "e0's position (after):  " << pos.x << ' ' << pos.y << ' ' << pos.z << std::endl;
-  std::cout << "e0's velocity (after):  " << vel.x << ' ' << vel.y << ' ' << vel.z << std::endl;
+  // DEBUG
+  std::cout << "position after: " << p.x << ' ' << p.y << std::endl; // 1 0
+  std::cout << "velocity after: " << v.x << ' ' << v.y << std::endl; // 1 0
+  // DEBUG
 
-  e0.destroy();
+  reg.destroy(id0);
+  reg.destroy(id1);
 
-  std::cout << "e0 expired: " << e0.expired()             << std::endl; // 1
-  std::cout << "e0 matches: " << e0.matches<expression>() << std::endl; // 0
+  // DEBUG
+  std::cout << "expired after: " << reg.expired(id0) << std::endl; // 1
+  std::cout << "expired after: " << reg.expired(id1) << std::endl; // 1
+  // DEBUG
 }

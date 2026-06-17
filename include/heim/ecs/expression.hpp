@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "heim/lib/type_sequence.hpp"
 
-namespace heim
+namespace heim::ecs
 {
 struct conjunction_tag { };
 struct disjunction_tag { };
@@ -221,6 +221,34 @@ template<typename ...Expressions>
 struct guaranteed<
     negation<disjunction<Expressions ...>>>
   : guaranteed<conjunction<negation<Expressions> ...>>
+{ };
+
+
+template<typename>
+struct mentioned;
+
+template<typename Expr>
+using mentioned_t
+= typename mentioned<Expr>::type;
+
+template<typename C>
+struct mentioned
+  : std::type_identity<type_sequence<C>>
+{ };
+
+template<typename ...Expr>
+struct mentioned<conjunction<Expr ...>>
+  : std::type_identity<typename type_sequence<mentioned_t<Expr> ...>::join::unique>
+{ };
+
+template<typename ...Expr>
+struct mentioned<disjunction<Expr ...>>
+  : std::type_identity<typename type_sequence<mentioned_t<Expr> ...>::join::unique>
+{ };
+
+template<typename Expr>
+struct mentioned<negation<Expr>>
+  : mentioned<Expr>
 { };
 
 } // namespace heim

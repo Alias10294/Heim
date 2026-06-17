@@ -12,14 +12,13 @@ To install Heim as a cloned repository, follow these commands :
 > meson setup build 
 ```
 
-Once the project is set up, the tests' and benchmark's executables can be compiled using this command:
+Once the project is set up, the tests' executable can be compiled using this command:
 ```
 > meson compile -C build
 ```
-To use either executable, use these commands:
+To use the executable, execute this command:
 ```
 > ./build/heim_test
-> ./build/heim_benchmark
 ```
 
 ## Introduction
@@ -29,39 +28,42 @@ and on delivering highly-performant code.
 
 ## Code Example 
 ```c++
-#include <heim/registry.hpp>
+#include <heim/heim.hpp>
 
-struct position { float x, y, z; };
-struct velocity { float x, y, z; };
+
+struct position { int x, y; };
+struct velocity { int x, y; };
 struct tag      { };
 
-using registry 
-= heim::sparse::static_registry::with_all<position, velocity, tag>;
+using registry
+= heim::ecs::sparse::auto_registry;
+
+using expression
+= heim::ecs::conjunction<position, velocity, heim::ecs::negation<tag>>;
 
 
 int main()
 {
-  registry reg{};
-  auto     e0 {reg.entity()};
-  auto     e1 {reg.entity()};
-  
-  e0.emplace<position>(0.f, 0.f, 0.f);
-  e0.emplace<velocity>(1.f, 0.f, 0.f);
-  
-  e1.emplace<position>(0.f, 1.f, 0.f);
-  e1.emplace<tag>     ();
+  registry   reg{};
+  auto const id0{reg.make()};
+  auto const id1{reg.make()};
 
-  for (auto e : reg.query<heim::conjunction<position, velocity, heim::negation<tag>>>())
+  reg.emplace<position>(id0, 0, 0);
+  reg.emplace<velocity>(id0, 1, 0);
+
+  reg.emplace<position>(id1, 0, 1);
+  reg.emplace<tag     >(id1);
+
+  for (auto const id : reg | heim::ecs::views::match<expression>)
   {
-    auto       &[px, py, pz]{e.get<position>()};
-    auto const &[vx, vy, vz]{e.get<velocity>()};
+    auto       &[px, py]{reg.get<position>(id)};
+    auto const &[vx, vy]{reg.get<velocity>(id)};
 
     px += vx;
     py += vy;
-    pz += vz;
   }
 
-  e0.destroy();
-  e1.destroy();
+  reg.destroy(id0);
+  reg.destroy(id1);
 }
 ```

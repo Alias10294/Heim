@@ -1,40 +1,31 @@
-#ifndef HEIM_ECS_REGISTRY_SPARSE_DETAIL_CORE_HPP
-#define HEIM_ECS_REGISTRY_SPARSE_DETAIL_CORE_HPP
+#ifndef HEIM_ECS_REGISTRY_SPARSE_MANAGER_HPP
+#define HEIM_ECS_REGISTRY_SPARSE_MANAGER_HPP
 
 #include <cstddef>
-#include <iterator>
-#include <memory>
 #include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
 #include "heim/ecs/identifier.hpp"
-#include "heim/lib/utility.hpp"
 
-namespace heim::sparse::detail
+namespace heim::ecs::sparse
 {
 template<
-    typename Identifier = default_identifier_t<>,
-    typename Allocator  = std::allocator<Identifier>>
-requires (
-    identifier   <Identifier>
- && allocator_for<Allocator, Identifier>)
-class registry_core
+    typename Id,
+    typename Alloc = std::allocator<Id>>
+requires (std::unsigned_integral<Id> && allocator_for<Alloc, Id>)
+class generic_manager
 {
 public:
-  using identifier_type = Identifier;
-  using allocator_type  = Allocator;
+  using identifier_type = Id;
+  using allocator_type  = Alloc;
 
 private:
-  using id_traits    = identifier_traits<identifier_type>;
-  using alloc_traits = std::allocator_traits<allocator_type>;
+  using id_traits
+  = identifier_traits<Id>;
 
   using container_type
-  = std::vector<identifier_type, allocator_type>;
-
-public:
-  using iterator       = typename container_type::const_reverse_iterator;
-  using const_iterator = typename container_type::const_reverse_iterator;
+  = std::vector<Id, Alloc>;
 
 private:
   container_type m_dense;
@@ -46,11 +37,13 @@ private:
   bool
   s_noexcept_move_alloc_construct()
   noexcept
-  {
-    return std::is_nothrow_constructible_v<
-        container_type,
-        container_type &&, allocator_type const &>;
-  }
+  { return std::is_nothrow_constructible_v<container_type, container_type &&, Alloc const &>; }
+
+  static constexpr
+  bool
+  s_noexcept_default_construct()
+  noexcept
+  { return std::is_nothrow_constructible_v<allocator_type>; }
 
   static constexpr
   bool
@@ -60,25 +53,22 @@ private:
 
 public:
   explicit constexpr
-  registry_core(allocator_type const &alloc)
+  generic_manager(allocator_type const &alloc)
+  noexcept
     : m_dense {alloc}
     , m_sparse{alloc}
     , m_begin {}
   { }
 
   constexpr
-  registry_core(registry_core const &other, allocator_type const &alloc)
+  generic_manager(generic_manager const &other, allocator_type const &alloc)
     : m_dense {other.m_dense , alloc}
     , m_sparse{other.m_sparse, alloc}
     , m_begin {other.m_begin}
   { }
 
   constexpr
-  registry_core(registry_core const &)
-  = default;
-
-  constexpr
-  registry_core(registry_core &&other, allocator_type const &alloc)
+  generic_manager(generic_manager &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
     : m_dense {std::move(other.m_dense ), alloc}
     , m_sparse{std::move(other.m_sparse), alloc}
@@ -86,37 +76,50 @@ public:
   { }
 
   constexpr
-  registry_core(registry_core &&)
+  generic_manager()
+  noexcept(s_noexcept_default_construct())
+    : generic_manager{allocator_type{}}
+  { }
+
+  constexpr
+  generic_manager(generic_manager const &)
   = default;
 
   constexpr
-  ~registry_core()
+  generic_manager(generic_manager &&)
   = default;
 
   constexpr
-  registry_core &
-  operator=(registry_core const &)
+  ~generic_manager()
   = default;
 
   constexpr
-  registry_core &
-  operator=(registry_core &&)
+  generic_manager &
+  operator=(generic_manager const &)
+  = default;
+
+  constexpr
+  generic_manager &
+  operator=(generic_manager &&)
   = default;
 
   constexpr
   void
-  swap(registry_core &other)
+  swap(generic_manager &other)
   noexcept(s_noexcept_swap())
   {
-    std::swap(m_dense , other.m_dense);
-    std::swap(m_sparse, other.m_sparse);
-    std::swap(m_begin , other.m_begin);
+    using std::swap;
+
+    swap(m_dense , other.m_dense);
+    swap(m_sparse, other.m_sparse);
+    swap(m_begin , other.m_begin);
   }
 
-  [[nodiscard]] friend constexpr
-  bool
-  operator==(registry_core const &, registry_core const &)
-  = default;
+  friend constexpr
+  void
+  swap(generic_manager &lhs, generic_manager &rhs)
+  noexcept(s_noexcept_swap())
+  { lhs.swap(rhs); }
 
   [[nodiscard]] constexpr
   allocator_type
@@ -124,54 +127,32 @@ public:
   noexcept
   { return m_dense.get_allocator(); }
 
-
-  [[nodiscard]] constexpr
-  iterator
-  begin()
-  noexcept
-  { return std::make_reverse_iterator(m_dense.end()); }
-
-  [[nodiscard]] constexpr
-  const_iterator
-  begin() const
-  noexcept
-  { return std::make_reverse_iterator(m_dense.end()); }
-
-  [[nodiscard]] constexpr
-  iterator
-  end()
-  noexcept
-  { return std::make_reverse_iterator(m_dense.begin() + static_cast<std::ptrdiff_t>(m_begin)); }
-
-  [[nodiscard]] constexpr
-  const_iterator
-  end() const
-  noexcept
-  { return std::make_reverse_iterator(m_dense.begin() + static_cast<std::ptrdiff_t>(m_begin)); }
-
-  [[nodiscard]] constexpr
-  const_iterator
-  cbegin() const
-  noexcept
-  { return std::make_reverse_iterator(m_dense.cend()); }
-
-  [[nodiscard]] constexpr
-  const_iterator
-  cend() const
-  noexcept
-  { return std::make_reverse_iterator(m_dense.cbegin() + static_cast<std::ptrdiff_t>(m_begin)); }
-
-  [[nodiscard]] constexpr
-  std::size_t
-  size() const
-  noexcept
-  { return m_dense.size() - m_begin; }
-
-  [[nodiscard]] constexpr
+  [[nodiscard]] friend constexpr
   bool
-  empty() const
-  noexcept
-  { return size() == 0; }
+  operator==(generic_manager const &, generic_manager const &)
+  = default;
+
+
+  [[nodiscard]] constexpr auto begin() noexcept       { return m_dense.crbegin(); }
+  [[nodiscard]] constexpr auto begin() const noexcept { return m_dense.crbegin(); }
+
+  [[nodiscard]] constexpr auto end() noexcept       { return m_dense.crend(); }
+  [[nodiscard]] constexpr auto end() const noexcept { return m_dense.crend(); }
+
+  [[nodiscard]] constexpr auto cbegin() const noexcept { return begin(); }
+  [[nodiscard]] constexpr auto cend  () const noexcept { return end  (); }
+
+  [[nodiscard]] constexpr auto rbegin() noexcept       { return m_dense.cbegin(); }
+  [[nodiscard]] constexpr auto rbegin() const noexcept { return m_dense.cbegin(); }
+
+  [[nodiscard]] constexpr auto rend() noexcept       { return m_dense.cend(); }
+  [[nodiscard]] constexpr auto rend() const noexcept { return m_dense.cend(); }
+
+  [[nodiscard]] constexpr auto crbegin() const noexcept { return rbegin(); }
+  [[nodiscard]] constexpr auto crend  () const noexcept { return rend  (); }
+
+  [[nodiscard]] constexpr auto size () const noexcept { return m_dense.size() - m_begin; }
+  [[nodiscard]] constexpr bool empty() const noexcept { return size() == 0; }
 
 
   [[nodiscard]] constexpr
@@ -186,14 +167,14 @@ public:
 
     identifier_type const pos{m_sparse[idx]};
 
-    return id_traits::index     (pos) < m_begin
+    return id_traits::index     (pos)  < m_begin
         || id_traits::generation(pos) != id_traits::generation(id);
   }
 
 
   [[nodiscard]] constexpr
   identifier_type
-  create()
+  make()
   {
     using index_type
     = typename id_traits::index_type;
@@ -243,7 +224,7 @@ public:
 
   constexpr
   void
-  clear()
+  destroy_all()
   noexcept
   {
     auto valid{m_dense | std::views::drop(m_begin)};
@@ -261,6 +242,6 @@ public:
   }
 };
 
-} // namespace heim::sparse::detail
+} // namespace heim::ecs::sparse
 
-#endif // HEIM_ECS_REGISTRY_SPARSE_DETAIL_CORE_HPP
+#endif // HEIM_ECS_REGISTRY_SPARSE_MANAGER_HPP

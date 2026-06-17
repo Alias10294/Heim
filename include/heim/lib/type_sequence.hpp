@@ -1,5 +1,5 @@
-#ifndef HEIM_TYPE_SEQUENCE_HPP
-#define HEIM_TYPE_SEQUENCE_HPP
+#ifndef HEIM_LIB_TYPE_SEQUENCE_HPP
+#define HEIM_LIB_TYPE_SEQUENCE_HPP
 
 #include <algorithm>
 #include <array>
@@ -1675,10 +1675,10 @@ struct type_sequence<>
   template<typename U> static constexpr std::size_t count    = type_sequence_count_v   <type_sequence, U>;
   template<typename U> static constexpr bool        contains = type_sequence_contains_v<type_sequence, U>;
 
-  using join      = type_sequence_join_t     <type_sequence>;
-  using unique    = type_sequence_unique_t   <type_sequence>;
-  using reverse   = type_sequence_reverse_t  <type_sequence>;
-  using tuple     = type_sequence_tuple_t    <type_sequence>;
+  using join      = type_sequence_join_t   <type_sequence>;
+  using unique    = type_sequence_unique_t <type_sequence>;
+  using reverse   = type_sequence_reverse_t<type_sequence>;
+  using tuple     = type_sequence_tuple_t  <type_sequence>;
 
   template<typename U> using split  = type_sequence_split_t <type_sequence, U>;
   template<typename U> using remove = type_sequence_remove_t<type_sequence, U>;
@@ -1845,4 +1845,4 @@ struct to_type_sequence<
 
 } // namespace heim
 
-#endif // HEIM_TYPE_SEQUENCE_HPP
+#endif // HEIM_LIB_TYPE_SEQUENCE_HPP
