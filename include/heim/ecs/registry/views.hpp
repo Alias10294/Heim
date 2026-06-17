@@ -34,6 +34,25 @@ private:
     using iterator_type
     = std::ranges::iterator_t<registry_type>;
 
+  public:
+    using iter_traits
+    = std::iterator_traits<iterator_type>;
+
+    using difference_type  = typename iter_traits::difference_type;
+    using value_type       = typename iter_traits::value_type;
+
+    using iterator_category
+    = std::conditional_t<
+        std::bidirectional_iterator<iterator_type>,
+        std::bidirectional_iterator_tag,
+        typename iter_traits::iterator_category>;
+
+    using iterator_concept
+    = std::conditional_t<
+        std::bidirectional_iterator<iterator_type>,
+        std::bidirectional_iterator_tag,
+        typename iter_traits::iterator_category>;
+
   private:
     registry_type *m_reg;
     iterator_type  m_it;
@@ -46,8 +65,9 @@ private:
     {
       auto const end{std::ranges::end(*m_reg)};
 
-      while (!m_reg->template matches<Expr>(*it) && it != end)
+      while (it != end && !m_reg->template matches<Expr>(*it))
         ++it;
+
       return it;
     }
 
@@ -55,11 +75,13 @@ private:
     iterator_type
     decrement(iterator_type it) const
     noexcept
+    requires std::bidirectional_iterator<iterator_type>
     {
       auto const begin{std::ranges::begin(*m_reg)};
 
-      while (!m_reg->template matches<Expr>(*it) && it != begin)
+      while (it != begin && !m_reg->template matches<Expr>(*it))
         --it;
+
       return it;
     }
 
