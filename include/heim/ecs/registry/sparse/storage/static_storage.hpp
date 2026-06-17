@@ -3,7 +3,9 @@
 
 #include <cstddef>
 #include <memory>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 #include "heim/ecs/identifier.hpp"
 #include "heim/lib/type_sequence.hpp"
 #include "pool.hpp"
@@ -11,15 +13,11 @@
 
 namespace heim::ecs::sparse
 {
-namespace detail
-{
 template<
     typename    C,
     std::size_t PageSz  = default_page_size_v>
-using generic_static_storage_descriptor
+using static_storage_descriptor
 = type_sequence<C, std::integral_constant<std::size_t, PageSz>>;
-
-} // namespace detail
 
 
 template<
@@ -43,12 +41,12 @@ template<
 class generic_static_storage<
     Id,
     Alloc,
-    type_sequence<detail::generic_static_storage_descriptor<Id, PageSzs> ...>>
+    type_sequence<static_storage_descriptor<Id, PageSzs> ...>>
 {
 public:
   using identifier_type      = Id;
   using allocator_type       = Alloc;
-  using description_sequence = type_sequence<detail::generic_static_storage_descriptor<Id, PageSzs> ...>;
+  using description_sequence = type_sequence<static_storage_descriptor<Id, PageSzs> ...>;
 
 private:
   using component_sequence = type_sequence<Cs ...>;
