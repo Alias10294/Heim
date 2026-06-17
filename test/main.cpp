@@ -40,14 +40,14 @@ int main()
   std::cout << "velocity before: " << v.x << ' ' << v.y << std::endl; // 1 0
   // DEBUG
 
-  // for (auto const id : reg | heim::ecs::views::match<expression>)
-  // {
-  //   auto       &[px, py]{reg.get<position>(id)};
-  //   auto const &[vx, vy]{reg.get<velocity>(id)};
-  //
-  //   px += vx;
-  //   py += vy;
-  // }
+  for (auto const id : reg | heim::ecs::views::match<expression>)
+  {
+    auto       &[px, py]{reg.get<position>(id)};
+    auto const &[vx, vy]{reg.get<velocity>(id)};
+
+    px += vx;
+    py += vy;
+  }
 
   // DEBUG
   std::cout << "position after: " << p.x << ' ' << p.y << std::endl; // 1 0

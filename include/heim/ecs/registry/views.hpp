@@ -28,45 +28,165 @@ public:
   using expression_type = Expr;
 
 private:
-  registry_type *m_reg;
+  struct iterator
+  {
+  private:
+    using iterator_type
+    = std::ranges::iterator_t<registry_type>;
+
+  private:
+    registry_type *m_reg;
+    iterator_type  m_it;
+
+  private:
+    [[nodiscard]] constexpr
+    iterator_type
+    increment(iterator_type it) const
+    noexcept
+    {
+      auto const end{std::ranges::end(*m_reg)};
+
+      while (!m_reg->template matches<Expr>(*it) && it != end)
+        ++it;
+      return it;
+    }
+
+    [[nodiscard]] constexpr
+    iterator_type
+    decrement(iterator_type it) const
+    noexcept
+    {
+      auto const begin{std::ranges::begin(*m_reg)};
+
+      while (!m_reg->template matches<Expr>(*it) && it != begin)
+        --it;
+      return it;
+    }
+
+  public:
+    constexpr
+    iterator()
+    = default;
+
+    constexpr
+    iterator(registry_type *reg, iterator_type it)
+      : m_reg{reg}
+      , m_it {increment(std::move(it))}
+    { }
+
+    friend constexpr
+    bool
+    operator==(iterator const &lhs, iterator const &rhs)
+    noexcept
+    requires std::equality_comparable<iterator_type>
+    { return lhs.m_it == rhs.m_it; }
+
+    friend constexpr
+    auto
+    operator<=>(iterator const &lhs, iterator const &rhs)
+    noexcept
+    requires std::three_way_comparable<iterator_type>
+    { return lhs.m_it <=> rhs.m_it; }
+
+    friend constexpr
+    std::ranges::range_rvalue_reference_t<registry_type>
+    iter_move(iterator const &it)
+    noexcept(noexcept(std::ranges::iter_move(it.m_it)))
+    { return std::ranges::iter_move(it.m_it); }
+
+    friend constexpr
+    void
+    iter_swap(iterator const &lhs, iterator const &rhs)
+    noexcept(noexcept(std::ranges::iter_swap(lhs.m_it, rhs.m_it)))
+    { return std::ranges::iter_swap(lhs.m_it, rhs.m_it); }
+
+
+    constexpr
+    std::ranges::range_reference_t<registry_type>
+    operator*() const
+    noexcept
+    { return *m_it; }
+
+
+    constexpr
+    iterator &
+    operator++()
+    noexcept
+    {
+      m_it = increment(std::move(++m_it));
+      return *this;
+    }
+
+    constexpr
+    void
+    operator++(int)
+    noexcept
+    { ++*this; }
+
+    constexpr
+    iterator
+    operator++(int)
+    noexcept
+    requires std::forward_iterator<iterator_type>
+    {
+      iterator tmp{*this};
+      ++*this;
+      return tmp;
+    }
+
+    constexpr
+    iterator &
+    operator--()
+    noexcept
+    requires std::bidirectional_iterator<iterator_type>
+    {
+      m_it = decrement(std::move(--m_it));
+      return *this;
+    }
+
+    constexpr
+    iterator
+    operator--(int)
+    noexcept
+    requires std::bidirectional_iterator<iterator_type>
+    {
+      iterator tmp{*this};
+      --*this;
+      return tmp;
+    }
+  };
 
 private:
-  [[nodiscard]] constexpr
-  auto
-  m_base()
-  noexcept
-  {
-    return *m_reg
-         | std::views::filter(
-               [this](auto const id)
-               { return m_reg->template matches<Expr>(id); });
-  }
+  registry_type *m_reg;
 
 public:
   constexpr
   match_view()
-  noexcept
-    : m_reg{}
-  { }
+  = default;
 
   explicit constexpr
   match_view(registry_type &reg)
-  noexcept
     : m_reg{std::addressof(reg)}
   { }
 
 
   [[nodiscard]] constexpr
-  auto
-  begin()
+  iterator
+  begin() const
   noexcept
-  { return m_base().begin(); }
+  { return iterator{m_reg, std::ranges::begin(*m_reg)}; }
+
+  [[nodiscard]] constexpr
+  iterator
+  end() const
+  noexcept
+  { return iterator{m_reg, std::ranges::end(*m_reg)}; }
 
   [[nodiscard]] constexpr
   auto
-  end()
+  reserve_hint() const
   noexcept
-  { return m_base().end(); }
+  { return std::ranges::size(*m_reg); }
 };
 
 
