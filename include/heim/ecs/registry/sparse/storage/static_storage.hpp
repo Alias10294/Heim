@@ -1,9 +1,0 @@
-#ifndef HEIM_ECS_REGISTRY_SPARSE_STORAGE_STATIC_STORAGE_HPP
-#define HEIM_ECS_REGISTRY_SPARSE_STORAGE_STATIC_STORAGE_HPP
-
-namespace heim::ecs::sparse
-{
-
-} // namespace heim::ecs::sparse
-
-#endif // HEIM_ECS_REGISTRY_SPARSE_STORAGE_STATIC_STORAGE_HPP

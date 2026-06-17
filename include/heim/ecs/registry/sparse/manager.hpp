@@ -12,7 +12,8 @@ namespace heim::ecs::sparse
 {
 template<
     typename Id,
-    typename Alloc>
+    typename Alloc = std::allocator<Id>>
+requires (std::unsigned_integral<Id> && allocator_for<Alloc, Id>)
 class generic_manager
 {
 public:
@@ -132,16 +133,25 @@ public:
   = default;
 
 
-  [[nodiscard]] constexpr auto begin() noexcept       { return std::ranges::crbegin(m_dense); }
-  [[nodiscard]] constexpr auto begin() const noexcept { return std::ranges::crbegin(m_dense); }
+  [[nodiscard]] constexpr auto begin() noexcept       { return m_dense.crbegin(); }
+  [[nodiscard]] constexpr auto begin() const noexcept { return m_dense.crbegin(); }
 
-  [[nodiscard]] constexpr auto end() noexcept       { return std::ranges::crend(m_dense); }
-  [[nodiscard]] constexpr auto end() const noexcept { return std::ranges::crend(m_dense); }
+  [[nodiscard]] constexpr auto end() noexcept       { return m_dense.crend(); }
+  [[nodiscard]] constexpr auto end() const noexcept { return m_dense.crend(); }
 
   [[nodiscard]] constexpr auto cbegin() const noexcept { return begin(); }
   [[nodiscard]] constexpr auto cend  () const noexcept { return end  (); }
 
-  [[nodiscard]] constexpr auto size () const noexcept { return std::ranges::size(m_dense) - m_begin; }
+  [[nodiscard]] constexpr auto rbegin() noexcept       { return m_dense.cbegin(); }
+  [[nodiscard]] constexpr auto rbegin() const noexcept { return m_dense.cbegin(); }
+
+  [[nodiscard]] constexpr auto rend() noexcept       { return m_dense.cend(); }
+  [[nodiscard]] constexpr auto rend() const noexcept { return m_dense.cend(); }
+
+  [[nodiscard]] constexpr auto crbegin() const noexcept { return rbegin(); }
+  [[nodiscard]] constexpr auto crend  () const noexcept { return rend  (); }
+
+  [[nodiscard]] constexpr auto size () const noexcept { return m_dense.size() - m_begin; }
   [[nodiscard]] constexpr bool empty() const noexcept { return size() == 0; }
 
 

@@ -33,29 +33,29 @@ concept component
 
 template<
     typename    C,
-    typename    Id,
-    std::size_t PageSz,
-    typename    Alloc>
-requires (component<C> && identifier<Id> && allocator_for<Alloc, Id>)
+    typename    Id     = default_identifier_t,
+    std::size_t PageSz = default_page_size_v,
+    typename    Alloc  = std::allocator<C>>
+requires (component<C> && identifier<Id> && allocator_for<Alloc, C>)
 class generic_pool
-  : public generic_set<Id, PageSz, Alloc>
+  : public generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>
 {
   using base_type
-  = generic_set<Id, PageSz, Alloc>;
+  = generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>;
 
 public:
-  using component_type
-  = C;
+  using component_type = C;
+  using allocator_type = Alloc;
 
-  using typename base_type::identifier_type;
-  using typename base_type::allocator_type;
+  using typename base_type
+      ::identifier_type;
 
 private:
   using typename base_type
       ::id_traits;
 
-  using component_allocator = typename std::allocator_traits<Alloc>::template rebind_alloc<C>;
-  using component_container = std::vector<component_type, component_allocator>;
+  using component_container
+  = std::vector<component_type, component_allocator>;
 
 private:
   using base_type::m_sparse;
@@ -72,11 +72,14 @@ private:
     return base_type::s_noexcept_move_alloc_construct()
         && std::is_nothrow_constructible_v<
                component_container,
-               component_container &&, component_allocator const &>;
+               component_container &&, allocator_type const &>;
   }
 
-  using base_type
-      ::s_noexcept_default_construct;
+  static constexpr
+  bool
+  s_noexcept_default_construct()
+  noexcept
+  { return std::is_nothrow_constructible_v<allocator_type>; }
 
   static constexpr
   bool
@@ -91,20 +94,20 @@ public:
   explicit constexpr
   generic_pool(allocator_type const &alloc)
   noexcept
-    : base_type   {alloc}
+    : base_type   {typename base_type::allocator_type{alloc}}
     , m_components{alloc}
   { }
 
   constexpr
   generic_pool(generic_pool const &other, allocator_type const &alloc)
-    : base_type   {static_cast<base_type const &>(other), alloc}
+    : base_type   {static_cast<base_type const &>(other), typename base_type::allocator_type{alloc}}
     , m_components{other.m_components, alloc}
   { }
 
   constexpr
   generic_pool(generic_pool &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : base_type   {static_cast<base_type &&>(other), alloc}
+    : base_type   {static_cast<base_type &&>(other), typename base_type::allocator_type{alloc}}
     , m_components{std::move(other.m_components), alloc}
   { }
 
@@ -153,8 +156,11 @@ public:
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
-  using base_type
-      ::get_allocator;
+  [[nodiscard]] constexpr
+  allocator_type
+  get_allocator() const
+  noexcept
+  { return m_components.get_allocator(); }
 
   [[nodiscard]] friend constexpr
   bool
@@ -320,21 +326,50 @@ template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-requires (component<C> && identifier<Id> && allocator_for<Alloc, Id>
+requires (component<C> && identifier<Id> && allocator_for<Alloc, C>
       &&  std::is_empty_v<C>)
 class generic_pool<C, Id, PageSz, Alloc>
-  : public generic_set<Id, PageSz, Alloc>
+  : public generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>
 {
   using base_type
-  = generic_set<Id, PageSz, Alloc>;
+  = generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>;
 
 public:
-  using component_type
-  = C;
+  using component_type = C;
+  using allocator_type = Alloc;
+
+public:
+  explicit constexpr
+  generic_pool(allocator_type const &alloc)
+  noexcept
+    : base_type{typename base_type::allocator_type{alloc}}
+  { }
+
+  constexpr
+  generic_pool(generic_pool const &other, allocator_type const &alloc)
+    : base_type{static_cast<base_type const &>(other), typename base_type::allocator_type{alloc}}
+  { }
+
+  constexpr
+  generic_pool(generic_pool &&other, allocator_type const &alloc)
+  noexcept(base_type::s_noexcept_move_alloc_construct())
+    : base_type{static_cast<base_type &&>(other), typename base_type::allocator_type{alloc}}
+  { }
 
   using base_type
       ::base_type;
+
+  [[nodiscard]] constexpr
+  allocator_type
+  get_allocator() const
+  noexcept
+  { return allocator_type{base_type::get_allocator()}; }
 };
+
+
+template<typename C>
+using pool
+= generic_pool<C>;
 
 } // namespace heim::ecs::sparse
 

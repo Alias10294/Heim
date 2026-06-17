@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -13,13 +14,22 @@
 
 namespace heim::ecs::sparse
 {
+template<typename = void>
+struct default_page_size
+  : std::integral_constant<std::size_t, 1024>
+{ };
+
+inline constexpr std::size_t default_page_size_v
+= default_page_size<>;
+
+
 namespace detail
 {
 template<
     typename    Id,
     std::size_t PageSz,
     typename    Alloc>
-requires (identifier<Id> && allocator_for<Alloc, Id>)
+requires (std::unsigned_integral<Id> && allocator_for<Alloc, Id>)
 class set_sparse_container
 {
 public:
@@ -36,14 +46,14 @@ private:
   using page
   = std::array<identifier_type, page_size>;
 
-  using page_allocator    = alloc_traits::template rebind_alloc <page>;
-  using page_alloc_traits = alloc_traits::template rebind_traits<page>;
+  using page_allocator    = typename alloc_traits::template rebind_alloc <page>;
+  using page_alloc_traits = typename alloc_traits::template rebind_traits<page>;
 
   using page_pointer
   = unique_allocator_aware_ptr<page, page_allocator>;
 
-  using page_pointer_allocator    = alloc_traits::template rebind_alloc <page_pointer>;
-  using page_pointer_alloc_traits = alloc_traits::template rebind_traits<page_pointer>;
+  using page_pointer_allocator    = typename alloc_traits::template rebind_alloc <page_pointer>;
+  using page_pointer_alloc_traits = typename alloc_traits::template rebind_traits<page_pointer>;
 
   using container_type
   = std::conditional_t<
@@ -91,7 +101,7 @@ private:
   void
   m_copy(container_type const &cont)
   {
-    m_container.reserve(cont.capacity());
+    m_container.reserve(cont.size());
 
     for (page_pointer const &ptr : cont)
     {
@@ -143,7 +153,7 @@ public:
   constexpr
   set_sparse_container(set_sparse_container &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : m_container{std::move(other.m_container), alloc}
+    : m_container{std::move(other.m_container), container_allocator{alloc}}
   { }
 
   constexpr
@@ -269,10 +279,7 @@ public:
       std::size_t const pg_idx{s_page_index(idx)};
 
       if (pg_idx >= m_container.size())
-        m_container.reserve(pg_idx + 1);
-
-      while (pg_idx >= m_container.size())
-        m_container.emplace_back(page_pointer{});
+        m_container.resize(pg_idx + 1);
 
       if (page_pointer &ptr{m_container[pg_idx]};
           !ptr)
@@ -293,10 +300,10 @@ public:
 
 
 template<
-    typename    Id,
-    std::size_t PageSz,
-    typename    Alloc>
-requires (identifier<Id> && allocator_for<Alloc, Id>)
+    typename    Id     = default_identifier_t,
+    std::size_t PageSz = default_page_size_v,
+    typename    Alloc  = std::allocator<Id>>
+requires (std::unsigned_integral<Id> && allocator_for<Alloc, Id>)
 class generic_set
 {
 public:
@@ -495,7 +502,7 @@ public:
   constexpr
   bool
   try_emplace(Args &&...args)
-  { return insert(identifier_type(std::forward<Args>(args)...)); }
+  { return insert(identifier_type{std::forward<Args>(args)...}); }
 
   constexpr
   bool
@@ -555,6 +562,10 @@ public:
     m_dense.clear();
   }
 };
+
+
+using set
+= generic_set<>;
 
 } // namespace heim::ecs::sparse
 

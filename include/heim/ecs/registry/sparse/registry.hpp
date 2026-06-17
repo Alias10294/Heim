@@ -13,9 +13,13 @@
 namespace heim::ecs::sparse
 {
 template<
-    typename Id,
-    typename Alloc,
-    typename Storage>
+    typename Storage,
+    typename Id      = default_identifier_t,
+    typename Alloc   = std::allocator<Id>>
+requires (std::unsigned_integral<Id>
+      &&  allocator_for<Alloc, Id>
+      &&  std::same_as <Id   , typename Storage::identifier_type>
+      &&  std::same_as <Alloc, typename Storage::allocator_type >)
 class generic_registry
 {
 public:
@@ -25,7 +29,7 @@ public:
 
 private:
   using manager_type
-  = manager<Id, Alloc>;
+  = generic_manager<Id, Alloc>;
 
 private:
   manager_type m_manager;
@@ -57,7 +61,6 @@ private:
   }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   static constexpr
   bool
   s_noexcept_matches()
@@ -70,11 +73,10 @@ private:
     else if constexpr (specialization_of_negation   <Expr>)
       return s_noexcept_matches_negation   (Expr{});
     else
-      return noexcept(std::declval<storage_type &>().template assure<Expr>());
+      return noexcept(assure<Expr>());
   }
 
   template<typename ...Expr>
-  requires (!qualified<Expr> && ...)
   static constexpr
   bool
   s_noexcept_matches_conjunction(conjunction<Expr ...> const)
@@ -82,7 +84,6 @@ private:
   { return (s_noexcept_matches<Expr>() && ...); }
 
   template<typename ...Expr>
-  requires (!qualified<Expr> && ...)
   static constexpr
   bool
   s_noexcept_matches_disjunction(disjunction<Expr ...> const)
@@ -90,7 +91,6 @@ private:
   { return (s_noexcept_matches<Expr>() && ...); }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   static constexpr
   bool
   s_noexcept_matches_negation(negation<Expr> const)
@@ -99,7 +99,6 @@ private:
 
 
   template<typename ...Expr>
-  requires ((!qualified<Expr>) && ...)
   [[nodiscard]] constexpr
   bool
   m_matches_conjunction(identifier_type const id, conjunction<Expr ...> const)
@@ -107,7 +106,6 @@ private:
   { return (matches<Expr>(id) && ...); }
 
   template<typename ...Expr>
-  requires ((!qualified<Expr>) && ...)
   [[nodiscard]] constexpr
   bool
   m_matches_disjunction(identifier_type const id, disjunction<Expr ...> const)
@@ -115,7 +113,6 @@ private:
   { return (matches<Expr>(id) || ...); }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   [[nodiscard]] constexpr
   bool
   m_matches_negation(identifier_type const id, negation<Expr> const)
@@ -124,7 +121,6 @@ private:
 
 
   template<typename ...Expr>
-  requires ((!qualified<Expr>) && ...)
   [[nodiscard]] constexpr
   bool
   m_matches_conjunction(identifier_type const id, conjunction<Expr ...> const) const
@@ -132,7 +128,6 @@ private:
   { return (matches<Expr>(id) && ...); }
 
   template<typename ...Expr>
-  requires ((!qualified<Expr>) && ...)
   [[nodiscard]] constexpr
   bool
   m_matches_disjunction(identifier_type const id, disjunction<Expr ...> const) const
@@ -140,7 +135,6 @@ private:
   { return (matches<Expr>(id) || ...); }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   [[nodiscard]] constexpr
   bool
   m_matches_negation(identifier_type const id, negation<Expr> const) const
@@ -232,15 +226,23 @@ public:
   [[nodiscard]] constexpr auto end() noexcept       { return m_manager.end(); }
   [[nodiscard]] constexpr auto end() const noexcept { return m_manager.end(); }
 
-  [[nodiscard]] constexpr auto cbegin() const noexcept { return begin(); }
-  [[nodiscard]] constexpr auto cend  () const noexcept { return end  (); }
+  [[nodiscard]] constexpr auto cbegin() const noexcept { return m_manager.cbegin(); }
+  [[nodiscard]] constexpr auto cend  () const noexcept { return m_manager.cend(); }
 
-  [[nodiscard]] constexpr auto size () const noexcept { return m_manager.size (); }
+  [[nodiscard]] constexpr auto rbegin() noexcept       { return m_manager.rbegin(); }
+  [[nodiscard]] constexpr auto rbegin() const noexcept { return m_manager.rbegin(); }
+
+  [[nodiscard]] constexpr auto rend() noexcept       { return m_manager.rend(); }
+  [[nodiscard]] constexpr auto rend() const noexcept { return m_manager.rend(); }
+
+  [[nodiscard]] constexpr auto crbegin() const noexcept { return m_manager.crbegin(); }
+  [[nodiscard]] constexpr auto crend  () const noexcept { return m_manager.crend(); }
+
+  [[nodiscard]] constexpr auto size () const noexcept { return m_manager.size(); }
   [[nodiscard]] constexpr bool empty() const noexcept { return m_manager.empty(); }
 
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   auto &
   assure()
@@ -248,15 +250,13 @@ public:
   { return m_storage.template assure<C>(); }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   auto &
   pool()
   noexcept
-  { return m_storage.template pool<C>(); }
+  { return assure<C>(); }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   auto const &
   pool() const
@@ -264,7 +264,6 @@ public:
   { return m_storage.template pool<C>(); }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   C &
   get(identifier_type const id)
@@ -272,7 +271,6 @@ public:
   { return assure<C>()[id]; }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   C const &
   get(identifier_type const id) const
@@ -280,7 +278,6 @@ public:
   { return pool<C>()[id]; }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   C *
   get_if(identifier_type const id)
@@ -292,7 +289,6 @@ public:
   }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   C const *
   get_if(identifier_type const id) const
@@ -304,7 +300,6 @@ public:
   }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   [[nodiscard]] constexpr
   bool
   matches(identifier_type const id)
@@ -321,7 +316,6 @@ public:
   }
 
   template<typename Expr>
-  requires (!qualified<Expr>)
   [[nodiscard]] constexpr
   bool
   matches(identifier_type const id) const
@@ -339,42 +333,36 @@ public:
 
 
   template<typename C, typename ...Args>
-  requires (!qualified<C>)
   constexpr
   C &
   emplace(identifier_type const id, Args &&...args)
   { return assure<C>().emplace(id, std::forward<Args>(args)...); }
 
   template<typename C, typename ...Args>
-  requires (!qualified<C>)
   constexpr
   std::pair<C &, bool>
   try_emplace(identifier_type const id, Args &&...args)
   { return assure<C>().try_emplace(id, std::forward<Args>(args)...); }
 
   template<typename C>
-  requires (!qualified<C>)
   constexpr
   std::pair<C &, bool>
   insert(identifier_type const id, C &&c)
   { return assure<C>().insert(id, std::forward<C>(c)); }
 
   template<typename C>
-  requires (!qualified<C>)
   constexpr
   std::pair<C &, bool>
   insert_or_assign(identifier_type const id, C &&c)
   { return assure<C>().insert_or_assign(id, std::forward<C>(c)); }
 
   template<typename C>
-  requires (!qualified<C>)
   constexpr
   void
   erase(identifier_type const id)
   { return assure<C>().erase(id); }
 
   template<typename C>
-  requires (!qualified<C>)
   constexpr
   bool
   try_erase(identifier_type const id)

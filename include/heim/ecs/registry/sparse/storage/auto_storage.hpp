@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "heim/ecs/identifier.hpp"
 #include "heim/lib/utility.hpp"
 #include "pool.hpp"
 #include "set.hpp"
@@ -15,8 +16,8 @@
 namespace heim::ecs::sparse
 {
 template<
-    typename    Id,
-    std::size_t PageSz,
+    typename    Id     = default_identifier_t,
+    std::size_t PageSz = default_page_size_v,
     typename    Alloc  = std::allocator<Id>>
 class generic_auto_storage
 {
@@ -80,7 +81,6 @@ private:
   }
 
   template<typename C>
-  requires (!qualified<C>)
   static constexpr
   std::size_t
   s_index()
@@ -165,7 +165,6 @@ public:
 
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   pool_for_type<C> &
   assure()
@@ -182,7 +181,6 @@ public:
   }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   pool_for_type<C> &
   pool()
@@ -190,7 +188,6 @@ public:
   { return static_cast<pool_for_type<C> &>(*m_container[s_index<C>()]); }
 
   template<typename C>
-  requires (!qualified<C>)
   [[nodiscard]] constexpr
   pool_for_type<C> const &
   pool() const
@@ -220,6 +217,10 @@ public:
     }
   }
 };
+
+
+using auto_storage
+= generic_auto_storage<>;
 
 } // namespace heim::ecs::sparse
 
