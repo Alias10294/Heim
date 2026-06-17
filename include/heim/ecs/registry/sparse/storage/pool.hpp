@@ -35,13 +35,13 @@ template<
     typename    C,
     typename    Id     = default_identifier_t,
     std::size_t PageSz = default_page_size_v,
-    typename    Alloc  = std::allocator<C>>
-requires (component<C> && identifier<Id> && allocator_for<Alloc, C>)
+    typename    Alloc  = std::allocator<Id>>
+requires (component<C> && identifier<Id> && allocator_for<Alloc, Id>)
 class generic_pool
-  : public generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>
+  : public generic_set<Id, PageSz, Alloc>
 {
   using base_type
-  = generic_set<Id, PageSz, typename std::allocator_traits<Alloc>::template rebind_alloc<Id>>;
+  = generic_set<Id, PageSz, Alloc>;
 
 public:
   using component_type = C;
@@ -54,8 +54,11 @@ private:
   using typename base_type
       ::id_traits;
 
-  using component_container
-  = std::vector<component_type, component_allocator>;
+  using alloc_traits
+  = std::allocator_traits<Alloc>;
+
+  using component_allocator = typename alloc_traits::template rebind_alloc<component_type>;
+  using component_container = std::vector<component_type, component_allocator>;
 
 private:
   using base_type::m_sparse;
@@ -72,7 +75,7 @@ private:
     return base_type::s_noexcept_move_alloc_construct()
         && std::is_nothrow_constructible_v<
                component_container,
-               component_container &&, allocator_type const &>;
+               component_container &&, component_allocator const &>;
   }
 
   static constexpr
@@ -94,20 +97,20 @@ public:
   explicit constexpr
   generic_pool(allocator_type const &alloc)
   noexcept
-    : base_type   {typename base_type::allocator_type{alloc}}
+    : base_type   {alloc}
     , m_components{alloc}
   { }
 
   constexpr
   generic_pool(generic_pool const &other, allocator_type const &alloc)
-    : base_type   {static_cast<base_type const &>(other), typename base_type::allocator_type{alloc}}
+    : base_type   {static_cast<base_type const &>(other), alloc}
     , m_components{other.m_components, alloc}
   { }
 
   constexpr
   generic_pool(generic_pool &&other, allocator_type const &alloc)
   noexcept(s_noexcept_move_alloc_construct())
-    : base_type   {static_cast<base_type &&>(other), typename base_type::allocator_type{alloc}}
+    : base_type   {static_cast<base_type &&>(other), alloc}
     , m_components{std::move(other.m_components), alloc}
   { }
 
@@ -156,11 +159,8 @@ public:
   noexcept(s_noexcept_swap())
   { lhs.swap(rhs); }
 
-  [[nodiscard]] constexpr
-  allocator_type
-  get_allocator() const
-  noexcept
-  { return m_components.get_allocator(); }
+  using base_type
+      ::get_allocator;
 
   [[nodiscard]] friend constexpr
   bool

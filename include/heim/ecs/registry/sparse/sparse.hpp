@@ -20,9 +20,6 @@ using generic_auto_registry
 using auto_registry
 = generic_auto_registry<>;
 
-
-
-
 } // namespace heim::ecs::sparse
 
 #endif // HEIM_ECS_REGISTRY_SPARSE_SPARSE_HPP
