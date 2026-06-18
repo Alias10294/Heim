@@ -1,17 +1,12 @@
 # Heim: Organize Your Data The Right Way
-`Heim` is a zero-dependency, header-only library dedicated to providing generic and highly performant solutions for 
-simulation and game programming.<br>
-Here are some of the library's features:
-- Multiple compatible generic implementations of the Entity-Component-System (ECS) pattern
-- Powerful template metaprogramming objects such as the `type_sequence`
-- [WIP] A modern graph library inspired by the famous [Boost Graph Library](https://www.boost.org/doc/libs/latest/libs/graph/doc/index.html) (BGL)
+<b>Heim</b> is a zero-dependency, header-only C++23 library for data-oriented game and simulation programming. Here are 
+its main features:
+- A hypermodern C++23 API
+- A generic take on the entity-component-system (ECS) pattern
+- Powerful template metaprogramming utilities such as the `type_sequence`
+- [WIP] A modern graph library inspired by the famous <b>Boost Graph Library</b> (BGL)
 
-## Table of contents
-- [Introduction](#introduction)
-  - [Code Example](#code-example)
-
-## Introduction
-### Code example
+## Code Example
 ```c++
 #include <heim/heim.hpp>
 
@@ -21,35 +16,60 @@ struct tag      { };
 
 
 using registry
-=        heim::ecs::sparse   ::auto_registry;
-// [WIP] heim::ecs::archetype::auto_registry;
-// [WIP] heim::ecs::hibit    ::auto_registry;
-//       heim::ecs::sparse   ::static_registry::with<position>::with<velocity>::with<tag>::type;
-// [WIP] heim::ecs::archetype::static_registry::with<position>::with<velocity>::with<tag>::type;
-// [WIP] heim::ecs::hibit    ::static_registry::with<position>::with<velocity>::with<tag>::type;
+= heim::ecs::sparse::auto_registry;
 
 int main()
 {
   registry   reg;
-  auto const id0 = reg.make();
-  auto const id1 = reg.make();
-    
-  reg.emplace<position>(id0, 0.f, 0.f, 0.f);
-  reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
-    
-  reg.emplace<position>(id1, 0.f, 1.f, 0.f);
-  reg.emplace<tag     >(id1);
-    
-  auto v = reg
-         | heim::ecs::views::match<heim::ecs::conjunction<position, velocity>>
-  //     | std::views:: ...
-  
-  for (auto const id : v)
+  auto const e0  = reg.make();
+  auto const e1  = reg.make();
+
+  reg.emplace<position>(e0, 0.f, 0.f, 0.f);
+  reg.emplace<velocity>(e0, 1.f, 0.f, 0.f);
+
+  reg.emplace<position>(e1, 0.f, 1.f, 0.f);
+  reg.emplace<tag>     (e1);
+
+  auto view = reg
+            | heim::ecs::views::match<heim::ecs::conjunction<position, velocity>>;
+
+  for (auto const e : view)
   {
-    // ...
+    auto       &[px, py, pz] = reg.get<position>(id);
+    auto const &[vx, vy, vz] = reg.get<velocity>(id);
+
+    px += vx;
+    py += vy;
+    pz += vz;
   }
-    
-  reg.destroy(id0);
-  reg.destroy(id1);
+
+  reg.destroy(e0);
+  reg.destroy(e1);
 }
 ```
+
+# Table of contents
+- [Introduction](#introduction)
+- [Entity-Component-System pattern](#entity-component-system-pattern)
+- [Metaprogramming utilities](#metaprogramming-utilities)
+- [Graphs](#graphs)
+- [Installation](#installation)
+- [License](#license)
+
+# Introduction
+...
+
+# Entity-Component-System pattern
+...
+
+# Metaprogramming utilities
+...
+
+# Graphs
+...
+
+# Installation
+...
+
+# License
+...
