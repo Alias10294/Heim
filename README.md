@@ -66,6 +66,10 @@ int main()
 ...
 
 # Graphs
+Whether it is in Heim or in the projects that use it, chances are that graphs or graph-like structures are going to 
+appear. Examples of situations where graphs are useful or even <i>critical</i> vary: rendering, physics simulation, 
+pathfinding, procedural generation, and many more.<br>
+
 ...
 
 # Installation
