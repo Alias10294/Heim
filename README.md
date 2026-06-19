@@ -1,10 +1,11 @@
 # Heim: Organize Your Data The Right Way
-<b>Heim</b> is a zero-dependency, header-only C++23 library for data-oriented game and simulation programming. Here are 
-its main features:
-- A hypermodern C++23 API
-- A generic take on the entity-component-system (ECS) pattern
-- Powerful template metaprogramming utilities such as the `type_sequence`
-- [WIP] A modern graph library inspired by the famous <b>Boost Graph Library</b> (BGL)
+<code>Heim</code> is a zero-dependency, header-only C++23 library for data-oriented game and simulation programming. 
+Here are its main features:
+- A hypermodern C++23 API;
+- A generic take on the Entity-Component-System (ECS) pattern;
+- Powerful template metaprogramming utilities such as the `type_sequence`;
+- [WIP] A modern graph library inspired by the famous 
+[Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/index.html).
 
 ## Code Example
 ```c++
@@ -53,6 +54,8 @@ int main()
 - [Entity-Component-System pattern](#entity-component-system-pattern)
 - [Metaprogramming utilities](#metaprogramming-utilities)
 - [Graphs](#graphs)
+  - [Inspiration](#inspiration)
+  - [Implementation](#implementation)
 - [Installation](#installation)
 - [License](#license)
 
@@ -66,10 +69,32 @@ int main()
 ...
 
 # Graphs
-Whether it is in Heim or in the projects that use it, chances are that graphs or graph-like structures are going to 
-appear. Examples of situations where graphs are useful or even <i>critical</i> vary: rendering, physics simulation, 
-pathfinding, procedural generation, and many more.<br>
+Whether it is in <code>Heim</code> itself or in the projects that use it, chances are that graphs or graph-like 
+structures are going to appear. Examples of situations where graphs are useful or even <i>critical</i> vary: rendering, 
+physics simulation, pathfinding, procedural generation, and <i>many</i> more.
 
+Because having the right data structures and algorithms at hand in all those situations goes a long way towards both 
+speeding up development and ensuring high performance on often important systems, <code>Heim</code> aims to provide 
+<i>just that</i>.
+
+## Inspiration
+Coming up with a representation of graphs that fits every possible use case is very difficult. One famous library that 
+has done that is the [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/index.html). It 
+succeeded by:
+- Decoupling graph data structures and algorithms to maximize their reusability;
+- Defining the expected interface of graph data structures through the use of traits and external functions;
+- Dissociating the graphs' descriptive data from their actual properties.
+
+This ensured that every candidate data structure could implement the interface needed to interact with the library's 
+algorithms.
+
+While the BGL's ideas represent perhaps the best way to go about implementing a generic graph library, its interface
+while powerful does not fit with what modern C++ looks like. It is also somewhat unfriendly to beginner-level 
+programmers, which is far from what it could be.<br>
+<code>Heim</code> aims to bring those ideas into a more modern C++, using new principles such as <b>concepts</b>, 
+<b>ranges</b> and <b>customization point objects</b> to implement a newer and easier-to-use library.
+
+## Implementation
 ...
 
 # Installation
