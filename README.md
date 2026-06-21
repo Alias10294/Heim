@@ -8,8 +8,9 @@ Here are its main features:
 [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/index.html).
 
 ## Code Example
+### Entity-Component-System pattern
 ```c++
-#include <heim/heim.hpp>
+#include <heim/ecs.hpp>
 
 struct position { float x, y, z; };
 struct velocity { float x, y, z; };
@@ -49,11 +50,68 @@ int main()
 }
 ```
 
+### Metaprogramming utilities
+```c++
+#include <cstdint>
+#include <type_traits>
+#include <heim/meta.hpp>
+
+using some_type_sequence 
+= heim::type_sequence<std::int8_t, std::int16_t, std::int32_t, std::int32_t, std::int64_t>;
+
+using unsigned_type_sequence
+= some_type_sequence
+    ::transform<std::make_unsigned>
+    ::prepend  <bool>
+    ::unique;
+
+
+using some_other_type_sequence
+= heim::type_sequence<int, float, float, int, float, float>;
+
+using int_sequence       = some_other_type_sequence::stride<3>;
+using other_int_sequence = some_other_type_sequence::filter<std::is_integral>;
+```
+
+### Graphs
+```c++
+#include <print>
+#include <unordered_map>
+#include <heim/graph.hpp>
+
+
+using graph_type = heim::graphs::adjacency_list<heim::graphs::undirected_tag>;
+using edge_type  = heim::graphs::edge_t<graph_type>;
+
+int main()
+{
+  graph_type                         g;
+  std::unordered_map<edge_type, int> weights;
+  
+  auto const v0 = heim::graphs::place_vertex(g);
+  auto const v1 = heim::graphs::place_vertex(g);
+  auto const v2 = heim::graphs::place_vertex(g);
+  auto const v3 = heim::graphs::place_vertex(g);
+  
+  auto weight_map = heim::graphs::make_property_map(weights);
+  
+  auto const e0 = heim::graphs::place_edge(g, v0, v1); weight_map.set(e0, 1);
+  auto const e1 = heim::graphs::place_edge(g, v1, v2); weight_map.set(e1, 2);
+  auto const e2 = heim::graphs::place_edge(g, v0, v2); weight_map.set(e2, 10);
+  auto const e3 = heim::graphs::place_edge(g, v2, v3); weight_map.set(e3, 1):
+  
+  auto res = heim::graphs::dijkstra(g, v0, weight_map);
+  
+  for (auto v : heim::graphs::vertices(g))
+    std::println("distance from {0} to {1}: {2}.", v0, v, res.distance_to(v));
+}
+```
+
 # Table of contents
 - [Introduction](#introduction)
-- [Entity-Component-System pattern](#entity-component-system-pattern)
-- [Metaprogramming utilities](#metaprogramming-utilities)
-- [Graphs](#graphs)
+- [Entity-Component-System pattern](#entity-component-system-pattern-1)
+- [Metaprogramming utilities](#metaprogramming-utilities-1)
+- [Graphs](#graphs-1)
   - [Inspiration](#inspiration)
   - [Implementation](#implementation)
     - [Interface](#interface)
@@ -109,9 +167,9 @@ flexibility and control over their specialization whilst also guaranteeing robus
 them.<br>
 Here is a first glance at what this interface might look like:
 ```c++
-using graph_type        = /* ... */;
-using vertex_descriptor = heim::graphs::vertex_descriptor_t<graph_type>;
-using edge_descriptor   = heim::graphs::edge_descriptor_t  <graph_type>;
+using graph_type  = /* ... */;
+using vertex_type = heim::graphs::vertex_t<graph_type>;
+using edge_type   = heim::graphs::edge_t  <graph_type>;
 
 graph_type        g;
 vertex_descriptor u, v;
@@ -162,7 +220,55 @@ lets property values be references from simple containers, or be proxy types cre
 set, or any value that can be aggregated into one object that the algorithms can use.
 
 ### Algorithms
-...
+Graph algorithms are the main reason why the previous interface and property system exist in the first place.
+
+Some libraries provide powerful algorithms, but require users to understand many advanced customization mechanisms 
+before they can obtain a useful result. Others provide simple APIs, but at the cost of flexibility, control, or 
+performance.<br>
+<code>Heim</code> aims to provide the best of both directions by providing, on top of the expert-accessible algorithms, 
+layers of simplication.
+
+Here is what that might look like with Dijkstra's shortest paths algorithm:
+```c++
+#include <heim/graph.hpp>
+
+// simple use case
+using graph_type      = /* ... */;
+using vertex_type     = heim::graphs::vertex_t    <graph_type>;
+using weight_map_type = heim::graphs::property_map<int, /* ... */>;
+
+graph_type      g;
+vertex_type     u, v;
+weight_map_type weights;
+
+auto res = heim::graphs::dijkstra(g, u, weights);
+
+if (res.reached(v))
+  auto const distance = res.distance_to(v);
+
+// more complex use case
+using distance_map_type     = heim::graphs::property_map<int        , /* ... */>;
+using predecessor_map_type  = heim::graphs::property_map<vertex_type, /* ... */>;
+using dijkstra_visitor_type = /* ... */;
+
+distance_map_type     distances;
+predecessor_map_type  predecessors;
+dijkstra_visitor_type visitor;
+
+auto res = heim::graphs::dijkstra(g, u, weights, distances, predecessors, visitor);
+
+if (res.reached(v))
+  auto const distance = res.distance_to(v);
+```
+
+<code>Heim</code> is set to support many graph algorithms:
+- Traversal algorithms;
+- Shortest path algorithms;
+- Topological sorting;
+- Connected component detection;
+- Cycle detection;
+- Minimum spanning tree algorithms;
+- ...
 
 # Installation
 ...
