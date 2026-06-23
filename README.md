@@ -1,14 +1,14 @@
 # Heim: Organize Your Data The Right Way
-<code>Heim</code> is a zero-dependency, header-only C++23 library for data-oriented game and simulation programming. 
-Here are its main features:
+`Heim` is a zero-dependency, header-only C++23 library for data-oriented game and simulation programming. Here are its 
+main features:
 - A hypermodern C++23 API;
-- A generic take on the Entity-Component-System (ECS) pattern;
+- A generic take on the [entity-component-system (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) pattern;
 - Powerful template metaprogramming utilities such as the `type_sequence`;
 - [WIP] A modern graph library inspired by the famous 
 [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/index.html).
 
-## Code Example
-### Entity-Component-System pattern
+## Code Examples
+### Entity-component-system pattern
 ```c++
 #include <heim/ecs.hpp>
 
@@ -23,30 +23,30 @@ using registry
 int main()
 {
   registry   reg;
-  auto const e0  = reg.make();
-  auto const e1  = reg.make();
+  auto const id0 = reg.make();
+  auto const id1 = reg.make();
 
-  reg.emplace<position>(e0, 0.f, 0.f, 0.f);
-  reg.emplace<velocity>(e0, 1.f, 0.f, 0.f);
+  reg.emplace<position>(id0, 0.f, 0.f, 0.f);
+  reg.emplace<velocity>(id0, 1.f, 0.f, 0.f);
 
-  reg.emplace<position>(e1, 0.f, 1.f, 0.f);
-  reg.emplace<tag>     (e1);
+  reg.emplace<position>(id1, 0.f, 1.f, 0.f);
+  reg.emplace<tag>     (id1);
 
   auto view = reg
             | heim::ecs::views::match<heim::ecs::conjunction<position, velocity>>;
 
-  for (auto const e : view)
+  for (auto const id : view)
   {
-    auto       &[px, py, pz] = reg.get<position>(e);
-    auto const &[vx, vy, vz] = reg.get<velocity>(e);
+    auto       &[px, py, pz] = reg.get<position>(id);
+    auto const &[vx, vy, vz] = reg.get<velocity>(id);
 
     px += vx;
     py += vy;
     pz += vz;
   }
 
-  reg.destroy(e0);
-  reg.destroy(e1);
+  reg.destroy(id0);
+  reg.destroy(id1);
 }
 ```
 
@@ -108,8 +108,15 @@ int main()
 ```
 
 # Table of contents
-- [Introduction](#introduction)
-- [Entity-Component-System pattern](#entity-component-system-pattern-1)
+- [Entity-component-system pattern](#entity-component-system-pattern-1)
+  - [Design](#design)
+    - [Registry](#registry)
+    - [Identifiers](#identifiers)
+    - [Expressions](#expressions)
+  - [Implementation strategies](#implementation-strategies)
+    - [Sparse-set-based strategy](#sparse-set-based-strategy)
+    - [Archetype-based strategy](#archetype-based-strategy)
+    - [Hibit-tree-based strategy](#hibit-tree-based-strategy)
 - [Metaprogramming utilities](#metaprogramming-utilities-1)
 - [Graphs](#graphs-1)
   - [Inspiration](#inspiration)
@@ -120,26 +127,54 @@ int main()
 - [Installation](#installation)
 - [License](#license)
 
-# Introduction
+# Entity-component-system pattern
+`Heim`'s main feature is its implementation of the 
+[entity-component-system (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) pattern.
+
+## Design
 ...
 
-# Entity-Component-System pattern
+### Registry
+Genericity in a program or code library is often achieved through the separation of data and behavior. In the ECS 
+pattern, systems by definition are responsible for the behavior of entities.<br> 
+In `Heim` entities live separately from systems in a container called a *registry*.
+
+...
+
+### Identifiers
+...
+
+### Expressions
+...
+
+## Implementation strategies
+The ECS pattern, by essence, is not necessarily tied to certain implementation strategies (e.g. archetypes or sparse
+sets). Each of those strategies have their own strengths and weaknesses, but shares the same core functionalities.<br>
+That is why `Heim` aims to provide multiple interchangeable implementations of the pattern that exhibit the same code
+interface.
+
+### Sparse-set-based strategy
+...
+
+### Archetype-based strategy
+...
+
+### Hibit-tree-based strategy
 ...
 
 # Metaprogramming utilities
 ...
 
 # Graphs
-Whether it is in <code>Heim</code> itself or in the projects that use it, chances are that graphs or graph-like 
-structures are going to appear. Examples of situations where graphs are useful or even <i>critical</i> vary: rendering, 
-physics simulation, pathfinding, procedural generation, and <i>many</i> more.
+Whether it is in `Heim` itself or in the projects that use it, chances are that graphs or graph-like structures are 
+going to appear. Examples of situations where graphs are useful or even *critical* vary: rendering, physics simulation, 
+pathfinding, procedural generation, and *many* more.
 
 Because having the right data structures and algorithms at hand in all those situations goes a long way towards both 
-speeding up development and ensuring high performance on often important systems, <code>Heim</code> aims to provide 
-<i>just that</i>.
+speeding up development and ensuring high performance on often important systems, `Heim` aims to provide *just that*.
 
-> Please note that this section of the library is still underway, and that the information below is <i>not</i> 
-guaranteed to be complete or to even be valid in future versions of the library.  
+> Please note that this section of the library is still underway, and that the information below is *not* guaranteed to 
+be complete or final.
 
 ## Inspiration
 Coming up with a representation of graphs that fits every possible use case is very difficult. One famous library that 
@@ -155,16 +190,16 @@ algorithms.
 ## Implementation
 While the BGL's ideas represent perhaps the best way to go about implementing a generic graph library, its interface 
 does not fully match what modern C++ code tends to look like. It is also somewhat unfriendly to beginner-level 
-programmers, which is far from what it could be.<br>
-<code>Heim</code> aims to bring those ideas into a more modern C++, using new principles such as <b>concepts</b>, 
-<b>ranges</b> and <b>customization point objects</b> to implement a newer and easier-to-use library.
+programmers, which is far from what it could be.\
+`Heim` aims to bring those ideas into a more modern C++, using new principles such as **concepts**, **ranges** and 
+**customization point objects** to implement a newer and easier-to-use library.
 
 ### Interface
-<code>Heim</code>'s graphs' interface, instead of revolving around a centralized <code>graph_traits</code> object that 
-needs every method and alias individually specialized, will make use of 
+`Heim`'s graphs' interface, instead of revolving around a centralized `graph_traits` object that needs every method and 
+alias individually specialized, will make use of 
 [customization point objects](https://en.cppreference.com/cpp/named_req/CustomizationPointObject). This allows more 
 flexibility and control over their specialization whilst also guaranteeing robust default implementations for some of 
-them.<br>
+them.\
 Here is a first glance at what this interface might look like:
 ```c++
 using graph_type  = /* ... */;
@@ -206,15 +241,15 @@ heim::graphs::remove_edges(g, u, v);
 
 ### Properties
 Most of the time a graph's components are tied to certain properties. For example, vertices could be associated with 
-<i>colors</i> or <i>locations</i>, and edges could be associated with <i>distances</i> or <i>costs</i>. Such properties 
-are even crucial to some algorithms, such as [Dijkstra's](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) or 
+*colors* or *locations*, and edges could be associated with *distances* or *costs*. Such properties are even crucial to 
+some algorithms, such as [Dijkstra's](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) or 
 [A*](https://en.wikipedia.org/wiki/A*_search_algorithm).
 
-As accessing and writing to properties depend on what form those properties take in a given program, <code>Heim</code>
-provides a generic abstraction for <i>getting</i> and <i>setting</i> properties: the <i>property map</i>.
+As accessing and writing to properties depend on what form those properties take in a given program, `Heim` provides a 
+generic abstraction for *getting* and *setting* properties: the *property map*.
 
-<i>Property maps</i> are lightweight objects. They do not hold any property data themselves or even references to other 
-containers or objects that are linked to the properties.<br>
+*Property maps* are lightweight objects. They do not hold any property data themselves or even references to other 
+containers or objects that are linked to the properties.\
 Instead, they only hold functions objects that themselves describe the actions to either get or set a property. This 
 lets property values be references from simple containers, or be proxy types created when read and written back when 
 set, or any value that can be aggregated into one object that the algorithms can use.
@@ -224,8 +259,8 @@ Graph algorithms are the main reason why the previous interface and property sys
 
 Some libraries provide powerful algorithms, but require users to understand many advanced customization mechanisms 
 before they can obtain a useful result. Others provide simple APIs, but at the cost of flexibility, control, or 
-performance.<br>
-<code>Heim</code> aims to provide the best of both directions by providing, on top of the expert-accessible algorithms, 
+performance.\
+`Heim` aims to provide the best of both directions by providing, on top of the expert-accessible algorithms, 
 layers of simplication.
 
 Here is what that might look like with Dijkstra's shortest paths algorithm:
@@ -261,7 +296,7 @@ if (res.reached(v))
   auto const distance = res.distance_to(v);
 ```
 
-<code>Heim</code> is set to support many graph algorithms:
+`Heim` is set to support many graph algorithms:
 - Traversal algorithms;
 - Shortest path algorithms;
 - Topological sorting;
