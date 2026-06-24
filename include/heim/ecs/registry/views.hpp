@@ -19,13 +19,13 @@ namespace heim::ecs
  *   This type should be partially specialized for specific registry types, as this default view
  *   filters throughout all its registry instance.
  */
-template<typename Reg, typename Expr>
+template<typename Expr, typename Reg>
 class match_view
-  : public std::ranges::view_interface<match_view<Reg, Expr>>
+  : public std::ranges::view_interface<match_view<Expr, Reg>>
 {
 public:
-  using registry_type   = Reg;
   using expression_type = Expr;
+  using registry_type   = Reg;
 
 private:
   struct iterator
@@ -237,7 +237,7 @@ struct match_fn
   auto
   operator()(Reg &reg) const
   noexcept
-  { return match_view<Reg, Expr>{reg}; }
+  { return match_view<Expr, Reg>{reg}; }
 };
 
 } // namespace detail

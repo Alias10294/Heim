@@ -98,7 +98,7 @@ int main()
   auto const e0 = heim::graphs::place_edge(g, v0, v1); weight_map.set(e0, 1);
   auto const e1 = heim::graphs::place_edge(g, v1, v2); weight_map.set(e1, 2);
   auto const e2 = heim::graphs::place_edge(g, v0, v2); weight_map.set(e2, 10);
-  auto const e3 = heim::graphs::place_edge(g, v2, v3); weight_map.set(e3, 1):
+  auto const e3 = heim::graphs::place_edge(g, v2, v3); weight_map.set(e3, 1);
   
   auto res = heim::graphs::dijkstra(g, v0, weight_map);
   
@@ -110,9 +110,9 @@ int main()
 # Table of contents
 - [Entity-component-system pattern](#entity-component-system-pattern-1)
   - [Design](#design)
-    - [Registry](#registry)
     - [Identifiers](#identifiers)
-    - [Expressions](#expressions)
+    - [Registries](#registries)
+    - [Matching entities](#matching-entities)
   - [Implementation strategies](#implementation-strategies)
     - [Sparse-set-based strategy](#sparse-set-based-strategy)
     - [Archetype-based strategy](#archetype-based-strategy)
@@ -132,35 +132,106 @@ int main()
 [entity-component-system (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) pattern.
 
 ## Design
-...
-
-### Registry
-Genericity in a program or code library is often achieved through the separation of data and behavior. In the ECS 
-pattern, systems by definition are responsible for the behavior of entities.<br> 
-In `Heim` entities live separately from systems in a container called a *registry*.
-
-...
-
 ### Identifiers
-...
+Most of the time in ECS implementations, entities are not concrete singular objects in code. Rather, their components 
+are often stored and organized in a data-oriented manner to optimize for performance.
 
-### Expressions
-...
+To keep a given *logical* entity associated with its components, with `Heim` each entity is assigned a unique 
+*identifier*.\
+This identifier, which can be as simple as an unsigned integer value, serves as a key for all operations made on the 
+entity, such as accessing or modifying one of its components, inserting or removing a component, and even destroying 
+the entity itself.
+
+### Registries
+Genericity in a program or code library is often achieved through the separation of data and behavior. In the ECS 
+pattern, systems by definition are responsible for the behavior of entities.\
+That is why in `Heim`, entities and their components live separately from systems in a container called a *registry*.
+
+As containers of *logical* entities, registries expose many operations:
+- creation / destruction of entities;
+- assignment / removal of components to / from entities;
+- access to components;
+- ...
+
+### Matching entities
+Because systems usually want to operate on groups of entities that match certain combinations of components, registries 
+expose views (often called queries) that provide these entities as a range.\
+To be able to describe complex combination of components, registries in `Heim` use *expressions*, a small compile-time 
+language where component types are the "variables". Expressions can be formed using three "keyword" types, and can 
+either be:
+- A single component type;
+- A conjunction of sub-expressions;
+- A disjunction of sub-expressions;
+- A negation of a sub-expression.
+
+#### Single component type
+A single component type used as an expression simply means that entities in the associated vie must possess the 
+component type.
+
+#### Conjunction
+A conjunction of sub-expressions express the idea that the entities included in the associated view must match all
+sub-expressions. It represents the logical operation `AND`, and looks like this in code:
+```c++
+heim::ecs::conjunction<Expressions ...>
+```
+
+#### Disjunction
+A disjunction of sub-expression express the idea that the entities in the associated view must match at least one of 
+the sub-expressions. It represents the logical operation `OR`, and looks like this in code:
+```c++
+heim::ecs::disjunction<Expressions ...>
+```
+
+#### Negation
+A negation of a sub-expression express the idea that the entities in the associated view must not match any of the 
+sub-expressions. It represents the logical operation `NOT`, and looks like this in code:
+```c++
+heim::ecs::negation<Expression>
+```
 
 ## Implementation strategies
 The ECS pattern, by essence, is not necessarily tied to certain implementation strategies (e.g. archetypes or sparse
-sets). Each of those strategies have their own strengths and weaknesses, but shares the same core functionalities.<br>
-That is why `Heim` aims to provide multiple interchangeable implementations of the pattern that exhibit the same code
-interface.
+sets). Each of those strategies have their own strengths and weaknesses, but shares the same core functionalities.\
+That is why `Heim` aims to provide multiple interchangeable implementations of the pattern that exhibit the same 
+minimal interface.
 
 ### Sparse-set-based strategy
-...
+This strategy is probably the simplest, but still competitive, approach when implementing the ECS pattern.\
+In this approach, each component type in the registry is associated with its own contiguous associative container, 
+which are inspired by sparse sets. 
+
+#### Advantages
+With a sparse-set-based registry, insertion and removal is the most trivial of all strategies, as you simply need to 
+modify the component type's container.
+
+#### Disadvantages
+Although constructing the views of a sparse-set-based registry is fast, iterating it can be costly. Because each 
+component container is independent, encountered entities are not guaranteed to match the expression, thus verification 
+is needed for each one. This is very acceptable when expressions do not involve many components, but can be costly when 
+expressions include many component types.\
+This cost can be mitigated though by selecting the smallest range of entities able to match the expression, thus 
+reducing how many entities are encountered.
 
 ### Archetype-based strategy
-...
+This implementation strategy rely on storing entities possessing the same combination of component types together 
+contiguously in tables called *archetypes*.
+> Please note while `Heim` is ready to welcome an archetype-based registry implementation, such implementation has not 
+been implemented yet.
 
-### Hibit-tree-based strategy
-...
+#### Advantages
+Because entities are grouped by their combination of component types, to construct a view registries just need to find 
+which archetypes match its expression, and iteration boils down to traversing the entities of each archetype which is 
+very fast. This is especially fast when expression mention a lot of component types, as the number of archetypes that 
+match said expression is often low.
+
+#### Disadvantages
+When a component is inserted into or removed from an entity, the entity has to move to their new archetype, and the 
+departed-from archetype has to reorder its entities to assure contiguity, which can be expensive in certain situations.
+
+### Other strategies
+While theses two strategies are today the usual picks when implementing the ECS pattern, other strategies exist.\
+For example, entities could be arranged along on a hierarchical inverted bitmap tree which trades some memory 
+contiguity for other benefits. Bitsets more generally can be used in many inside an ECS implementation.
 
 # Metaprogramming utilities
 ...
@@ -172,7 +243,6 @@ pathfinding, procedural generation, and *many* more.
 
 Because having the right data structures and algorithms at hand in all those situations goes a long way towards both 
 speeding up development and ensuring high performance on often important systems, `Heim` aims to provide *just that*.
-
 > Please note that this section of the library is still underway, and that the information below is *not* guaranteed to 
 be complete or final.
 
@@ -261,7 +331,7 @@ Some libraries provide powerful algorithms, but require users to understand many
 before they can obtain a useful result. Others provide simple APIs, but at the cost of flexibility, control, or 
 performance.\
 `Heim` aims to provide the best of both directions by providing, on top of the expert-accessible algorithms, 
-layers of simplication.
+layers of simplification.
 
 Here is what that might look like with Dijkstra's shortest paths algorithm:
 ```c++
