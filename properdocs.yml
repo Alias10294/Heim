@@ -1,0 +1,4 @@
+site_name: Heim Docs
+nav:
+  - Home: index.md
+  - Properties: property/index.md
