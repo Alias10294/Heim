@@ -10,7 +10,7 @@ It currently features:
 
 ## Code examples
 ### Graphs
-```cpp
+```c++
 #include <print>
 #include <heim/graph.hpp>
 
@@ -37,7 +37,7 @@ int main()
 ```
 
 ### Properties
-```cpp
+```c++
 #include <print>
 #include <unordered_map>
 #include <vector>
