@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>property_map - Heim: Properties</title>
+
+  <link rel="stylesheet" href="../../../../style.css">
+  <script src="../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../index.html">Home</a>
+          <a href="../../../index.html">Properties</a>
+          <a href="../../../../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../index.html">Heim</a>
+      <span>›</span>
+      <a href="../../../index.html">Properties</a>
+      <span>›</span>
+      <span>property_map</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="property_map-heim-properties">property_map</h1>
+
+      <h2 id="synopsis">Synopsis</h2>
+
+      <pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Get</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Set</span>&gt;
+<span class="heim-cpp-keyword">class</span> <span class="heim-cpp-type">property_map</span>;</code></pre>
+
+      <h2 id="overview">Overview</h2>
+
+      <p>
+        <code>property_map</code> is a class template implementing the library <em>property map</em> concept, that uses a pair of function
+        objects as <em>getter</em> and <em>setter</em> to provide genericity.
+      </p>
+
+      <h2 id="template-parameters">Template Parameters</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Get</code></td><td>The getter function object type</td></tr>
+          <tr><td><code>Set</code></td><td>The setter function object type</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="member-types">Member Types</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>getter_type</code></td><td><code>Get</code></td></tr>
+          <tr><td><code>setter_type</code></td><td><code>Set</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="member-functions">Member Functions</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="constructor.html">(constructor)</a></td><td>Initializes the <code>property_map</code></td></tr>
+          <tr><td>(destructor) <em>(implicitly declared)</em></td><td>Destroys the <code>property_map</code></td></tr>
+          <tr><td><code>operator=</code> <em>(implicitly declared)</em></td><td>Assigns values to the object</td></tr>
+          <tr><td><a href="get.html"><code>get</code></a></td><td>Returns the property associated with a given key</td></tr>
+          <tr><td><a href="set.html"><code>set</code></a></td><td>Modifies the property associated with a given key</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="non-member-functions">Non-member Functions</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="make_property_map.html"><code>make_property_map</code></a></td><td>Creates a property map object using specific arguments</td></tr>
+          <tr><td><a href="make_readable_property_map.html"><code>make_readable_property_map</code></a></td><td>Creates a readable property map object using specific arguments</td></tr>
+          <tr><td><a href="make_writable_property_map.html"><code>make_writable_property_map</code></a></td><td>Creates a writable property map object using specific arguments</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="non-member-constants">Non-member Constants</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="no_property.html"><code>no_property_getter</code></a><br>
+              <a href="no_property.html"><code>no_property_setter</code></a>
+            </td>
+            <td>Denote the construction of readable/writable-only <code>property_map</code> objects</td>
+          </tr>
+          <tr><td><a href="identity_arg.html"><code>identity_arg</code></a></td><td>Creates a readable map that returns as property its argument unchanged</td></tr>
+          <tr><td><a href="constant_arg.html"><code>constant_arg</code></a></td><td>Creates a readable map that returns the same value no matter the key</td></tr>
+          <tr><td><a href="associative_container_arg.html"><code>assocative_container_arg</code></a></td><td>Creates a map that references the given associative container</td></tr>
+          <tr><td><a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td><td>Creates a map that associates keys with elements of a random-access sequence by using them, directly or through a given index map, as offsets from the given iterator</td></tr>
+          <tr><td><a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td><td>Creates a map that associates keys with elements of the given random-access range by using them, directly or through a given index map, as offsets</td></tr>
+          <tr><td><a href="member_arg.html"><code>member_arg</code></a></td><td>Creates a map that maps objects to one of their member objects or to the return type of one of their nullary member functions</td></tr>
+          <tr><td><a href="pointer_arg.html"><code>pointer_arg</code></a></td><td>Creates a map that maps pointers to their pointed-to object</td></tr>
+          <tr><td><a href="invocable_arg.html"><code>invocable_arg</code></a></td><td>Creates a map that maps objects to the result of the given function with them as the argument</td></tr>
+          <tr><td><a href="composable_arg.html"><code>composable_arg</code></a></td><td>Creates a map that composes the two given property maps</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="see-also">See Also</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="../../traits/is_map_for.html"><code>properties::is_map_for</code></a></td>
+            <td>Specifies that a type is both a readable and writable property map type for given types</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>properties::is_writable_map_for - Heim: Properties</title>
+
+  <link rel="stylesheet" href="../../../style.css">
+  <script src="../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../index.html">Home</a>
+          <a href="../../index.html">Properties</a>
+          <a href="../../../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../index.html">Heim</a>
+      <span>›</span>
+      <a href="../../index.html">Properties</a>
+      <span>›</span>
+      <span>properties::is_writable_map_for</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="propertiesis_writable_map_for-heim-properties">properties::is_writable_map_for</h1>
+
+      <h2 id="synopsis">Synopsis</h2>
+
+      <pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> ...<span class="heim-cpp-template-param">Args</span>&gt;
+<span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">is_writable_map_for</span>;
+
+<span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> ...<span class="heim-cpp-template-param">Args</span>&gt;
+<span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-builtin-type">bool</span> <span class="heim-cpp-constant">is_writable_map_for_v</span>
+= <span class="heim-cpp-type">is_writable_map_for</span>&lt;<span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">Args</span> ...&gt;::<span class="heim-cpp-member">value</span>;
+
+<span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> ...<span class="heim-cpp-template-param">Args</span>&gt;
+<span class="heim-cpp-keyword">concept</span> <span class="heim-cpp-concept">writable_map_for</span>
+= <span class="heim-cpp-constant">is_writable_map_for_v</span>&lt;<span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">Args</span> ...&gt;;</code></pre>
+
+      <h2 id="overview">Overview</h2>
+
+      <p>
+        Checks whether instances of the property map type <code>M</code> can modify properties with keys of type <code>K</code> and value arguments of types <code>Args</code>.
+      </p>
+
+      <h2 id="template-parameters">Template Parameters</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>M</code></td><td>The property map type</td></tr>
+          <tr><td><code>K</code></td><td>The key type</td></tr>
+          <tr><td><code>Args ...</code></td><td>The value type pack</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="see-also">See Also</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="is_readable_map_for.html"><code>properties::is_readable_map_for</code></a></td><td>Checks the validity of a call to <a href="../primitives/get.html"><code>properties::get</code></a> for given types</td></tr>
+          <tr><td><a href="is_map_for.html"><code>properties::is_map_for</code></a></td><td>Specifies that a type is both a readable and writable property map type for the given types</td></tr>
+        </tbody>
+      </table>
+
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

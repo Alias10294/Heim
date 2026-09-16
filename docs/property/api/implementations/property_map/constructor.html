@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>property_map::property_map - Heim: Properties</title>
+
+  <link rel="stylesheet" href="../../../../style.css">
+  <script src="../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../index.html">Home</a>
+          <a href="../../../index.html">Properties</a>
+          <a href="../../../../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../index.html">Heim</a>
+      <span>›</span>
+      <a href="../../../index.html">Properties</a>
+      <span>›</span>
+      <a href="index.html">property_map</a>
+      <span>›</span>
+      <span>property_map::property_map</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="property_mapproperty_map-heim-properties">property_map::property_map</h1>
+
+      <h2 id="synopsis">Synopsis</h2>
+
+      <pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-function">property_map</span>(<span class="heim-cpp-type">getter_type</span> <span class="heim-cpp-parameter">g</span>, <span class="heim-cpp-type">setter_type</span> <span class="heim-cpp-parameter">s</span>);</code></pre>
+
+      <h2 id="overview">Overview</h2>
+
+      <p>
+        Constructs <code>this</code> using the given function objects <code>g</code> and <code>s</code>.
+      </p>
+
+      <h2 id="requirements">Requirements</h2>
+
+      <p>
+        <code>getter_type</code> and <code>setter_type</code> have to be
+        <a href="https://cppreference.com/cpp/concepts/movable"><code>movable</code></a> types.
+      </p>
+
+      <h2 id="parameters">Parameters</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>g</code></td><td>The getter function object to use</td></tr>
+          <tr><td><code>s</code></td><td>The setter function object to use</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="code-example">Code Example</h2>
+
+      <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/property.hpp&gt;</span>
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+{
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">getter</span>{[](<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">k</span>) { <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-number">0</span>; }};
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">setter</span>{[](<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">k</span>, <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">v</span>) { }};
+
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">r</span>{<span class="heim-cpp-variable">getter</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">no_property_setter</span>};
+  <span class="heim-cpp-keyword">static_assert</span>( <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">r</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
+  <span class="heim-cpp-keyword">static_assert</span>(!<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">r</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
+
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">w</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">no_property_getter</span>, <span class="heim-cpp-variable">setter</span>};
+  <span class="heim-cpp-keyword">static_assert</span>(!<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">w</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
+  <span class="heim-cpp-keyword">static_assert</span>( <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">w</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
+
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">rw</span>{<span class="heim-cpp-variable">getter</span>, <span class="heim-cpp-variable">setter</span>};
+  <span class="heim-cpp-keyword">static_assert</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">rw</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
+  <span class="heim-cpp-keyword">static_assert</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">rw</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
+}</code></pre>
+
+      <h2 id="notes">Notes</h2>
+
+      <p>
+        All other constructors are left implicitely declared.
+      </p>
+
+      <h2 id="see-also">See Also</h2>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="no_property.html"><code>no_property_getter</code></a><br><a href="no_property.html"><code>no_property_setter</code></a></td><td>Denote the construction of readable/writable-only <code>property_map</code> objects</td></tr>
+        </tbody>
+      </table>
+
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>Heim: Properties</title>
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="index.html">Properties</a>
+          <a href="../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Heim</a>
+      <span>›</span>
+      <span>Properties</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="heim-properties">Heim: Properties</h1>
+
+      <p>
+        This library proposes a common interface to represent and interact with properties of objects independently of their
+        implementation. This can promote reusability and genericity in various applications, effectively abstracting the
+        concepts of <em>getter</em> and <em>setter</em>.
+      </p>
+
+      <p>
+        It is itself used in the <a href="../graph/index.html">Graphs</a> library in many of its algorithms.
+      </p>
+
+      <h2 id="overview">Overview</h2>
+
+      <h3 id="introduction">Introduction</h3>
+
+      <p>
+        Often times, in object-oriented programming, properties represent some part of a class that needs to be read and/or
+        written to.<br>
+        In reality, <em>when you think about it</em>, properties could designate <em>anything</em> associated to some object; the
+        data member of an object, the result of a function applied to an object, the value associated to an object by a
+        hash map, and countless more. This implies that algorithms (or code in general) that manipulate properties of objects
+        need a generic abstraction in order to avoid problems such as strong coupling to the properties' origin or constrained
+        reusability. This is what Heim provides with this library.
+      </p>
+
+      <h3 id="property-mapping">Property mapping</h3>
+
+      <p>
+        Just as iterators in the C++ standard library provide an abstraction for manipulating sequential data structures, Heim
+        develops the concept of the <em>property map</em>.
+      </p>
+
+      <p>
+        A property map is a lightweight, cheap-to-copy object that represents a specific association between keys and their
+        properties. It is not intended to own but only reference/forward the means of associating the keys and properties.<br>
+        As such, the same property map interface can represent completely different underlying mechanisms.
+      </p>
+
+      <h3 id="property-access">Property access</h3>
+
+      <p>
+        Using its property maps, this library provides a common interface for accessing properties. It relies on
+        <a href="https://cppreference.com/cpp/named_req/CustomizationPointObject">customization point objects</a>, and consists of two
+        operations:
+      </p>
+
+      <ul>
+        <li><a href="api/primitives/get.html"><code>properties::get</code></a>, the <em>getter</em>, which returns the given key's associated property according to the given property map.</li>
+        <li><a href="api/primitives/set.html"><code>properties::set</code></a>, the <em>setter</em>, which modifies the given key's associated property according to the given property map.</li>
+      </ul>
+
+      <p>
+        Consequently, property maps are said to be respectively <em>readable</em> and/or <em>writable</em> depending on which operations they
+        support. This denomination is explicitly supported by a <a href="#traits">comprehensive set of type traits and concepts</a>.
+      </p>
+
+      <h3 id="customizability">Customizability</h3>
+
+      <p>
+        The property map concept being entirely independent from any particular implementation, any type for which the
+        appropriate <a href="api/primitives/get.html"><code>properties::get</code></a> and <a href="api/primitives/set.html"><code>properties::set</code></a> operations are
+        available can be used as a property map type.
+      </p>
+
+      <p>
+        Nevertheless, this library provides <a href="api/implementations/property_map/index.html"><code>property_map</code></a> as a general-purpose
+        implementation of the concept and that relies on
+        <a href="https://cppreference.com/cpp/named_req/FunctionObject">function objects</a>.<br>
+        This implementation is also backed by <a href="api/implementations/property_map/make_property_map.html"><code>make_property_map</code></a>, an
+        adaptor function that helps create <a href="api/implementations/property_map/index.html"><code>property_map</code></a> objects from common or
+        known patterns. It can also help compose <a href="api/implementations/property_map/index.html"><code>property_map</code></a> objects to
+        construct more complex associations.
+      </p>
+
+      <h2 id="getting-started">Getting Started</h2>
+
+      <h3 id="installation">Installation</h3>
+
+      <p>
+        An installation guide for Heim as a whole can be found directly on the <a href="https://github.com/Alias10294/heim#getting-started">README</a> or
+        <a href="../index.html#getting-started">main</a> pages.
+      </p>
+
+      <h3 id="creating-property-maps">Creating property maps</h3>
+
+      <p>
+        To create property maps from simple representations, use the
+        <a href="api/implementations/property_map/make_property_map.html"><code>make_property_map</code></a> function.
+      </p>
+
+      <pre><code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-variable">m</span>;
+
+<span class="heim-cpp-comment">// map keys to their values in an associative container
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">m_pm</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-variable">m</span>);
+
+<span class="heim-cpp-comment">// map values to their logical inverse
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">n_pm</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">logical_not</span>&lt;&gt;);
+
+<span class="heim-cpp-comment">// map strings to their hashed value
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">h_pm</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">hash</span>&lt;<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">string</span>&gt;{});
+
+<span class="heim-cpp-comment">// and more ...</span></code></pre>
+
+      <p>
+        Property maps can also be directly constructed using
+        <a href="api/implementations/property_map/constructor.html"><code>property_map</code>'s constructor</a> and custom
+        <a href="https://cppreference.com/cpp/named_req/FunctionObject">function objects</a>.
+      </p>
+
+      <pre><code><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">getter</span> = [](<span class="heim-cpp-keyword">auto</span> &amp;&amp;<span class="heim-cpp-parameter">k</span>) { <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-number">0</span>; };
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">setter</span> = [](<span class="heim-cpp-keyword">auto</span> &amp;&amp;<span class="heim-cpp-parameter">k</span>, <span class="heim-cpp-keyword">auto</span> &amp;&amp;...<span class="heim-cpp-parameter">args</span>) { };
+
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span>{<span class="heim-cpp-variable">getter</span>, <span class="heim-cpp-variable">setter</span>};</code></pre>
+
+      <h3 id="accessing-properties">Accessing properties</h3>
+
+      <p>
+        Use the library's interface to access properties.
+      </p>
+
+      <pre><code><span class="heim-cpp-comment">// read access to a property
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">prop</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>);
+
+<span class="heim-cpp-comment">// write access to a property
+</span><span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>, <span class="heim-cpp-variable">prop</span>);</code></pre>
+
+      <h3 id="composing-property-maps">Composing property maps</h3>
+
+      <p>
+        When associations can be represented by combining multiple other associations,
+        <a href="api/implementations/property_map/make_property_map.html"><code>make_property_map</code></a> can also be used along with
+        <a href="api/implementations/property_map/composable_arg.html"><code>composable_arg</code></a> to combine their respective property maps.
+      </p>
+
+      <pre><code><span class="heim-cpp-comment">// x(key) &lt;=&gt; a(b(key))
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">x</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">a</span>, <span class="heim-cpp-variable">b</span>);
+
+<span class="heim-cpp-comment">// y(key) &lt;=&gt; x(c(key)) &lt;=&gt; a(b(c(key)))
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">y</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">x</span>, <span class="heim-cpp-variable">c</span>);</code></pre>
+
+      <h3 id="implementing-property-maps">Implementing property maps</h3>
+
+      <p>
+        If what this library does not provide a fitting property map, or if the provided solutions lack specific
+        functionalities, custom property map types can easily be implemented and have very few requirements:
+      </p>
+
+      <ul>
+        <li>be usable through <a href="api/primitives/get.html"><code>properties::get</code></a> and/or <a href="api/primitives/set.html"><code>properties::set</code></a>, that is provide equivalent <code>get</code> and <code>set</code> as either member or free functions;</li>
+        <li>not own the resources they refer to, as they are intended to be cheaply copied for algorithms to use.</li>
+      </ul>
+
+      <h2 id="code-example">Code Example</h2>
+
+      <pre><code><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;print&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;unordered_map&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;vector&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;heim/property.hpp&gt;</span><span class="heim-cpp-preprocessor">
+</span>
+<span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">entity</span> { <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-member">hp</span>; };
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+{
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unordered_map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-variable">map</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">100</span>}, {<span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">80</span>}, {<span class="heim-cpp-number">2</span>, <span class="heim-cpp-number">60</span>}};
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-type">entity</span>&gt;          <span class="heim-cpp-variable">vec</span>{{<span class="heim-cpp-number">100</span>}, {<span class="heim-cpp-number">80</span>}, {<span class="heim-cpp-number">60</span>}};
+
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">map_pm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-variable">map</span>)};
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">vec_pm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(
+      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>,
+      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">member_arg</span>, &amp;<span class="heim-cpp-type">entity</span>::<span class="heim-cpp-member">hp</span>),
+      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-variable">vec</span>)};
+
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
+
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
+
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
+}</code></pre>
+
+      <h2 id="api-reference">API Reference</h2>
+
+      <h3 id="primitives">Primitives</h3>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="api/primitives/get.html"><code>properties::get</code></a></td><td>Returns the property associated to a key</td></tr>
+          <tr><td><a href="api/primitives/set.html"><code>properties::set</code></a></td><td>Modifies the property associated to a key</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="traits">Traits</h3>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="api/traits/is_readable_map_for.html"><code>properties::is_readable_map_for</code></a></td><td>Checks the validity of a call to <a href="api/primitives/get.html"><code>properties::get</code></a> for given types</td></tr>
+          <tr><td><a href="api/traits/is_writable_map_for.html"><code>properties::is_writable_map_for</code></a></td><td>Checks the validity of a call to <a href="api/primitives/set.html"><code>properties::set</code></a> for given types</td></tr>
+          <tr><td><a href="api/traits/is_map_for.html"><code>properties::is_map_for</code></a></td><td>Specifies that a type is both a readable and writable property map type for given types</td></tr>
+          <tr><td><a href="api/traits/is_reflective_map_for.html"><code>properties::is_reflective_map_for</code></a></td><td>Checks that a type is a property map that can write back accessed properties</td></tr>
+          <tr><td><a href="api/traits/readable_map_result.html"><code>properties::readable_map_result</code></a></td><td>Determines the result type of a call to <a href="api/primitives/get.html"><code>properties::get</code></a></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="implementations">Implementations</h3>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="api/implementations/property_map/index.html"><code>property_map</code></a></td><td>A versatile and generic implementation of the property map concept relying on function objects</td></tr>
+        </tbody>
+      </table>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

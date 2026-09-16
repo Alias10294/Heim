@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>random_access_iterator_arg - Heim: Properties</title>
+
+  <link rel="stylesheet" href="../../../../style.css">
+  <script src="../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../index.html">Home</a>
+          <a href="../../../index.html">Properties</a>
+          <a href="../../../../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../index.html">Heim</a>
+      <span>›</span>
+      <a href="../../../index.html">Properties</a>
+      <span>›</span>
+      <a href="index.html">property_map</a>
+      <span>›</span>
+      <span>random_access_iterator_arg</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="random_access_iterator_arg">random_access_iterator_arg</h1>
+
+<h2 id="synopsis">Synopsis</h2>
+<pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">random_access_iterator_arg_t</span> { <span class="heim-cpp-keyword">explicit</span> <span class="heim-cpp-type">random_access_iterator_arg_t</span>() = <span class="heim-cpp-control-keyword">default</span>; }
+
+<span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-type">random_access_iterator_arg_t</span> <span class="heim-cpp-tag">random_access_iterator_arg</span>{};
+</code></pre>
+<h2 id="overview">Overview</h2>
+<p>Used with <a href="make_property_map.html"><code>make_property_map</code></a> to create a property map that associates keys with elements of a
+random-access sequence by using them, directly or through an index map, as offsets from a given iterator.</p>
+<h2 id="code-example">Code Example</h2>
+<pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;array&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/property.hpp&gt;</span>
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+{
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">array</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-number">5</span>&gt; <span class="heim-cpp-variable">arr</span>{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">2</span>, <span class="heim-cpp-number">4</span>, <span class="heim-cpp-number">5</span>, <span class="heim-cpp-number">8</span>};
+  <span class="heim-cpp-keyword">auto</span>               <span class="heim-cpp-variable">pm</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-variable">arr</span>.<span class="heim-cpp-method">begin</span>())};
+
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">0</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">3</span>));
+  
+  <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">set</span>(<span class="heim-cpp-number">3</span>, <span class="heim-cpp-number">6</span>);
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">3</span>));
+}
+</code></pre>
+<h3 id="output">Output</h3>
+<pre><code>0 5 6 </code></pre>
+<h2 id="see-also">See Also</h2>
+<table>
+<thead>
+<th>Name</th>
+<th>Description</th>
+</thead>
+<tbody>
+<tr>
+<td><a href="make_property_map.html"><code>make_property_map</code></a></td>
+<td>Creates a property map using the given arguments</td>
+</tr>
+<tr>
+<td><a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td>
+<td>A tag used to create property maps from a random-access range</td>
+</tr>
+</tbody>
+</table>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

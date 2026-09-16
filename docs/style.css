@@ -1,0 +1,712 @@
+:root {
+  --heim-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --heim-mono: Consolas, "Cascadia Mono", monospace;
+
+  --heim-width: 900px;
+  --heim-page-padding: 16px;
+
+  /* Heim Docs — light palette, inspired by GitHub/Primer. */
+  --heim-bg: #ffffff;
+  --heim-bg-soft: #f6f8fa;
+  --heim-bg-hover: #f3f4f6;
+  --heim-text: #1f2328;
+  --heim-text-soft: #59636e;
+  --heim-border: #d0d7de;
+  --heim-border-soft: #d8dee4;
+  --heim-border-strong: #afb8c1;
+  --heim-link: #0969da;
+  --heim-focus: #0969da;
+
+  /* Code surfaces */
+  --heim-code-bg: #f6f8fa;
+  --heim-code-border: #d0d7de;
+  --heim-inline-code-bg: #eff1f3;
+  --heim-inline-code-border: #d8dee4;
+  --heim-code-text: #1f2328;
+
+  /* Language */
+  --heim-cpp-keyword: #cf222e;
+  --heim-cpp-control-keyword: #cf222e;
+  --heim-cpp-special-keyword: #cf222e;
+  --heim-cpp-operator-keyword: #cf222e;
+  --heim-cpp-attribute: #8250df;
+  --heim-cpp-literal: #0550ae;
+  --heim-cpp-operator: #1f2328;
+  --heim-cpp-punctuation: #1f2328;
+
+  /* Symbols */
+  --heim-cpp-builtin-type: #0550ae;
+  --heim-cpp-type: #8250df;
+  --heim-cpp-template-param: #953800;
+  --heim-cpp-concept: #6639ba;
+  --heim-cpp-namespace: #0969da;
+  --heim-cpp-function: #6639ba;
+  --heim-cpp-method: #8250df;
+  --heim-cpp-variable: #1f2328;
+  --heim-cpp-parameter: #953800;
+  --heim-cpp-member: #953800;
+  --heim-cpp-constant: #0550ae;
+  --heim-cpp-enum-member: #0550ae;
+  --heim-cpp-cpo: #6639ba;
+  --heim-cpp-tag: #953800;
+
+  /* Lexical */
+  --heim-cpp-string: #0a3069;
+  --heim-cpp-string-escape: #116329;
+  --heim-cpp-number: #0550ae;
+  --heim-cpp-comment: #656d76;
+  --heim-cpp-doc-comment: #57606a;
+
+  /* Preprocessor */
+  --heim-cpp-preprocessor: #cf222e;
+  --heim-cpp-macro: #8250df;
+}
+
+html[data-heim-theme="dark"] {
+  /* Heim Docs — dark palette, inspired by GitHub/Primer. */
+  --heim-bg: #0d1117;
+  --heim-bg-soft: #161b22;
+  --heim-bg-hover: #21262d;
+  --heim-text: #e6edf3;
+  --heim-text-soft: #8b949e;
+  --heim-border: #30363d;
+  --heim-border-soft: #21262d;
+  --heim-border-strong: #484f58;
+  --heim-link: #58a6ff;
+  --heim-focus: #58a6ff;
+
+  --heim-code-bg: #161b22;
+  --heim-code-border: #30363d;
+  --heim-inline-code-bg: #161b22;
+  --heim-inline-code-border: #30363d;
+  --heim-code-text: #e6edf3;
+
+  /* Language */
+  --heim-cpp-keyword: #ff7b72;
+  --heim-cpp-control-keyword: #ff7b72;
+  --heim-cpp-special-keyword: #ff7b72;
+  --heim-cpp-operator-keyword: #ff7b72;
+  --heim-cpp-attribute: #d2a8ff;
+  --heim-cpp-literal: #79c0ff;
+  --heim-cpp-operator: #e6edf3;
+  --heim-cpp-punctuation: #e6edf3;
+
+  /* Symbols */
+  --heim-cpp-builtin-type: #79c0ff;
+  --heim-cpp-type: #d2a8ff;
+  --heim-cpp-template-param: #ffa657;
+  --heim-cpp-concept: #d2a8ff;
+  --heim-cpp-namespace: #79c0ff;
+  --heim-cpp-function: #d2a8ff;
+  --heim-cpp-method: #d2a8ff;
+  --heim-cpp-variable: #e6edf3;
+  --heim-cpp-parameter: #ffa657;
+  --heim-cpp-member: #ffa657;
+  --heim-cpp-constant: #79c0ff;
+  --heim-cpp-enum-member: #79c0ff;
+  --heim-cpp-cpo: #d2a8ff;
+  --heim-cpp-tag: #ffa657;
+
+  /* Lexical */
+  --heim-cpp-string: #a5d6ff;
+  --heim-cpp-string-escape: #7ee787;
+  --heim-cpp-number: #79c0ff;
+  --heim-cpp-comment: #8b949e;
+  --heim-cpp-doc-comment: #8b949e;
+
+  /* Preprocessor */
+  --heim-cpp-preprocessor: #ff7b72;
+  --heim-cpp-macro: #d2a8ff;
+
+  color-scheme: dark;
+}
+
+html[data-heim-theme="light"] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--heim-bg);
+  color: var(--heim-text);
+
+  font-family: var(--heim-font);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--heim-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--heim-focus);
+  outline-offset: 2px;
+}
+
+code,
+pre {
+  font-family: var(--heim-mono);
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+.heim-header {
+  flex: none;
+  border-top: 1px solid var(--heim-border);
+  border-bottom: 1px solid var(--heim-border);
+  background: var(--heim-bg);
+}
+
+.heim-header__top,
+.heim-header__bar-inner,
+.heim-main,
+.heim-footer__inner {
+  width: min(
+    calc(100% - (2 * var(--heim-page-padding))),
+    var(--heim-width)
+  );
+  margin-inline: auto;
+}
+
+.heim-header__top {
+  min-height: 66px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.heim-brand {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+
+  color: var(--heim-text);
+  text-decoration: none;
+}
+
+.heim-brand:hover,
+.heim-brand:focus-visible {
+  text-decoration: none;
+}
+
+.heim-brand__name {
+  flex: none;
+
+  color: var(--heim-link);
+  font-family: var(--heim-mono);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.heim-brand__subtitle {
+  min-width: 0;
+
+  color: var(--heim-text-soft);
+  font-size: 13px;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+.heim-header__bar {
+  border-top: 1px solid var(--heim-border-soft);
+  background: var(--heim-bg);
+}
+
+.heim-header__bar-inner {
+  min-height: 36px;
+  display: flex;
+  align-items: stretch;
+}
+
+.heim-nav {
+  min-width: 0;
+  margin-left: -10px;
+
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+
+  font-size: 13px;
+}
+
+.heim-nav a {
+  min-height: 36px;
+
+  display: flex;
+  align-items: center;
+
+  padding-inline: 10px;
+
+  color: var(--heim-link);
+  border-bottom: 2px solid transparent;
+
+  white-space: nowrap;
+}
+
+.heim-nav a:hover,
+.heim-nav a:focus-visible {
+  background: transparent;
+  border-bottom-color: var(--heim-link);
+  text-decoration: none;
+}
+
+.heim-nav a:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline-offset: -2px;
+}
+
+.heim-header__actions {
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heim-github {
+  min-height: 30px;
+
+  display: inline-flex;
+  align-items: center;
+
+  border: 1px solid var(--heim-border);
+  border-radius: 4px;
+
+  background: var(--heim-bg);
+  color: var(--heim-text);
+
+  font-size: 12px;
+  line-height: 1;
+
+  overflow: hidden;
+  text-decoration: none;
+
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.heim-github:hover {
+  background: var(--heim-bg-hover);
+  border-color: var(--heim-border-strong);
+  text-decoration: none;
+}
+
+.heim-github__label {
+  padding: 0 9px;
+
+  font-weight: 600;
+}
+
+.heim-github__stars {
+  min-height: 28px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 0 8px;
+
+  border-left: 1px solid var(--heim-border-soft);
+
+  color: var(--heim-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.heim-github__star {
+  color: #b58900;
+  font-size: 12px;
+}
+
+html[data-heim-theme="dark"] .heim-github__star {
+  color: #e0b84f;
+}
+
+.heim-github__count {
+  min-width: 1ch;
+}
+
+.heim-theme {
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: var(--heim-text-soft);
+  font-size: 12px;
+}
+
+.heim-theme__select {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+.heim-theme__select::after {
+  content: "";
+
+  position: absolute;
+  right: 9px;
+
+  width: 6px;
+  height: 6px;
+
+  border-right: 1.5px solid var(--heim-text-soft);
+  border-bottom: 1.5px solid var(--heim-text-soft);
+
+  transform: translateY(-2px) rotate(45deg);
+  pointer-events: none;
+}
+
+.heim-theme select {
+  appearance: none;
+
+  min-width: 92px;
+  height: 30px;
+  padding: 0 28px 0 10px;
+
+  border: 1px solid var(--heim-border);
+  border-radius: 4px;
+
+  background: var(--heim-bg);
+  color: var(--heim-text);
+
+  font: inherit;
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.heim-theme select:hover {
+  background: var(--heim-bg-hover);
+  border-color: var(--heim-border-strong);
+}
+
+.heim-theme select:focus-visible {
+  outline: none;
+  border-color: var(--heim-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--heim-focus) 25%, transparent);
+}
+
+.heim-main {
+  flex: 1 0 auto;
+  min-width: 0;
+  padding: 18px 0 56px;
+}
+
+.heim-breadcrumbs {
+  min-width: 0;
+  margin-bottom: 24px;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+
+  color: var(--heim-text-soft);
+  font-size: 13px;
+
+  overflow-wrap: anywhere;
+}
+
+.heim-content {
+  min-width: 0;
+}
+
+.heim-content h1 {
+  margin-top: 0;
+
+  font-size: clamp(26px, 4vw, 30px);
+  line-height: 1.2;
+
+  overflow-wrap: anywhere;
+}
+
+.heim-content h2 {
+  margin-top: 28px;
+  padding-bottom: 4px;
+
+  border-bottom: 1px solid var(--heim-border);
+
+  font-size: 20px;
+  line-height: 1.25;
+
+  overflow-wrap: anywhere;
+}
+
+.heim-content p,
+.heim-content li,
+.heim-content td,
+.heim-content th {
+  overflow-wrap: break-word;
+}
+
+.heim-content code {
+  padding: 0.08em 0.28em;
+
+  border: 1px solid var(--heim-inline-code-border);
+  border-radius: 3px;
+
+  background: var(--heim-inline-code-bg);
+
+  font-size: 0.94em;
+  line-height: 1.2;
+
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.heim-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+
+  padding: 14px;
+
+  border: 1px solid var(--heim-code-border);
+  border-radius: 3px;
+  background: var(--heim-code-bg);
+
+  line-height: 1.45;
+  tab-size: 2;
+}
+
+.heim-content pre code {
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+
+  color: var(--heim-code-text);
+  font-size: 0.95em;
+  line-height: inherit;
+}
+
+.heim-content table {
+  width: 100%;
+  max-width: 100%;
+
+  border-collapse: collapse;
+}
+
+.heim-content th,
+.heim-content td {
+  padding: 6px 8px;
+
+  border-bottom: 1px solid var(--heim-border);
+
+  text-align: left;
+  vertical-align: top;
+}
+
+.heim-footer {
+  flex: none;
+
+  border-top: 1px solid var(--heim-border);
+  background: var(--heim-bg-soft);
+}
+
+.heim-footer__inner {
+  padding: 16px 0;
+
+  color: var(--heim-text-soft);
+  font-size: 12px;
+}
+
+/* Manual C++ syntax highlighting.
+ *
+ * The markup is semantic rather than theme-specific. Each class has its own
+ * color variable. The current Heim Docs palette deliberately maps some semantic
+ * categories together while keeping others distinct. A different theme can thus be
+ * implemented entirely by replacing the variables above.
+ *
+ * Punctuation is normally left unwrapped in HTML because most themes use the
+ * editor foreground for it. .heim-cpp-punctuation exists for the rare cases
+ * where an explicit token is useful.
+ */
+.heim-cpp-keyword { color: var(--heim-cpp-keyword); }
+.heim-cpp-control-keyword { color: var(--heim-cpp-control-keyword); }
+.heim-cpp-special-keyword { color: var(--heim-cpp-special-keyword); }
+.heim-cpp-operator-keyword { color: var(--heim-cpp-operator-keyword); }
+.heim-cpp-attribute { color: var(--heim-cpp-attribute); }
+.heim-cpp-literal { color: var(--heim-cpp-literal); }
+.heim-cpp-operator { color: var(--heim-cpp-operator); }
+.heim-cpp-punctuation { color: var(--heim-cpp-punctuation); }
+
+.heim-cpp-builtin-type { color: var(--heim-cpp-builtin-type); }
+.heim-cpp-type { color: var(--heim-cpp-type); }
+.heim-cpp-template-param { color: var(--heim-cpp-template-param); }
+.heim-cpp-concept { color: var(--heim-cpp-concept); }
+.heim-cpp-namespace { color: var(--heim-cpp-namespace); }
+.heim-cpp-function { color: var(--heim-cpp-function); }
+.heim-cpp-method { color: var(--heim-cpp-method); }
+.heim-cpp-variable { color: var(--heim-cpp-variable); }
+.heim-cpp-parameter { color: var(--heim-cpp-parameter); }
+.heim-cpp-member { color: var(--heim-cpp-member); }
+.heim-cpp-constant { color: var(--heim-cpp-constant); }
+.heim-cpp-enum-member { color: var(--heim-cpp-enum-member); }
+.heim-cpp-cpo { color: var(--heim-cpp-cpo); }
+.heim-cpp-tag { color: var(--heim-cpp-tag); }
+
+.heim-cpp-string { color: var(--heim-cpp-string); }
+.heim-cpp-string-escape { color: var(--heim-cpp-string-escape); }
+.heim-cpp-number { color: var(--heim-cpp-number); }
+.heim-cpp-comment { color: var(--heim-cpp-comment); }
+.heim-cpp-doc-comment { color: var(--heim-cpp-doc-comment); }
+
+.heim-cpp-preprocessor { color: var(--heim-cpp-preprocessor); }
+.heim-cpp-macro { color: var(--heim-cpp-macro); }
+
+@media (max-width: 700px) {
+  :root {
+    --heim-page-padding: 12px;
+  }
+
+  .heim-header__top {
+    min-height: auto;
+    padding: 12px 0;
+
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .heim-header__actions {
+    gap: 8px;
+  }
+
+  .heim-brand {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .heim-theme__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .heim-header__top {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .heim-header__actions {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .heim-theme {
+    justify-content: flex-end;
+  }
+
+  .heim-brand__name {
+    font-size: 22px;
+  }
+
+  .heim-main {
+    padding-top: 14px;
+    padding-bottom: 40px;
+  }
+
+  .heim-breadcrumbs {
+    margin-bottom: 18px;
+  }
+
+  .heim-content pre {
+    padding: 12px;
+  }
+
+  .heim-content th,
+  .heim-content td {
+    padding-inline: 6px;
+  }
+}
+
+/* API signature enumerations
+ *
+ * Signature code blocks are real children of their numbered list items.
+ * This keeps the number and its declaration structurally associated while
+ * retaining horizontal scrolling on long C++ declarations.
+ */
+.heim-signature-list {
+  margin: 12px 0 20px;
+  padding-left: 2.4rem;
+}
+
+.heim-signature-list > li {
+  margin: 0 0 12px;
+  padding-left: 0.35rem;
+}
+
+.heim-signature-list > li::marker {
+  color: var(--heim-text-soft);
+  font-family: var(--heim-mono);
+  font-size: 0.92em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.heim-signature-list > li > pre {
+  margin: 6px 0 0;
+}
+
+.heim-signature-list > li:last-child {
+  margin-bottom: 0;
+}
+
+/* Ordered lists use parenthesized markers: 1), 2), 3), ... */
+ol > li::marker {
+  content: counter(list-item) ") ";
+}

@@ -3,9 +3,9 @@ Heim is a C++26 collection of header-only libraries that provide useful and gene
 *data-oriented design* (*DOD*).
 
 It currently features:
-+ a [graph](docs/graph/index.md) library inspired by the 
+* a [graph](docs_md/graph/index.md) library inspired by the 
   [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/index.html),
-+ a [module](docs/property/index.md) library that abstracts the concepts of object properties and association of 
+* a [module](docs_md/property/index.md) library that abstracts the concepts of object properties and association of 
   objects.
 
 ## Code examples
@@ -96,8 +96,8 @@ heim_dep = dependency(
 ## Documentation
 Each library has its own documentation.
 
-See the [Graphs documentation](docs/graph/index.md).\
-See the [Properties documentation](docs/property/index.md).
+See the [Graphs documentation](docs_md/graph/index.md).\
+See the [Properties documentation](docs_md/property/index.md).
 
 ## License
 Heim is available under the [MIT license](LICENSE).

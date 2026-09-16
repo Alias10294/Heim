@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>Page title - Heim: Properties or Graphs</title>
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="../property/index.html">Properties</a>
+          <a href="../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Heim</a>
+      <span>›</span>
+      <span>Page title</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1>Page title</h1>
+
+      <p>
+        Page content.
+      </p>
+
+      <h2>Section</h2>
+
+      <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+
+<span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">example</span>
+{
+  <span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">entity</span>
+  {
+    <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-member">hp</span>;
+  };
+
+  <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+  {
+    <span class="heim-cpp-type">entity</span> <span class="heim-cpp-variable">player</span>{<span class="heim-cpp-number">100</span>};
+
+    <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(
+        <span class="heim-cpp-string">&quot;HP: {}\\n&quot;</span>,
+        <span class="heim-cpp-variable">player</span>.<span class="heim-cpp-member">hp</span>);
+
+    <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-number">0</span>;
+  }
+}</code></pre>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

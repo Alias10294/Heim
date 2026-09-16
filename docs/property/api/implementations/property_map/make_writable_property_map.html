@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>make_writable_property_map - Heim: Properties</title>
+
+  <link rel="stylesheet" href="../../../../style.css">
+  <script src="../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../index.html">Home</a>
+          <a href="../../../index.html">Properties</a>
+          <a href="../../../../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../index.html">Heim</a>
+      <span>›</span>
+      <a href="../../../index.html">Properties</a>
+      <span>›</span>
+      <a href="index.html">property_map</a>
+      <span>›</span>
+      <span>make_writable_property_map</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="make_writable_property_map">make_writable_property_map</h1>
+
+<h2 id="synopsis">Synopsis</h2>
+<pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> ...<span class="heim-cpp-template-param">Args</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">Args</span> &amp;&amp;...<span class="heim-cpp-parameter">args</span>);
+</code></pre>
+<h3 id="valid-call-signatures">Valid Call Signatures</h3>
+<ol class="heim-signature-list">
+<li><pre><code>[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">identity_arg_t</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">constant_arg_t</span>, <span class="heim-cpp-template-param">T</span> &amp;&amp;<span class="heim-cpp-parameter">t</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Cont</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">associative_container_arg_t</span>, <span class="heim-cpp-template-param">Cont</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">It</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">random_access_iterator_arg_t</span>, <span class="heim-cpp-template-param">It</span> <span class="heim-cpp-parameter">it</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">It</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">random_access_iterator_arg_t</span>, <span class="heim-cpp-template-param">It</span> <span class="heim-cpp-parameter">it</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">R</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">random_access_range_arg_t</span>, <span class="heim-cpp-template-param">R</span> &amp;<span class="heim-cpp-parameter">rg</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">R</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">random_access_range_arg_t</span>, <span class="heim-cpp-template-param">R</span> &amp;<span class="heim-cpp-parameter">rg</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">C</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">member_arg_t</span>, <span class="heim-cpp-template-param">M</span> <span class="heim-cpp-template-param">C</span>::*<span class="heim-cpp-parameter">m</span>);
+</code></pre>
+</li>
+<li><pre><code>[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">pointer_arg_t</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">F</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">invocable_arg_t</span>, <span class="heim-cpp-template-param">F</span> <span class="heim-cpp-parameter">f</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">FMap</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">GMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-type">composable_arg_t</span>, <span class="heim-cpp-template-param">FMap</span> <span class="heim-cpp-parameter">f</span>, <span class="heim-cpp-template-param">GMap</span> <span class="heim-cpp-parameter">g</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+</ol>
+<h3 id="special-call-signatures">Special Call Signatures</h3>
+<ol class="heim-signature-list">
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Hash</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">KeyEqual</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unordered_map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Hash</span>, <span class="heim-cpp-template-param">KeyEqual</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Hash</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">KeyEqual</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unordered_map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Hash</span>, <span class="heim-cpp-template-param">KeyEqual</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">KCont</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">MCont</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">flat_map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-template-param">KCont</span>, <span class="heim-cpp-template-param">MCont</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">KCont</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">MCont</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">flat_map</span>&lt;<span class="heim-cpp-template-param">K</span>, <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Cmp</span>, <span class="heim-cpp-template-param">KCont</span>, <span class="heim-cpp-template-param">MCont</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">It</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">It</span> <span class="heim-cpp-parameter">it</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">It</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">It</span> <span class="heim-cpp-parameter">it</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">span</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; <span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">span</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; <span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">T</span> (&amp;<span class="heim-cpp-parameter">cont</span>)[<span class="heim-cpp-template-param">N</span>]);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">T</span> <span class="heim-cpp-keyword">const</span> (&amp;<span class="heim-cpp-parameter">cont</span>)[<span class="heim-cpp-template-param">N</span>]);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">T</span> (&amp;<span class="heim-cpp-parameter">cont</span>)[<span class="heim-cpp-template-param">N</span>], <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">T</span> <span class="heim-cpp-keyword">const</span> (&amp;<span class="heim-cpp-parameter">cont</span>)[<span class="heim-cpp-template-param">N</span>], <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">array</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">array</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">array</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-builtin-type">size_t</span> <span class="heim-cpp-template-param">N</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">array</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">N</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">deque</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">deque</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>);
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">deque</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">Alloc</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">IndexMap</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">deque</span>&lt;<span class="heim-cpp-template-param">T</span>, <span class="heim-cpp-template-param">Alloc</span>&gt; <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">cont</span>, <span class="heim-cpp-template-param">IndexMap</span> <span class="heim-cpp-parameter">imap</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+<li><pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">F</span>&gt;
+[[<span class="heim-cpp-attribute">nodiscard</span>]] <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-keyword">auto</span>
+<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-template-param">F</span> &amp;&amp;<span class="heim-cpp-parameter">f</span>)
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-comment">/* see below */</span>;
+</code></pre>
+</li>
+</ol>
+<h2 id="overview">Overview</h2>
+<p>Constructs a writable <a href="index.html"><code>property_map</code></a> object with special getters and setters according to certain tags and
+arguments.</p>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Name</th>
+  <th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"><a href="identity_arg.html"><code>identity_arg</code></a></td>
+  <td style="text-align:left">Creates an unusable (readable-only) map</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="constant_arg.html"><code>constant_arg</code></a></td>
+  <td style="text-align:left">Creates an unusable (readable-only) map</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="associative_container_arg.html"><code>associative_container_arg</code></a></td>
+  <td style="text-align:left">Creates a map that references the given associative container</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td>
+  <td style="text-align:left">Creates a map that associates keys with elements of a random-access sequence by using them, directly or through a given index map, as offsets from the given iterator</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td>
+  <td style="text-align:left">Creates a map that associates keys with elements of the given random-access range by using them, directly or through a given index map, as offsets</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="member_arg.html"><code>member_arg</code></a></td>
+  <td style="text-align:left">Creates a map that maps objects to one of their member objects or to the return type of one of their nullary member functions</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="pointer_arg.html"><code>pointer_arg</code></a></td>
+  <td style="text-align:left">Creates a map that maps pointers to their pointed-to object</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="invocable_arg.html"><code>invocable_arg</code></a></td>
+  <td style="text-align:left">Creates a map that maps objects to the result of the given function with them as the argument</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="composable_arg.html"><code>composable_arg</code></a></td>
+  <td style="text-align:left">Creates a map that composes the two given property maps</td>
+</tr>
+</tbody>
+</table>
+<h3 id="special-call-signatures-2">Special Call Signatures</h3>
+<p>To simplify usage for obvious cases, special call signatures are available.</p>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Signatures</th>
+  <th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left">1-6.</td>
+  <td style="text-align:left">Hide <a href="associative_container_arg.html"><code>associative_container_arg</code></a></td>
+</tr>
+<tr>
+  <td style="text-align:left">7-10.</td>
+  <td style="text-align:left">Hide <a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td>
+</tr>
+<tr>
+  <td style="text-align:left">11-26.</td>
+  <td style="text-align:left">Hide <a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td>
+</tr>
+<tr>
+  <td style="text-align:left">27.</td>
+  <td style="text-align:left">Hides <a href="invocable_arg.html"><code>invocable_arg</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="template-parameters">Template Parameters</h2>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Name</th>
+  <th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"><code>Args</code></td>
+  <td style="text-align:left">The value type pack</td>
+</tr>
+</tbody>
+</table>
+<h2 id="requirements">Requirements</h2>
+<h3 id="valid-call-signatures-2">Valid call signatures</h3>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Signatures</th>
+  <th style="text-align:left">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left">2.</td>
+  <td style="text-align:left"><code>std::decay_t&lt;T&gt;</code> must be constructible from <code>T &amp;&amp;</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">4.</td>
+  <td style="text-align:left"><code>It</code> must be copy constructible and model <code>std::random_access_iterator</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">5.</td>
+  <td style="text-align:left"><code>It</code> and <code>IndexMap</code> must be copy constructible, and <code>It</code> must model <code>std::random_access_iterator</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">6.</td>
+  <td style="text-align:left"><code>R</code> must model <code>std::ranges::random_access_range</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">7.</td>
+  <td style="text-align:left"><code>IndexMap</code> must be copy constructible and <code>R</code> must model <code>std::ranges::random_access_range</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">10.</td>
+  <td style="text-align:left"><code>F</code> must be copy constructible.</td>
+</tr>
+<tr>
+  <td style="text-align:left">11.</td>
+  <td style="text-align:left"><code>FMap</code> and <code>GMap</code> must be copy constructible.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="special-call-signatures-3">Special call signatures</h3>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Signatures</th>
+  <th style="text-align:left">Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left">7.</td>
+  <td style="text-align:left"><code>It</code> must model <code>std::random_access_iterator</code>.</td>
+</tr>
+<tr>
+  <td style="text-align:left">8.</td>
+  <td style="text-align:left"><code>It</code> must model <code>std::random_access_iterator</code> and <code>IndexMap</code> must be copy constructible.</td>
+</tr>
+<tr>
+  <td style="text-align:left">10.<br>13-14.<br>17-18.<br>21-22.<br>25-26.</td>
+  <td style="text-align:left"><code>IndexMap</code> must be copy constructible.</td>
+</tr>
+<tr>
+  <td style="text-align:left">27.</td>
+  <td style="text-align:left"><code>std::remove_reference_t&lt;F&gt;</code> must be a function type.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="parameters">Parameters</h2>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Name</th>
+  <th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"><code>args</code></td>
+  <td style="text-align:left">The value pack</td>
+</tr>
+</tbody>
+</table>
+<h2 id="code-example">Code Example</h2>
+<pre><code><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;map&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;ranges&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;utility&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;vector&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;heim/property.hpp&gt;</span><span class="heim-cpp-preprocessor">
+</span>
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+{
+  <span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">pair</span> = <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">pair</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;;
+
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-type">map</span>{};
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-builtin-type">int</span>&gt;   <span class="heim-cpp-variable">vec</span>{};
+  <span class="heim-cpp-keyword">auto</span>               <span class="heim-cpp-parameter">it</span> {<span class="heim-cpp-variable">vec</span>.<span class="heim-cpp-method">begin</span>()};
+
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm1</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">identity_arg</span>)};                           <span class="heim-cpp-comment">// 1. (unusable)
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm2</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">constant_arg</span>, <span class="heim-cpp-number">10.</span>};                       <span class="heim-cpp-comment">// 2. (unusable)
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm3</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-type">map</span>)};         <span class="heim-cpp-comment">// 3.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm4</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-parameter">it</span>)};         <span class="heim-cpp-comment">// 4.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm5</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-parameter">it</span> , <span class="heim-cpp-variable">ac_pm</span>)}; <span class="heim-cpp-comment">// 5.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm6</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_range_arg</span>   , <span class="heim-cpp-variable">vec</span>)};        <span class="heim-cpp-comment">// 6.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm7</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_range_arg</span>   , <span class="heim-cpp-variable">vec</span>, <span class="heim-cpp-variable">ac_pm</span>)}; <span class="heim-cpp-comment">// 7.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm8</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">member_arg</span>, &amp;<span class="heim-cpp-type">pair</span>::<span class="heim-cpp-variable">first</span>)};               <span class="heim-cpp-comment">// 8.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm9</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">pointer_arg</span>)};                            <span class="heim-cpp-comment">// 9.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm10</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">invocable_arg</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-namespace">ranges</span>::<span class="heim-cpp-function">size</span>)};       <span class="heim-cpp-comment">// 10.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm11</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_writable_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">ac_pm</span>, <span class="heim-cpp-variable">ri_pm</span>)};           <span class="heim-cpp-comment">// 11.
+</span>}
+</code></pre>
+<h2 id="see-also">See Also</h2>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Name</th>
+  <th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"><a href="make_property_map.html"><code>make_property_map</code></a></td>
+  <td style="text-align:left">Creates a property map object using specific arguments</td>
+</tr>
+<tr>
+  <td style="text-align:left"><a href="make_writable_property_map.html"><code>make_writable_property_map</code></a></td>
+  <td style="text-align:left">Creates a writable property map object using specific arguments</td>
+</tr>
+</tbody>
+</table>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>
