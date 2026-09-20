@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>Page title - Heim</title>
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="../script.js" defer></script>
+
+  <style>
+    .heim-placeholder {
+      max-width: 640px;
+      margin-top: 20px;
+      padding: 16px 18px;
+      border: 1px solid var(--heim-border);
+      border-radius: 6px;
+      background: var(--heim-bg-soft);
+    }
+
+    .heim-placeholder__title {
+      margin: 0 0 6px;
+      font-weight: 600;
+    }
+
+    .heim-placeholder p:last-child {
+      margin: 0;
+      color: var(--heim-text-soft);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="../property/index.html">Properties</a>
+          <a href="../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Heim</a>
+      <span>›</span>
+      <span>Page title</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1>Page title</h1>
+
+      <section class="heim-placeholder" aria-label="Page status">
+        <p class="heim-placeholder__title">Documentation in progress</p>
+
+        <p>
+          This page has not been documented yet. Its content will be added as the corresponding part of Heim is completed.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

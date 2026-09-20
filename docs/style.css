@@ -60,6 +60,22 @@
   /* Preprocessor */
   --heim-cpp-preprocessor: #cf222e;
   --heim-cpp-macro: #8250df;
+
+  /* Meson */
+  --heim-meson-keyword: #cf222e;
+  --heim-meson-operator-keyword: #cf222e;
+  --heim-meson-constant: #0550ae;
+  --heim-meson-function: #6639ba;
+  --heim-meson-namespace: #0969da;
+  --heim-meson-magic: #8250df;
+  --heim-meson-variable: #1f2328;
+  --heim-meson-argument: #953800;
+  --heim-meson-string: #0a3069;
+  --heim-meson-number: #0550ae;
+  --heim-meson-literal: #0550ae;
+  --heim-meson-operator: #1f2328;
+  --heim-meson-punctuation: #1f2328;
+  --heim-meson-comment: #656d76;
 }
 
 html[data-heim-theme="dark"] {
@@ -117,6 +133,22 @@ html[data-heim-theme="dark"] {
   /* Preprocessor */
   --heim-cpp-preprocessor: #ff7b72;
   --heim-cpp-macro: #d2a8ff;
+
+  /* Meson */
+  --heim-meson-keyword: #ff7b72;
+  --heim-meson-operator-keyword: #ff7b72;
+  --heim-meson-constant: #79c0ff;
+  --heim-meson-function: #d2a8ff;
+  --heim-meson-namespace: #79c0ff;
+  --heim-meson-magic: #d2a8ff;
+  --heim-meson-variable: #e6edf3;
+  --heim-meson-argument: #ffa657;
+  --heim-meson-string: #a5d6ff;
+  --heim-meson-number: #79c0ff;
+  --heim-meson-literal: #79c0ff;
+  --heim-meson-operator: #e6edf3;
+  --heim-meson-punctuation: #e6edf3;
+  --heim-meson-comment: #8b949e;
 
   color-scheme: dark;
 }
@@ -709,4 +741,112 @@ html[data-heim-theme="dark"] .heim-github__star {
 /* Ordered lists use parenthesized markers: 1), 2), 3), ... */
 ol > li::marker {
   content: counter(list-item) ") ";
+}
+
+/* Meson syntax highlighting */
+.heim-meson-keyword { color: var(--heim-meson-keyword); }
+.heim-meson-operator-keyword { color: var(--heim-meson-operator-keyword); }
+.heim-meson-constant { color: var(--heim-meson-constant); }
+.heim-meson-function { color: var(--heim-meson-function); }
+.heim-meson-namespace { color: var(--heim-meson-namespace); }
+.heim-meson-magic { color: var(--heim-meson-magic); }
+.heim-meson-variable { color: var(--heim-meson-variable); }
+.heim-meson-argument { color: var(--heim-meson-argument); }
+.heim-meson-string { color: var(--heim-meson-string); }
+.heim-meson-number { color: var(--heim-meson-number); }
+.heim-meson-literal { color: var(--heim-meson-literal); }
+.heim-meson-operator { color: var(--heim-meson-operator); }
+.heim-meson-punctuation { color: var(--heim-meson-punctuation); }
+.heim-meson-comment { color: var(--heim-meson-comment); }
+
+/* Documentation home page */
+
+.heim-library-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.heim-library {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--heim-border);
+  border-radius: 6px;
+  background: var(--heim-bg);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.heim-library h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.heim-library > p {
+  margin: 0;
+  color: var(--heim-text-soft);
+}
+
+.heim-library > p:last-of-type {
+  padding-bottom: 16px;
+}
+
+.heim-library__footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--heim-border-soft);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.heim-content code.heim-library__include {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--heim-text-soft);
+  font-size: 0.88em;
+}
+
+.heim-library__link {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.heim-principle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.heim-principle {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid var(--heim-border);
+  border-radius: 6px;
+  background: var(--heim-bg);
+}
+
+.heim-principle h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.heim-principle p {
+  margin: 0;
+  color: var(--heim-text-soft);
+}
+
+@media (max-width: 700px) {
+  .heim-library-grid,
+  .heim-principle-grid {
+    grid-template-columns: 1fr;
+  }
 }

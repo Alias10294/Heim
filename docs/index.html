@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>Heim C++ Library Documentation</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="property/index.html">Properties</a>
+          <a href="graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <article class="heim-content">
+      <h1 id="heim-home-title">Heim</h1>
+
+      <p>
+        Heim is a C++26 collection of header-only libraries that provide useful and generic abstractions in accord with
+        <em>data-oriented design</em> (<em>DOD</em>).
+      </p>
+
+      <h2 id="libraries">Libraries</h2>
+
+      <div class="heim-library-grid">
+        <section class="heim-library" aria-labelledby="library-properties">
+          <h3 id="library-properties">Properties</h3>
+
+          <p>
+            Represent associations between objects and their properties through a common read/write interface,
+            independently of how those associations are implemented. Property maps can adapt existing representations,
+            including containers, members and function objects, and can be composed to express richer mappings.
+          </p>
+
+          <div class="heim-library__footer">
+            <code class="heim-library__include">&lt;heim/property.hpp&gt;</code>
+            <a class="heim-library__link" href="property/index.html">Properties documentation →</a>
+          </div>
+        </section>
+
+        <section class="heim-library" aria-labelledby="library-graphs">
+          <h3 id="library-graphs">Graphs</h3>
+
+          <p>
+            Represent graph structures and run algorithms through generic, requirement-based interfaces. Heim provides
+            ready-to-use graph types while allowing compatible user-defined representations to participate in the same
+            algorithms.
+          </p>
+
+          <div class="heim-library__footer">
+            <code class="heim-library__include">&lt;heim/graph.hpp&gt;</code>
+            <a class="heim-library__link" href="graph/index.html">Graphs documentation →</a>
+          </div>
+        </section>
+      </div>
+
+      <h2 id="why-use-heim">Why Use Heim?</h2>
+
+      <div class="heim-principle-grid">
+        <section class="heim-principle">
+          <h3 id="keep-control-over-your-data">Keep control over your data</h3>
+
+          <p>
+            Every concept formalized in Heim's libraries explicitly avoids imposing a particular representation for your data.
+            How it is structured, stored and organized remains your complete choice.
+          </p>
+        </section>
+
+        <section class="heim-principle">
+          <h3 id="leverage-genericity">Leverage genericity</h3>
+
+          <p>
+            Interact with common interfaces rather than concrete types. By expressing abstractions only in terms of their
+            requirements, Heim lets any suited representation benefit from the same code.
+          </p>
+        </section>
+
+        <section class="heim-principle">
+          <h3 id="stay-free-to-specialize">Stay free to specialize</h3>
+
+          <p>
+            Genericity in Heim does not come at the cost of specialization, it <em>includes</em> it. Common interfaces remain open
+            to specialized behavior whenever a particular representation has more to offer.
+          </p>
+        </section>
+
+        <section class="heim-principle">
+          <h3 id="compose-richer-abstractions">Compose richer abstractions</h3>
+
+          <p>
+            Heim's abstractions are intended to be tools at the service of your project, and can be freely combined to build
+            more expressive ones around your own needs.
+          </p>
+        </section>
+
+        <section class="heim-principle">
+          <h3 id="maintain-uncompromised-performance">Maintain uncompromised performance</h3>
+
+          <p>
+            Heim fully embraces C++'s core motivation of <em>zero-cost abstraction</em>. In the same manner as the standard
+            library, abstractions do not take away from performance and can even fully disappear through compilation.
+          </p>
+        </section>
+
+        <section class="heim-principle">
+          <h3 id="harness-cpp-modernity">Harness C++ modernity</h3>
+
+          <p>
+            Sitting on top of the best modern C++ has to offer, Heim makes the most of recent language and standard library
+            features such as <em>concepts</em>, <em>ranges</em> and <em>customization point objects</em>.
+          </p>
+        </section>
+      </div>
+
+      <h2 id="requirements">Requirements</h2>
+
+      <p>
+        To be used, Heim requires a C++26 compiler with Contracts support.
+      </p>
+
+      <p>
+        Currently, only GCC 16 and later meets these requirements. Check out
+        <a href="https://en.cppreference.com/cpp/compiler_support/26">this page</a> to stay informed about compiler support for C++26.
+      </p>
+
+      <h2 id="installation">Installation</h2>
+
+      <h3 id="single-header-distribution">Single-header distribution</h3>
+
+      <p>
+        The most straightforward way to have access to all of Heim's libraries is to copy the <code>heim.hpp</code> from the
+        <code>single_include/</code> directory. This directory also provides individual files for each individual library, to be
+        copied in the same way.
+      </p>
+
+      <h3 id="using-meson">Using Meson</h3>
+
+      <h4 id="make-heim-available">Make Heim available</h4>
+
+      <h5 id="as-a-subproject">As a subproject</h5>
+
+      <p>
+        The most natural way to use Heim with Meson is to have it as a Meson subproject. That is attained by placing the Heim
+        repository in your project's <code>subprojects/</code> directory, either using Git
+      </p>
+
+      <pre><code>git clone https://github.com/Alias10294/Heim.git subprojects/heim</code></pre>
+
+      <p>or as a Git submodule.</p>
+
+      <pre><code>git submodule add https://github.com/Alias10294/Heim.git subprojects/heim</code></pre>
+
+      <p>Your project should look like this:</p>
+
+      <pre><code>your-project/
+├── ...
+├── subprojects/
+│   └── heim/
+│       ├── include/
+│       ├── ...
+│       └── meson.build
+└── meson.build</code></pre>
+
+      <h5 id="as-a-system-dependency">As a system dependency</h5>
+
+      <p>
+        Heim can also be installed independently anywhere in your machine and later found through <code>pkg-config</code>.
+      </p>
+
+      <pre><code>git clone https://github.com/Alias10294/Heim.git
+cd heim
+meson setup build
+meson install -C build</code></pre>
+
+      <h4 id="add-it-as-dependency">Add it as dependency</h4>
+
+      <p>
+        Once Heim has been made available, the only action left is to declare it in your <code>meson.build</code> file.
+      </p>
+
+      <pre class="heim-meson-code"><code><span class="heim-meson-variable">heim</span> <span class="heim-meson-operator">=</span> <span class="heim-meson-function">dependency</span><span class="heim-meson-punctuation">(</span><span class="heim-meson-string">'heim'</span><span class="heim-meson-punctuation">)</span></code></pre>
+
+      <p>The dependency can the passed to any candidate target that needs Heim or one of its libraries.</p>
+
+      <pre class="heim-meson-code"><code><span class="heim-meson-function">executable</span><span class="heim-meson-punctuation">(</span>
+    <span class="heim-meson-punctuation">.</span><span class="heim-meson-punctuation">.</span><span class="heim-meson-punctuation">.</span><span class="heim-meson-punctuation">,</span>
+    <span class="heim-meson-argument">dependencies</span><span class="heim-meson-punctuation">:</span> <span class="heim-meson-variable">heim</span><span class="heim-meson-punctuation">)</span></code></pre>
+
+      <h2 id="license">License</h2>
+
+      <p>Heim is available under the <a href="../LICENSE">MIT license</a>.</p>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>
