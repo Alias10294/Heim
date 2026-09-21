@@ -47,8 +47,6 @@
   --heim-cpp-member: #953800;
   --heim-cpp-constant: #0550ae;
   --heim-cpp-enum-member: #0550ae;
-  --heim-cpp-cpo: #6639ba;
-  --heim-cpp-tag: #953800;
 
   /* Lexical */
   --heim-cpp-string: #0a3069;
@@ -120,8 +118,6 @@ html[data-heim-theme="dark"] {
   --heim-cpp-member: #ffa657;
   --heim-cpp-constant: #79c0ff;
   --heim-cpp-enum-member: #79c0ff;
-  --heim-cpp-cpo: #d2a8ff;
-  --heim-cpp-tag: #ffa657;
 
   /* Lexical */
   --heim-cpp-string: #a5d6ff;
@@ -618,8 +614,6 @@ html[data-heim-theme="dark"] .heim-github__star {
 .heim-cpp-member { color: var(--heim-cpp-member); }
 .heim-cpp-constant { color: var(--heim-cpp-constant); }
 .heim-cpp-enum-member { color: var(--heim-cpp-enum-member); }
-.heim-cpp-cpo { color: var(--heim-cpp-cpo); }
-.heim-cpp-tag { color: var(--heim-cpp-tag); }
 
 .heim-cpp-string { color: var(--heim-cpp-string); }
 .heim-cpp-string-escape { color: var(--heim-cpp-string-escape); }
@@ -761,30 +755,40 @@ ol > li::marker {
 
 /* Documentation home page */
 
-.heim-library-grid {
+.heim-library-grid,
+.heim-principle-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.heim-library {
+.heim-library,
+.heim-principle {
   min-width: 0;
-  padding: 16px;
   border: 1px solid var(--heim-border);
   border-radius: 6px;
   background: var(--heim-bg);
+}
+
+.heim-library {
+  padding: 16px;
 
   display: flex;
   flex-direction: column;
 }
 
-.heim-library h3 {
+.heim-library h3,
+.heim-principle h3 {
   margin: 0 0 8px;
-  font-size: 17px;
   line-height: 1.3;
 }
 
-.heim-library > p {
+.heim-library h3 {
+  font-size: 17px;
+}
+
+.heim-library > p,
+.heim-principle p {
   margin: 0;
   color: var(--heim-text-soft);
 }
@@ -819,29 +823,12 @@ ol > li::marker {
   white-space: nowrap;
 }
 
-.heim-principle-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
 .heim-principle {
-  min-width: 0;
   padding: 14px 15px;
-  border: 1px solid var(--heim-border);
-  border-radius: 6px;
-  background: var(--heim-bg);
 }
 
 .heim-principle h3 {
-  margin: 0 0 8px;
   font-size: 16px;
-  line-height: 1.3;
-}
-
-.heim-principle p {
-  margin: 0;
-  color: var(--heim-text-soft);
 }
 
 @media (max-width: 700px) {
@@ -849,4 +836,25 @@ ol > li::marker {
   .heim-principle-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Documentation placeholder pages */
+
+.heim-placeholder {
+  max-width: 640px;
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--heim-border);
+  border-radius: 6px;
+  background: var(--heim-bg-soft);
+}
+
+.heim-placeholder__title {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.heim-placeholder p:last-child {
+  margin: 0;
+  color: var(--heim-text-soft);
 }

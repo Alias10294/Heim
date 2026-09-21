@@ -94,11 +94,11 @@
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">getter</span>{[](<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">k</span>) { <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-number">0</span>; }};
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">setter</span>{[](<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">k</span>, <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-parameter">v</span>) { }};
 
-  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">r</span>{<span class="heim-cpp-variable">getter</span>, <span class="heim-cpp-constant">no_property_setter</span>};
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">r</span>{<span class="heim-cpp-variable">getter</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">no_property_setter</span>};
   <span class="heim-cpp-keyword">static_assert</span>( <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">r</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
   <span class="heim-cpp-keyword">static_assert</span>(!<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">r</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
 
-  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">w</span>{<span class="heim-cpp-constant">no_property_getter</span>, <span class="heim-cpp-variable">setter</span>};
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">property_map</span> <span class="heim-cpp-variable">w</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">no_property_getter</span>, <span class="heim-cpp-variable">setter</span>};
   <span class="heim-cpp-keyword">static_assert</span>(!<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">w</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
   <span class="heim-cpp-keyword">static_assert</span>( <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">w</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
 
@@ -106,16 +106,6 @@
   <span class="heim-cpp-keyword">static_assert</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">readable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">rw</span>), <span class="heim-cpp-builtin-type">int</span>&gt;);
   <span class="heim-cpp-keyword">static_assert</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-concept">writable_map_for</span>&lt;<span class="heim-cpp-keyword">decltype</span>(<span class="heim-cpp-variable">rw</span>), <span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;);
 }</code></pre>
-
-      <h2 id="see-also">See Also</h2>
-
-      <table>
-        <thead>
-          <tr><th>Name</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
 
     </article>
   </main>

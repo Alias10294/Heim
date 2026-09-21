@@ -74,7 +74,7 @@
 <h2 id="synopsis">Synopsis</h2>
 <pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">random_access_range_arg_t</span> { <span class="heim-cpp-keyword">explicit</span> <span class="heim-cpp-type">random_access_range_arg_t</span>() = <span class="heim-cpp-control-keyword">default</span>; }
 
-<span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-type">random_access_range_arg_t</span> <span class="heim-cpp-tag">random_access_range_arg</span>{};
+<span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-type">random_access_range_arg_t</span> <span class="heim-cpp-constant">random_access_range_arg</span>{};
 </code></pre>
 <h2 id="overview">Overview</h2>
 <p>Used with <a href="make_property_map.html"><code><span class="heim-cpp-function">make_property_map</span></code></a> to create a property map that associates keys with elements of a
@@ -86,7 +86,7 @@ random-access range by using them, directly or through an index map, as offsets.
 <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
 {
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-variable">vec</span>{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">2</span>, <span class="heim-cpp-number">4</span>, <span class="heim-cpp-number">5</span>, <span class="heim-cpp-number">8</span>};
-  <span class="heim-cpp-keyword">auto</span>             <span class="heim-cpp-variable">pm</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_range_arg</span>, <span class="heim-cpp-variable">vec</span>)};
+  <span class="heim-cpp-keyword">auto</span>             <span class="heim-cpp-variable">pm</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">random_access_range_arg</span>, <span class="heim-cpp-variable">vec</span>)};
 
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">0</span>));
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">pm</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">3</span>));
@@ -109,7 +109,7 @@ random-access range by using them, directly or through an index map, as offsets.
 <td>Creates a property map using the given arguments</td>
 </tr>
 <tr>
-<td><a href="random_access_iterator_arg.html"><code><span class="heim-cpp-tag">random_access_iterator_arg</span></code></a></td>
+<td><a href="random_access_iterator_arg.html"><code><span class="heim-cpp-constant">random_access_iterator_arg</span></code></a></td>
 <td>A tag used to create property maps from a random-access iterator</td>
 </tr>
 </tbody>

@@ -71,7 +71,7 @@
 
       <pre><code><span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">properties</span>
 {
-  <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-comment">/* detail */</span> <span class="heim-cpp-cpo">get</span>{};
+  <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-comment">/* detail */</span> <span class="heim-cpp-constant">get</span>{};
 }</code></pre>
 
       <pre><code><span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">M</span>, <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">K</span>&gt;
@@ -88,7 +88,7 @@
       <h3 id="customization-point-object">Customization point object</h3>
 
       <p>
-        A call to <code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">m</span>, <span class="heim-cpp-variable">k</span>)</code> is equivalent to:
+        A call to <code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">m</span>, <span class="heim-cpp-variable">k</span>)</code> is equivalent to:
       </p>
 
       <ol>
@@ -133,12 +133,12 @@
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">string</span>&gt;   <span class="heim-cpp-variable">um</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-string">"</span><span class="heim-cpp-string">A</span><span class="heim-cpp-string">"</span>}, {<span class="heim-cpp-number">1</span>, <span class="heim-cpp-string">"</span><span class="heim-cpp-string">B</span><span class="heim-cpp-string">"</span>}};
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unique_ptr</span>&lt;<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">string</span>&gt; <span class="heim-cpp-variable">up</span>{<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">make_unique</span>&lt;<span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">string</span>&gt;(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">unique_ptr</span><span class="heim-cpp-string">"</span>)};
 
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">um_map</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-variable">um</span>)};
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">up_map</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">pointer_arg</span>)};
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">um_map</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">associative_container_arg</span>, <span class="heim-cpp-variable">um</span>)};
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">up_map</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">pointer_arg</span>)};
 
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">um_map</span>, <span class="heim-cpp-number">0</span>));
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">um_map</span>, <span class="heim-cpp-number">1</span>));
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">up_map</span>, <span class="heim-cpp-variable">up</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">um_map</span>, <span class="heim-cpp-number">0</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">um_map</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">up_map</span>, <span class="heim-cpp-variable">up</span>));
 }</code></pre>
 
       <h3 id="output">Output</h3>
@@ -152,9 +152,9 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><a href="set.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span></code></a></td><td>Modifies the property associated to a key</td></tr>
-          <tr><td><a href="../traits/is_readable_map_for.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">is_readable_map_for</span></code></a></td><td>Checks the validity of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span></code></a> for given types</td></tr>
-          <tr><td><a href="../traits/readable_map_result.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">readable_map_result</span></code></a></td><td>Determines the result type of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span></code></a></td></tr>
+          <tr><td><a href="set.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">set</span></code></a></td><td>Modifies the property associated to a key</td></tr>
+          <tr><td><a href="../traits/is_readable_map_for.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">is_readable_map_for</span></code></a></td><td>Checks the validity of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span></code></a> for given types</td></tr>
+          <tr><td><a href="../traits/readable_map_result.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">readable_map_result</span></code></a></td><td>Determines the result type of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span></code></a></td></tr>
         </tbody>
       </table>
     </article>

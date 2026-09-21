@@ -54,53 +54,88 @@
 
   const githubLink = document.querySelector("[data-heim-github-repo]");
 
-  if (githubLink !== null) {
-    const repository = githubLink.dataset.heimGithubRepo;
-    const starCount = githubLink.querySelector(".heim-github__count");
+  if (githubLink === null) {
+    return;
+  }
 
-    if (repository !== undefined && repository.length > 0) {
-      githubLink.href = `https://github.com/${repository}`;
+  const repository = githubLink.dataset.heimGithubRepo;
+  const starCount = githubLink.querySelector(".heim-github__count");
 
-      fetch(`https://api.github.com/repos/${repository}`, {
-        headers: {
-          Accept: "application/vnd.github+json"
-        }
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`GitHub API returned ${response.status}`);
-          }
+  if (repository === undefined || repository.length === 0) {
+    return;
+  }
 
-          return response.json();
-        })
-        .then((data) => {
-          if (starCount === null) {
-            return;
-          }
+  githubLink.href = `https://github.com/${repository}`;
 
-          const stars = Number(data.stargazers_count);
+  if (starCount === null) {
+    return;
+  }
 
-          if (!Number.isFinite(stars)) {
-            throw new Error("Invalid GitHub star count");
-          }
+  const starsStorageKey = `heim-github-stars:${repository}`;
 
-          const formatter = new Intl.NumberFormat("en", {
-            notation: stars >= 1000 ? "compact" : "standard",
-            maximumFractionDigits: 1
-          });
+  function displayStars(stars) {
+    const formatter = new Intl.NumberFormat("en", {
+      notation: stars >= 1000 ? "compact" : "standard",
+      maximumFractionDigits: 1
+    });
 
-          starCount.textContent = formatter.format(stars);
+    starCount.textContent = formatter.format(stars);
+    githubLink.setAttribute("aria-label", `Heim on GitHub — ${stars} stars`);
+  }
 
-          githubLink.setAttribute(
-            "aria-label",
-            `Heim on GitHub — ${stars} stars`
-          );
-        })
-        .catch(() => {
-          if (starCount !== null) {
-            starCount.textContent = "—";
-          }
-        });
+  function getCachedStars() {
+    try {
+      const cachedStars = sessionStorage.getItem(starsStorageKey);
+
+      if (cachedStars === null) {
+        return null;
+      }
+
+      const stars = Number(cachedStars);
+      return Number.isFinite(stars) ? stars : null;
+    } catch {
+      return null;
     }
   }
+
+  function cacheStars(stars) {
+    try {
+      sessionStorage.setItem(starsStorageKey, String(stars));
+    } catch {
+      // The cache is optional; GitHub data can still be displayed normally.
+    }
+  }
+
+  const cachedStars = getCachedStars();
+
+  if (cachedStars !== null) {
+    displayStars(cachedStars);
+    return;
+  }
+
+  fetch(`https://api.github.com/repos/${repository}`, {
+    headers: {
+      Accept: "application/vnd.github+json"
+    }
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`GitHub API returned ${response.status}`);
+      }
+
+      return response.json();
+    })
+    .then((data) => {
+      const stars = Number(data.stargazers_count);
+
+      if (!Number.isFinite(stars)) {
+        throw new Error("Invalid GitHub star count");
+      }
+
+      cacheStars(stars);
+      displayStars(stars);
+    })
+    .catch(() => {
+      starCount.textContent = "—";
+    });
 })();

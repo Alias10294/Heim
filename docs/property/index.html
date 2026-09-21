@@ -187,10 +187,10 @@
       </p>
 
       <pre><code><span class="heim-cpp-comment">// read access to a property
-</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">prop</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>);
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">prop</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>);
 
 <span class="heim-cpp-comment">// write access to a property
-</span><span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>, <span class="heim-cpp-variable">prop</span>);</code></pre>
+</span><span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">set</span>(<span class="heim-cpp-variable">pmap</span>, <span class="heim-cpp-variable">key</span>, <span class="heim-cpp-variable">prop</span>);</code></pre>
 
       <h3 id="composing-property-maps">Composing property maps</h3>
 
@@ -201,10 +201,10 @@
       </p>
 
       <pre><code><span class="heim-cpp-comment">// x(key) &lt;=&gt; a(b(key))
-</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">x</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">a</span>, <span class="heim-cpp-variable">b</span>);
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">x</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">composable_arg</span>, <span class="heim-cpp-variable">a</span>, <span class="heim-cpp-variable">b</span>);
 
 <span class="heim-cpp-comment">// y(key) &lt;=&gt; x(c(key)) &lt;=&gt; a(b(c(key)))
-</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">y</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">x</span>, <span class="heim-cpp-variable">c</span>);</code></pre>
+</span><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">y</span> = <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">composable_arg</span>, <span class="heim-cpp-variable">x</span>, <span class="heim-cpp-variable">c</span>);</code></pre>
 
       <h3 id="implementing-property-maps">Implementing property maps</h3>
 
@@ -234,18 +234,18 @@
 
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">map_pm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-variable">map</span>)};
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">vec_pm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(
-      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>,
-      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">member_arg</span>, &amp;<span class="heim-cpp-type">entity</span>::<span class="heim-cpp-member">hp</span>),
+      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">composable_arg</span>,
+      <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-constant">member_arg</span>, &amp;<span class="heim-cpp-type">entity</span>::<span class="heim-cpp-member">hp</span>),
       <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-variable">vec</span>)};
 
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
 
-  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
-  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">set</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">set</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">20</span>);
 
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">map_pm</span>, <span class="heim-cpp-number">1</span>));
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">"</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">"</span>, <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-constant">get</span>(<span class="heim-cpp-variable">vec_pm</span>, <span class="heim-cpp-number">1</span>));
 }</code></pre>
 
       <h3 id="output">Output</h3>
