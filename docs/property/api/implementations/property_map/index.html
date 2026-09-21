@@ -77,7 +77,7 @@
       <h2 id="overview">Overview</h2>
 
       <p>
-        <code>property_map</code> is a class template implementing the library <em>property map</em> concept, that uses a pair of function
+        <code><span class="heim-cpp-type">property_map</span></code> is a class template implementing the library <em>property map</em> concept, that uses a pair of function
         objects as <em>getter</em> and <em>setter</em> to provide genericity.
       </p>
 
@@ -88,8 +88,8 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>Get</code></td><td>The getter function object type</td></tr>
-          <tr><td><code>Set</code></td><td>The setter function object type</td></tr>
+          <tr><td><code><span class="heim-cpp-template-param">Get</span></code></td><td>The getter function object type</td></tr>
+          <tr><td><code><span class="heim-cpp-template-param">Set</span></code></td><td>The setter function object type</td></tr>
         </tbody>
       </table>
 
@@ -100,8 +100,8 @@
           <tr><th>Name</th><th>Value</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>getter_type</code></td><td><code>Get</code></td></tr>
-          <tr><td><code>setter_type</code></td><td><code>Set</code></td></tr>
+          <tr><td><code><span class="heim-cpp-type">getter_type</span></code></td><td><code><span class="heim-cpp-template-param">Get</span></code></td></tr>
+          <tr><td><code><span class="heim-cpp-type">setter_type</span></code></td><td><code><span class="heim-cpp-template-param">Set</span></code></td></tr>
         </tbody>
       </table>
 
@@ -112,11 +112,11 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><a href="constructor.html">(constructor)</a></td><td>Initializes the <code>property_map</code></td></tr>
-          <tr><td>(destructor) <em>(implicitly declared)</em></td><td>Destroys the <code>property_map</code></td></tr>
-          <tr><td><code>operator=</code> <em>(implicitly declared)</em></td><td>Assigns values to the object</td></tr>
-          <tr><td><a href="get.html"><code>get</code></a></td><td>Returns the property associated with a given key</td></tr>
-          <tr><td><a href="set.html"><code>set</code></a></td><td>Modifies the property associated with a given key</td></tr>
+          <tr><td><a href="constructor.html">(constructor)</a></td><td>Initializes the <code><span class="heim-cpp-type">property_map</span></code></td></tr>
+          <tr><td>(destructor) <em>(implicitly declared)</em></td><td>Destroys the <code><span class="heim-cpp-type">property_map</span></code></td></tr>
+          <tr><td><code><span class="heim-cpp-operator-keyword">operator</span>=</code> <em>(implicitly declared)</em></td><td>Assigns values to the object</td></tr>
+          <tr><td><a href="get.html"><code><span class="heim-cpp-method">get</span></code></a></td><td>Returns the property associated with a given key</td></tr>
+          <tr><td><a href="set.html"><code><span class="heim-cpp-method">set</span></code></a></td><td>Modifies the property associated with a given key</td></tr>
         </tbody>
       </table>
 
@@ -127,9 +127,9 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><a href="make_property_map.html"><code>make_property_map</code></a></td><td>Creates a property map object using specific arguments</td></tr>
-          <tr><td><a href="make_readable_property_map.html"><code>make_readable_property_map</code></a></td><td>Creates a readable property map object using specific arguments</td></tr>
-          <tr><td><a href="make_writable_property_map.html"><code>make_writable_property_map</code></a></td><td>Creates a writable property map object using specific arguments</td></tr>
+          <tr><td><a href="make_property_map.html"><code><span class="heim-cpp-function">make_property_map</span></code></a></td><td>Creates a property map object using specific arguments</td></tr>
+          <tr><td><a href="make_readable_property_map.html"><code><span class="heim-cpp-function">make_readable_property_map</span></code></a></td><td>Creates a readable property map object using specific arguments</td></tr>
+          <tr><td><a href="make_writable_property_map.html"><code><span class="heim-cpp-function">make_writable_property_map</span></code></a></td><td>Creates a writable property map object using specific arguments</td></tr>
         </tbody>
       </table>
 
@@ -142,20 +142,20 @@
         <tbody>
           <tr>
             <td>
-              <a href="no_property.html"><code>no_property_getter</code></a><br>
-              <a href="no_property.html"><code>no_property_setter</code></a>
+              <a href="no_property.html"><code><span class="heim-cpp-constant">no_property_getter</span></code></a><br>
+              <a href="no_property.html"><code><span class="heim-cpp-constant">no_property_setter</span></code></a>
             </td>
-            <td>Denote the construction of readable/writable-only <code>property_map</code> objects</td>
+            <td>Denote the construction of readable/writable-only <code><span class="heim-cpp-type">property_map</span></code> objects</td>
           </tr>
-          <tr><td><a href="identity_arg.html"><code>identity_arg</code></a></td><td>Creates a readable map that returns as property its argument unchanged</td></tr>
-          <tr><td><a href="constant_arg.html"><code>constant_arg</code></a></td><td>Creates a readable map that returns the same value no matter the key</td></tr>
-          <tr><td><a href="associative_container_arg.html"><code>assocative_container_arg</code></a></td><td>Creates a map that references the given associative container</td></tr>
-          <tr><td><a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td><td>Creates a map that associates keys with elements of a random-access sequence by using them, directly or through a given index map, as offsets from the given iterator</td></tr>
-          <tr><td><a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td><td>Creates a map that associates keys with elements of the given random-access range by using them, directly or through a given index map, as offsets</td></tr>
-          <tr><td><a href="member_arg.html"><code>member_arg</code></a></td><td>Creates a map that maps objects to one of their member objects or to the return type of one of their nullary member functions</td></tr>
-          <tr><td><a href="pointer_arg.html"><code>pointer_arg</code></a></td><td>Creates a map that maps pointers to their pointed-to object</td></tr>
-          <tr><td><a href="invocable_arg.html"><code>invocable_arg</code></a></td><td>Creates a map that maps objects to the result of the given function with them as the argument</td></tr>
-          <tr><td><a href="composable_arg.html"><code>composable_arg</code></a></td><td>Creates a map that composes the two given property maps</td></tr>
+          <tr><td><a href="identity_arg.html"><code><span class="heim-cpp-tag">identity_arg</span></code></a></td><td>Creates a readable map that returns as property its argument unchanged</td></tr>
+          <tr><td><a href="constant_arg.html"><code><span class="heim-cpp-tag">constant_arg</span></code></a></td><td>Creates a readable map that returns the same value no matter the key</td></tr>
+          <tr><td><a href="associative_container_arg.html"><code><span class="heim-cpp-tag">assocative_container_arg</span></code></a></td><td>Creates a map that references the given associative container</td></tr>
+          <tr><td><a href="random_access_iterator_arg.html"><code><span class="heim-cpp-tag">random_access_iterator_arg</span></code></a></td><td>Creates a map that associates keys with elements of a random-access sequence by using them, directly or through a given index map, as offsets from the given iterator</td></tr>
+          <tr><td><a href="random_access_range_arg.html"><code><span class="heim-cpp-tag">random_access_range_arg</span></code></a></td><td>Creates a map that associates keys with elements of the given random-access range by using them, directly or through a given index map, as offsets</td></tr>
+          <tr><td><a href="member_arg.html"><code><span class="heim-cpp-tag">member_arg</span></code></a></td><td>Creates a map that maps objects to one of their member objects or to the return type of one of their nullary member functions</td></tr>
+          <tr><td><a href="pointer_arg.html"><code><span class="heim-cpp-tag">pointer_arg</span></code></a></td><td>Creates a map that maps pointers to their pointed-to object</td></tr>
+          <tr><td><a href="invocable_arg.html"><code><span class="heim-cpp-tag">invocable_arg</span></code></a></td><td>Creates a map that maps objects to the result of the given function with them as the argument</td></tr>
+          <tr><td><a href="composable_arg.html"><code><span class="heim-cpp-tag">composable_arg</span></code></a></td><td>Creates a map that composes the two given property maps</td></tr>
         </tbody>
       </table>
 
@@ -167,7 +167,7 @@
         </thead>
         <tbody>
           <tr>
-            <td><a href="../../traits/is_map_for.html"><code>properties::is_map_for</code></a></td>
+            <td><a href="../../traits/is_map_for.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">is_map_for</span></code></a></td>
             <td>Specifies that a type is both a readable and writable property map type for given types</td>
           </tr>
         </tbody>

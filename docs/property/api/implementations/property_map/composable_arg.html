@@ -77,7 +77,7 @@
 <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-type">composable_arg_t</span> <span class="heim-cpp-tag">composable_arg</span>{};
 </code></pre>
 <h2 id="overview">Overview</h2>
-<p>Used with <a href="make_property_map.html"><code>make_property_map</code></a> to create a property map that composes two given property maps.</p>
+<p>Used with <a href="make_property_map.html"><code><span class="heim-cpp-function">make_property_map</span></code></a> to create a property map that composes two given property maps.</p>
 <h2 id="code-example">Code Example</h2>
 <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;map&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;memory&gt;</span>
@@ -85,10 +85,10 @@
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/property.hpp&gt;</span>
 <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
 {
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unique_ptr</span>&lt;<span class="heim-cpp-builtin-type">char</span>&gt;&gt; <span class="heim-cpp-type">map</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">make_unique</span>&lt;<span class="heim-cpp-builtin-type">char</span>&gt;(<span class="heim-cpp-string">&#x27;</span><span class="heim-cpp-string">a</span><span class="heim-cpp-string">&#x27;</span>)}};
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">unique_ptr</span>&lt;<span class="heim-cpp-builtin-type">char</span>&gt;&gt; <span class="heim-cpp-variable">map</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">make_unique</span>&lt;<span class="heim-cpp-builtin-type">char</span>&gt;(<span class="heim-cpp-string">&#x27;</span><span class="heim-cpp-string">a</span><span class="heim-cpp-string">&#x27;</span>)}};
 
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">ppm</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">pointer_arg</span>)};
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">acpm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-type">map</span>)};
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">acpm</span>{<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-variable">map</span>)};
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">cpm</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">composable_arg</span>, <span class="heim-cpp-variable">ppm</span>, <span class="heim-cpp-variable">acpm</span>)};
 
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;</span><span class="heim-cpp-string">{} </span><span class="heim-cpp-string">&quot;</span>, <span class="heim-cpp-variable">p_map</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-variable">ac_map</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-number">0</span>)));
@@ -105,7 +105,7 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="make_property_map.html"><code>make_property_map</code></a></td>
+<td><a href="make_property_map.html"><code><span class="heim-cpp-function">make_property_map</span></code></a></td>
 <td>Creates a property map using the given arguments</td>
 </tr>
 </tbody>

@@ -329,7 +329,7 @@
 </li>
 </ol>
 <h2 id="overview">Overview</h2>
-<p>Constructs a <a href="index.html"><code>property_map</code></a> object with special getters and setters according to certain tags and arguments.</p>
+<p>Constructs a <a href="index.html"><code><span class="heim-cpp-type">property_map</span></code></a> object with special getters and setters according to certain tags and arguments.</p>
 <table>
 <thead>
 <tr>
@@ -339,39 +339,39 @@
 </thead>
 <tbody>
 <tr>
-  <td style="text-align:left"><a href="identity_arg.html"><code>identity_arg</code></a></td>
+  <td style="text-align:left"><a href="identity_arg.html"><code><span class="heim-cpp-tag">identity_arg</span></code></a></td>
   <td style="text-align:left">Creates a readable map that returns as property its argument unchanged</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="constant_arg.html"><code>constant_arg</code></a></td>
+  <td style="text-align:left"><a href="constant_arg.html"><code><span class="heim-cpp-tag">constant_arg</span></code></a></td>
   <td style="text-align:left">Creates a readable map that returns the same value no matter the key</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="associative_container_arg.html"><code>associative_container_arg</code></a></td>
+  <td style="text-align:left"><a href="associative_container_arg.html"><code><span class="heim-cpp-tag">associative_container_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that references the given associative container</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td>
+  <td style="text-align:left"><a href="random_access_iterator_arg.html"><code><span class="heim-cpp-tag">random_access_iterator_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that associates keys with elements of a random-access sequence by using them, directly or through a given index map, as offsets from the given iterator</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td>
+  <td style="text-align:left"><a href="random_access_range_arg.html"><code><span class="heim-cpp-tag">random_access_range_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that associates keys with elements of the given random-access range by using them, directly or through a given index map, as offsets</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="member_arg.html"><code>member_arg</code></a></td>
+  <td style="text-align:left"><a href="member_arg.html"><code><span class="heim-cpp-tag">member_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that maps objects to one of their member objects or to the return type of one of their nullary member functions</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="pointer_arg.html"><code>pointer_arg</code></a></td>
+  <td style="text-align:left"><a href="pointer_arg.html"><code><span class="heim-cpp-tag">pointer_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that maps pointers to their pointed-to object</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="invocable_arg.html"><code>invocable_arg</code></a></td>
+  <td style="text-align:left"><a href="invocable_arg.html"><code><span class="heim-cpp-tag">invocable_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that maps objects to the result of the given function with them as the argument</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="composable_arg.html"><code>composable_arg</code></a></td>
+  <td style="text-align:left"><a href="composable_arg.html"><code><span class="heim-cpp-tag">composable_arg</span></code></a></td>
   <td style="text-align:left">Creates a map that composes the two given property maps</td>
 </tr>
 </tbody>
@@ -388,19 +388,19 @@
 <tbody>
 <tr>
   <td style="text-align:left">1-6.</td>
-  <td style="text-align:left">Hide <a href="associative_container_arg.html"><code>associative_container_arg</code></a></td>
+  <td style="text-align:left">Hide <a href="associative_container_arg.html"><code><span class="heim-cpp-tag">associative_container_arg</span></code></a></td>
 </tr>
 <tr>
   <td style="text-align:left">7-10.</td>
-  <td style="text-align:left">Hide <a href="random_access_iterator_arg.html"><code>random_access_iterator_arg</code></a></td>
+  <td style="text-align:left">Hide <a href="random_access_iterator_arg.html"><code><span class="heim-cpp-tag">random_access_iterator_arg</span></code></a></td>
 </tr>
 <tr>
   <td style="text-align:left">11-26.</td>
-  <td style="text-align:left">Hide <a href="random_access_range_arg.html"><code>random_access_range_arg</code></a></td>
+  <td style="text-align:left">Hide <a href="random_access_range_arg.html"><code><span class="heim-cpp-tag">random_access_range_arg</span></code></a></td>
 </tr>
 <tr>
   <td style="text-align:left">27.</td>
-  <td style="text-align:left">Hides <a href="invocable_arg.html"><code>invocable_arg</code></a></td>
+  <td style="text-align:left">Hides <a href="invocable_arg.html"><code><span class="heim-cpp-tag">invocable_arg</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -414,7 +414,7 @@
 </thead>
 <tbody>
 <tr>
-  <td style="text-align:left"><code>Args</code></td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">Args</span></code></td>
   <td style="text-align:left">The value type pack</td>
 </tr>
 </tbody>
@@ -431,31 +431,31 @@
 <tbody>
 <tr>
   <td style="text-align:left">2.</td>
-  <td style="text-align:left"><code>std::decay_t&lt;T&gt;</code> must be constructible from <code>T &amp;&amp;</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">decay_t</span>&lt;<span class="heim-cpp-template-param">T</span>&gt;</code> must be constructible from <code><span class="heim-cpp-template-param">T</span> &amp;&amp;</code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">4.</td>
-  <td style="text-align:left"><code>It</code> must be copy constructible and model <code>std::random_access_iterator</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">It</span></code> must be copy constructible and model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-concept">random_access_iterator</span></code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">5.</td>
-  <td style="text-align:left"><code>It</code> and <code>IndexMap</code> must be copy constructible, and <code>It</code> must model <code>std::random_access_iterator</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">It</span></code> and <code><span class="heim-cpp-template-param">IndexMap</span></code> must be copy constructible, and <code><span class="heim-cpp-template-param">It</span></code> must model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-concept">random_access_iterator</span></code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">6.</td>
-  <td style="text-align:left"><code>R</code> must model <code>std::ranges::random_access_range</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">R</span></code> must model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-namespace">ranges</span>::<span class="heim-cpp-concept">random_access_range</span></code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">7.</td>
-  <td style="text-align:left"><code>IndexMap</code> must be copy constructible and <code>R</code> must model <code>std::ranges::random_access_range</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">IndexMap</span></code> must be copy constructible and <code><span class="heim-cpp-template-param">R</span></code> must model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-namespace">ranges</span>::<span class="heim-cpp-concept">random_access_range</span></code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">10.</td>
-  <td style="text-align:left"><code>F</code> must be copy constructible.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">F</span></code> must be copy constructible.</td>
 </tr>
 <tr>
   <td style="text-align:left">11.</td>
-  <td style="text-align:left"><code>FMap</code> and <code>GMap</code> must be copy constructible.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">FMap</span></code> and <code><span class="heim-cpp-template-param">GMap</span></code> must be copy constructible.</td>
 </tr>
 </tbody>
 </table>
@@ -470,19 +470,19 @@
 <tbody>
 <tr>
   <td style="text-align:left">7.</td>
-  <td style="text-align:left"><code>It</code> must model <code>std::random_access_iterator</code>.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">It</span></code> must model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-concept">random_access_iterator</span></code>.</td>
 </tr>
 <tr>
   <td style="text-align:left">8.</td>
-  <td style="text-align:left"><code>It</code> must model <code>std::random_access_iterator</code> and <code>IndexMap</code> must be copy constructible.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">It</span></code> must model <code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-concept">random_access_iterator</span></code> and <code><span class="heim-cpp-template-param">IndexMap</span></code> must be copy constructible.</td>
 </tr>
 <tr>
   <td style="text-align:left">10.<br>13-14.<br>17-18.<br>21-22.<br>25-26.</td>
-  <td style="text-align:left"><code>IndexMap</code> must be copy constructible.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-template-param">IndexMap</span></code> must be copy constructible.</td>
 </tr>
 <tr>
   <td style="text-align:left">27.</td>
-  <td style="text-align:left"><code>std::remove_reference_t&lt;F&gt;</code> must be a function type.</td>
+  <td style="text-align:left"><code><span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">remove_reference_t</span>&lt;<span class="heim-cpp-template-param">F</span>&gt;</code> must be a function type.</td>
 </tr>
 </tbody>
 </table>
@@ -496,31 +496,31 @@
 </thead>
 <tbody>
 <tr>
-  <td style="text-align:left"><code>args</code></td>
+  <td style="text-align:left"><code><span class="heim-cpp-parameter">args</span></code></td>
   <td style="text-align:left">The value pack</td>
 </tr>
 </tbody>
 </table>
 <h2 id="code-example">Code Example</h2>
-<pre><code><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;map&gt;</span><span class="heim-cpp-preprocessor">
-</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;ranges&gt;</span><span class="heim-cpp-preprocessor">
-</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;utility&gt;</span><span class="heim-cpp-preprocessor">
-</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;vector&gt;</span><span class="heim-cpp-preprocessor">
-</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-comment">&lt;heim/property.hpp&gt;</span><span class="heim-cpp-preprocessor">
+<pre><code><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;map&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;ranges&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;utility&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;vector&gt;</span><span class="heim-cpp-preprocessor">
+</span><span class="heim-cpp-preprocessor">#</span><span class="heim-cpp-preprocessor">include</span> <span class="heim-cpp-string">&lt;heim/property.hpp&gt;</span><span class="heim-cpp-preprocessor">
 </span>
 <span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
 {
   <span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">pair</span> = <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">pair</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt;;
 
-  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-type">map</span>{};
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">map</span>&lt;<span class="heim-cpp-builtin-type">int</span>, <span class="heim-cpp-builtin-type">int</span>&gt; <span class="heim-cpp-variable">map</span>{};
   <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-type">vector</span>&lt;<span class="heim-cpp-builtin-type">int</span>&gt;   <span class="heim-cpp-variable">vec</span>{};
-  <span class="heim-cpp-keyword">auto</span>               <span class="heim-cpp-parameter">it</span> {<span class="heim-cpp-variable">vec</span>.<span class="heim-cpp-method">begin</span>()};
+  <span class="heim-cpp-keyword">auto</span>               <span class="heim-cpp-variable">it</span> {<span class="heim-cpp-variable">vec</span>.<span class="heim-cpp-method">begin</span>()};
 
   <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm1</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">identity_arg</span>)};                           <span class="heim-cpp-comment">// 1.
 </span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm2</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">constant_arg</span>, <span class="heim-cpp-number">10.</span>};                       <span class="heim-cpp-comment">// 2.
-</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm3</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-type">map</span>)};         <span class="heim-cpp-comment">// 3.
-</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm4</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-parameter">it</span>)};         <span class="heim-cpp-comment">// 4.
-</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm5</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-parameter">it</span> , <span class="heim-cpp-variable">ac_pm</span>)}; <span class="heim-cpp-comment">// 5.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm3</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">associative_container_arg</span>, <span class="heim-cpp-variable">map</span>)};         <span class="heim-cpp-comment">// 3.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm4</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-variable">it</span>)};         <span class="heim-cpp-comment">// 4.
+</span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm5</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_iterator_arg</span>, <span class="heim-cpp-variable">it</span> , <span class="heim-cpp-variable">ac_pm</span>)}; <span class="heim-cpp-comment">// 5.
 </span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm6</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_range_arg</span>   , <span class="heim-cpp-variable">vec</span>)};        <span class="heim-cpp-comment">// 6.
 </span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm7</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">random_access_range_arg</span>   , <span class="heim-cpp-variable">vec</span>, <span class="heim-cpp-variable">ac_pm</span>)}; <span class="heim-cpp-comment">// 7.
 </span>  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm8</span> {<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-function">make_property_map</span>(<span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-tag">member_arg</span>, &amp;<span class="heim-cpp-type">pair</span>::<span class="heim-cpp-variable">first</span>)};               <span class="heim-cpp-comment">// 8.
@@ -539,11 +539,11 @@
 </thead>
 <tbody>
 <tr>
-  <td style="text-align:left"><a href="make_readable_property_map.html"><code>make_readable_property_map</code></a></td>
+  <td style="text-align:left"><a href="make_readable_property_map.html"><code><span class="heim-cpp-function">make_readable_property_map</span></code></a></td>
   <td style="text-align:left">Creates a readable property map object using specific arguments</td>
 </tr>
 <tr>
-  <td style="text-align:left"><a href="make_writable_property_map.html"><code>make_writable_property_map</code></a></td>
+  <td style="text-align:left"><a href="make_writable_property_map.html"><code><span class="heim-cpp-function">make_writable_property_map</span></code></a></td>
   <td style="text-align:left">Creates a writable property map object using specific arguments</td>
 </tr>
 </tbody>

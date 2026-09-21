@@ -82,18 +82,18 @@
       <h2 id="overview">Overview</h2>
 
       <p>
-        Returns the value associated to the key <code>k</code> by the property map <code>m</code>.
+        Returns the value associated to the key <code><span class="heim-cpp-parameter">k</span></code> by the property map <code><span class="heim-cpp-parameter">m</span></code>.
       </p>
 
       <h3 id="customization-point-object">Customization point object</h3>
 
       <p>
-        A call to <code>properties::get(m, k)</code> is equivalent to:
+        A call to <code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span>(<span class="heim-cpp-variable">m</span>, <span class="heim-cpp-variable">k</span>)</code> is equivalent to:
       </p>
 
       <ol>
-        <li><code>m.get(k)</code> if it exists,</li>
-        <li>otherwise, <code>get(m, k)</code>, where <code>get</code> is found through <a href="https://cppreference.com/cpp/language/adl"><em>argument-dependent lookup (ADL)</em></a>.</li>
+        <li><code><span class="heim-cpp-variable">m</span>.<span class="heim-cpp-method">get</span>(<span class="heim-cpp-variable">k</span>)</code> if it exists,</li>
+        <li>otherwise, <code><span class="heim-cpp-function">get</span>(<span class="heim-cpp-variable">m</span>, <span class="heim-cpp-variable">k</span>)</code>, where <code><span class="heim-cpp-function">get</span></code> is found through <a href="https://cppreference.com/cpp/language/adl"><em>argument-dependent lookup (ADL)</em></a>.</li>
       </ol>
 
       <h2 id="template-parameters">Template Parameters</h2>
@@ -103,8 +103,8 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>M</code></td><td>The property map type</td></tr>
-          <tr><td><code>K</code></td><td>The key type</td></tr>
+          <tr><td><code><span class="heim-cpp-template-param">M</span></code></td><td>The property map type</td></tr>
+          <tr><td><code><span class="heim-cpp-template-param">K</span></code></td><td>The key type</td></tr>
         </tbody>
       </table>
 
@@ -115,8 +115,8 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>m</code></td><td>The property map</td></tr>
-          <tr><td><code>k</code></td><td>The key whose associated property is to access</td></tr>
+          <tr><td><code><span class="heim-cpp-parameter">m</span></code></td><td>The property map</td></tr>
+          <tr><td><code><span class="heim-cpp-parameter">k</span></code></td><td>The key whose associated property is to access</td></tr>
         </tbody>
       </table>
 
@@ -152,9 +152,9 @@
           <tr><th>Name</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><a href="set.html"><code>properties::set</code></a></td><td>Modifies the property associated to a key</td></tr>
-          <tr><td><a href="../traits/is_readable_map_for.html"><code>properties::is_readable_map_for</code></a></td><td>Checks the validity of a call to <a href="get.html"><code>properties::get</code></a> for given types</td></tr>
-          <tr><td><a href="../traits/readable_map_result.html"><code>properties::readable_map_result</code></a></td><td>Determines the result type of a call to <a href="get.html"><code>properties::get</code></a></td></tr>
+          <tr><td><a href="set.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">set</span></code></a></td><td>Modifies the property associated to a key</td></tr>
+          <tr><td><a href="../traits/is_readable_map_for.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">is_readable_map_for</span></code></a></td><td>Checks the validity of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span></code></a> for given types</td></tr>
+          <tr><td><a href="../traits/readable_map_result.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-type">readable_map_result</span></code></a></td><td>Determines the result type of a call to <a href="get.html"><code><span class="heim-cpp-namespace">properties</span>::<span class="heim-cpp-cpo">get</span></code></a></td></tr>
         </tbody>
       </table>
     </article>
