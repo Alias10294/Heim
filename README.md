@@ -2,70 +2,15 @@
 Heim is a C++26 collection of header-only libraries that provide useful and generic abstractions for 
 *data-oriented design* (*DOD*).
 
-It currently features:
-* a [graph](docs_md/graph/index.md) library inspired by the 
-  [Boost Graph Library (BGL)](https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/index.html),
-* a [module](docs_md/property/index.md) library that abstracts the concepts of object properties and association of 
-  objects.
-
-## Code examples
-### Graphs
-```cpp
-#include <print>
-#include <heim/graph.hpp>
-
-using graph_type = heim::adjacency_list<>;
-
-int main()
-{
-  graph_type g;
-
-  auto v0 = heim::graphs::place_vertex();
-  auto v1 = heim::graphs::place_vertex();
-  auto v2 = heim::graphs::place_vertex();
-  auto v3 = heim::graphs::place_vertex();
-
-  auto [e0, placed] = heim::graphs::place_edge(g, v0, v1);
-  auto [e1, _     ] = heim::graphs::place_edge(g, v1, v2);
-  auto [e2, _     ] = heim::graphs::place_edge(g, v0, v2);
-  auto [e3, _     ] = heim::graphs::place_edge(g, v2, v3);
-
-  auto res = heim::graphs::breadth_first_search(g, v0);
-  if (res.reached(v3))
-    std::println("{}", res.path_from(v3));  
-}
-```
-
+## Libraries
 ### Properties
-```cpp
-#include <print>
-#include <unordered_map>
-#include <vector>
-#include <heim/property.hpp>
+Represent associations between objects and their properties through a common read/write interface, independently of how
+those associations are implemented. Property maps can adapt existing representations, including containers, members and
+function objects, and can be composed to express richer mappings.
 
-struct entity { int hp; };
-
-int main()
-{
-  std::unordered_map<int, int> map{{0, 100}, {1, 80}, {2, 60}};
-  std::vector<entity>          vec{{100}, {80}, {60}};
-  
-  auto map_pm{heim::make_property_map(map)};
-  auto vec_pm{heim::make_property_map(
-      heim::composable_arg,
-      heim::make_property_map(heim::member_arg, &entity::hp),
-      heim::make_property_map(vec)};
-      
-  std::print("{} ", heim::properties::get(map_pm, 1));
-  std::print("{} ", heim::properties::get(vec_pm, 1));
-  
-  heim::properties::set(map_pm, 1, 20);
-  heim::properties::set(vec_pm, 1, 20);
-  
-  std::print("{} ", heim::properties::get(map_pm, 1));
-  std::print("{} ", heim::properties::get(vec_pm, 1));
-}
-```
+### Graphs
+Represent graph structures and run algorithms through generic, requirement-based interfaces. Heim provides ready-to-use
+graph types while allowing compatible user-defined representations to participate in the same algorithms.
 
 ## Why Use Heim ?
 ### Keep control over your data
@@ -151,10 +96,7 @@ executable(
 ```
 
 ## Documentation
-Each library has its own documentation.
-
-See the [Graphs documentation](docs/graph/index.html).\
-See the [Properties documentation](docs/property/index.html).
+Documentation for the entire project can be found [here](https://alias10294.github.io/Heim/).
 
 ## License
 Heim is available under the [MIT license](LICENSE).
