@@ -7,10 +7,71 @@ Heim is a C++26 collection of header-only libraries that provide useful and gene
 Represent associations between objects and their properties through a common read/write interface, independently of how
 those associations are implemented. Property maps can adapt existing representations, including containers, members and
 function objects, and can be composed to express richer mappings.
+```cpp
+#include <print>
+#include <unordered_map>
+#include <vector>
+#include <heim/property.hpp>
+
+struct entity { int hp; }
+
+int main()
+{
+  std::unordered_map<int, int> map{{0, 100}, {1, 80}, {2, 60}};
+  std::vector<entity>          vec{{100}, {80}, {60}};
+  
+  auto map_pm{heim::make_property_map(map)};
+  auto vec_pm{heim::make_property_map(
+      heim::composable_arg,
+      heim::make_property_map(heim::member_arg, &entity::hp),
+      heim::make_property_map(vec))};
+  
+  std::print("{} ", heim::properties::get(map_pm, 1));
+  std::print("{} ", heim::properties::get(vec_pm, 1));
+
+  heim::properties::set(map_pm, 1, 20);
+  heim::properties::set(vec_pm, 1, 20);
+
+  std::print("{} ", heim::properties::get(map_pm, 1));
+  std::print("{} ", heim::properties::get(vec_pm, 1));
+}
+```
+```text
+80 80 20 20 
+```
 
 ### Graphs
 Represent graph structures and run algorithms through generic, requirement-based interfaces. Heim provides ready-to-use
 graph types while allowing compatible user-defined representations to participate in the same algorithms.
+```cpp
+#include <print>
+#include <heim/graph.hpp>
+
+using graph_type  = heim::adjacency_list<>;
+using vertex_type = heim::graphs::vertex_t<graph_type>;
+
+int main()
+{
+  graph_type g{};
+  
+  vertex_type v0{heim::graphs::place_vertex(g)};
+  vertex_type v1{heim::graphs::place_vertex(g)};
+  vertex_type v2{heim::graphs::place_vertex(g)};
+  vertex_type v3{heim::graphs::place_vertex(g)};
+  
+  auto [e0, placed]{heim::graphs::place_edge(g, v0, v1)};
+  auto [e1, _     ]{heim::graphs::place_edge(g, v1, v2)};
+  auto [e2, _     ]{heim::graphs::place_edge(g, v0, v2)};
+  auto [e3, _     ]{heim::graphs::place_edge(g, v2, v3)};
+  
+  auto res{heim::graphs::breadth_first_search(g, v0)};
+  if (res.reached(v3))
+    std::print("{}", res.path_from(v3));
+}
+```
+```text
+[3, 2, 0]
+```
 
 ## Why Use Heim ?
 ### Keep control over your data
@@ -54,11 +115,11 @@ the same way.
 ##### As a subproject
 The most natural way to use Heim with Meson is to have it as a Meson subproject. That is attained by placing the Heim
 repository in your project's `subprojects/` directory, either using Git
-```console
+```text
 git clone https://github.com/Alias10294/Heim.git subprojects/heim
 ```
 or as a Git submodule.
-```console
+```text
 git submodule add https://github.com/Alias10294/Heim.git subprojects/heim
 ```
 
@@ -76,7 +137,7 @@ your-project/
 
 ##### As a system dependency
 Heim can also be installed independently anywhere in your machine and later found through `pkg-config`.
-```console 
+```text 
 git clone https://github.com/Alias10294/Heim.git
 cd heim
 meson setup build

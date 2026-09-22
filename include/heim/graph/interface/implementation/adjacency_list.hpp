@@ -516,8 +516,8 @@ public:
 
 
 template<
-    bool        IsDirected    = true,
-    bool        IsMultigraph  = true,
+    bool        IsDirected    = false,
+    bool        IsMultigraph  = false,
     bool        IsInIncident  = true,
     bool        IsOutIncident = true,
     typename    UInt          = unsigned,

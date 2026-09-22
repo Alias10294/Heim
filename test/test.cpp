@@ -108,22 +108,22 @@ static void test_001()
   std::println("  distance to v3 = {}", dij_to_res.distance());
 
 
-  // // connected_components
-  // auto const cc_res{heim::graphs::connected_components(g)};
-  //
-  // std::println("connected_components");
-  // std::println("  graph connected ? {}"    , cc_res.connected());
-  // std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
+  // connected_components
+  auto const cc_res{heim::graphs::connected_components(g)};
+
+  std::println("connected_components");
+  std::println("  graph connected ? {}"    , cc_res.connected());
+  std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
 
   // topological_sort
-  auto const topo{heim::graphs::topological_sort(g)};
-
-  std::println("topological_sort");
-
-  std::print  ("  ordering:");
-  for (vertex_type v : topo)
-    std::print(" {}", v);
-  std::println();
+  // auto const topo{heim::graphs::topological_sort(g)};
+  //
+  // std::println("topological_sort");
+  //
+  // std::print  ("  ordering:");
+  // for (vertex_type v : topo)
+  //   std::print(" {}", v);
+  // std::println();
 }
 
 static void test_graph()
