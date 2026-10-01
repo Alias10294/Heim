@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html data-heim-theme="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>adjacency_list::operator= - Heim: Graphs</title>
+<link href="../../../../../style.css" rel="stylesheet"/>
+<script defer="" src="../../../../../script.js"></script>
+</head>
+<body>
+<header class="heim-header">
+<div class="heim-header__top">
+<a aria-label="Heim documentation home" class="heim-brand" href="../../../../../index.html">
+<span class="heim-brand__name">Heim</span>
+<span class="heim-brand__subtitle">C++ Library Documentation</span>
+</a>
+<div class="heim-header__actions">
+<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
+<span class="heim-github__label">GitHub</span>
+<span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+</a>
+<label class="heim-theme">
+<span class="heim-theme__label">Theme</span>
+<span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+</label>
+</div>
+</div>
+<div class="heim-header__bar">
+<div class="heim-header__bar-inner">
+<nav aria-label="Main navigation" class="heim-nav">
+<a href="../../../../../index.html">Home</a>
+<a href="../../../../../property/index.html">Properties</a>
+<a href="../../../../index.html">Graphs</a>
+</nav>
+</div>
+</div>
+</header>
+<main class="heim-main">
+<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+<a href="../../../../../index.html">Heim</a>
+<span>›</span>
+<a href="../../../../index.html">Graphs</a>
+<span>›</span>
+<a href="index.html">adjacency_list</a>
+<span>›</span>
+<span>adjacency_list::operator=</span>
+</nav>
+<article class="heim-content">
+<h1 id="adjacency-list-operator-assignment">adjacency_list::operator=</h1>
+<h2 id="synopsis">Synopsis</h2>
+<ol class="heim-signature-list">
+<li><pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-operator">&amp;</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">=</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">other</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre></li>
+<li><pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-operator">&amp;</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">=</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">other</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre></li>
+<li><pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-operator">&amp;</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">=</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">:</span><span class="heim-cpp-operator">:</span><span class="heim-cpp-type">initializer_list</span><span class="heim-cpp-operator">&lt;</span><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">:</span><span class="heim-cpp-operator">:</span><span class="heim-cpp-type">pair</span><span class="heim-cpp-operator">&lt;</span><span class="heim-cpp-type">id_type</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">id_type</span><span class="heim-cpp-operator">&gt;</span><span class="heim-cpp-operator">&gt;</span> <span class="heim-cpp-parameter">ilist</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre></li>
+</ol>
+<h2 id="overview">Overview</h2>
+<p>Replaces the vertices and edges in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code>.</p>
+<table>
+<tbody>
+<tr><td>1)</td><td>Copy assignment operator</td></tr>
+<tr><td>2)</td><td>Move assignment operator</td></tr>
+<tr><td>3)</td><td>Clears and uses the edges described by <code><span class="heim-cpp-parameter">ilist</span></code></td></tr>
+</tbody>
+</table>
+<h2 id="parameters">Parameters</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-parameter">other</span></code></td><td>The other adjacency list whose contents to assign to this object</td></tr>
+<tr><td><code><span class="heim-cpp-parameter">ilist</span></code></td><td>The initializer list of edges to assign to this object</td></tr>
+</tbody>
+</table>
+
+
+<h2 id="complexity">Complexity</h2>
+<table>
+<tbody>
+<tr><td>1, 2)</td><td><code>O(V + E)</code>, where V and E are respectively the number of vertices and edges in <code>other</code>.</td></tr>
+<tr><td>3)</td><td><code>O(V + E + N)</code> for multigraphs; <code>O(V + E + N²)</code> otherwise in the worst case, where V, E and N are the numbers of vertices, edges and elements in <code>ilist</code>.</td></tr>
+</tbody>
+</table>
+<h2 id="code-example">Code Example</h2>
+<pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;utility&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+<span class="heim-cpp-whitespace">
+</span><span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">()</span>
+<span class="heim-cpp-punctuation">{</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">other</span><span class="heim-cpp-punctuation">{{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}, {</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}}</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g0</span><span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g1</span><span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g2</span><span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">
+  </span><span class="heim-cpp-variable">g0</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-variable">other</span><span class="heim-cpp-punctuation">;</span>                            <span class="heim-cpp-comment">// copy assignment</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-variable">g1</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">move</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g0</span><span class="heim-cpp-punctuation">);</span>                    <span class="heim-cpp-comment">// move assignment</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-variable">g2</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-punctuation">{{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}, {</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}, {</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}, {</span><span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span class="heim-cpp-punctuation">}};</span> <span class="heim-cpp-comment">// initializer-list assignment</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+<h2 id="see-also">See Also</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="constructor.html">(constructor)</a></td><td>Constructs the <code><span class="heim-cpp-type">adjacency_list</span></code></td></tr>
+</tbody>
+</table>
+</article>
+</main>
+<footer class="heim-footer">
+<div class="heim-footer__inner">
+<span>Heim C++ Library Documentation</span>
+</div>
+</footer>
+</body>
+</html>

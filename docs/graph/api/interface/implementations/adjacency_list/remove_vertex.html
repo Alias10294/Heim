@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>adjacency_list::remove_vertex - Heim: Graphs</title>
+
+  <link rel="stylesheet" href="../../../../../style.css">
+  <script src="../../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+      <div class="heim-header__actions">
+        <a class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim" aria-label="Heim on GitHub">
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../../index.html">Home</a>
+          <a href="../../../../../property/index.html">Properties</a>
+          <a href="../../../../index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../../index.html">Heim</a><span>›</span>
+      <a href="../../../../index.html">Graphs</a><span>›</span>
+      <a href="index.html">adjacency_list</a><span>›</span>
+      <span>adjacency_list::remove_vertex</span>
+    </nav>
+    <article class="heim-content">
+      <h1 id="adjacency-list-remove-vertex">adjacency_list::remove_vertex</h1>
+      <h2 id="synopsis">Synopsis</h2>
+      <pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-builtin-type">void</span>
+<span class="heim-cpp-method">remove_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-parameter">v</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre>
+
+      <h2 id="overview">Overview</h2>
+      <p>Removes vertex <code><span class="heim-cpp-parameter">v</span></code> from <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code>, together with all edges incident with it.</p>
+
+      <h2 id="parameters">Parameters</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code><span class="heim-cpp-parameter">v</span></code></td><td>The vertex to remove</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="preconditions">Preconditions</h2>
+      <p><code><span class="heim-cpp-parameter">v</span></code> identifies a vertex contained in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code>.</p>
+
+      <h2 id="complexity">Complexity</h2>
+        <p><code>O(E + d(v)²)</code> in the worst case, where <code>E</code> is the number of edges in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code> and <code>d(v)</code> is the number of edges incident with <code><span class="heim-cpp-parameter">v</span></code>.</p>
+
+      <h2 id="code-example">Code Example</h2>
+      <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">remove_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">vertices</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">edges</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+
+      <h3 id="possible-output">Possible Output</h3>
+      <pre><code>[2, 1]
+[]</code></pre>
+
+      <h2 id="see-also">See Also</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><a href="remove_edge.html"><code><span class="heim-cpp-method">remove_edge</span></code></a></td><td>Removes an edge</td></tr>
+          <tr><td><a href="clear_vertex.html"><code><span class="heim-cpp-method">clear_vertex</span></code></a></td><td>Removes all edges incident with a given vertex</td></tr>
+          <tr><td><a href="../../primitives/remove_vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">remove_vertex</span></code></a></td><td>Removes a vertex and clears its incident edges</td></tr>
+        </tbody>
+      </table>
+
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

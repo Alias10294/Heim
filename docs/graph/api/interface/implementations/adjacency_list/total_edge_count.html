@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>adjacency_list::total_edge_count - Heim: Graphs</title>
+
+  <link rel="stylesheet" href="../../../../../style.css">
+  <script src="../../../../../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../../../../../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a class="heim-github" data-heim-github-repo="Alias10294/heim"
+           href="https://github.com/Alias10294/heim" aria-label="Heim on GitHub">
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../../../../../index.html">Home</a>
+          <a href="../../../../../property/index.html">Properties</a>
+          <a href="../../../../index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../../../../index.html">Heim</a><span>›</span>
+      <a href="../../../../index.html">Graphs</a><span>›</span>
+      <a href="index.html">adjacency_list</a><span>›</span>
+      <span>adjacency_list::total_edge_count</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1 id="adjacency-list-total-edge-count">adjacency_list::total_edge_count</h1>
+      <h2 id="synopsis">Synopsis</h2>
+      <pre><code><span class="heim-cpp-punctuation">[[</span><span class="heim-cpp-attribute">nodiscard</span><span class="heim-cpp-punctuation">]]</span> <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">size_type</span>
+<span class="heim-cpp-method">total_edge_count</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-parameter">v</span><span class="heim-cpp-punctuation">)</span> <span class="heim-cpp-keyword">const</span>
+<span class="heim-cpp-keyword">noexcept</span>
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-constant">is_in_incident</span> <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-constant">is_out_incident</span><span class="heim-cpp-punctuation">;</span></code></pre>
+
+      <h2 id="overview">Overview</h2>
+      <p>Returns the number of edges in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code> incident with vertex <code><span class="heim-cpp-parameter">v</span></code>.</p>
+
+      <h3 id="in-undirected-graphs">In Undirected Graphs</h3>
+      <p>If <code><span class="heim-cpp-constant">is_directed</span></code> is <code><span class="heim-cpp-literal">false</span></code>, this method, <a href="out_edge_count.html"><code><span class="heim-cpp-method">out_edge_count</span></code></a> and <a href="in_edge_count.html"><code><span class="heim-cpp-method">in_edge_count</span></code></a> are equivalent and return the same value.</p>
+
+      <h2 id="parameters">Parameters</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code><span class="heim-cpp-parameter">v</span></code></td><td>The vertex whose incident edges are counted</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="preconditions">Preconditions</h2>
+      <p><code><span class="heim-cpp-parameter">v</span></code> identifies a vertex contained in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code>.</p>
+
+      <h2 id="return-value">Return Value</h2>
+      <p>The number of edges incident with <code><span class="heim-cpp-parameter">v</span></code>. In a directed graph, this is the sum of its incoming and outgoing edge counts.</p>
+
+      <h2 id="complexity">Complexity</h2>
+      <p><code>O(1)</code></p>
+
+      <h2 id="code-example">Code Example</h2>
+      <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">undirected_graph</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-literal">false</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">directed_graph</span>   <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-literal">true</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-type">directed_graph</span>   <span class="heim-cpp-variable">dg</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-type">undirected_graph</span> <span class="heim-cpp-variable">ug</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">print</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{} "</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">dg</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">total_edge_count</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">print</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{} "</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">ug</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">total_edge_count</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+
+      <h3 id="output">Output</h3>
+      <pre><code>2 2 </code></pre>
+
+      <h2 id="see-also">See Also</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><a href="out_edge_count.html"><code><span class="heim-cpp-method">out_edge_count</span></code></a></td><td>Returns the number of edges going out from a vertex</td></tr>
+          <tr><td><a href="in_edge_count.html"><code><span class="heim-cpp-method">in_edge_count</span></code></a></td><td>Returns the number of edges going into a vertex</td></tr>
+          <tr><td><a href="../../primitives/total_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">total_edge_count</span></code><br><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">degree</span></code></a></td><td>Returns the number of edges incident with a vertex</td></tr>
+        </tbody>
+      </table>
+
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>

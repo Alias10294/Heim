@@ -1,0 +1,108 @@
+<!doctype html>
+
+<html data-heim-theme="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>adjacency_list::place_vertex - Heim: Graphs</title>
+<link href="../../../../../style.css" rel="stylesheet"/>
+<script defer="" src="../../../../../script.js"></script>
+</head>
+<body>
+<header class="heim-header">
+<div class="heim-header__top">
+<a aria-label="Heim documentation home" class="heim-brand" href="../../../../../index.html">
+<span class="heim-brand__name">Heim</span>
+<span class="heim-brand__subtitle">C++ Library Documentation</span>
+</a>
+<div class="heim-header__actions">
+<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
+<span class="heim-github__label">GitHub</span>
+<span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+</a>
+<label class="heim-theme">
+<span class="heim-theme__label">Theme</span>
+<span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+</label>
+</div>
+</div>
+<div class="heim-header__bar">
+<div class="heim-header__bar-inner">
+<nav aria-label="Main navigation" class="heim-nav">
+<a href="../../../../../index.html">Home</a>
+<a href="../../../../../property/index.html">Properties</a>
+<a href="../../../../index.html">Graphs</a>
+</nav>
+</div>
+</div>
+</header>
+<main class="heim-main">
+<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+<a href="../../../../../index.html">Heim</a><span>›</span>
+<a href="../../../../index.html">Graphs</a><span>›</span>
+<a href="index.html">adjacency_list</a><span>›</span><span>adjacency_list::place_vertex</span>
+</nav>
+<article class="heim-content">
+<h1 id="adjacency-list-place-vertex">adjacency_list::place_vertex</h1>
+<h2 id="synopsis">Synopsis</h2>
+<pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">vertex_type</span>
+<span class="heim-cpp-method">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre>
+<h2 id="overview">Overview</h2>
+<p>Creates a new vertex in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code> and returns its value.</p>
+<h2 id="complexity">Complexity</h2>
+<p><code>O(1)</code> amortized.</p>
+<h2 id="exceptions">Exceptions</h2>
+    <p>
+        This function exhibits a
+        <a href="https://cppreference.com/cpp/language/exceptions#Exception_safety">
+            strong exception safety guarantee
+        </a>,
+        that is if any exception is thrown the function has no effect.
+    </p>
+<h2 id="code-example">Code Example</h2>
+<pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">vertices</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">vertices</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+<h3 id="possible-output">Possible Output</h3>
+<pre><code>[0]
+[1, 0]</code></pre>
+<h2 id="see-also">See Also</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="place_edge.html"><code><span class="heim-cpp-method">place_edge</span></code></a></td><td>Creates a new edge between two vertices</td></tr>
+<tr><td><a href="vertices.html"><code><span class="heim-cpp-method">vertices</span></code></a></td><td>Returns a range of the vertices</td></tr>
+<tr><td><a href="vertex_count.html"><code><span class="heim-cpp-method">vertex_count</span></code></a></td><td>Returns the number of vertices</td></tr>
+<tr><td><a href="../../primitives/place_vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span></code></a></td><td>Creates a new vertex</td></tr>
+</tbody>
+</table>
+</article>
+</main>
+<footer class="heim-footer">
+<div class="heim-footer__inner">
+<span>Heim C++ Library Documentation</span>
+</div>
+</footer>
+</body>
+</html>

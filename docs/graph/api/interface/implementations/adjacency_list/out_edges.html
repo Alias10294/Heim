@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>adjacency_list::out_edges - Heim Documentation: Graphs</title>
+    <link rel="stylesheet" href="../../../../../style.css">
+</head>
+<body>
+<header>
+    <h1>adjacency_list::out_edges</h1>
+    <h5>Defined in <code>graph/interface/implementation/adjacency_list.hpp</code></h5>
+
+</header>
+    <h3>Synopsis</h3>
+    <pre><code>[[nodiscard]] constexpr
+auto
+out_edges(vertex_type v) const
+noexcept
+requires is_out_incident;</code></pre>
+
+    <hr>
+
+    <h3>Overview</h3>
+    <p>Returns an unordered view of the edges in <code><span class="heim-cpp-operator">*</span><span class="heim-cpp-keyword">this</span></code> whose source vertex is <code><span class="heim-cpp-parameter">v</span></code>.</p>
+
+    <h4>Undirected graphs</h4>
+    <p>
+        If <code><span class="heim-cpp-constant">is_directed</span></code> is equal to <code><span class="heim-cpp-literal">false</span></code>, this method and
+        <a href="in_edges.html"><code><span class="heim-cpp-method">in_edges</span></code></a> return equivalent ranges of edges for a given vertex, but the
+        edges' source and target vertex are context-dependent. In this method, for example, each referenced edge's
+        source vertex is <code><span class="heim-cpp-parameter">v</span></code>.
+    </p>
+
+    <h3>Parameters</h3>
+    <table>
+        <thead>
+        <tr>
+            <td>Name</td>
+            <td>Description</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code>v</code></td>
+            <td>The source vertex</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Example</h3>
+    <pre><code>#include &lt;print&gt;
+#include &lt;heim/graph.hpp&gt;
+
+using undirected_graph = heim::adjacency_list&lt;false&gt;;
+using directed_graph   = heim::adjacency_list&lt;true&gt;;
+
+template&lt;typename Graph&gt;
+void print_out_edges(Graph const &g, vertex_t&lt;Graph&gt; v)
+{
+  for (auto e : g.out_edges(v))
+    std::print("({}, {}) ", g.source(e), g.target(e));
+  std::println();
+}
+
+int main()
+{
+  directed_graph   dg{{0, 1}, {2, 0}, {1, 2}};
+  undirected_graph ug{{0, 1}, {2, 0}, {1, 2}};
+
+  print_out_edges(dg, 0);
+  print_out_edges(ug, 0);
+}</code></pre>
+    <h4>Possible output</h4>
+    <pre><code>(0, 1)
+(0, 1) (0, 2) </code></pre>
+
+<footer>
+    <h3>See also</h3>
+    <table>
+        <tbody>
+        <tr>
+            <td><a href="source.html"><code>source</code></a></td>
+            <td>Returns the source vertex of an edge</td>
+        </tr>
+        <tr>
+            <td><a href="target.html"><code>target</code></a></td>
+            <td>Returns the target vertex of an edge</td>
+        </tr>
+        <tr>
+            <td><a href="out_edge_count.html"><code>out_edge_count</code></a></td>
+            <td>Returns the number of edges going out from a vertex</td>
+        </tr>
+        <tr>
+            <td><a href="in_edges.html"><code>in_edges</code></a></td>
+            <td>Returns a range of the edges going towards a vertex</td>
+        </tr>
+        <tr>
+            <td><a href="../../primitives/out_edges.html"><code>graphs::out_edges</code></a></td>
+            <td>Returns a range of the edges going out from a given vertex</td>
+        </tr>
+        </tbody>
+    </table>
+</footer>
+</body>
+</html>

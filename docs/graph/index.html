@@ -1,86 +1,370 @@
 <!doctype html>
-<html lang="en" data-heim-theme="light">
+
+<html data-heim-theme="light" lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-
-  <title>Page title - Heim</title>
-
-  <link rel="stylesheet" href="../style.css">
-  <script src="../script.js" defer></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>Heim: Graphs</title>
+<link href="../style.css" rel="stylesheet"/>
+<script defer="" src="../script.js"></script>
 </head>
-
 <body>
-  <header class="heim-header">
-    <div class="heim-header__top">
-      <a class="heim-brand" href="../index.html" aria-label="Heim documentation home">
-        <span class="heim-brand__name">Heim</span>
-        <span class="heim-brand__subtitle">C++ Library Documentation</span>
-      </a>
+<header class="heim-header">
+<div class="heim-header__top">
+<a aria-label="Heim documentation home" class="heim-brand" href="../index.html">
+<span class="heim-brand__name">Heim</span>
+<span class="heim-brand__subtitle">C++ Library Documentation</span>
+</a>
+<div class="heim-header__actions">
+<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
+<span class="heim-github__label">GitHub</span>
+<span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+</a>
+<label class="heim-theme">
+<span class="heim-theme__label">Theme</span>
+<span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+</label>
+</div>
+</div>
+<div class="heim-header__bar">
+<div class="heim-header__bar-inner">
+<nav aria-label="Main navigation" class="heim-nav">
+<a href="../index.html">Home</a>
+<a href="../property/index.html">Properties</a>
+<a href="index.html">Graphs</a>
+</nav>
+</div>
+</div>
+</header>
+<main class="heim-main">
+<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+<a href="../index.html">Heim</a>
+<span>›</span>
+<span>Graphs</span>
+</nav>
+<article class="heim-content">
+<h1 id="heim-graphs">Heim: Graphs</h1>
+<p>This library provides a common interface to represent and interact with
+      <a href="https://wikipedia.org/wiki/Graph_(discrete_mathematics)">graphs</a>. Inspired directly from the
+      <a href="https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/index.html">Boost Graph Library (BGL)</a>, it focuses on
+      genericity, performance and ease of use, bringing an ideal tool to experts and beginners alike.</p>
+<h2 id="overview">Overview</h2>
+<h3 id="introduction">Introduction</h3>
+<p>In mathematics, graphs are well defined as a pair of two sets: one of its <em>vertices</em> (i.e. nodes, points) and the other
+      of its <em>edges</em> (i.e. arcs, links). In computer science however, many, <em>many</em> different implementations of graphs exist
+      and are used in as many different situations.<br/>
+      Nonetheless, these situations generally demand the same fundamental operations and algorithms from involved graph data
+      structures, independently of how they are implemented. Consequently, to avoid strong coupling to particular
+      implementations and unnecessary code duplication, this library provides a complete generic abstraction for these
+      operations and algorithms.</p>
+<h3 id="graph-interface">Graph interface</h3>
+<p>In order to interact seamlessly with any graph data structure, Heim establishes an interface grounded in theory, to
+      which graph representations can conform independently of their underlying implementation.</p>
+<p>At the core of the interface, a <a href="#traits">small set of customizable traits</a> helps determine the essential
+      characteristics of graph types.<br/>
+      From these traits are established <a href="#primitives">the common primitives</a> through which graphs can be interacted with.
+      These primitives are offered as
+      <a href="https://cppreference.com/cpp/named_req/CustomizationPointObject">customization point objects</a>, allowing types such as
+      a <code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">vector</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">vector</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-builtin-type">int</span><span class="heim-cpp-operator">&gt;&gt;</span></code> and any other graph representation to provide their own implementations of them.</p>
+<p>Since different graph representations provide different capabilities, graph types are not required to support every
+      primitive. They are expected however to support all traits, as these traits are fundamental to their
+      interpretation by the primitives.</p>
+<h4 id="implementations-0">Implementations</h4>
+<p>While the interface is designed to be used with arbitrary graph types, Heim also provides implementations of its own
+      for the most common situations, each one having their own advantages and shortcomings.</p>
+<p><a href="api/interface/implementations/adjacency_list/index.html"><code><span class="heim-cpp-type">adjacency_list</span></code></a> is a general-purpose mutable graph
+      type, suited for representing sparse graphs and for being used in many algorithms.<br/>
+      Additional graph representations are planned to cover different use cases and performance tradeoffs, notably
+      <a href="https://wikipedia.org/wiki/Adjacency_matrix">adjacency matrix</a> and
+      <a href="https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)">compressed sparse row</a>
+      representations.</p>
+<h3 id="graph-algorithms">Graph algorithms</h3>
+<p>Because using graphs often means using their related algorithms, this library offers <a href="#algorithms">many of them</a>, built
+      explicitly on its established interface to ensure maximum reusability. Examples of these algorithms range from
+      traversal and shortest paths algorithms, to topological sorting of graphs or component-related algorithms.</p>
+<p>Since algorithms interact with graphs in different ways, each formulates certain requirements regarding which
+      primitives need to be available on graph types. Thus, any type that makes available the right primitives can be used as
+      a graph type in the corresponding algorithms.</p>
+<h4 id="properties">Properties</h4>
+<p>A lot of the algorithms proposed in this library require additional information to be associated with vertices or
+      edges, such as weights and costs on edges, or colors on vertices.</p>
+<p>Since no assumptions can be made on <em>where</em> or <em>how</em> properties from those objects can be accessed, algorithms make
+      extensive use of the abstractions provided by the <a href="../property/index.html">Properties</a> library. More often than not, the
+      needed properties of vertices and edges live outside the graph instance itself, namely in associative or indexed
+      containers.</p>
+<h4 id="visitors">Visitors</h4>
+<p>In some algorithms, execution can be divided into meaningful events at which additional behavior may be useful to
+      inject. Such customizability is brought in this library by <em>visitors</em>.</p>
+<p>Visitors are objects exposing a different callback for each specific event in a given algorithm. Examples of such
+      events include discovering a vertex or examining an edge in a traversal algorithm, or reacting to the color of a vertex
+      in some color-based algorithms.<br/>
+      They can also help directly impact their algorithm's own execution using specific return values, namely stopping the
+      algorithm when a specific vertex or edge has been encountered, and more.</p>
+<h3 id="in-comparison">In comparison</h3>
+<p>Many graph libraries for C++ exist.<br/>
+      The <a href="https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/index.html">Boost Graph Library (BGL)</a> remains the
+      historical reference for generic graph programming, providing a rich model suited to many representations and concrete
+      situations, but at the cost of a high upfront complexity, making it difficult to approach for beginner and casual
+      users.<br/>
+      Later, <a href="https://lemon.cs.elte.hu/trac/lemon">LEMON</a> appeared as a generic and efficient alternative with an emphasis on
+      network optimization, but as of today, the library has been discontinued and does not compile past C++17.<br/>
+      Also recently <a href="https://fhamonic.github.io/melon/">MELON</a>, while providing an excellent implementation and design, also
+      stepped back on some of the genericity and control that others provide to gain performance and simplicity.<br/>
+      More recently, <a href="https://zigrazor.github.io/CXXGraph/">CXXGraph</a> favors a particularly direct and beginner-friendly
+      object-oriented interface, at the cost of tightly coupling algorithms, properties and graph representations to its own
+      data model.<br/>
+      Lastly, <a href="https://github.com/stdgraph/graph-v3">graph-v3</a>, being developed alongside an ongoing proposal for a standard
+      C++ graph library, simplifies how properties are represented, but keeps the upfront complexity that they add to the
+      algorithms' interface making it difficult to approach.</p>
+<p>Heim aims to provide an elegant way to avoid the main issues of these libraries. By keeping the original genericity of
+      the BGL whilst bringing its interface into a more modern C++, and by offering algorithms with different levels of
+      complexity without hindering performance, Heim caters to both beginners' and experts' needs.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="installation">Installation</h3>
+<p>An installation guide for Heim as a whole can be found directly on the <a href="https://github.com/Alias10294/heim#installation">README</a> or
+      <a href="../index.html#installation">main</a> pages.</p>
+<h3 id="creating-graphs">Creating graphs</h3>
+<p>To create a simple undirected graph, use the <a href="api/interface/implementations/adjacency_list/index.html"><code><span class="heim-cpp-type">adjacency_list</span></code></a>
+      class, along with the interface's primitives to add vertices and edges to it:</p>
+<pre><code><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">;</span>
 
-      <div class="heim-header__actions">
-        <a
-          class="heim-github"
-          data-heim-github-repo="Alias10294/heim"
-          href="https://github.com/Alias10294/heim"
-          aria-label="Heim on GitHub"
-        >
-          <span class="heim-github__label">GitHub</span>
-          <span class="heim-github__stars" aria-label="GitHub stars">
-            <span class="heim-github__star" aria-hidden="true">★</span>
-            <span class="heim-github__count">—</span>
-          </span>
-        </a>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">v0</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">v1</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">v2</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
 
-        <label class="heim-theme">
-          <span class="heim-theme__label">Theme</span>
-          <span class="heim-theme__select">
-            <select id="heim-theme-select" aria-label="Color theme">
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </span>
-        </label>
-      </div>
-    </div>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">_</span>     <span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">_</span>     <span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre>
+<blockquote>
+<p><code><span class="heim-cpp-variable">placed</span></code> contains <code><span class="heim-cpp-literal">true</span></code> if the edge has been placed, <code><span class="heim-cpp-literal">false</span></code> otherwise. This is important when the graph is
+      not a <a href="api/interface/traits/is_multigraph.html"><em>multigraph</em></a>, that is a graph with <em>at most</em> one edge between two
+      given vertices.</p>
+</blockquote>
+<p>Some graph types offer additional functionalities <em>on top</em> of the expected interface, which is only a <em>baseline</em> of
+      what is expected of graph representations. The
+      <a href="api/interface/implementations/adjacency_list/index.html"><code><span class="heim-cpp-type">adjacency_list</span></code></a> class, for example, supports edge list
+      initialization, as well as implicit conversion of vertices to unsigned integers.</p>
+<pre><code><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span></code></pre>
+<h3 id="accessing-graphs">Accessing graphs</h3>
+<p>This library's interface offers many ways to inspect graphs along with their vertices and edges.</p>
+<pre><code><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">vs</span>     <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">vertices</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>     <span class="heim-cpp-comment">// a range of the given graph's vertices</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">es</span>     <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">edges</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>        <span class="heim-cpp-comment">// a range of the given graph's edges</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">oes</span>    <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">out_edges</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-comment">// a range of a given vertex's edges going out of it</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">dg</span>     <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">degree</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>    <span class="heim-cpp-comment">// the number of edges incident with the given vertex</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">u</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">endpoints</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">e</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-comment">// the two vertices of a given edge</span>
+<span class="heim-cpp-comment">// ... and many more ...</span></code></pre>
+<h3 id="using-algorithms">Using algorithms</h3>
+<p>Each algorithm in this library aims to expose its results through a specific result object.</p>
+<pre><code><span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">res</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">breadth_first_search</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">src</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-comment">// special dedicated result object</span>
+<span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">res</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">dst</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">print</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">res</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">path_from</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">dst</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
 
-    <div class="heim-header__bar">
-      <div class="heim-header__bar-inner">
-        <nav class="heim-nav" aria-label="Main navigation">
-          <a href="../index.html">Home</a>
-          <a href="../property/index.html">Properties</a>
-          <a href="../graph/index.html">Graphs</a>
-        </nav>
-      </div>
-    </div>
-  </header>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">topo</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">topological_sort</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-comment">// a view of the vertices in topological order</span></code></pre>
+<p>While each algorithm provides a simple interface, many parameters can be specified for utmost control over the algorithm.</p>
+<h3 id="providing-graph-properties">Providing graph properties</h3>
+<p>Some of the library's algorithms may require vertices and edges to have certain properties, such as colors on vertices,
+      or weights on edges. Consequently, such algorithms make use of the <a href="../property/index.html">Properties</a> library, ensuring
+      that no superficial requirement is made on how and where properties need to be accessed.</p>
+<pre><code><span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">graph_type</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">edge_type</span>  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">edge_t</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
 
-  <main class="heim-main">
-    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
-      <a href="../index.html">Heim</a>
-      <span>›</span>
-      <span>Graphs</span>
-    </nav>
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">get_weight</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">edge_type</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm_0</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-function">get_weight</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
 
-    <article class="heim-content">
-      <h1>Graphs</h1>
+<span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">map</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">edge_type</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-builtin-type">int</span><span class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">m</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm_1</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">m</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
 
-      <section class="heim-placeholder" aria-label="Page status">
-        <p class="heim-placeholder__title">Documentation in progress</p>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">res_0</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">dijkstra</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">src</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">pm_0</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">res_1</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">dijkstra</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">src</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">pm_1</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre>
+<h2 id="code-example">Code Example</h2>
+<pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
 
-        <p>
-          This page has not been documented yet. Its content will be added as the corresponding part of Heim is completed.
-        </p>
-      </section>
-    </article>
-  </main>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">graph_type</span>  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
 
-  <footer class="heim-footer">
-    <div class="heim-footer__inner">
-      <span>Heim C++ Library Documentation</span>
-    </div>
-  </footer>
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-type">graph_type</span> <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed</span><span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e3</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">res</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">breadth_first_search</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">res</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">print</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">res</span><span class="heim-cpp-operator">.</span><span class="heim-cpp-method">path_from</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+<h3 id="output">Output</h3>
+<pre><code>[3, 2, 0]</code></pre>
+<h2 id="api-reference">API Reference</h2>
+<h3 id="algorithms">Algorithms</h3>
+<section aria-label="Algorithms documentation status" class="heim-placeholder">
+<p class="heim-placeholder__title">Documentation in progress</p>
+<p>
+    The algorithms reference is not available yet. It will be added as the corresponding documentation is completed.
+  </p>
+</section>
+<h3 id="interface">Interface</h3>
+<h4 id="traits">Traits</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="api/interface/traits/vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">vertex</span></code></a></td>
+<td>Determines the vertex type of a given graph type</td>
+</tr>
+<tr>
+<td><a href="api/interface/traits/edge.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">edge</span></code></a></td>
+<td>Determines the edge type of a given graph type</td>
+</tr>
+<tr>
+<td><a href="api/interface/traits/is_directed.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">is_directed</span></code></a></td>
+<td>Checks that a graph type represents a directed graph</td>
+</tr>
+<tr>
+<td><a href="api/interface/traits/is_multigraph.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">is_multigraph</span></code></a></td>
+<td>Checks that a graph type represents a multigraph</td>
+</tr>
+</tbody>
+</table>
+<h4 id="primitives">Primitives</h4>
+<h5 id="lookup">Lookup</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="api/interface/primitives/vertices.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">vertices</span></code></a></td>
+<td>Returns a range of a graph's vertices</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/edges.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">edges</span></code></a></td>
+<td>Returns a range of a graph's edges</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/vertex_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">vertex_count</span></code></a><br/><a href="api/interface/primitives/vertex_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">order</span></code></a></td>
+<td>Returns the number of vertices of a graph</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">edge_count</span></code></a><br/><a href="api/interface/primitives/edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">size</span></code></a></td>
+<td>Returns the number of edges of a graph</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/out_edges.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">out_edges</span></code></a></td>
+<td>Returns a range of the edges going out from a vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/in_edges.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_edges</span></code></a></td>
+<td>Returns a range of the edges going into a vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/out_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">out_edge_count</span></code></a><br/><a href="api/interface/primitives/out_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">out_degree</span></code></a></td>
+<td>Returns the number of edges going out from a vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/in_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_edge_count</span></code></a><br/><a href="api/interface/primitives/in_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_degree</span></code></a></td>
+<td>Returns the number of edges going into a vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/total_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">total_edge_count</span></code></a><br/><a href="api/interface/primitives/total_edge_count.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">degree</span></code></a></td>
+<td>Returns the number of edges incident with a vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/source.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">source</span></code></a></td>
+<td>Returns the source vertex of an edge</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/target.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">target</span></code></a></td>
+<td>Returns the target vertex of an edge</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/endpoints.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">endpoints</span></code></a></td>
+<td>Returns the incident vertices of an edge</td>
+</tr>
+</tbody>
+</table>
+<h5 id="modifiers">Modifiers</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="api/interface/primitives/place_vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span></code></a></td>
+<td>Creates a new vertex</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/place_edge.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span></code></a></td>
+<td>Creates a new edge between two vertices</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/remove_vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">remove_vertex</span></code></a></td>
+<td>Removes a vertex and clears its incident edges</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/remove_edge.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">remove_edge</span></code></a></td>
+<td>Removes an edge</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/remove_edges.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">remove_edges</span></code></a></td>
+<td>Removes all edges between two vertices</td>
+</tr>
+<tr>
+<td><a href="api/interface/primitives/clear_vertex.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">clear_vertex</span></code></a></td>
+<td>Removes all edges incident with a given vertex</td>
+</tr>
+</tbody>
+</table>
+<h4 id="implementations-1">Implementations</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="api/interface/implementations/adjacency_list/index.html"><code><span class="heim-cpp-type">adjacency_list</span></code></a></td>
+<td>A general-purpose mutable implementation of a graph</td>
+</tr>
+</tbody>
+</table>
+</article>
+</main>
+<footer class="heim-footer">
+<div class="heim-footer__inner">
+<span>Heim C++ Library Documentation</span>
+</div>
+</footer>
 </body>
 </html>

@@ -1,0 +1,176 @@
+<!doctype html>
+
+<html data-heim-theme="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>adjacency_list - Heim: Graphs</title>
+<link href="../../../../../style.css" rel="stylesheet"/>
+<script defer="" src="../../../../../script.js"></script>
+</head>
+<body>
+<header class="heim-header">
+<div class="heim-header__top">
+<a aria-label="Heim documentation home" class="heim-brand" href="../../../../../index.html">
+<span class="heim-brand__name">Heim</span>
+<span class="heim-brand__subtitle">C++ Library Documentation</span>
+</a>
+<div class="heim-header__actions">
+<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
+<span class="heim-github__label">GitHub</span>
+<span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+</a>
+<label class="heim-theme">
+<span class="heim-theme__label">Theme</span>
+<span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+</label>
+</div>
+</div>
+<div class="heim-header__bar">
+<div class="heim-header__bar-inner">
+<nav aria-label="Main navigation" class="heim-nav">
+<a href="../../../../../index.html">Home</a>
+<a href="../../../../../property/index.html">Properties</a>
+<a href="../../../../index.html">Graphs</a>
+</nav>
+</div>
+</div>
+</header>
+<main class="heim-main">
+<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+<a href="../../../../../index.html">Heim</a><span>›</span>
+<a href="../../../../index.html">Graphs</a><span>›</span>
+<span>adjacency_list</span>
+</nav>
+<article class="heim-content">
+<h1 id="adjacency-list">adjacency_list</h1>
+<h2 id="synopsis">Synopsis</h2>
+<pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+    <span class="heim-cpp-builtin-type">bool</span>        <span class="heim-cpp-template-param">IsDirected</span>    <span class="heim-cpp-operator">=</span> <span class="heim-cpp-literal">false</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-builtin-type">bool</span>        <span class="heim-cpp-template-param">IsMultigraph</span>  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-literal">false</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-builtin-type">bool</span>        <span class="heim-cpp-template-param">IsInIncident</span>  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-literal">true</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-builtin-type">bool</span>        <span class="heim-cpp-template-param">IsOutIncident</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-literal">true</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span>    <span class="heim-cpp-template-param">UInt</span>          <span class="heim-cpp-operator">=</span> <span class="heim-cpp-builtin-type">unsigned</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">size_t</span> <span class="heim-cpp-template-param">PageSize</span>      <span class="heim-cpp-operator">=</span> <span class="heim-cpp-constant">default_page_size_v</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span>    <span class="heim-cpp-template-param">Allocator</span>     <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">allocator</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">UInt</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-keyword">requires</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-concept">unsigned_integral</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">UInt</span><span class="heim-cpp-punctuation">&gt;</span>
+      <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-concept">same_as</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">UInt</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">allocator_traits</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">Allocator</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">value_type</span><span class="heim-cpp-punctuation">&gt;</span>
+      <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-punctuation">(</span><span class="heim-cpp-template-param">IsDirected</span>
+            <span class="heim-cpp-operator">?</span> <span class="heim-cpp-template-param">IsOutIncident</span> <span class="heim-cpp-operator">||</span> <span class="heim-cpp-template-param">IsInIncident</span>
+            <span class="heim-cpp-operator">:</span> <span class="heim-cpp-template-param">IsOutIncident</span> <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-template-param">IsInIncident</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-keyword">class</span> <span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">;</span></code></pre>
+<h2 id="overview">Overview</h2>
+<p><code><span class="heim-cpp-type">adjacency_list</span></code> is a class template implementing the <a href="https://wikipedia.org/wiki/Adjacency_list">adjacency list</a> graph data structure, where each vertex is associated with its incident edges. This layout is particularly suited for general-purpose use, as many algorithms rely on iterating vertices' incident edges.</p>
+<h2 id="template-parameters">Template Parameters</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th><th>Default</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-template-param">IsDirected</span></code></td><td>Set to <code><span class="heim-cpp-literal">true</span></code> if the graph type models a directed graph, <code><span class="heim-cpp-literal">false</span></code> otherwise</td><td><code><span class="heim-cpp-literal">false</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">IsMultigraph</span></code></td><td>Set to <code><span class="heim-cpp-literal">true</span></code> if the graph type models a <a href="https://wikipedia.org/wiki/Multigraph">multigraph</a>, <code><span class="heim-cpp-literal">false</span></code> otherwise</td><td><code><span class="heim-cpp-literal">false</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">IsInIncident</span></code></td><td>Set to <code><span class="heim-cpp-literal">true</span></code> if the graph type keeps track of edges coming in to vertices, <code><span class="heim-cpp-literal">false</span></code> otherwise</td><td><code><span class="heim-cpp-literal">true</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">IsOutIncident</span></code></td><td>Set to <code><span class="heim-cpp-literal">true</span></code> if the graph type keeps track of edges going out from vertices, <code><span class="heim-cpp-literal">false</span></code> otherwise</td><td><code><span class="heim-cpp-literal">true</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">UInt</span></code></td><td>The unsigned integral type used to identify vertices and edges</td><td><code><span class="heim-cpp-builtin-type">unsigned</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">PageSize</span></code></td><td>The size for the internal sparse pages</td><td><a href="../../../../common/sparse/default_page_size.html"><code><span class="heim-cpp-constant">default_page_size_v</span></code></a></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">Allocator</span></code></td><td>The allocator type</td><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">allocator</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">UInt</span><span class="heim-cpp-punctuation">&gt;</span></code></td></tr>
+</tbody>
+</table>
+<h2 id="member-types">Member Types</h2>
+<table>
+<thead><tr><th>Name</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-type">id_type</span></code></td><td><code><span class="heim-cpp-template-param">UInt</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-type">allocator_type</span></code></td><td><code><span class="heim-cpp-template-param">Allocator</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-type">size_type</span></code></td><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">size_t</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-type">vertex_type</span></code></td><td><em>implementation-defined</em>, implicitly constructible from <code><span class="heim-cpp-type">id_type</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-type">edge_type</span></code></td><td><em>implementation-defined</em></td></tr>
+</tbody>
+</table>
+<h2 id="member-constants">Member Constants</h2>
+<table>
+<thead><tr><th>Name</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-constant">is_directed</span></code></td><td><code><span class="heim-cpp-template-param">IsDirected</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-constant">is_multigraph</span></code></td><td><code><span class="heim-cpp-template-param">IsMultigraph</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-constant">is_in_incident</span></code></td><td><code><span class="heim-cpp-template-param">IsInIncident</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-constant">is_out_incident</span></code></td><td><code><span class="heim-cpp-template-param">IsOutIncident</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-constant">page_size</span></code></td><td><code><span class="heim-cpp-template-param">PageSize</span></code></td></tr>
+</tbody>
+</table>
+<h2 id="member-functions">Member Functions</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="constructor.html">(constructor)</a></td><td>Constructs the <code><span class="heim-cpp-type">adjacency_list</span></code></td></tr>
+<tr><td>(destructor) <em>(implicitly declared)</em></td><td>Destroys the <code><span class="heim-cpp-type">adjacency_list</span></code></td></tr>
+<tr><td><a href="assignment.html"><code><span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">=</span></code></a></td><td>Assigns new contents to the <code><span class="heim-cpp-type">adjacency_list</span></code></td></tr>
+<tr><td><a href="swap.html"><code><span class="heim-cpp-method">swap</span></code></a></td><td>Exchanges the contents of two <code><span class="heim-cpp-type">adjacency_list</span></code> objects</td></tr>
+<tr><td><a href="get_allocator.html"><code><span class="heim-cpp-method">get_allocator</span></code></a></td><td>Returns the associated allocator</td></tr>
+</tbody>
+</table>
+<h3 id="lookup">Lookup</h3>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="vertices.html"><code><span class="heim-cpp-method">vertices</span></code></a></td><td>Returns a range of the vertices</td></tr>
+<tr><td><a href="edges.html"><code><span class="heim-cpp-method">edges</span></code></a></td><td>Returns a range of the edges</td></tr>
+<tr><td><a href="vertex_count.html"><code><span class="heim-cpp-method">vertex_count</span></code></a></td><td>Returns the number of vertices</td></tr>
+<tr><td><a href="edge_count.html"><code><span class="heim-cpp-method">edge_count</span></code></a></td><td>Returns the number of edges</td></tr>
+<tr><td><a href="out_edges.html"><code><span class="heim-cpp-method">out_edges</span></code></a></td><td>Returns a range of the edges going out from a vertex</td></tr>
+<tr><td><a href="in_edges.html"><code><span class="heim-cpp-method">in_edges</span></code></a></td><td>Returns a range of the edges going into a vertex</td></tr>
+<tr><td><a href="out_edge_count.html"><code><span class="heim-cpp-method">out_edge_count</span></code></a></td><td>Returns the number of edges going out from a vertex</td></tr>
+<tr><td><a href="in_edge_count.html"><code><span class="heim-cpp-method">in_edge_count</span></code></a></td><td>Returns the number of edges going into a vertex</td></tr>
+<tr><td><a href="total_edge_count.html"><code><span class="heim-cpp-method">total_edge_count</span></code></a></td><td>Returns the number of edges incident with a vertex</td></tr>
+<tr><td><a href="source.html"><code><span class="heim-cpp-method">source</span></code></a></td><td>Returns the source vertex of an edge</td></tr>
+<tr><td><a href="target.html"><code><span class="heim-cpp-method">target</span></code></a></td><td>Returns the target vertex of an edge</td></tr>
+<tr><td><a href="endpoints.html"><code><span class="heim-cpp-method">endpoints</span></code></a></td><td>Returns the incident vertices of an edge</td></tr>
+</tbody>
+</table>
+<h3 id="modifiers">Modifiers</h3>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="place_vertex.html"><code><span class="heim-cpp-method">place_vertex</span></code></a></td><td>Creates a new vertex</td></tr>
+<tr><td><a href="place_edge.html"><code><span class="heim-cpp-method">place_edge</span></code></a></td><td>Creates a new edge between two vertices</td></tr>
+<tr><td><a href="remove_vertex.html"><code><span class="heim-cpp-method">remove_vertex</span></code></a></td><td>Removes a vertex and clears its incident edges</td></tr>
+<tr><td><a href="remove_edge.html"><code><span class="heim-cpp-method">remove_edge</span></code></a></td><td>Removes an edge</td></tr>
+<tr><td><a href="remove_edges.html"><code><span class="heim-cpp-method">remove_edges</span></code></a></td><td>Removes all edges between two vertices</td></tr>
+<tr><td><a href="clear_vertex.html"><code><span class="heim-cpp-method">clear_vertex</span></code></a></td><td>Removes all edges incident with a given vertex</td></tr>
+<tr><td><a href="clear.html"><code><span class="heim-cpp-method">clear</span></code></a></td><td>Removes all vertices and edges</td></tr>
+</tbody>
+</table>
+<h2 id="non-member-functions">Non-member Functions</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="equality.html"><code><span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">==</span></code><br/><code><span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">!=</span></code></a></td><td>Compares two <code><span class="heim-cpp-type">adjacency_list</span></code> objects</td></tr>
+</tbody>
+</table>
+<h2 id="helper-classes">Helper Classes</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">hash</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span class="heim-cpp-punctuation">&gt;</span></code></td><td>Hash support for vertices</td></tr>
+<tr><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">hash</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">edge_type</span><span class="heim-cpp-punctuation">&gt;</span></code></td><td>Hash support for edges</td></tr>
+<tr><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">formatter</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span class="heim-cpp-punctuation">&gt;</span></code></td><td>Formatting support for vertices</td></tr>
+<tr><td><code><span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">formatter</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">edge_type</span><span class="heim-cpp-punctuation">&gt;</span></code></td><td>Formatting support for edges</td></tr>
+</tbody>
+</table>
+</article>
+</main>
+<footer class="heim-footer">
+<div class="heim-footer__inner">
+<span>Heim C++ Library Documentation</span>
+</div>
+</footer>
+</body>
+</html>

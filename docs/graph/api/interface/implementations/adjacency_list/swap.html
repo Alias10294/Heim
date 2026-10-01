@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-heim-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>adjacency_list::swap - Heim: Graphs</title>
+
+  <link rel="stylesheet" href="../style.css">
+  <script src="../script.js" defer></script>
+</head>
+
+<body>
+  <header class="heim-header">
+    <div class="heim-header__top">
+      <a class="heim-brand" href="../index.html" aria-label="Heim documentation home">
+        <span class="heim-brand__name">Heim</span>
+        <span class="heim-brand__subtitle">C++ Library Documentation</span>
+      </a>
+
+      <div class="heim-header__actions">
+        <a
+          class="heim-github"
+          data-heim-github-repo="Alias10294/heim"
+          href="https://github.com/Alias10294/heim"
+          aria-label="Heim on GitHub"
+        >
+          <span class="heim-github__label">GitHub</span>
+          <span class="heim-github__stars" aria-label="GitHub stars">
+            <span class="heim-github__star" aria-hidden="true">★</span>
+            <span class="heim-github__count">—</span>
+          </span>
+        </a>
+
+        <label class="heim-theme">
+          <span class="heim-theme__label">Theme</span>
+          <span class="heim-theme__select">
+            <select id="heim-theme-select" aria-label="Color theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="heim-header__bar">
+      <div class="heim-header__bar-inner">
+        <nav class="heim-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="../property/index.html">Properties</a>
+          <a href="../graph/index.html">Graphs</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="heim-main">
+    <nav class="heim-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Heim</a>
+      <span>›</span>
+      <a href="../graph/index.html">Graphs</a>
+      <span>›</span>
+      <span>adjacency_list::swap</span>
+    </nav>
+
+    <article class="heim-content">
+      <h1>adjacency_list::swap</h1>
+
+      <h2>Synopsis</h2>
+
+      <pre><code><span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-builtin-type">void</span>
+<span class="heim-cpp-method">swap</span>(<span class="heim-cpp-type">adjacency_list</span> &amp;<span class="heim-cpp-parameter">other</span>);</code></pre>
+
+      <pre><code><span class="heim-cpp-keyword">friend</span> <span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-builtin-type">void</span>
+<span class="heim-cpp-function">swap</span>(<span class="heim-cpp-type">adjacency_list</span> &amp;<span class="heim-cpp-parameter">lhs</span>, <span class="heim-cpp-type">adjacency_list</span> &amp;<span class="heim-cpp-parameter">rhs</span>)
+{ <span class="heim-cpp-parameter">lhs</span>.<span class="heim-cpp-method">swap</span>(<span class="heim-cpp-parameter">rhs</span>); }</code></pre>
+
+      <h2>Overview</h2>
+
+      <p>
+        Exchange the contents of the <code>*this</code> with <code>other</code>.
+      </p>
+
+      <p>
+        Respects the allocator's swap propagation semantics of the standard template library.
+      </p>
+
+      <h2>Parameters</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>other</code></td>
+            <td>The <code>adjacency_list</code> whose contents to swap with <code>*this</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Complexity</h2>
+
+      <p><code>O(1)</code></p>
+
+      <h2>Code Example</h2>
+
+      <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+
+<span class="heim-cpp-keyword">template</span>&lt;<span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span>&gt;
+<span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-function">print_edges</span>(<span class="heim-cpp-template-param">G</span> <span class="heim-cpp-keyword">const</span> &amp;<span class="heim-cpp-parameter">g</span>)
+{
+  <span class="heim-cpp-control-keyword">for</span> (<span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">e</span> : <span class="heim-cpp-parameter">g</span>.<span class="heim-cpp-method">edges</span>())
+    <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">print</span>(<span class="heim-cpp-string">&quot;{} &quot;</span>, <span class="heim-cpp-parameter">g</span>.<span class="heim-cpp-method">endpoints</span>(<span class="heim-cpp-variable">e</span>));
+
+  <span class="heim-cpp-namespace">std</span>::<span class="heim-cpp-function">println</span>();
+}
+
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span>()
+{
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g0</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">1</span>}, {<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">2</span>}, {<span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">2</span>}};
+  <span class="heim-cpp-namespace">heim</span>::<span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g1</span>{{<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">3</span>}, {<span class="heim-cpp-number">0</span>, <span class="heim-cpp-number">1</span>}, {<span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">2</span>}, {<span class="heim-cpp-number">1</span>, <span class="heim-cpp-number">3</span>}};
+
+  <span class="heim-cpp-variable">g0</span>.<span class="heim-cpp-method">swap</span>(<span class="heim-cpp-variable">g1</span>);
+  <span class="heim-cpp-function">print_edges</span>(<span class="heim-cpp-variable">g0</span>);
+  <span class="heim-cpp-function">print_edges</span>(<span class="heim-cpp-variable">g1</span>);
+}</code></pre>
+
+      <h3>Possible output</h3>
+
+      <pre><code>(0, 3), (0, 1), (1, 2), (1, 3)
+(0, 1), (0, 2), (1, 2)</code></pre>
+
+      <h2>See Also</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>(constructor)</code></td>
+            <td>Constructs the <code>adjacency_list</code></td>
+          </tr>
+          <tr>
+            <td><code>operator=</code></td>
+            <td>Assigns new contents to the <code>adjacency_list</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </main>
+
+  <footer class="heim-footer">
+    <div class="heim-footer__inner">
+      <span>Heim C++ Library Documentation</span>
+    </div>
+  </footer>
+</body>
+</html>
