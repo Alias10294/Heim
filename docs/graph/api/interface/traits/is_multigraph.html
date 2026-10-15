@@ -57,18 +57,21 @@
 <article class="heim-content">
 <h1 id="graphs-is_multigraph">graphs::is_multigraph</h1>
 <h2 id="synopsis">Synopsis</h2>
-<pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">is_multigraph</span>
-  <span class="heim-cpp-punctuation">:</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">bool_constant</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">is_multigraph</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+<pre><code><span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">graphs</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">is_multigraph</span>
+    <span class="heim-cpp-punctuation">:</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">bool_constant</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">is_multigraph</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
 
-<span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-builtin-type">bool</span> <span class="heim-cpp-constant">is_multigraph_v</span>
-<span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">is_multigraph</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">value</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span class="heim-cpp-builtin-type">bool</span> <span class="heim-cpp-constant">is_multigraph_v</span>
+  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">is_multigraph</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">value</span><span class="heim-cpp-punctuation">;</span>
 
-<span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-keyword">concept</span> <span class="heim-cpp-concept">multigraph</span>
-<span class="heim-cpp-operator">=</span> <span class="heim-cpp-constant">is_multigraph_v</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span></code></pre>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-keyword">concept</span> <span class="heim-cpp-concept">multigraph</span>
+  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-constant">is_multigraph_v</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
 <h2 id="overview">Overview</h2>
 <p>
         Checks if the given graph type <code><span class="heim-cpp-template-param">G</span></code> describes a multigraph, that is a graph that can have multiple edges

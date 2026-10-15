@@ -1,0 +1,116 @@
+<!doctype html>
+<html data-heim-theme="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>breadth_first_search_result, bfs_result - Heim: Graphs</title>
+<link href="../../../../../style.css" rel="stylesheet"/>
+<script defer="" src="../../../../../script.js"></script>
+</head>
+<body>
+<header class="heim-header">
+<div class="heim-header__top">
+<a aria-label="Heim documentation home" class="heim-brand" href="../../../../../index.html">
+<span class="heim-brand__name">Heim</span>
+<span class="heim-brand__subtitle">C++ Library Documentation</span>
+</a>
+<div class="heim-header__actions">
+<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
+<span class="heim-github__label">GitHub</span>
+<span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+</a>
+<label class="heim-theme">
+<span class="heim-theme__label">Theme</span>
+<span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+</label>
+</div>
+</div>
+<div class="heim-header__bar">
+<div class="heim-header__bar-inner">
+<nav aria-label="Main navigation" class="heim-nav">
+<a href="../../../../../index.html">Home</a>
+<a href="../../../../../property/index.html">Properties</a>
+<a href="../../../../index.html">Graphs</a>
+</nav>
+</div>
+</div>
+</header>
+<main class="heim-main">
+<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+<a href="../../../../../index.html">Heim</a><span>›</span>
+<a href="../../../../index.html">Graphs</a><span>›</span>
+<span>breadth_first_search_result, bfs_result</span>
+</nav>
+<article class="heim-content"><h1 id="breadth-first-search-result">graphs::breadth_first_search_result, graphs::bfs_result</h1>
+<h2 id="synopsis">Synopsis</h2>
+<pre><code><span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">graphs</span> 
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">LMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">TMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-keyword">class</span> <span class="heim-cpp-type">breadth_first_search_result</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">LMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">TMap</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">bfs_result</span>
+  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-type">breadth_first_search_result</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-template-param">PMap</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-template-param">LMap</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-template-param">TMap</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+<h2 id="overview">Overview</h2>
+<p><code><span class="heim-cpp-type">breadth_first_search_result</span></code> is a class template providing a result interface to the <a href="../search.html"><code><span class="heim-cpp-function">breadth_first_search</span></code></a> algorithm.</p>
+<h2 id="template-parameters">Template Parameters</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th><th>Default</th></tr></thead>
+<tbody>
+<tr><td><code><span class="heim-cpp-template-param">G</span></code></td><td>The related graph type</td><td></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">PMap</span></code></td><td>The property map type used to record reached vertices' predecessor</td><td><code><span class="heim-cpp-type">default_property_map_t</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">LMap</span></code></td><td>The property map type used to record reached vertices' distance to their nearest root vertex</td><td><code><span class="heim-cpp-type">default_property_map_t</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-template-param">TMap</span></code></td><td>The property map type used to record reached vertices' order</td><td><code><span class="heim-cpp-type">default_property_map_t</span></code></td></tr>
+</tbody>
+</table>
+<h2 id="member-functions">Member Functions</h2>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="constructor.html">(constructor)</a></td><td>Constructs the <code><span class="heim-cpp-type">breadth_first_search_result</span></code></td></tr>
+<tr><td>(destructor) <em>(implicitly declared)</em></td><td>Destroys the <code><span class="heim-cpp-type">breadth_first_search_result</span></code></td></tr>
+<tr><td><code><span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-operator">=</span></code> <em>(implicitly declared)</em></td><td>Assigns new contents to the <code><span class="heim-cpp-type">breadth_first_search_result</span></code></td></tr>
+</tbody>
+</table>
+<h3 id="lookup">Lookup</h3>
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><a href="predecessor_map.html"><code><span class="heim-cpp-method">predecessor_map</span></code></a></td><td>Returns the deduced property map for vertices' predecessor</td></tr>
+<tr><td><a href="level_map.html"><code><span class="heim-cpp-method">level_map</span></code></a></td><td>Returns the deduced property map for vertices' distance to root vertices</td></tr>
+<tr><td><a href="discovery_time_map.html"><code><span class="heim-cpp-method">discovery_time_map</span></code></a></td><td>Returns the deduced property map for vertices' discovery order</td></tr>
+<tr><td><a href="reached.html"><code><span class="heim-cpp-method">reached</span></code></a></td><td>Checks if a vertex has been discovered</td></tr>
+<tr><td><a href="predecessor_of.html"><code><span class="heim-cpp-method">predecessor_of</span></code></a></td><td>Returns the predecessor of a vertex</td></tr>
+<tr><td><a href="level_of.html"><code><span class="heim-cpp-method">level_of</span></code></a></td><td>Returns the distance to root vertices of a vertex</td></tr>
+<tr><td><a href="discovery_time_of.html"><code><span class="heim-cpp-method">discovery_time_of</span></code></a></td><td>Returns the discovery order of a vertex</td></tr>
+<tr><td><a href="path_from.html"><code><span class="heim-cpp-method">path_from</span></code></a></td><td>Returns a range of the path from a vertex to its nearest root vertex</td></tr>
+</tbody>
+</table>
+</article>
+</main>
+<footer class="heim-footer">
+<div class="heim-footer__inner">
+<span>Heim C++ Library Documentation</span>
+</div>
+</footer>
+</body>
+</html>

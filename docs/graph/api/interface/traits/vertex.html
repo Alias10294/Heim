@@ -57,14 +57,17 @@
 <article class="heim-content">
 <h1 id="graphs-vertex">graphs::vertex</h1>
 <h2 id="synopsis">Synopsis</h2>
-<pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">vertex</span>
-  <span class="heim-cpp-punctuation">:</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">type_identity</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">vertex_type</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+<pre><code><span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">graphs</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">vertex</span>
+    <span class="heim-cpp-punctuation">:</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">type_identity</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">vertex_type</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
 
-<span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
-<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">vertex_t</span>
-<span class="heim-cpp-operator">=</span> <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-type">vertex</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">type</span><span class="heim-cpp-punctuation">;</span></code></pre>
+  <span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span>
+  <span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">vertex_t</span>
+  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-type">vertex</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-member">type</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
 <h2 id="overview">Overview</h2>
 <p>
         Specifies the vertex type of the given graph type <code><span class="heim-cpp-template-param">G</span></code>.

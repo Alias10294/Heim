@@ -43,79 +43,79 @@ static void test_001()
   auto const bfs_to_path{bfs_to_res.path()};
 
   std::println("breadth_first_search_to");
-  std::println("  v3 reached ? {}", bfs_to_ok);
 
+  std::println("  v3 reached ? {}", bfs_to_ok);
   std::print  ("  path from v3:");
   for (vertex_type v : bfs_to_path)
     std::print(" {}", v);
   std::println();
 
-  // depth_first_search
-  auto const dfs_res {heim::graphs::depth_first_search(g, v0)};
-  bool const dfs_ok  {dfs_res.reached(v3)};
-  auto const dfs_path{dfs_res.path_from(v3)};
+  // // depth_first_search
+  // auto const dfs_res {heim::graphs::depth_first_search(g, v0)};
+  // bool const dfs_ok  {dfs_res.reached(v3)};
+  // auto const dfs_path{dfs_res.path_from(v3)};
+  //
+  // std::println("depth_first_search");
+  //
+  // std::println("  v3 reached ? {}", dfs_ok);
+  // std::print  ("  path from v3:");
+  // for (vertex_type v : dfs_path)
+  //   std::print(" {}", v);
+  // std::println();
+  //
+  // // depth_first_search_to
+  // auto const dfs_to_res {heim::graphs::depth_first_search_to(g, v0, v3)};
+  // bool const dfs_to_ok  {dfs_to_res.reached()};
+  // auto const dfs_to_path{dfs_to_res.path()};
+  //
+  // std::println("depth_first_search_to");
+  //
+  // std::println("  v3 reached ? {}", dfs_to_ok);
+  // std::print  ("  path from v3:");
+  // for (vertex_type v : dfs_to_path)
+  //   std::print(" {}", v);
+  // std::println();
+  //
+  // // dijkstra
+  // auto const dij_res {heim::graphs::dijkstra(g, v0, heim::make_readable_property_map(w))};
+  // bool const dij_ok  {dij_res.reached(v3)};
+  // auto const dij_path{dij_res.path_from(v3)};
+  //
+  // std::println("dijkstra");
+  //
+  // std::println("  v3 reached ? {}", dij_ok);
+  // std::print  ("  path from v3:");
+  // for (vertex_type v : dij_path)
+  //   std::print(" {}", v);
+  // std::println();
+  //
+  // std::println("  distances:");
+  // for (vertex_type v : heim::graphs::vertices(g))
+  //   std::println("    distance to v{} = {}", v, dij_res.distance_to(v));
+  //
+  // // dijkstra_to
+  // auto const dij_to_res {heim::graphs::dijkstra_to(g, v0, v3, heim::make_readable_property_map(w))};
+  // bool const dij_to_ok  {dij_to_res.reached()};
+  // auto const dij_to_path{dij_to_res.path()};
+  //
+  // std::println("dijkstra_to");
+  //
+  // std::println("  v3 reached ? {}", dij_to_ok);
+  // std::print  ("  path from v3:");
+  // for (vertex_type v : dij_to_path)
+  //   std::print(" {}", v);
+  // std::println();
+  // std::println("  distance to v3 = {}", dij_to_res.distance());
+  //
+  //
+  // // connected_components
+  // auto const cc_res{heim::graphs::connected_components(g)};
+  //
+  // std::println("connected_components");
+  // std::println("  graph connected ? {}"    , cc_res.connected());
+  // std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
 
-  std::println("depth_first_search");
-  std::println("  v3 reached ? {}", dfs_ok);
-
-  std::print  ("  path from v3:");
-  for (vertex_type v : dfs_path)
-    std::print(" {}", v);
-  std::println();
-
-  // depth_first_search_to
-  auto const dfs_to_res {heim::graphs::depth_first_search_to(g, v0, v3)};
-  bool const dfs_to_ok  {dfs_to_res.reached()};
-  auto const dfs_to_path{dfs_to_res.path()};
-
-  std::println("depth_first_search_to");
-  std::println("  v3 reached ? {}", dfs_to_ok);
-
-  std::print  ("  path from v3:");
-  for (vertex_type v : dfs_to_path)
-    std::print(" {}", v);
-  std::println();
-
-  // dijkstra
-  auto const dij_res {heim::graphs::dijkstra(g, v0, heim::make_readable_property_map(w))};
-  bool const dij_ok  {dij_res.reached(v3)};
-  auto const dij_path{dij_res.path_from(v3)};
-
-  std::println("dijkstra");
-  std::println("  v3 reached ? {}", dij_ok);
-
-  std::print  ("  path from v3:");
-  for (vertex_type v : dij_path)
-    std::print(" {}", v);
-  std::println();
-
-  std::println("  distances:");
-  for (vertex_type v : heim::graphs::vertices(g))
-    std::println("    distance to v{} = {}", v, dij_res.distance_to(v));
-
-  // dijkstra_to
-  auto const dij_to_res {heim::graphs::dijkstra_to(g, v0, v3, heim::make_readable_property_map(w))};
-  bool const dij_to_ok  {dij_to_res.reached()};
-  auto const dij_to_path{dij_to_res.path()};
-
-  std::println("dijkstra_to");
-  std::println("  v3 reached ? {}", dij_to_ok);
-
-  std::print  ("  path from v3:");
-  for (vertex_type v : dij_to_path)
-    std::print(" {}", v);
-  std::println();
-  std::println("  distance to v3 = {}", dij_to_res.distance());
-
-
-  // connected_components
-  auto const cc_res{heim::graphs::connected_components(g)};
-
-  std::println("connected_components");
-  std::println("  graph connected ? {}"    , cc_res.connected());
-  std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
-
-  // topological_sort
+  // // topological_sort
   // auto const topo{heim::graphs::topological_sort(g)};
   //
   // std::println("topological_sort");
@@ -125,6 +125,7 @@ static void test_001()
   //   std::print(" {}", v);
   // std::println();
 }
+
 
 static void test_graph()
 {
@@ -142,11 +143,15 @@ static void test_graph()
 
   heim::adjacency_list g{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
 
-  auto const bfs{heim::graphs::breadth_first_search(g, 0)};
+  // heim::graphs::bfs_result const res{heim::graphs::breadth_first_search(g, std::array{0, 1})};
+  //
+  // for (auto v : res.path_from(3))
+  //   std::cout << v << ' '; // 3 2 0
 
-  for (auto v : bfs.path_from(3))
-    std::cout << v << ' '; // 3 2 0
+  auto res{heim::graphs::bfs_to(g, 0, 3)};
+  std::print("{}", static_cast<unsigned>(res.destination()) == 3);
 }
+
 
 namespace { struct entity { int hp; }; }
 
@@ -192,4 +197,4 @@ using s4 = s0::sort     <compare>;            // char, short, int, int, long, lo
 
 
 int main()
-{ test_001(); }
+{ test_graph(); }

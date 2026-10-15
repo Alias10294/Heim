@@ -44,15 +44,17 @@ public:
     };
 
   private:
-    PredecessorMap *m_p;
-    value_type      m_v;
-    bool            m_ended;
+    PredecessorMap m_p;
+    value_type     m_v;
+    bool           m_ended;
 
   private:
     constexpr
-    iterator(PredecessorMap *p, value_type v)
+    iterator(PredecessorMap p, value_type v, bool ended)
     requires std::move_constructible<value_type>
-      : m_p{p}, m_v{std::move(v)}, m_ended{p == nullptr}
+      : m_p    {std::move(p    )}
+      , m_v    {std::move(v    )}
+      , m_ended{std::move(ended)}
     { }
 
   public:
@@ -92,7 +94,7 @@ public:
      && std::constructible_from <value_type, properties::readable_map_result_t<PredecessorMap &, value_type &>>
      && std::equality_comparable<value_type>
     {
-      value_type next{properties::get(*this->m_p, this->m_v)};
+      value_type next{properties::get(this->m_p, this->m_v)};
 
       if (this->m_v == next)
         this->m_ended = true;
@@ -109,24 +111,19 @@ public:
   };
 
 private:
-  PredecessorMap *m_p;
-  Vertex          m_v;
+  PredecessorMap m_p;
+  Vertex         m_v;
 
 public:
   constexpr
   predecessor_view()
-    : m_p{}, m_v{}
-  { }
+  = default;
 
   constexpr
-  predecessor_view(PredecessorMap *p, Vertex v)
+  predecessor_view(PredecessorMap p, Vertex v)
   requires std::move_constructible<Vertex>
-    : m_p{p}, m_v{std::move(v)}
-  { }
-
-  constexpr
-  predecessor_view(PredecessorMap &p, Vertex v)
-    : predecessor_view{std::addressof(p), std::move(v)}
+    : m_p{std::move(p)}
+    , m_v{std::move(v)}
   { }
 
 
@@ -134,7 +131,12 @@ public:
   iterator
   begin() const
   requires std::copyable<Vertex>
-  { return iterator{m_p, m_v}; }
+  {
+    return iterator{
+        this->m_p,
+        this->m_v,
+        properties::get(this->m_p, this->m_v) == this->m_v};
+  }
 
   [[nodiscard]] constexpr
   std::default_sentinel_t

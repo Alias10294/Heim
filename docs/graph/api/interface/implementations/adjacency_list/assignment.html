@@ -54,7 +54,7 @@
 <span>›</span>
 <a href="index.html">adjacency_list</a>
 <span>›</span>
-<span>adjacency_list::operator=</span>
+<span>operator=</span>
 </nav>
 <article class="heim-content">
 <h1 id="adjacency-list-operator-assignment">adjacency_list::operator=</h1>
@@ -103,9 +103,9 @@
 </span><span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">()</span>
 <span class="heim-cpp-punctuation">{</span>
 <span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">other</span><span class="heim-cpp-punctuation">{{</span><span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">}, {</span><span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">}}</span><span class="heim-cpp-punctuation">;</span>
-<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g0</span><span class="heim-cpp-punctuation">{};</span>
-<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g1</span><span class="heim-cpp-punctuation">{};</span>
-<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g2</span><span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g0</span>   <span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g1</span>   <span class="heim-cpp-punctuation">{};</span>
+<span class="heim-cpp-whitespace">  </span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span class="heim-cpp-variable">g2</span>   <span class="heim-cpp-punctuation">{};</span>
 <span class="heim-cpp-whitespace">
   </span><span class="heim-cpp-variable">g0</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-variable">other</span><span class="heim-cpp-punctuation">;</span>                            <span class="heim-cpp-comment">// copy assignment</span>
 <span class="heim-cpp-whitespace">  </span><span class="heim-cpp-variable">g1</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">move</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g0</span><span class="heim-cpp-punctuation">);</span>                    <span class="heim-cpp-comment">// move assignment</span>

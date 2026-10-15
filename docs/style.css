@@ -24,6 +24,9 @@
   --heim-inline-code-border: #d8dee4;
   --heim-code-text: #1f2328;
 
+  /* Pseudocode — visitor event flow */
+  --heim-pseudocode-event-color: #59636e;
+
   /* Language */
   --heim-cpp-keyword: #cf222e;
   --heim-cpp-control-keyword: #cf222e;
@@ -94,6 +97,9 @@ html[data-heim-theme="dark"] {
   --heim-inline-code-bg: #161b22;
   --heim-inline-code-border: #30363d;
   --heim-code-text: #e6edf3;
+
+  /* Pseudocode — visitor event flow */
+  --heim-pseudocode-event-color: #8b949e;
 
   /* Language */
   --heim-cpp-keyword: #ff7b72;
@@ -857,4 +863,52 @@ ol > li::marker {
 .heim-placeholder p:last-child {
   margin: 0;
   color: var(--heim-text-soft);
+}
+
+/* Visitor event reference
+ *
+ * Event cards share Heim's existing neutral surfaces and typography.
+ * A single-column grid preserves the order in which the events are documented.
+ * No new palette variables or C++ token classes are required.
+ */
+.heim-event-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 12px 0 24px;
+}
+
+.heim-event {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid var(--heim-border);
+  border-radius: 6px;
+  background: var(--heim-bg);
+}
+
+.heim-content .heim-event h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.heim-content .heim-event h4 code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.94em;
+}
+
+.heim-content .heim-event p {
+  margin: 0 0 8px;
+}
+
+.heim-content .heim-event p:last-child {
+  margin-bottom: 0;
+}
+
+/* Pseudocode: visitor events and their control-flow branches. */
+.heim-pseudocode-event {
+  color: var(--heim-pseudocode-event-color);
 }

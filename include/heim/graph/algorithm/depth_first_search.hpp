@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <ranges>

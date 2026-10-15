@@ -104,7 +104,7 @@
       containers.</p>
 <h4 id="visitors">Visitors</h4>
 <p>In some algorithms, execution can be divided into meaningful events at which additional behavior may be useful to
-      inject. Such customizability is brought in this library by <em>visitors</em>.</p>
+      inject. Such customizability is brought in this library by <a href="visitors.html">visitors</a>.</p>
 <p>Visitors are objects exposing a different callback for each specific event in a given algorithm. Examples of such
       events include discovering a vertex or examining an edge in a traversal algorithm, or reacting to the color of a vertex
       in some color-based algorithms.<br/>
@@ -113,9 +113,8 @@
 <h3 id="in-comparison">In comparison</h3>
 <p>Many graph libraries for C++ exist.<br/>
       The <a href="https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/index.html">Boost Graph Library (BGL)</a> remains the
-      historical reference for generic graph programming, providing a rich model suited to many representations and concrete
-      situations, but at the cost of a high upfront complexity, making it difficult to approach for beginner and casual
-      users.<br/>
+      historical reference for generic graph programming, providing a rich model suited to many representations and situations, but at
+      the cost of a high upfront complexity, making it difficult to approach for beginner and casual users.<br/>
       Later, <a href="https://lemon.cs.elte.hu/trac/lemon">LEMON</a> appeared as a generic and efficient alternative with an emphasis on
       network optimization, but as of today, the library has been discontinued and does not compile past C++17.<br/>
       Also recently <a href="https://fhamonic.github.io/melon/">MELON</a>, while providing an excellent implementation and design, also
@@ -215,12 +214,57 @@
 <pre><code>[3, 2, 0]</code></pre>
 <h2 id="api-reference">API Reference</h2>
 <h3 id="algorithms">Algorithms</h3>
-<section aria-label="Algorithms documentation status" class="heim-placeholder">
-<p class="heim-placeholder__title">Documentation in progress</p>
-<p>
-    The algorithms reference is not available yet. It will be added as the corresponding documentation is completed.
-  </p>
-</section>
+<h4 id="traversal">Traversal</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="api/algorithm/breadth_first/search.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">breadth_first_search</span></code></a><br/>
+<a href="api/algorithm/breadth_first/search.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">bfs</span></code></a>
+</td>
+    <td>Performs the classic <a href="https://wikipedia.org/wiki/Breadth-first_search">breadth-first search algorithm</a> on a graph</td>
+</tr>
+<tr>
+<td>
+<a href="api/algorithm/breadth_first/search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">breadth_first_search_to</span></code></a><br/>
+<a href="api/algorithm/breadth_first/search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">bfs_to</span></code></a>
+</td>
+<td>Performs the classic <a href="https://wikipedia.org/wiki/Breadth-first_search">breadth-first search algorithm</a> on a graph, stopping when a specified vertex is discovered</td>
+</tr>
+<tr>
+<td>
+<a href="api/algorithm/breadth_first/visit.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">breadth_first_visit</span></code></a>
+</td>
+<td>Performs a <a href="https://wikipedia.org/wiki/Breadth-first_search">breadth-first traversal</a> of a graph, exposing events exploitable by a <a href="visitors.html">visitor</a></td>
+</tr>
+<tr>
+    <td>
+        <a href="api/algorithm/depth_first/search.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">depth_first_search</span></code></a><br/>
+        <a href="api/algorithm/depth_first/search.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dfs</span></code></a>
+    </td>
+    <td>Performs the classic <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first search algorithm</a> on a graph</td>
+</tr>
+<tr>
+    <td>
+        <a href="api/algorithm/depth_first/search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">depth_first_search_to</span></code></a><br/>
+        <a href="api/algorithm/depth_first/search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dfs_to</span></code></a>
+    </td>
+    <td>Performs the classic <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first search algorithm</a> on a graph, stopping when a specified vertex is discovered</td>
+</tr>
+<tr>
+    <td>
+        <a href="api/algorithm/depth_first/visit.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">depth_first_visit</span></code></a>
+    </td>
+    <td>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first search algorithm</a> of a graph, exposing events exploitable by a <a href="visitors.html">visitor</a></td>
+</tr>
+</tbody>
+</table>
 <h3 id="interface">Interface</h3>
 <h4 id="traits">Traits</h4>
 <table>
