@@ -181,7 +181,8 @@
         <h3 id="visitor-events">Visitor Events</h3>
         <p>This algorithm lets users customize its execution by letting <a href="../../../visitors.html">visitor</a>
             objects respond to
-            specific events as member functions of said visitor objects.</p><h4 id="visitor-parameters">Parameters</h4>
+            specific events as member functions of said visitor objects.</p>
+        <h4 id="visitor-parameters">Parameters</h4>
         <table>
             <thead>
             <tr>
@@ -204,6 +205,7 @@
             </tr>
             </tbody>
         </table>
+        <h4 id="visitor-event-list">Events</h4>
         <div class="heim-event-list">
             <section class="heim-event"><h4 id="initialize-vertex-g-v"><code><span class="heim-cpp-method">initialize_vertex</span><span
                     class="heim-cpp-punctuation">(</span><span class="heim-cpp-parameter">g</span><span
@@ -463,15 +465,15 @@
                         return false</span>
                 color v in gray
                 <span class="heim-pseudocode-event">emit discover_vertex(G, v) then
-                           if stop then
-                               return false
-                           else if prune then
-                               color v in black
-                               emit finish_vertex(G, v) then
-                                   if stop then
-                                       return false
-                              continue
-</span>                enqueue v
+                    if stop then
+                        return false
+                    else if prune then
+                        color v in black
+                        emit finish_vertex(G, v) then
+                            if stop then
+                                return false
+                        continue</span>
+                enqueue v
             else do
                 <span class="heim-pseudocode-event">emit non_tree_edge(G, e) then
                      if stop then
