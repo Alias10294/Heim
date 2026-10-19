@@ -377,10 +377,10 @@
                 vertices
             </li>
         </ul>
-        <p>These properties can be collected either in a given <a href="search_result_to/index.html"><code><span
+        <p>These properties can be collected either in a given <a href="search_to_result/index.html"><code><span
                 class="heim-cpp-type">breadth_first_search_to_result</span></code></a>
             object <code><span class="heim-cpp-parameter">res</span></code>, or in a returned <a
-                    href="search_result_to/index.html"><code><span
+                    href="search_to_result/index.html"><code><span
                     class="heim-cpp-type">breadth_first_search_to_result</span></code></a> object.</p>
         <h3 id="properties">Properties</h3>
         <p>To function and produce its results, this algorithm manipulates the graph’s elements’ properties using <a
@@ -478,7 +478,7 @@
             </tr>
             <tr>
                 <td><code><span class="heim-cpp-parameter">res</span></code></td>
-                <td>The <a href="search_result_to/index.html"><code><span class="heim-cpp-type">breadth_first_search_to_result</span></code></a>
+                <td>The <a href="search_to_result/index.html"><code><span class="heim-cpp-type">breadth_first_search_to_result</span></code></a>
                     object to
                     populate with the algorithm’s results
                 </td>
@@ -492,7 +492,7 @@
                 <td>The root vertex for the search</td>
             </tr>
             <tr>
-                <td><code><span class="heim-cpp-parameter">dst</span></code></td>
+                <td><code><span class="heim-cpp-parameter">tgt</span></code></td>
                 <td>The target vertex for the search</td>
             </tr>
             <tr>
@@ -550,29 +550,62 @@
                     class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span
                     class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">res</span><span
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">r0</span><span
                     class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span
                     class="heim-cpp-operator">:</span><span class="heim-cpp-operator">:</span><span
                     class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">:</span><span
                     class="heim-cpp-operator">:</span><span
-                    class="heim-cpp-function">breadth_first_search_to</span><span
+                    class="heim-cpp-constant">breadth_first_search_to</span><span
                     class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
                     class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span
                     class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span
                     class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">};</span>
 
   <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span
-                    class="heim-cpp-variable">res</span><span class="heim-cpp-punctuation">.</span><span
+                    class="heim-cpp-variable">r0</span><span class="heim-cpp-punctuation">.</span><span
                     class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span
                     class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span>
     <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">:</span><span
                     class="heim-cpp-operator">:</span><span class="heim-cpp-function">println</span><span
                     class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"</span><span
                     class="heim-cpp-string">{}</span><span class="heim-cpp-string">"</span><span
-                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">res</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r0</span><span
                     class="heim-cpp-punctuation">.</span><span class="heim-cpp-method">path</span><span
                     class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span
                     class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">bfs_to_result</span> <span
+                    class="heim-cpp-variable">r1</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">&gt;</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">bfs_to</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r1</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-namespace">std</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">array</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">;</span>
+
+  <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">r1</span><span class="heim-cpp-punctuation">.</span><span
+                    class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">)</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r1</span><span
+                    class="heim-cpp-punctuation">.</span><span class="heim-cpp-method">path</span><span
+                    class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">;</span>
 <span class="heim-cpp-punctuation">}</span></code></pre>
         <h3 id="possible-output">Possible output</h3>
         <pre><code>[3, 2, 0]

@@ -1,117 +1,190 @@
 <!doctype html>
 <html data-heim-theme="light" lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<meta content="light dark" name="color-scheme"/>
-<title>Visitors - Heim: Graphs</title>
-<link href="../style.css" rel="stylesheet"/>
-<script defer="" src="../script.js"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="light dark" name="color-scheme"/>
+    <title>Visitors - Heim: Graphs</title>
+    <link href="../style.css" rel="stylesheet"/>
+    <script defer="" src="../script.js"></script>
 </head>
 <body>
 <header class="heim-header">
-<div class="heim-header__top">
-<a aria-label="Heim documentation home" class="heim-brand" href="../index.html">
-<span class="heim-brand__name">Heim</span>
-<span class="heim-brand__subtitle">C++ Library Documentation</span>
-</a>
-<div class="heim-header__actions">
-<a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim" href="https://github.com/Alias10294/heim">
-<span class="heim-github__label">GitHub</span>
-<span aria-label="GitHub stars" class="heim-github__stars">
+    <div class="heim-header__top">
+        <a aria-label="Heim documentation home" class="heim-brand" href="../index.html">
+            <span class="heim-brand__name">Heim</span>
+            <span class="heim-brand__subtitle">C++ Library Documentation</span>
+        </a>
+        <div class="heim-header__actions">
+            <a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim"
+               href="https://github.com/Alias10294/heim">
+                <span class="heim-github__label">GitHub</span>
+                <span aria-label="GitHub stars" class="heim-github__stars">
 <span aria-hidden="true" class="heim-github__star">★</span>
 <span class="heim-github__count">—</span>
 </span>
-</a>
-<label class="heim-theme">
-<span class="heim-theme__label">Theme</span>
-<span class="heim-theme__select">
+            </a>
+            <label class="heim-theme">
+                <span class="heim-theme__label">Theme</span>
+                <span class="heim-theme__select">
 <select aria-label="Color theme" id="heim-theme-select">
 <option value="system">System</option>
 <option value="light">Light</option>
 <option value="dark">Dark</option>
 </select>
 </span>
-</label>
-</div>
-</div>
-<div class="heim-header__bar">
-<div class="heim-header__bar-inner">
-<nav aria-label="Main navigation" class="heim-nav">
-<a href="../index.html">Home</a>
-<a href="../property/index.html">Properties</a>
-<a href="index.html">Graphs</a>
-</nav>
-</div>
-</div>
+            </label>
+        </div>
+    </div>
+    <div class="heim-header__bar">
+        <div class="heim-header__bar-inner">
+            <nav aria-label="Main navigation" class="heim-nav">
+                <a href="../index.html">Home</a>
+                <a href="../property/index.html">Properties</a>
+                <a href="index.html">Graphs</a>
+            </nav>
+        </div>
+    </div>
 </header>
 <main class="heim-main">
-<nav aria-label="Breadcrumb" class="heim-breadcrumbs">
-<a href="../index.html">Heim</a><span>›</span>
-<a href="index.html">Graphs</a><span>›</span>
-<span>Visitors</span>
-</nav>
-<article class="heim-content">
-<h1 id="visitors">Visitors</h1>
-<p>In some graph algorithms, execution can be divided into meaningful events at which additional behavior may be useful to inject. Such customizability is brought in this library by <em>visitors</em>.</p>
-<h2 id="overview">Overview</h2>
-<p>Visitors are objects intended to be passed as parameters in graph algorithms to customize their execution. They can be used in many ways, from simple observation or recording of information to alteration of the algorithms' execution.</p>
-<p>Visitor types do not need to inherit from a specific base type. Instead, they only <em>may</em> implement some specific <em>member functions</em> that algorithms will detect and invoke in accordance to their events.</p>
-<h3 id="events">Events</h3>
-<p>Events represents meaningful points in the execution of a graph algorithm, such as discovering a vertex or examining an edge during traversal.</p>
-<p>Graph algorithms that <em>do</em> accept visitors each describe a specific list of events whose names, order <em>and</em> semantics depend solely on the algorithm itself. More specifically, events with the same name can have different semantics.</p>
-<p>Events can be exploited by visitors by implementing the according member functions.</p>
-<pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">some_visitor</span>
+    <nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+        <a href="../index.html">Heim</a><span>›</span>
+        <a href="index.html">Graphs</a><span>›</span>
+        <span>Visitors</span>
+    </nav>
+    <article class="heim-content">
+        <h1 id="visitors">Visitors</h1>
+        <p>In some graph algorithms, execution can be divided into meaningful events at which additional behavior may be
+            useful to inject. Such customizability is brought in this library by <em>visitors</em>.</p>
+        <h2 id="overview">Overview</h2>
+        <p>Visitors are objects intended to be passed as parameters in graph algorithms to customize their execution.
+            They can be used in many ways, from simple observation or recording of information to alteration of the
+            algorithms' execution.</p>
+        <p>Visitor types do not need to inherit from a specific base type. Instead, they only <em>may</em> implement
+            some specific <em>member functions</em> that algorithms will detect and invoke in accordance to their
+            events.</p>
+        <h3 id="events">Events</h3>
+        <p>Events represents meaningful points in the execution of a graph algorithm, such as discovering a vertex or
+            examining an edge during traversal.</p>
+        <p>Graph algorithms that <em>do</em> accept visitors each describe a specific list of events whose names, order
+            <em>and</em> semantics depend solely on the algorithm itself. More specifically, events with the same name
+            can have different semantics.</p>
+        <p>Events can be exploited by visitors by implementing the according member functions.</p>
+        <pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">some_visitor</span>
 <span class="heim-cpp-punctuation">{</span>
-  <span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-method">discover_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">some_graph</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">some_vertex</span> <span class="heim-cpp-parameter">v</span><span class="heim-cpp-punctuation">)</span>
-  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-comment">/* ... do anything ... */</span> <span class="heim-cpp-punctuation">}</span>
+  <span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-method">discover_vertex</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">some_graph</span> <span
+                    class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
+                    class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-type">some_vertex</span> <span class="heim-cpp-parameter">v</span><span
+                    class="heim-cpp-punctuation">)</span>
+  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-comment">/* ... do anything ... */</span> <span
+                    class="heim-cpp-punctuation">}</span>
   
-  <span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-method">examine_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">some_graph</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">some_edge</span> <span class="heim-cpp-parameter">e</span><span class="heim-cpp-punctuation">)</span>
-  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-comment">/* ... do anything ... */</span> <span class="heim-cpp-punctuation">}</span>
+  <span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-method">examine_edge</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">some_graph</span> <span
+                    class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
+                    class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-type">some_edge</span> <span class="heim-cpp-parameter">e</span><span
+                    class="heim-cpp-punctuation">)</span>
+  <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-comment">/* ... do anything ... */</span> <span
+                    class="heim-cpp-punctuation">}</span>
 <span class="heim-cpp-punctuation">}</span></code></pre>
-<h3 id="execution-control">Execution control</h3>
-<p>While events allow injection of behavior amidst a graph algorithm's execution, they can also alter it using specific return values, of the <code><span class="heim-cpp-keyword">enum</span> <span class="heim-cpp-keyword">class</span></code> type <code><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span></code>.</p>
-<pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">some_visitor</span>
+        <h3 id="execution-control">Execution control</h3>
+        <p>While events allow injection of behavior amidst a graph algorithm's execution, they can also alter it using
+            specific return values, of the <code><span class="heim-cpp-keyword">enum</span> <span
+                    class="heim-cpp-keyword">class</span></code> type <code><span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span></code>.</p>
+        <pre><code><span class="heim-cpp-keyword">struct</span> <span class="heim-cpp-type">some_visitor</span>
 <span class="heim-cpp-punctuation">{</span>
-  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span> <span class="heim-cpp-method">examine_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">some_graph</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">some_edge</span> <span class="heim-cpp-parameter">e</span><span class="heim-cpp-punctuation">)</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span> <span
+                    class="heim-cpp-method">examine_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-type">some_graph</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">some_edge</span> <span
+                    class="heim-cpp-parameter">e</span><span class="heim-cpp-punctuation">)</span>
   <span class="heim-cpp-punctuation">{</span>
-    <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span class="heim-cpp-function">should_stop_at_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-parameter">e</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span>
-      <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-enum-member">stop</span><span class="heim-cpp-punctuation">;</span>
+    <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-function">should_stop_at_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-parameter">e</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">)</span>
+      <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-enum-member">stop</span><span
+                    class="heim-cpp-punctuation">;</span>
     <span class="heim-cpp-control-keyword">else</span>
-      <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-enum-member">proceed</span><span class="heim-cpp-punctuation">;</span>
+      <span class="heim-cpp-control-keyword">return</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-enum-member">proceed</span><span
+                    class="heim-cpp-punctuation">;</span>
   <span class="heim-cpp-punctuation">}</span>
 <span class="heim-cpp-punctuation">}</span></code></pre>
-<p>Each visitor may not accept all existing values depending on its meaning, but at most accept four:</p>
-<table>
-<thead>
-<tr><th>Name</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr><td><code><span class="heim-cpp-enum-member">proceed</span></code></td><td>Available in all graph algorithms, and allows the algorithm to continue its normal execution</td></tr>
-<tr><td><code><span class="heim-cpp-enum-member">stop</span></code></td><td>Available also in all graph algorithms, and stops the algorithm using <code><span class="heim-cpp-control-keyword">return</span></code>, leaving its internal state as is</td></tr>
-<tr><td><code><span class="heim-cpp-enum-member">skip</span></code></td><td>Used with some events to avoid treating the current element but continuing the execution</td></tr>
-<tr><td><code><span class="heim-cpp-enum-member">prune</span></code></td><td>Used with some events to skip elements in continuation of the current element but not itself nor others</td></tr>
-</tbody>
-</table>
-<p>Note that using <code><span class="heim-cpp-builtin-type">void</span></code> as an event's return type is equivalent to returning <code><span class="heim-cpp-enum-member">proceed</span></code> from the event.<br/>Also, the precise consequences of <code><span class="heim-cpp-enum-member">skip</span></code> and <code><span class="heim-cpp-enum-member">prune</span></code> in each specific event that accepts these values can still differ depending on the algorithm itself.</p>
-<h2 id="related-algorithms">Related algorithms</h2>
-<table>
-<thead>
-<tr><th>Name</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="api/algorithm/breadth_first/visit.html"><code><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">breadth_first_visit</span></code></a></td>
-<td>Performs a breadth-first traversal of a graph, exposing events exploitable by a <a href="visitors.html">visitor</a>.</td>
-</tr>
-</tbody>
-</table>
-</article>
+        <p>Each event may not accept all existing values depending on its meaning, but at most accept four:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code><span class="heim-cpp-enum-member">proceed</span></code></td>
+                <td>Available with each event, and allows the algorithm to continue its normal execution</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-enum-member">stop</span></code></td>
+                <td>Available with each event, and stops the algorithm using <code><span
+                        class="heim-cpp-control-keyword">return</span></code>, leaving its internal state as is
+                </td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-enum-member">skip</span></code></td>
+                <td>Used with some events to avoid treating the current element but continuing the execution</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-enum-member">prune</span></code></td>
+                <td>Used with some events to skip elements in continuation of the current element but not itself nor
+                    others
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Note that using <code><span class="heim-cpp-builtin-type">void</span></code> as an event's return type is
+            equivalent to returning <code><span class="heim-cpp-enum-member">proceed</span></code> from the event.<br/>Also,
+            the precise consequences of <code><span class="heim-cpp-enum-member">skip</span></code> and <code><span
+                    class="heim-cpp-enum-member">prune</span></code> in each specific event that accepts these values
+            can still differ depending on the algorithm itself.</p>
+        <h2 id="related-algorithms">Related algorithms</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><a href="api/algorithm/breadth_first/visit.html"><code><span
+                        class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">breadth_first_visit</span></code></a></td>
+                <td>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">breadth-first traversal</a> of a
+                    graph, exposing events exploitable by a <a href="visitors.html">visitor</a>.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
 </main>
 <footer class="heim-footer">
-<div class="heim-footer__inner">
-<span>Heim C++ Library Documentation</span>
-</div>
+    <div class="heim-footer__inner">
+        <span>Heim C++ Library Documentation</span>
+    </div>
 </footer>
 </body>
 </html>

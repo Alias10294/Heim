@@ -240,7 +240,7 @@
                                 class="heim-cpp-operator">::</span><span class="heim-cpp-type">visit</span><span
                                 class="heim-cpp-operator">::</span><span class="heim-cpp-enum-member">skip</span></code>
                             is returned, the algorithm ignores <code><span class="heim-cpp-parameter">v</span></code>
-                            entirely and does not discover it.
+                            entirely and does not discover it here.
                         </li>
                     </ul>
                 </div>
@@ -250,7 +250,7 @@
                     class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span
                     class="heim-cpp-parameter">v</span><span class="heim-cpp-punctuation">)</span></code></h4>
                 <p>Invoked when <code><span class="heim-cpp-parameter">v</span></code> is first approached during the
-                    algorithm's traversal.</p>
+                    algorithm's traversal, just after it is colored in gray.</p>
                 <div class="heim-event__responses"><h5 id="discover-vertex-return-values">Return values</h5>
                     <ul>
                         <li>If <code><span class="heim-cpp-namespace">graphs</span><span
@@ -418,7 +418,7 @@
             </section>
         </div>
         <h3 id="pseudocode">Pseudocode</h3>
-        <pre class="heim-pseudocode"><code>with a graph G and root vertices roots do
+        <pre class="heim-pseudocode"><code>breadth_first_visit(G, roots) do
     for each vertex v in G do
         color v in white 
         <span class="heim-pseudocode-event">emit initialize_vertex(G, v) then
@@ -632,7 +632,7 @@
   <span class="heim-cpp-builtin-type">void</span> <span class="heim-cpp-method">discover_vertex</span><span
                     class="heim-cpp-punctuation">(</span><span class="heim-cpp-type">graph_type</span> <span
                     class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
-                    class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-punctuation">,</span> <span
                     class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-parameter">v</span><span
                     class="heim-cpp-punctuation">)</span>
   <span class="heim-cpp-punctuation">{</span> <span class="heim-cpp-namespace">std</span><span
@@ -707,7 +707,7 @@
                 <td><a href="../depth_first/visit.html"><code><span class="heim-cpp-namespace">graphs</span><span
                         class="heim-cpp-operator">::</span><span
                         class="heim-cpp-constant">depth_first_visit</span></code></a></td>
-                <td>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first search algorithm</a>
+                <td>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first traversal</a>
                     of a graph, exposing events exploitable by a <a href="../../../visitors.html">visitor</a></td>
             </tr>
             </tbody>

@@ -50,32 +50,32 @@ static void test_001()
     std::print(" {}", v);
   std::println();
 
-  // // depth_first_search
-  // auto const dfs_res {heim::graphs::depth_first_search(g, v0)};
-  // bool const dfs_ok  {dfs_res.reached(v3)};
-  // auto const dfs_path{dfs_res.path_from(v3)};
-  //
-  // std::println("depth_first_search");
-  //
-  // std::println("  v3 reached ? {}", dfs_ok);
-  // std::print  ("  path from v3:");
-  // for (vertex_type v : dfs_path)
-  //   std::print(" {}", v);
-  // std::println();
-  //
-  // // depth_first_search_to
-  // auto const dfs_to_res {heim::graphs::depth_first_search_to(g, v0, v3)};
-  // bool const dfs_to_ok  {dfs_to_res.reached()};
-  // auto const dfs_to_path{dfs_to_res.path()};
-  //
-  // std::println("depth_first_search_to");
-  //
-  // std::println("  v3 reached ? {}", dfs_to_ok);
-  // std::print  ("  path from v3:");
-  // for (vertex_type v : dfs_to_path)
-  //   std::print(" {}", v);
-  // std::println();
-  //
+  // depth_first_search
+  auto const dfs_res {heim::graphs::depth_first_search(g, v0)};
+  bool const dfs_ok  {dfs_res.reached(v3)};
+  auto const dfs_path{dfs_res.path_from(v3)};
+
+  std::println("depth_first_search");
+
+  std::println("  v3 reached ? {}", dfs_ok);
+  std::print  ("  path from v3:");
+  for (vertex_type v : dfs_path)
+    std::print(" {}", v);
+  std::println();
+
+  // depth_first_search_to
+  auto const dfs_to_res {heim::graphs::depth_first_search_to(g, v0, v3)};
+  bool const dfs_to_ok  {dfs_to_res.reached()};
+  auto const dfs_to_path{dfs_to_res.path()};
+
+  std::println("depth_first_search_to");
+
+  std::println("  v3 reached ? {}", dfs_to_ok);
+  std::print  ("  path from v3:");
+  for (vertex_type v : dfs_to_path)
+    std::print(" {}", v);
+  std::println();
+
   // // dijkstra
   // auto const dij_res {heim::graphs::dijkstra(g, v0, heim::make_readable_property_map(w))};
   // bool const dij_ok  {dij_res.reached(v3)};
@@ -143,13 +143,17 @@ static void test_graph()
 
   heim::adjacency_list g{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
 
-  // heim::graphs::bfs_result const res{heim::graphs::breadth_first_search(g, std::array{0, 1})};
-  //
-  // for (auto v : res.path_from(3))
-  //   std::cout << v << ' '; // 3 2 0
+  auto bfs{heim::graphs::bfs(g, 0)};
+  std::println("{}", bfs.path_from(3));
 
-  auto res{heim::graphs::bfs_to(g, 0, 3)};
-  std::print("{}", static_cast<unsigned>(res.destination()) == 3);
+  auto bfs_to{heim::graphs::bfs_to(g, 0, 3)};
+  std::println("{}", bfs_to.path());
+
+  auto dfs{heim::graphs::dfs(g, 0)};
+  std::println("{}", dfs.path_from(3));
+
+  auto dfs_to{heim::graphs::dfs_to(g, 0, 3)};
+  std::println("{}", dfs_to.path());
 }
 
 

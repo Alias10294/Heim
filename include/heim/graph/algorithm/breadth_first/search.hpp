@@ -4,14 +4,11 @@
 #include <concepts>
 #include <cstddef>
 #include <limits>
-#include <memory>
 #include <queue>
 #include <ranges>
-#include <span>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include "heim/graph/algorithm/color.hpp"
 #include "heim/graph/algorithm/predecessor_view.hpp"
 #include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/graph/interface/primitives.hpp"
@@ -24,6 +21,9 @@ namespace heim::graphs
 {
 namespace detail
 {
+struct bfs_fn;
+
+
 template<
     typename PMap,
     typename LMap,
@@ -49,6 +49,12 @@ public:
     , m_t {std::move(t )}
   { }
 
+
+  template<typename G>
+  constexpr
+  void
+  initialize_vertex(G const &, vertex_t<std::remove_cvref_t<G>> v)
+  { properties::set(this->m_tm, v, std::numeric_limits<std::size_t>::max()); }
 
   template<typename G>
   constexpr
@@ -88,6 +94,8 @@ template<
     typename TMap = default_property_map_t>
 class breadth_first_search_result
 {
+  friend struct detail::bfs_fn;
+
 private:
   using vertex_type
   = vertex_t<std::remove_cvref_t<G>>;
@@ -96,6 +104,22 @@ private:
   detail::result_storage<std::unordered_map<vertex_type, vertex_type>, PMap> m_p_rstorage;
   detail::result_storage<std::unordered_map<vertex_type, std::size_t>, LMap> m_l_rstorage;
   detail::result_storage<std::unordered_map<vertex_type, std::size_t>, TMap> m_t_rstorage;
+
+private:
+  [[nodiscard]] constexpr
+  auto
+  m_predecessor_map() const
+  { return this->m_p_rstorage.property_map(); }
+
+  [[nodiscard]] constexpr
+  auto
+  m_level_map() const
+  { return this->m_l_rstorage.property_map(); }
+
+  [[nodiscard]] constexpr
+  auto
+  m_discovery_time_map() const
+  { return this->m_t_rstorage.property_map(); }
 
 public:
   constexpr
@@ -111,25 +135,9 @@ public:
 
 
   [[nodiscard]] constexpr
-  auto
-  predecessor_map() const
-  { return this->m_p_rstorage.property_map(); }
-
-  [[nodiscard]] constexpr
-  auto
-  level_map() const
-  { return this->m_l_rstorage.property_map(); }
-
-  [[nodiscard]] constexpr
-  auto
-  discovery_time_map() const
-  { return this->m_t_rstorage.property_map(); }
-
-
-  [[nodiscard]] constexpr
   bool
   reached(vertex_type v) const
-  { return properties::get(this->discovery_time_map(), std::move(v)) != std::numeric_limits<std::size_t>::max(); }
+  { return properties::get(this->m_discovery_time_map(), std::move(v)) != std::numeric_limits<std::size_t>::max(); }
 
 
   [[nodiscard]] constexpr
@@ -137,7 +145,7 @@ public:
   predecessor_of(vertex_type v) const
   {
     contract_assert(this->reached(v));
-    return properties::get(this->predecessor_map(), std::move(v));
+    return properties::get(this->m_predecessor_map(), std::move(v));
   }
 
   [[nodiscard]] constexpr
@@ -145,20 +153,20 @@ public:
   level_of(vertex_type v) const
   {
     contract_assert(this->reached(v));
-    return properties::get(this->level_map(), std::move(v));
+    return properties::get(this->m_level_map(), std::move(v));
   }
 
   [[nodiscard]] constexpr
   auto
   discovery_time_of(vertex_type v) const
-  { return properties::get(this->discovery_time_map(), std::move(v)); }
+  { return properties::get(this->m_discovery_time_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
   path_from(vertex_type v) const &
   {
     contract_assert(this->reached(v));
-    return predecessor_view{this->predecessor_map(), std::move(v)};
+    return predecessor_view{this->m_predecessor_map(), std::move(v)};
   }
 
   [[nodiscard]] constexpr
@@ -207,20 +215,13 @@ struct bfs_fn
           std::ranges::range_reference_t<VRange>,
           vertex_t<std::remove_cvref_t<G>>>
   {
-    using vertex_type
-    = vertex_t<std::remove_cvref_t<G>>;
-
-    auto rpm{res.predecessor_map   ()};
-    auto rlm{res.level_map         ()};
-    auto rtm{res.discovery_time_map()};
-
-    for (vertex_type v : vertices(g))
-      properties::set(rtm, v, std::numeric_limits<std::size_t>::max());
-
     breadth_first_visit(
         g,
         std::forward<VRange>(rs),
-        bf_visitor{rpm, rlm, rtm},
+        bf_visitor{
+            res.m_predecessor_map   (),
+            res.m_level_map         (),
+            res.m_discovery_time_map()},
         std::move(cm),
         std::forward<Queue>(q));
   }
@@ -241,10 +242,13 @@ struct bfs_fn
       CMap                             cm = {},
       Queue                          &&q  = {}) const
   {
-    this->operator()(
+    breadth_first_visit(
         g,
-        res,
-        std::span{std::addressof(r), std::size_t{1}},
+        std::views::single(std::move(r)),
+        bf_visitor{
+            res.m_predecessor_map   (),
+            res.m_level_map         (),
+            res.m_discovery_time_map()},
         std::move(cm),
         std::forward<Queue>(q));
   }
@@ -279,7 +283,7 @@ struct bfs_fn
         std::move(lm),
         std::move(tm)};
 
-    this->operator()(
+    (*this)(
         g,
         res,
         std::forward<VRange>(rs),
@@ -306,14 +310,19 @@ struct bfs_fn
       CMap                             cm = {},
       Queue                          &&q  = {}) const
   {
-    return this->operator()(
-        g,
-        std::span{std::addressof(r), std::size_t{1}},
+    bfs_result res{
+        std::in_place_type<G>,
         std::move(pm),
         std::move(lm),
-        std::move(tm),
+        std::move(tm)};
+
+    (*this)(
+        g,
+        res,
+        std::views::single(std::move(r)),
         std::move(cm),
         std::forward<Queue>(q));
+    return res;
   }
 };
 

@@ -16,7 +16,7 @@ template<
     typename PredecessorMap,
     typename Vertex>
 class predecessor_view
-  : std::ranges::view_interface<predecessor_view<PredecessorMap, Vertex>>
+  : public std::ranges::view_interface<predecessor_view<PredecessorMap, Vertex>>
 {
 public:
   class iterator
@@ -25,7 +25,7 @@ public:
 
   public:
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept  = std::forward_iterator_tag;
+    using iterator_concept  = std::input_iterator_tag;
     using difference_type   = std::ptrdiff_t;
     using value_type        = Vertex;
     using reference         = Vertex;
@@ -44,29 +44,31 @@ public:
     };
 
   private:
-    PredecessorMap m_p;
-    value_type     m_v;
-    bool           m_ended;
+    std::optional<std::ranges::single_view<PredecessorMap>> m_pm; // ensures at least std::input_iterator
+    value_type                                              m_v;
+    bool                                                    m_ended;
 
   private:
     constexpr
-    iterator(PredecessorMap p, value_type v, bool ended)
+    iterator(PredecessorMap pm, value_type v, bool ended)
     requires std::move_constructible<value_type>
-      : m_p    {std::move(p    )}
-      , m_v    {std::move(v    )}
+      : m_pm   {std::in_place, std::move(pm)}
+      , m_v    {std::move(v)}
       , m_ended{std::move(ended)}
     { }
 
   public:
     constexpr
     iterator()
-      : m_p{}, m_v{}, m_ended{true}
+      : m_pm   {}
+      , m_v    {}
+      , m_ended{true}
     { }
 
     [[nodiscard]] friend constexpr
     bool
-    operator==(iterator const &, iterator const &)
-    = default;
+    operator==(iterator const &lhs, iterator const &rhs)
+    { return lhs.m_ended == rhs.m_ended && (lhs.m_ended || lhs.m_v == rhs.m_v); }
 
     [[nodiscard]] friend constexpr
     bool
@@ -94,7 +96,7 @@ public:
      && std::constructible_from <value_type, properties::readable_map_result_t<PredecessorMap &, value_type &>>
      && std::equality_comparable<value_type>
     {
-      value_type next{properties::get(this->m_p, this->m_v)};
+      value_type next{properties::get(*this->m_pm->data(), this->m_v)};
 
       if (this->m_v == next)
         this->m_ended = true;
@@ -111,8 +113,8 @@ public:
   };
 
 private:
-  PredecessorMap m_p;
-  Vertex         m_v;
+  std::ranges::single_view<PredecessorMap> m_pm; // ensures std::movable
+  Vertex                                   m_v;
 
 public:
   constexpr
@@ -120,23 +122,17 @@ public:
   = default;
 
   constexpr
-  predecessor_view(PredecessorMap p, Vertex v)
+  predecessor_view(PredecessorMap pm, Vertex v)
   requires std::move_constructible<Vertex>
-    : m_p{std::move(p)}
-    , m_v{std::move(v)}
+    : m_pm{std::move(pm)}
+    , m_v {std::move(v )}
   { }
 
 
   [[nodiscard]] constexpr
   iterator
   begin() const
-  requires std::copyable<Vertex>
-  {
-    return iterator{
-        this->m_p,
-        this->m_v,
-        properties::get(this->m_p, this->m_v) == this->m_v};
-  }
+  { return iterator{*this->m_pm.data(), this->m_v, false}; }
 
   [[nodiscard]] constexpr
   std::default_sentinel_t
@@ -145,17 +141,5 @@ public:
 };
 
 } // namespace heim::graphs
-
-
-namespace std::ranges
-{
-template<
-    typename PredecessorMap,
-    typename Vertex>
-inline constexpr bool
-enable_borrowed_range<heim::graphs::predecessor_view<PredecessorMap, Vertex>>
-= true;
-
-} // namespace std::ranges
 
 #endif // HEIM_GRAPH_ALGORITHM_PREDECESSOR_VIEW_HPP

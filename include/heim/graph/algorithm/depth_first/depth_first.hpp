@@ -1,0 +1,8 @@
+#ifndef HEIM_GRAPH_ALGORITHM_DEPTH_FIRST_DEPTH_FIRST_HPP
+#define HEIM_GRAPH_ALGORITHM_DEPTH_FIRST_DEPTH_FIRST_HPP
+
+#include "search.hpp"
+#include "search_to.hpp"
+#include "visit.hpp"
+
+#endif // HEIM_GRAPH_ALGORITHM_DEPTH_FIRST_DEPTH_FIRST_HPP

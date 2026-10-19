@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
-#include <inplace_vector>
+#include <format>
 #include <functional>
 #include <memory>
+#include <ostream>
 #include <ranges>
 #include <scoped_allocator>
 #include <tuple>
@@ -1144,30 +1145,27 @@ struct hash<heim::detail::adjacency_list_edge<Graph, UInt>>
 
 template<typename Graph, typename UInt>
 struct formatter<heim::detail::adjacency_list_vertex<Graph, UInt>>
+  : formatter<UInt>
 {
-  constexpr
+  template<typename FormatContext>
   auto
-  parse(format_parse_context &ctx) const
-  { return ctx.begin(); }
-
-  constexpr
-  auto
-  format(heim::detail::adjacency_list_vertex<Graph, UInt> const &v, format_context &ctx) const
-  { return format_to(ctx.out(), "{}", v.id()); }
+  format(
+      heim::detail::adjacency_list_vertex<Graph, UInt> const &v,
+      FormatContext                                          &ctx) const
+  { return formatter<UInt>::format(v.id(), ctx); }
 };
 
 template<typename Graph, typename UInt>
 struct formatter<heim::detail::adjacency_list_edge<Graph, UInt>>
+  : formatter<UInt>
 {
+  template<typename FormatContext>
   constexpr
   auto
-  parse(format_parse_context &ctx) const
-  { return ctx.begin(); }
-
-  constexpr
-  auto
-  format(heim::detail::adjacency_list_edge<Graph, UInt> const &e, format_context &ctx) const
-  { return format_to(ctx.out(), "{}", e.id()); }
+  format(
+      heim::detail::adjacency_list_edge<Graph, UInt> const &e,
+      FormatContext                                        &ctx) const
+  { return formatter<UInt>::format(e.id(), ctx); }
 };
 
 } // namespace std

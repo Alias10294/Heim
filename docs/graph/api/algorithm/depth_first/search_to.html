@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html data-heim-theme="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="light dark" name="color-scheme"/>
+    <title>depth_first_search_to, dfs_to_to - Heim: Graphs</title>
+    <link href="../../../../style.css" rel="stylesheet"/>
+    <script defer="" src="../../../../script.js"></script>
+</head>
+<body>
+<header class="heim-header">
+    <div class="heim-header__top">
+        <a aria-label="Heim documentation home" class="heim-brand" href="../../../../index.html">
+            <span class="heim-brand__name">Heim</span>
+            <span class="heim-brand__subtitle">C++ Library Documentation</span>
+        </a>
+        <div class="heim-header__actions">
+            <a aria-label="Heim on GitHub" class="heim-github" data-heim-github-repo="Alias10294/heim"
+               href="https://github.com/Alias10294/heim">
+                <span class="heim-github__label">GitHub</span>
+                <span aria-label="GitHub stars" class="heim-github__stars">
+<span aria-hidden="true" class="heim-github__star">★</span>
+<span class="heim-github__count">—</span>
+</span>
+            </a>
+            <label class="heim-theme">
+                <span class="heim-theme__label">Theme</span>
+                <span class="heim-theme__select">
+<select aria-label="Color theme" id="heim-theme-select">
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</span>
+            </label>
+        </div>
+    </div>
+    <div class="heim-header__bar">
+        <div class="heim-header__bar-inner">
+            <nav aria-label="Main navigation" class="heim-nav">
+                <a href="../../../../index.html">Home</a>
+                <a href="../../../../property/index.html">Properties</a>
+                <a href="../../../index.html">Graphs</a>
+            </nav>
+        </div>
+    </div>
+</header>
+<main class="heim-main">
+    <nav aria-label="Breadcrumb" class="heim-breadcrumbs">
+        <a href="../../../../index.html">Heim</a>
+        <span>›</span>
+        <a href="../../../index.html">Graphs</a>
+        <span>›</span>
+        <span>depth_first_search_to, dfs_to_to</span>
+    </nav>
+    <article class="heim-content">
+        <h1 id="depth_first_search">graphs::depth_first_search_to, graphs::dfs_to_to</h1>
+        <h2 id="synopsis">Synopsis</h2>
+        <pre><code><span class="heim-cpp-keyword">namespace</span> <span class="heim-cpp-namespace">graphs</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span
+                    class="heim-cpp-comment">/* detail */</span> <span
+                    class="heim-cpp-constant">depth_first_search_to</span> <span
+                    class="heim-cpp-operator">=</span> <span
+                    class="heim-cpp-comment">/* detail */</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">inline</span> <span class="heim-cpp-keyword">constexpr</span> <span
+                    class="heim-cpp-comment">/* detail */</span> <span class="heim-cpp-constant">dfs_to</span>                <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-comment">/* detail */</span><span
+                    class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+        <ol class="heim-signature-list">
+            <li><pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">VRange</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">DMap</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">CMap</span>   <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span
+                        class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-builtin-type">void</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-punctuation">(</span><span
+                        class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">(</span>
+    <span class="heim-cpp-template-param">G</span>                      <span
+                        class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
+                        class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">dfs_to_result</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">PMap</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">DMap</span><span class="heim-cpp-punctuation">&gt;</span> <span
+                        class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">res</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">VRange</span>                      <span class="heim-cpp-operator">&amp;&amp;</span><span
+                        class="heim-cpp-parameter">rs</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">CMap</span>                          <span
+                        class="heim-cpp-parameter">cm</span>  <span class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">)</span> <span class="heim-cpp-keyword">const</span>
+<span class="heim-cpp-keyword">requires</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-namespace">ranges</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-concept">input_range</span><span
+                        class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">VRange</span><span class="heim-cpp-punctuation">&gt;</span>
+ <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-namespace">std</span><span
+                        class="heim-cpp-operator">::</span><span class="heim-cpp-concept">convertible_to</span><span
+                        class="heim-cpp-punctuation">&lt;</span>
+        <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-namespace">ranges</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">range_reference_t</span><span
+                        class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">VRange</span><span
+                        class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
+        <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span
+                        class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">;</span></code></pre>
+            </li>
+            <li><pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">VRange</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span>   <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">DMap</span>   <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">CMap</span>   <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span
+                        class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">dfs_to_result</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">PMap</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">DMap</span><span class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-punctuation">(</span><span
+                        class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">(</span>
+    <span class="heim-cpp-template-param">G</span>                         <span
+                        class="heim-cpp-keyword">const</span> <span
+                        class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">g</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">VRange</span>                         <span class="heim-cpp-operator">&amp;&amp;</span><span
+                        class="heim-cpp-parameter">rs</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-parameter">tgt</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">PMap</span>                             <span
+                        class="heim-cpp-parameter">pm</span>  <span
+                        class="heim-cpp-operator">=</span> <span class="heim-cpp-punctuation">{</span><span
+                        class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">DMap</span>                             <span
+                        class="heim-cpp-parameter">dm</span>  <span
+                        class="heim-cpp-operator">=</span> <span class="heim-cpp-punctuation">{</span><span
+                        class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">CMap</span>                             <span
+                        class="heim-cpp-parameter">cm</span>  <span
+                        class="heim-cpp-operator">=</span> <span class="heim-cpp-punctuation">{</span><span
+                        class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">)</span> <span class="heim-cpp-keyword">const</span>
+<span class="heim-cpp-keyword">requires</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-namespace">ranges</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-concept">input_range</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">VRange</span><span class="heim-cpp-punctuation">&gt;</span>
+ <span class="heim-cpp-operator">&amp;&amp;</span> <span class="heim-cpp-namespace">std</span><span
+                        class="heim-cpp-operator">::</span><span class="heim-cpp-concept">convertible_to</span><span
+                        class="heim-cpp-punctuation">&lt;</span>
+        <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-namespace">ranges</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">range_reference_t</span><span
+                        class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">VRange</span><span
+                        class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
+        <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">;</span></code></pre>
+            </li>
+            <li><pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">DMap</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">CMap</span> <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span
+                        class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-builtin-type">void</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-punctuation">(</span><span
+                        class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">(</span>
+    <span class="heim-cpp-template-param">G</span>                         <span
+                        class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
+                        class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">dfs_to_result</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">PMap</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">DMap</span><span class="heim-cpp-punctuation">&gt;</span>    <span
+                        class="heim-cpp-operator">&amp;</span><span class="heim-cpp-parameter">res</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-parameter">r</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">CMap</span>                             <span
+                        class="heim-cpp-parameter">cm</span>  <span class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">)</span> <span class="heim-cpp-keyword">const</span><span
+                        class="heim-cpp-punctuation">;</span></code></pre>
+            </li>
+            <li><pre><code><span class="heim-cpp-keyword">template</span><span class="heim-cpp-punctuation">&lt;</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">G</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">PMap</span> <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">DMap</span> <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-keyword">typename</span> <span class="heim-cpp-template-param">CMap</span> <span
+                        class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-type">default_property_map_t</span><span
+                        class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-keyword">constexpr</span>
+<span class="heim-cpp-type">dfs_to_result</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">PMap</span><span class="heim-cpp-punctuation">,</span> <span
+                        class="heim-cpp-template-param">DMap</span><span class="heim-cpp-punctuation">&gt;</span>
+<span class="heim-cpp-operator-keyword">operator</span><span class="heim-cpp-punctuation">(</span><span
+                        class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">(</span>
+    <span class="heim-cpp-template-param">G</span>                         <span
+                        class="heim-cpp-keyword">const</span> <span class="heim-cpp-operator">&amp;</span><span
+                        class="heim-cpp-parameter">g</span><span class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-parameter">r</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-parameter">tgt</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">PMap</span>                             <span
+                        class="heim-cpp-parameter">pm</span>  <span class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">DMap</span>                             <span
+                        class="heim-cpp-parameter">dm</span>  <span class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">,</span>
+    <span class="heim-cpp-template-param">CMap</span>                             <span
+                        class="heim-cpp-parameter">cm</span>  <span class="heim-cpp-operator">=</span> <span
+                        class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                        class="heim-cpp-punctuation">)</span> <span class="heim-cpp-keyword">const</span><span
+                        class="heim-cpp-punctuation">;</span></code></pre>
+            </li>
+        </ol>
+        <h2 id="overview">Overview</h2>
+        <p>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first traversal</a> of the graph
+            <code><span class="heim-cpp-parameter">g</span></code>, starting from one
+            root vertex <code><span class="heim-cpp-parameter">r</span></code> or multiple root vertices <code><span
+                    class="heim-cpp-parameter">rs</span></code>, and exploring adjacent vertices as far as possible
+            before backtracking.</p>
+        <p>Throughout its execution, the algorithm records multiple properties of the vertices:</p>
+        <ul>
+            <li>Their predecessor during the traversal, that is the vertex from which they were discovered</li>
+            <li>Their discovery time (or order), that is the order in which they were discovered relative to the other
+                vertices
+            </li>
+            <li>Their finishing time (or order), that is the order in which the algorithm finished exploring a vertex's
+                descendant relative to the other vertices
+            </li>
+        </ul>
+        <p>These properties can be collected either in a given <a href="search_to_result/index.html"><code><span
+                class="heim-cpp-type">depth_first_search_to_result</span></code></a> object <code><span
+                class="heim-cpp-parameter">res</span></code>, or in a returned <a href="search_to_result/index.html"><code><span
+                class="heim-cpp-type">depth_first_search_to_result</span></code></a> object.</p>
+        <h3 id="properties">Properties</h3>
+        <p>To function and produce its results, this algorithm manipulates the graph’s elements’ properties using <a
+                href="../../../../property/index.html#property-mapping">property maps</a>, which can be obtained either:
+        </p>
+        <ul>
+            <li>By default, in which case the algorithm allocates external storage for the related properties</li>
+            <li>Manually, which can be useful when properties need to originate from a specific source</li>
+            <li>Through the given result object (i.e. <code><span class="heim-cpp-parameter">res</span></code>), which
+                already exposes some of the required maps
+            </li>
+        </ul>
+        <h2 id="template-parameters">Template Parameters</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code><span class="heim-cpp-template-param">G</span></code></td>
+                <td>The graph type</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-template-param">VRange</span></code></td>
+                <td>The input range of root vertices</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-template-param">PMap</span></code></td>
+                <td>The property map type used to record reached vertices’ predecessor</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-template-param">DMap</span></code></td>
+                <td>The property map type used to record reached vertices’ discovery order</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-template-param">CMap</span></code></td>
+                <td>The property map type used to manage vertices’ exploration state</td>
+            </tr>
+            </tbody>
+        </table>
+        <h2 id="requirements">Requirements</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Signatures</th>
+                <th>Requirements</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>1)<br/>3)</td>
+                <td><code><span class="heim-cpp-template-param">VRange</span></code> must model <code><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-namespace">ranges</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-concept">input_range</span></code>, and <code><span class="heim-cpp-namespace">std</span><span
+                        class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">ranges</span><span
+                        class="heim-cpp-operator">::</span><span class="heim-cpp-type">range_reference_t</span><span
+                        class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-template-param">VRange</span><span
+                        class="heim-cpp-punctuation">&gt;</span></code> must be convertible to <code><span
+                        class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-type">remove_cvref_t</span><span class="heim-cpp-punctuation">&lt;</span><span
+                        class="heim-cpp-template-param">G</span><span class="heim-cpp-punctuation">&gt;</span><span
+                        class="heim-cpp-punctuation">&gt;</span></code></td>
+            </tr>
+            </tbody>
+        </table>
+        <h2 id="parameters">Parameters</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">g</span></code></td>
+                <td>The graph to search</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">res</span></code></td>
+                <td>The <a href="search_to_result/index.html"><code><span
+                        class="heim-cpp-type">depth_first_search_to_result</span></code></a> object to populate with the
+                    algorithm’s results
+                </td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">rs</span></code></td>
+                <td>The range of root vertices for the search</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">r</span></code></td>
+                <td>The root vertex for the search</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">tgt</span></code></td>
+                <td>The target vertex for the search</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">pm</span></code></td>
+                <td>The property map used to record reached vertices’ predecessor</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">dm</span></code></td>
+                <td>The property map used to record reached vertices’ discovery order</td>
+            </tr>
+            <tr>
+                <td><code><span class="heim-cpp-parameter">cm</span></code></td>
+                <td>The property map used to manage vertices’ exploration state</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2 id="complexity">Complexity</h2>
+        <p><code>O(V + E)</code> in the worst case, where <code>V</code> is the number of vertices in
+            <code><span class="heim-cpp-parameter">g</span></code> and <code>E</code> is the number of edges in
+            <code><span class="heim-cpp-parameter">g</span></code>.
+        </p>
+
+        <h2 id="code-example">Code Example</h2>
+        <pre><code><span class="heim-cpp-preprocessor">#include</span> <span
+                class="heim-cpp-string">&lt;print&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;type_traits&gt;</span>
+<span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
+
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-punctuation">{</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span> <span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">1</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">1</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">2</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-number">2</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">r0</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">depth_first_search_to</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  
+  <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">r0</span><span class="heim-cpp-punctuation">.</span><span
+                    class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">)</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r0</span><span
+                    class="heim-cpp-punctuation">.</span><span class="heim-cpp-method">path</span><span
+                    class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">;</span>
+  
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">dfs_to_result</span> <span
+                    class="heim-cpp-variable">r1</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">&gt;</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">3</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dfs_to</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r1</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">vertices</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">;</span>
+  
+  <span class="heim-cpp-control-keyword">if</span> <span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">r1</span><span class="heim-cpp-punctuation">.</span><span
+                    class="heim-cpp-method">reached</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">)</span>
+    <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">println</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-string">"{}"</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">r1</span><span
+                    class="heim-cpp-punctuation">.</span><span class="heim-cpp-method">path</span><span
+                    class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-punctuation">}</span></code></pre>
+        <h3 id="possible-output">Possible output</h3>
+        <pre><code>[3, 2, 1, 0]
+[3, 2, 1, 0]</code></pre>
+        <h2 id="see-also">See Also</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><a href="search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span
+                        class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">depth_first_search</span></code><br/><code><span
+                        class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">dfs</span></code></a></td>
+                <td>Performs the classic <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first search
+                    algorithm</a> on a graph
+                </td>
+            </tr>
+            <tr>
+                <td><a href="visit.html"><code><span class="heim-cpp-namespace">graphs</span><span
+                        class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">depth_first_visit</span></code></a></td>
+                <td>Performs a <a href="https://wikipedia.org/wiki/Depth-first_search">depth-first traversal</a> of a
+                    graph, exposing events exploitable by a <a href="../../../visitors.html">visitor</a></td>
+            </tr>
+            <tr>
+                <td><a href="../breadth_first/search_to.html"><code><span class="heim-cpp-namespace">graphs</span><span
+                        class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">breadth_first_search_to</span></code><br/><code><span
+                        class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                        class="heim-cpp-constant">bfs_to</span></code></a></td>
+                <td>Performs the classic <a href="https://wikipedia.org/wiki/Breadth-first_search">breadth-first search
+                    algorithm</a> on a graph, stopping when a specified vertex is discovered
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+</main>
+<footer class="heim-footer">
+    <div class="heim-footer__inner">
+        <span>Heim C++ Library Documentation</span>
+    </div>
+</footer>
+</body>
+</html>
