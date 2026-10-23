@@ -154,6 +154,12 @@ static void test_graph()
 
   auto dfs_to{heim::graphs::dfs_to(g, 0, 3)};
   std::println("{}", dfs_to.path());
+
+  auto dij{heim::graphs::dijkstra(g, 0, heim::make_property_map(heim::constant_arg, 2))};
+  std::println("{} {}", dij.path_from(3), dij.distance_of(3));
+
+  auto dij_to{heim::graphs::dijkstra_to(g, 0, 3, heim::make_property_map(heim::constant_arg, 2))};
+  std::println("{} {}", dij_to.path(), dij_to.distance());
 }
 
 

@@ -56,7 +56,6 @@ struct source_vertex
   }
 };
 
-
 struct discover_vertex
 {
   template<typename Vis, typename G>
@@ -267,46 +266,46 @@ struct bf_visit_fn
 
     for (vertex_type r : std::forward<VRange>(rs))
     {
-      if (properties::get(rcm, r) == colors::white_v<color_type>)
+      if (properties::get(rcm, r) != colors::white_v<color_type>)
+        continue;
+
+      ctrl = bf::source_vertex(vis, g, r);
+      contract_assert(
+          ctrl == visit::proceed
+       || ctrl == visit::skip
+       || ctrl == visit::stop);
+
+      if      (ctrl == visit::stop)
+        return false;
+      else if (ctrl == visit::skip)
+        continue;
+
+      properties::set(rcm, r, colors::gray_v<color_type>);
+
+      ctrl = bf::discover_vertex(vis, g, r);
+      contract_assert(
+          ctrl == visit::proceed
+       || ctrl == visit::prune
+       || ctrl == visit::stop);
+
+      if      (ctrl == visit::stop)
+        return false;
+      else if (ctrl == visit::prune)
       {
-        ctrl = bf::source_vertex(vis, g, r);
+        properties::set(rcm, r, colors::black_v<color_type>);
+
+        ctrl = bf::finish_vertex(vis, g, r);
         contract_assert(
             ctrl == visit::proceed
-         || ctrl == visit::skip
          || ctrl == visit::stop);
 
-        if      (ctrl == visit::stop)
+        if (ctrl == visit::stop)
           return false;
-        else if (ctrl == visit::skip)
-          continue;
 
-        properties::set(rcm, r, colors::gray_v<color_type>);
-
-        ctrl = bf::discover_vertex(vis, g, r);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::prune
-         || ctrl == visit::stop);
-
-        if      (ctrl == visit::stop)
-          return false;
-        else if (ctrl == visit::prune)
-        {
-          properties::set(rcm, r, colors::black_v<color_type>);
-
-          ctrl = bf::finish_vertex(vis, g, r);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::stop);
-
-          if (ctrl == visit::stop)
-            return false;
-
-          continue;
-        }
-
-        q.push(std::move(r));
+        continue;
       }
+
+      q.push(std::move(r));
     }
 
     while (!q.empty())

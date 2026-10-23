@@ -5,112 +5,112 @@
 #include <cstddef>
 #include <functional>
 #include <ranges>
+#include <type_traits>
 #include <utility>
+#include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/property/primitives.hpp"
 
-namespace heim
+namespace heim::graphs::detail
 {
 template<
     std::size_t Arity,
-    typename    Container,
-    typename    PriorityMap,
-    typename    IndexMap,
-    typename    Compare>
+    typename    Cont,
+    typename    PrioMap,
+    typename    IdxMap,
+    typename    Cmp>
 requires (Arity >= 2)
 class indirect_d_ary_heap
 {
-private:
-  using size_type
-  = std::ranges::range_size_t<Container>;
+public:
+  using size_type  = std::ranges::range_size_t <Cont>;
+  using value_type = std::ranges::range_value_t<Cont>;
 
 private:
-  [[no_unique_address]] Container &&m_cont;
-  [[no_unique_address]] PriorityMap m_p_map;
-  [[no_unique_address]] IndexMap    m_i_map;
-  [[no_unique_address]] Compare     m_cmp;
+  Cont                                             m_cnt;
+  deduced_storage_t<value_type, size_type, IdxMap> m_i_rstorage;
+  [[no_unique_address]] PrioMap                    m_pm;
+  [[no_unique_address]] Cmp                        m_cmp;
 
 private:
   constexpr
-  void
-  heapify_up(std::ranges::range_size_t<Container> pos)
+  bool
+  precedes(value_type const &lhs, value_type const &rhs)
   {
+    return std::invoke(
+        this->m_cmp,
+        properties::get(this->m_pm, lhs),
+        properties::get(this->m_pm, rhs));
+  }
+
+  constexpr
+  void
+  assign_at(size_type pos, value_type &&val)
+  {
+    this->m_cnt[pos] = std::move(val);
+    properties::set(this->m_i_rstorage.property_map(), this->m_cnt[pos], pos);
+  }
+
+  constexpr
+  void
+  heapify_up(size_type pos)
+  {
+    value_type val{std::move(this->m_cnt[pos])};
+
     while (pos != size_type{})
     {
       size_type parent{(pos - 1) / Arity};
 
-      if (!std::invoke(
-          this->m_cmp,
-          properties::get(this->m_p_map, this->m_cont[pos]),
-          properties::get(this->m_p_map, this->m_cont[parent])))
+      if (!this->precedes(val, this->m_cnt[parent]))
         break;
 
-      using std::swap;
-
-      swap(this->m_cont[pos], this->m_cont[parent]);
-      properties::set(this->m_i_map, this->m_cont[pos]   , pos);
-      properties::set(this->m_i_map, this->m_cont[parent], parent);
-
-      pos = std::move(parent);
+      this->assign_at(pos, std::move(this->m_cnt[parent]));
+      pos = parent;
     }
+
+    this->assign_at(pos, std::move(val));
   }
 
   constexpr
   void
-  heapify_down(std::ranges::range_size_t<Container> pos)
+  heapify_down(size_type pos)
   {
-    size_type size{std::ranges::size(this->m_cont)};
+    size_type  size{std::ranges::size(this->m_cnt)};
+    value_type val {std::move(this->m_cnt[pos])};
 
-    for (;;)
+    while (!(size <= size_type{1} || pos > (size - 2) / Arity))
     {
-      size_type begin{Arity * pos + 1};
+      size_type first{Arity * pos + 1};
+      size_type last {first + std::min<size_type>(Arity, size - first)};
+      size_type best {first};
 
-      if (begin >= size)
-        return;
-
-      size_type best{begin};
-      size_type end {begin + std::min(Arity, size - best)};
-
-      for (size_type child{begin + 1}; child < end; ++child)
+      for (size_type child{first + 1}; child < last; ++child)
       {
-        if (std::invoke(
-            this->m_cmp,
-            properties::get(this->m_p_map, this->m_cont[child]),
-            properties::get(this->m_p_map, this->m_cont[best])))
+        if (this->precedes(this->m_cnt[child], this->m_cnt[best]))
           best = child;
       }
 
-      if (!std::invoke(
-          this->m_cmp,
-          properties::get(this->m_p_map, this->m_cont[best]),
-          properties::get(this->m_p_map, this->m_cont[pos])))
-        return;
+      if (!this->precedes(this->m_cnt[best], val))
+        break;
 
-      using std::swap;
-
-      swap(this->m_cont[best], this->m_cont[pos]);
-      properties::set(this->m_i_map, this->m_cont[best], best);
-      properties::set(this->m_i_map, this->m_cont[pos] , pos);
-
-      pos = std::move(best);
+      this->assign_at(pos, std::move(this->m_cnt[best]));
+      pos = best;
     }
+
+    this->assign_at(pos, std::move(val));
   }
 
 public:
   constexpr
-  indirect_d_ary_heap()
-  = default;
-
-  constexpr
   indirect_d_ary_heap(
       std::integral_constant<std::size_t, Arity>,
-      Container &&cont,
-      PriorityMap p_map,
-      IndexMap    i_map,
-      Compare     cmp)
-    : m_cont {std::forward<Container>(cont)}
-    , m_p_map{std::move(p_map)}
-    , m_i_map{std::move(i_map)}
-    , m_cmp  {std::move(cmp)}
+      Cont  &&cont,
+      PrioMap pm,
+      IdxMap  im,
+      Cmp   &&cmp)
+    : m_cnt       {std::forward<Cont>(cont)}
+    , m_i_rstorage{std::move(im)}
+    , m_pm        {std::move(pm)}
+    , m_cmp       {std::forward<Cmp>(cmp)}
   { }
 
 
@@ -118,52 +118,61 @@ public:
   bool
   empty() const
   noexcept
-  { return std::ranges::empty(this->m_cont); }
+  { return std::ranges::empty(this->m_cnt); }
+
+  [[nodiscard]] constexpr
+  value_type const &
+  front() const
+  {
+    contract_assert(!this->empty());
+    return this->m_cnt.front();
+  }
 
 
   template<typename Vertex>
   constexpr
   void
-  insert(Vertex v)
+  push(Vertex &&v)
   {
-    size_type pos{std::ranges::size(this->m_cont)};
+    size_type pos{std::ranges::size(this->m_cnt)};
 
-    this->m_cont.push_back(std::move(v));
-    properties::set(this->m_i_map, this->m_cont.back(), pos);
-
-    heapify_up(std::move(pos));
+    this->m_cnt.push_back(std::forward<Vertex>(v));
+    this->heapify_up(std::move(pos));
   }
 
   constexpr
-  auto
-  extract_min()
+  void
+  pop()
   {
-    contract_assert(!std::ranges::empty(this->m_cont));
+    contract_assert(!this->empty());
 
-    size_type size{std::ranges::size(this->m_cont)};
-    auto      res {std::move(this->m_cont.front())};
-
-    if (size == size_type{1})
-      this->m_cont.pop_back();
+    if (std::ranges::size(this->m_cnt) == size_type{1})
+      this->m_cnt.pop_back();
     else
     {
-      this->m_cont.front() = std::move(this->m_cont.back());
-      this->m_cont.pop_back();
-      properties::set(this->m_i_map, this->m_cont.front(), size_type{0});
-
-      heapify_down(size_type{0});
+      this->m_cnt.front() = std::move(this->m_cnt.back());
+      this->m_cnt.pop_back();
+      this->heapify_down(size_type{0});
     }
-
-    return res;
   }
 
   template<typename Vertex>
   constexpr
   void
   decrease_key(Vertex v)
-  { heapify_up(properties::get(this->m_i_map, v)); }
+  { this->heapify_up(properties::get(this->m_i_rstorage.property_map(), v)); }
 };
 
-} // namespace heim
+
+template<
+    std::size_t Arity,
+    typename    Cont,
+    typename    PrioMap,
+    typename    IdxMap,
+    typename    Cmp>
+indirect_d_ary_heap(std::integral_constant<std::size_t, Arity>, Cont &&, PrioMap, IdxMap, Cmp &&)
+-> indirect_d_ary_heap<Arity, Cont, PrioMap, IdxMap, Cmp>;
+
+} // namespace heim::graphs::detail
 
 #endif // HEIM_GRAPH_ALGORITHM_INDIRECT_D_ARY_HEAP_HPP

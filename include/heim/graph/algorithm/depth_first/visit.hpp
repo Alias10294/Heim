@@ -174,6 +174,7 @@ struct finish_edge
       return visit::proceed;
   }
 };
+
 } // namespace fn
 
 

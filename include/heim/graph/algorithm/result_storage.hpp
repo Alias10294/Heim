@@ -82,6 +82,11 @@ public:
   { return this->m_map; }
 };
 
+
+template<typename K, typename V, typename M>
+using deduced_storage_t
+= result_storage<std::unordered_map<K, V>, M>;
+
 } // namespace detail
 } // namespace heim::graphs
 

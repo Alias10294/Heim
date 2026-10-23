@@ -3,7 +3,7 @@
 
 #include "breadth_first/breadth_first.hpp"
 #include "depth_first/depth_first.hpp"
-// #include "dijkstra/dijkstra.hpp"
+#include "dijkstra/dijkstra.hpp"
 #include "color.hpp"
 // #include "connected_components.hpp"
 #include "indirect_d_ary_heap.hpp"

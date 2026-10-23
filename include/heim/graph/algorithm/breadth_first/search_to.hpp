@@ -81,10 +81,7 @@ public:
   {
     properties::set(this->m_tm, v, ++this->m_t);
 
-    if (v == this->m_tgt)
-      return visit::stop;
-
-    return visit::proceed;
+    return v == this->m_tgt ? visit::stop : visit::proceed;
   }
 
   constexpr
