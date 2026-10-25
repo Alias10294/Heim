@@ -423,7 +423,7 @@
         color v in white 
         <span class="heim-pseudocode-event">emit initialize_vertex(G, v) then
             if stop then
-            return false</span>
+                return false</span>
     for each root vertex r in roots do
         <span class="heim-pseudocode-event">emit source_vertex(G, r) then
             if stop then
@@ -451,7 +451,7 @@
                 emit finish_vertex(G, u) then
                     if stop then
                         return false
-                 continue</span>
+                continue</span>
         for each out-edge e of u do
             <span class="heim-pseudocode-event">emit examine_edge(G, e) then
                 if stop then
@@ -486,11 +486,11 @@
                     <span class="heim-pseudocode-event">emit black_target(G, e) then
                         if stop then
                             return false</span>
-               color u in black
-               <span class="heim-pseudocode-event">emit finish_vertex(G, u) then
-                   if stop then
-                       return false
-</span></code></pre>
+        color u in black
+        <span class="heim-pseudocode-event">emit finish_vertex(G, u) then
+            if stop then
+                return false</span>
+    return true</code></pre>
         <h2 id="template-parameters">Template Parameters</h2>
         <table>
             <thead>

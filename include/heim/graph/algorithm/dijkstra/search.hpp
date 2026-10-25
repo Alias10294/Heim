@@ -41,7 +41,7 @@ public:
   template<typename G>
   constexpr
   void
-  initialize_vertex(G const &, vertex_t<std::remove_cvref_t<G>> v)
+  source_vertex(G const &, vertex_t<std::remove_cvref_t<G>> v)
   { properties::set(this->m_pm, v, v); }
 
   template<typename G>

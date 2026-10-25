@@ -45,13 +45,13 @@ public:
       vertex_type tgt,
       PMap        pm)
     : m_tgt{std::move(tgt)}
-    , m_pm {std::move(pm)}
+    , m_pm {std::move(pm )}
   { }
 
 
   constexpr
   void
-  initialize_vertex(G const &, vertex_type v)
+  source_vertex(G const &, vertex_type v)
   { properties::set(this->m_pm, v, v); }
 
   constexpr

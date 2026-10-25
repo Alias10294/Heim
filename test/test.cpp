@@ -136,10 +136,10 @@ static void test_graph()
   // auto const v2{heim::graphs::place_vertex(g)};
   // auto const v3{heim::graphs::place_vertex(g)};
   //
-  // auto const [e0, inserted]{heim::graphs::place_edge(g, v0, v1)};
-  // auto const [e1, _       ]{heim::graphs::place_edge(g, v0, v2)};
-  // auto const [e2, _       ]{heim::graphs::place_edge(g, v1, v2)};
-  // auto const [e3, _       ]{heim::graphs::place_edge(g, v2, v3)};
+  // auto const [e0, placed]{heim::graphs::place_edge(g, v0, v1)};
+  // auto const [e1, _     ]{heim::graphs::place_edge(g, v0, v2)};
+  // auto const [e2, _     ]{heim::graphs::place_edge(g, v1, v2)};
+  // auto const [e3, _     ]{heim::graphs::place_edge(g, v2, v3)};
 
   heim::adjacency_list g{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
 
