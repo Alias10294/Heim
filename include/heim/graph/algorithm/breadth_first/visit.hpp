@@ -16,9 +16,7 @@
 
 namespace heim::graphs
 {
-namespace detail
-{
-namespace bf
+namespace detail::bfs::vis
 {
 namespace fn
 {
@@ -213,10 +211,10 @@ inline constexpr fn::non_tree_edge     non_tree_edge    {};
 inline constexpr fn::gray_target       gray_target      {};
 inline constexpr fn::black_target      black_target     {};
 
-} // namespace bf
 
-
-struct bf_visit_fn
+namespace fn
+{
+struct algo
 {
   template<
       typename G,
@@ -255,7 +253,7 @@ struct bf_visit_fn
     {
       properties::set(rcm, v, colors::white_v<color_type>);
 
-      ctrl = bf::initialize_vertex(vis, g, std::move(v));
+      ctrl = vis::initialize_vertex(vis, g, std::move(v));
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop);
@@ -269,7 +267,7 @@ struct bf_visit_fn
       if (properties::get(rcm, r) != colors::white_v<color_type>)
         continue;
 
-      ctrl = bf::source_vertex(vis, g, r);
+      ctrl = vis::source_vertex(vis, g, r);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::skip
@@ -282,7 +280,7 @@ struct bf_visit_fn
 
       properties::set(rcm, r, colors::gray_v<color_type>);
 
-      ctrl = bf::discover_vertex(vis, g, r);
+      ctrl = vis::discover_vertex(vis, g, r);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::prune
@@ -294,7 +292,7 @@ struct bf_visit_fn
       {
         properties::set(rcm, r, colors::black_v<color_type>);
 
-        ctrl = bf::finish_vertex(vis, g, r);
+        ctrl = vis::finish_vertex(vis, g, r);
         contract_assert(
             ctrl == visit::proceed
          || ctrl == visit::stop);
@@ -313,7 +311,7 @@ struct bf_visit_fn
       vertex_type u{q.front()};
       q.pop();
 
-      ctrl = bf::examine_vertex(vis, g, u);
+      ctrl = vis::examine_vertex(vis, g, u);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::prune
@@ -326,7 +324,7 @@ struct bf_visit_fn
       {
         properties::set(rcm, u, colors::black_v<color_type>);
 
-        ctrl = bf::finish_vertex(vis, g, u);
+        ctrl = vis::finish_vertex(vis, g, u);
         contract_assert(
             ctrl == visit::proceed
          || ctrl == visit::stop);
@@ -339,7 +337,7 @@ struct bf_visit_fn
 
       for (edge_type e : out_edges(g, u))
       {
-        ctrl = bf::examine_edge(vis, g, e);
+        ctrl = vis::examine_edge(vis, g, e);
         contract_assert(
             ctrl == visit::proceed
          || ctrl == visit::skip
@@ -355,7 +353,7 @@ struct bf_visit_fn
 
         if (clr == colors::white_v<color_type>)
         {
-          ctrl = bf::tree_edge(vis, g, e);
+          ctrl = vis::tree_edge(vis, g, e);
           contract_assert(
               ctrl == visit::proceed
            || ctrl == visit::stop);
@@ -365,7 +363,7 @@ struct bf_visit_fn
 
           properties::set(rcm, v, colors::gray_v<color_type>);
 
-          ctrl = bf::discover_vertex(vis, g, v);
+          ctrl = vis::discover_vertex(vis, g, v);
           contract_assert(
               ctrl == visit::proceed
            || ctrl == visit::prune
@@ -377,7 +375,7 @@ struct bf_visit_fn
           {
             properties::set(rcm, v, colors::black_v<color_type>);
 
-            ctrl = bf::finish_vertex(vis, g, v);
+            ctrl = vis::finish_vertex(vis, g, v);
             contract_assert(
                 ctrl == visit::proceed
              || ctrl == visit::stop);
@@ -392,7 +390,7 @@ struct bf_visit_fn
         }
         else
         {
-          ctrl = bf::non_tree_edge(vis, g, e);
+          ctrl = vis::non_tree_edge(vis, g, e);
           contract_assert(
               ctrl == visit::proceed
            || ctrl == visit::skip
@@ -405,7 +403,7 @@ struct bf_visit_fn
 
           if (clr == colors::gray_v<color_type>)
           {
-            ctrl = bf::gray_target(vis, g, std::move(e));
+            ctrl = vis::gray_target(vis, g, std::move(e));
             contract_assert(
                 ctrl == visit::proceed
              || ctrl == visit::stop);
@@ -415,7 +413,7 @@ struct bf_visit_fn
           }
           else
           {
-            ctrl = bf::black_target(vis, g, std::move(e));
+            ctrl = vis::black_target(vis, g, std::move(e));
             contract_assert(
                 ctrl == visit::proceed
              || ctrl == visit::stop);
@@ -428,7 +426,7 @@ struct bf_visit_fn
 
       properties::set(rcm, u, colors::black_v<color_type>);
 
-      ctrl = bf::finish_vertex(vis, g, std::move(u));
+      ctrl = vis::finish_vertex(vis, g, std::move(u));
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop);
@@ -463,10 +461,11 @@ struct bf_visit_fn
   }
 };
 
-} // namespace detail
+} // namespace fn
+} // namespace detail::bfs::vis
 
 inline constexpr
-detail::bf_visit_fn
+detail::bfs::vis::fn::algo
 breadth_first_visit{};
 
 } // namespace heim::graphs

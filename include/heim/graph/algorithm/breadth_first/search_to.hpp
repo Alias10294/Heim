@@ -19,17 +19,20 @@
 
 namespace heim::graphs
 {
-namespace detail
+namespace detail::bfs::to
 {
-struct bfs_to_fn;
+namespace fn
+{
+struct algo;
 
+} // namespace fn
 
 template<
     typename G,
     typename PMap,
     typename LMap,
     typename TMap>
-struct bf_to_visitor
+struct visitor
 {
 private:
   using vertex_type
@@ -44,7 +47,7 @@ private:
 
 public:
   constexpr
-  bf_to_visitor(
+  visitor(
       std::in_place_type_t<G>,
       vertex_type tgt,
       PMap        pm,
@@ -103,7 +106,7 @@ template<
     typename TMap = default_property_map_t>
 class breadth_first_search_to_result
 {
-  friend struct detail::bfs_to_fn;
+  friend struct detail::bfs::to::fn::algo;
 
 private:
   using vertex_type
@@ -198,9 +201,9 @@ using bfs_to_result
 = breadth_first_search_to_result<G, PMap, LMap, TMap>;
 
 
-namespace detail
+namespace detail::bfs::to::fn
 {
-struct bfs_to_fn
+struct algo
 {
   template<
       typename G,
@@ -227,7 +230,7 @@ struct bfs_to_fn
     breadth_first_visit(
         g,
         std::forward<VRange>(rs),
-        bf_to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target            (),
             res.m_predecessor_map   (),
@@ -256,7 +259,7 @@ struct bfs_to_fn
     breadth_first_visit(
         g,
         std::views::single(std::move(r)),
-        bf_to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target            (),
             res.m_predecessor_map   (),
@@ -343,10 +346,10 @@ struct bfs_to_fn
   }
 };
 
-} // namespace detail
+} // namespace detail::bfs::to::fn
 
-inline constexpr detail::bfs_to_fn breadth_first_search_to{};
-inline constexpr detail::bfs_to_fn bfs_to                 {};
+inline constexpr detail::bfs::to::fn::algo breadth_first_search_to{};
+inline constexpr detail::bfs::to::fn::algo bfs_to                 {};
 
 } // namespace heim::graphs
 

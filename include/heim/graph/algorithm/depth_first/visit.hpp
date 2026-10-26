@@ -16,9 +16,7 @@
 
 namespace heim::graphs
 {
-namespace detail
-{
-namespace df
+namespace detail::dfs::vis
 {
 namespace fn
 {
@@ -188,9 +186,9 @@ inline constexpr fn::back_edge             back_edge            {};
 inline constexpr fn::forward_or_cross_edge forward_or_cross_edge{};
 inline constexpr fn::finish_edge           finish_edge          {};
 
-} // namespace df
-
-struct df_visit_fn
+namespace fn
+{
+struct algo
 {
 private:
   template<
@@ -213,7 +211,7 @@ private:
 
     properties::set(cm, r, colors::gray_v<color_type>);
 
-    ctrl = df::discover_vertex(vis, g, r);
+    ctrl = vis::discover_vertex(vis, g, r);
     contract_assert(
         ctrl == visit::proceed
      || ctrl == visit::stop
@@ -225,7 +223,7 @@ private:
     {
       for (edge_type e : out_edges(g, r))
       {
-        ctrl = df::examine_edge(vis, g, e);
+        ctrl = vis::examine_edge(vis, g, e);
         contract_assert(
             ctrl == visit::proceed
          || ctrl == visit::stop
@@ -241,7 +239,7 @@ private:
 
         if (clr == colors::white_v<color_type>)
         {
-          ctrl = df::tree_edge(vis, g, e);
+          ctrl = vis::tree_edge(vis, g, e);
           contract_assert(
               ctrl == visit::proceed
            || ctrl == visit::stop);
@@ -256,7 +254,7 @@ private:
         {
           if (clr == colors::gray_v<color_type>)
           {
-            ctrl = df::back_edge(vis, g, e);
+            ctrl = vis::back_edge(vis, g, e);
             contract_assert(
                 ctrl == visit::proceed
              || ctrl == visit::stop);
@@ -266,7 +264,7 @@ private:
           }
           else
           {
-            ctrl = df::forward_or_cross_edge(vis, g, e);
+            ctrl = vis::forward_or_cross_edge(vis, g, e);
             contract_assert(
                 ctrl == visit::proceed
              || ctrl == visit::stop);
@@ -276,7 +274,7 @@ private:
           }
         }
 
-        ctrl = df::finish_edge(vis, g, e);
+        ctrl = vis::finish_edge(vis, g, e);
         contract_assert(
             ctrl == visit::proceed
          || ctrl == visit::stop);
@@ -288,13 +286,13 @@ private:
 
     properties::set(cm, r, colors::black_v<color_type>);
 
-    ctrl = df::finish_vertex(vis, g, r);
+    ctrl = vis::finish_vertex(vis, g, r);
     contract_assert(
         ctrl == visit::proceed
      || ctrl == visit::stop);
 
     if (ctrl == visit::stop)
-        return false;
+      return false;
 
     return true;
   }
@@ -333,7 +331,7 @@ public:
     {
       properties::set(rcm, v, colors::white_v<color_type>);
 
-      ctrl = df::initialize_vertex(vis, g, v);
+      ctrl = vis::initialize_vertex(vis, g, v);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop);
@@ -347,7 +345,7 @@ public:
       if (properties::get(rcm, r) != colors::white_v<color_type>)
         continue;
 
-      ctrl = df::start_vertex(vis, g, r);
+      ctrl = vis::start_vertex(vis, g, r);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop
@@ -384,11 +382,11 @@ public:
         std::move(cm));
   }
 };
-
-} // namespace detail
+} // namespace fn
+} // namespace detail::dfs::vis
 
 inline constexpr
-detail::df_visit_fn
+detail::dfs::vis::fn::algo
 depth_first_visit{};
 
 } // namespace heim::graphs

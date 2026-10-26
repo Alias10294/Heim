@@ -91,7 +91,7 @@ static void test_001()
 
   std::println("  distances:");
   for (vertex_type v : heim::graphs::vertices(g))
-    std::println("    distance to v{} = {}", v, dij_res.distance_to(v));
+    std::println("    distance to v{} = {}", v, dij_res.distance_of(v));
 
   // dijkstra_to
   auto const dij_to_res {heim::graphs::dijkstra_to(g, v0, v3, heim::make_readable_property_map(w))};
@@ -108,12 +108,12 @@ static void test_001()
   std::println("  distance to v3 = {}", dij_to_res.distance());
 
 
-  // // connected_components
-  // auto const cc_res{heim::graphs::connected_components(g)};
-  //
-  // std::println("connected_components");
-  // std::println("  graph connected ? {}"    , cc_res.connected());
-  // std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
+  // connected_components
+  auto const cc_res{heim::graphs::connected_components(g)};
+
+  std::println("connected_components");
+  std::println("  graph connected ? {}"    , cc_res.connected());
+  std::println("  v0 and v3 connected ? {}", cc_res.connected(v0, v3));
 
   // // topological_sort
   // auto const topo{heim::graphs::topological_sort(g)};
@@ -129,18 +129,6 @@ static void test_001()
 
 static void test_graph()
 {
-  // heim::adjacency_list g{};
-  //
-  // auto const v0{heim::graphs::place_vertex(g)};
-  // auto const v1{heim::graphs::place_vertex(g)};
-  // auto const v2{heim::graphs::place_vertex(g)};
-  // auto const v3{heim::graphs::place_vertex(g)};
-  //
-  // auto const [e0, placed]{heim::graphs::place_edge(g, v0, v1)};
-  // auto const [e1, _     ]{heim::graphs::place_edge(g, v0, v2)};
-  // auto const [e2, _     ]{heim::graphs::place_edge(g, v1, v2)};
-  // auto const [e3, _     ]{heim::graphs::place_edge(g, v2, v3)};
-
   heim::adjacency_list       ug{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
   heim::adjacency_list<true> dg{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
 
@@ -162,12 +150,11 @@ static void test_graph()
   auto dij_to{heim::graphs::dijkstra_to(ug, 0, 3, heim::make_property_map(heim::constant_arg, 2))};
   std::println("{} {}", dij_to.path(), dij_to.distance());
 
-  std::vector<heim::graphs::vertex_t<heim::adjacency_list<true>>> rtopo{};
-  heim::graphs::reverse_topological_sort(dg, std::back_inserter(rtopo));
-  std::println("{}", rtopo);
-
   auto topo{heim::graphs::topological_sort(dg)};
   std::println("{}", topo);
+
+  auto cc{heim::graphs::connected_components(ug)};
+  std::println("{}", cc.connected());
 }
 
 

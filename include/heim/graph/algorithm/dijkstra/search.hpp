@@ -20,7 +20,7 @@ namespace detail::dij
 {
 namespace fn
 {
-struct search;
+struct algo;
 
 } // namespace fn
 
@@ -63,7 +63,7 @@ template<
     typename Cmp  = std::less<>>
 class dijkstra_search_result
 {
-  friend class detail::dij::fn::search;
+  friend class detail::dij::fn::algo;
 
 private:
   using vertex_type
@@ -174,7 +174,7 @@ using dijkstra_result
 
 namespace detail::dij::fn
 {
-struct search
+struct algo
 {
   template<
       typename G,
@@ -369,8 +369,8 @@ struct search
 
 } // namespace detail::dij::fn
 
-inline constexpr detail::dij::fn::search dijkstra_search{};
-inline constexpr detail::dij::fn::search dijkstra       {};
+inline constexpr detail::dij::fn::algo dijkstra_search{};
+inline constexpr detail::dij::fn::algo dijkstra       {};
 
 } // namespace heim::graphs
 

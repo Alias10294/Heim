@@ -18,14 +18,14 @@ namespace heim::graphs
 namespace detail::topo
 {
 template<typename OutputIt>
-class visitor
+class dfs_visitor
 {
 private:
   OutputIt m_it;
 
 public:
   constexpr
-  visitor(OutputIt it)
+  dfs_visitor(OutputIt it)
     : m_it{std::move(it)}
   { }
 
@@ -49,9 +49,9 @@ public:
   { return std::move(this->m_it); }
 };
 
-namespace fn
+namespace rev::fn
 {
-struct reverse_sort
+struct algo
 {
   template<
       typename G,
@@ -67,24 +67,24 @@ struct reverse_sort
       directed<std::remove_cvref_t<G>>
    && std::output_iterator<OutIt, vertex_t<std::remove_cvref_t<G>>>
   {
-    visitor vis{std::move(it)};
+    dfs_visitor vis{std::move(it)};
 
     depth_first_visit(g, vertices(g), vis, std::move(cm));
     return std::move(vis).get();
   }
 };
 
-} // namespace fn
+} // namespace rev::fn
 } // namespace detail::topo
 
 inline constexpr
-detail::topo::fn::reverse_sort
+detail::topo::rev::fn::algo
 reverse_topological_sort{};
 
 
 namespace detail::topo::fn
 {
-struct sort
+struct algo
 {
   template<
       typename G,
@@ -115,7 +115,7 @@ struct sort
 } // namespace detail::topo::fn
 
 inline constexpr
-detail::topo::fn::sort
+detail::topo::fn::algo
 topological_sort{};
 
 } // namespace heim::graphs

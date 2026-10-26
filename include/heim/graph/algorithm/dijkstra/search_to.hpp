@@ -16,11 +16,11 @@
 
 namespace heim::graphs
 {
-namespace detail::dij
+namespace detail::dij::to
 {
 namespace fn
 {
-struct search_to;
+struct algo;
 
 } // namespace fn
 
@@ -28,7 +28,7 @@ struct search_to;
 template<
     typename G,
     typename PMap>
-struct to_visitor
+struct visitor
 {
 private:
   using vertex_type
@@ -40,7 +40,7 @@ private:
 
 public:
   constexpr
-  to_visitor(
+  visitor(
       std::in_place_type_t<G>,
       vertex_type tgt,
       PMap        pm)
@@ -77,7 +77,7 @@ template<
     typename Cmp  = std::less<>>
 class dijkstra_search_to_result
 {
-  friend class detail::dij::fn::search_to;
+  friend class detail::dij::to::fn::algo;
 
 private:
   using vertex_type
@@ -203,9 +203,9 @@ using dijkstra_to_result
 = dijkstra_search_to_result<G, WMap, PMap, DMap, Inf, Cmp>;
 
 
-namespace detail::dij::fn
+namespace detail::dij::to::fn
 {
-struct search_to
+struct algo
 {
   template<
       typename G,
@@ -242,7 +242,7 @@ struct search_to
         g,
         std::forward<VRange>(rs),
         std::move(wm),
-        to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target         (),
             res.m_predecessor_map()},
@@ -285,7 +285,7 @@ struct search_to
         g,
         std::views::single(std::move(r)),
         std::move(wm),
-        to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target         (),
             res.m_predecessor_map()},
@@ -410,8 +410,8 @@ struct search_to
 
 } // namespace detail::dij::fn
 
-inline constexpr detail::dij::fn::search_to dijkstra_search_to{};
-inline constexpr detail::dij::fn::search_to dijkstra_to       {};
+inline constexpr detail::dij::to::fn::algo dijkstra_search_to{};
+inline constexpr detail::dij::to::fn::algo dijkstra_to       {};
 
 } // namespace heim::graphs
 

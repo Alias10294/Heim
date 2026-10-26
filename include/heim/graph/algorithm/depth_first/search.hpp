@@ -16,16 +16,20 @@
 
 namespace heim::graphs
 {
-namespace detail
+namespace detail::dfs
 {
-struct dfs_fn;
+namespace fn
+{
+struct algo;
+
+} // namespace fn
 
 
 template<
     typename PMap,
     typename DMap,
     typename FMap>
-struct df_visitor
+struct visitor
 {
   [[no_unique_address]] PMap m_pm;
   [[no_unique_address]] DMap m_dm;
@@ -34,11 +38,11 @@ struct df_visitor
 
 public:
   constexpr
-  df_visitor(
-      PMap         pm,
-      DMap         dm,
-      FMap         fm,
-      std::size_t  t  = {})
+  visitor(
+      PMap        pm,
+      DMap        dm,
+      FMap        fm,
+      std::size_t t  = {})
     : m_pm{std::move(pm)}
     , m_dm{std::move(dm)}
     , m_fm{std::move(fm)}
@@ -82,7 +86,7 @@ public:
   { properties::set(this->m_pm, target(g, e), source(g, e)); }
 };
 
-} // namespace detail
+} // namespace detail::dfs
 
 
 template<
@@ -92,7 +96,7 @@ template<
     typename FMap = default_property_map_t>
 class depth_first_search_result
 {
-  friend struct detail::dfs_fn;
+  friend struct detail::dfs::fn::algo;
 
 private:
   using vertex_type
@@ -184,9 +188,9 @@ using dfs_result
 = depth_first_search_result<G, PMap, DMap, FMap>;
 
 
-namespace detail
+namespace detail::dfs::fn
 {
-struct dfs_fn
+struct algo
 {
   template<
       typename G,
@@ -211,7 +215,7 @@ struct dfs_fn
     depth_first_visit(
         g,
         std::forward<VRange>(rs),
-        df_visitor{
+        visitor{
             res.m_predecessor_map   (),
             res.m_discovery_time_map(),
             res.m_finish_time_map   ()},
@@ -267,7 +271,7 @@ struct dfs_fn
     depth_first_visit(
         g,
         std::move(r),
-        df_visitor{
+        visitor{
             res.m_predecessor_map   (),
             res.m_discovery_time_map(),
             res.m_finish_time_map   ()},
@@ -301,10 +305,10 @@ struct dfs_fn
   }
 };
 
-} // namespace detail
+} // namespace detail::dfs::fn
 
-inline constexpr detail::dfs_fn depth_first_search{};
-inline constexpr detail::dfs_fn dfs               {};
+inline constexpr detail::dfs::fn::algo depth_first_search{};
+inline constexpr detail::dfs::fn::algo dfs               {};
 
 } // namespace heim::graphs
 

@@ -32,6 +32,24 @@ dijkstra_heap_arity_v
 
 namespace detail::dij
 {
+template<
+    typename G,
+    typename WMap>
+using weight_t
+= std::remove_cvref_t<properties::readable_map_result_t<WMap &, edge_t<std::remove_cvref_t<G>> &>>;
+
+template<
+    typename G,
+    typename WMap,
+    typename DMap>
+using dist_t
+= std::remove_cvref_t<properties::readable_map_result_t<
+    typename deduced_storage_t<vertex_t<std::remove_cvref_t<G>>, weight_t<G, WMap>, DMap>::property_map_type,
+    vertex_t<std::remove_cvref_t<G>>>>;
+
+
+namespace vis
+{
 namespace fn
 {
 struct initialize_vertex
@@ -194,7 +212,7 @@ template<
   typename Cmp,
   typename Cmb,
   typename Heap>
-struct bf_visitor
+struct bfs_visitor
 {
 private:
   template<typename G> using vertex_type = vertex_t<std::remove_cvref_t<G>>;
@@ -212,7 +230,7 @@ private:
 
 public:
   constexpr
-  bf_visitor(
+  bfs_visitor(
       WMap   wm,
       Vis  &&vis,
       DMap   dm,
@@ -222,13 +240,13 @@ public:
       Cmb  &&cmb,
       Heap  &heap)
     : m_wm  {std::move(wm)}
-    , m_vis {std::forward<Vis>(vis)}
-    , m_dm  {std::move(dm)}
-    , m_inf {std::forward<Inf>(inf)}
-    , m_zr  {std::forward<Zero>(zr)}
-    , m_cmp {cmp}
-    , m_cmb {std::forward<Cmb>(cmb)}
-    , m_heap{heap}
+  , m_vis {std::forward<Vis>(vis)}
+  , m_dm  {std::move(dm)}
+  , m_inf {std::forward<Inf>(inf)}
+  , m_zr  {std::forward<Zero>(zr)}
+  , m_cmp {cmp}
+  , m_cmb {std::forward<Cmb>(cmb)}
+  , m_heap{heap}
   { }
 
 
@@ -239,7 +257,7 @@ public:
   {
     properties::set(this->m_dm, v, this->m_inf);
 
-    return dij::initialize_vertex(this->m_vis, g, v);
+    return vis::initialize_vertex(this->m_vis, g, v);
   }
 
   template<typename G>
@@ -247,7 +265,7 @@ public:
   visit
   source_vertex(G const &g, vertex_type<G> v)
   {
-    auto ctrl{dij::source_vertex(this->m_vis, g, v)};
+    auto ctrl{vis::source_vertex(this->m_vis, g, v)};
     contract_assert(
         ctrl == visit::proceed
      || ctrl == visit::stop
@@ -268,7 +286,7 @@ public:
   visit
   discover_vertex(G const &g, vertex_type<G> v)
   {
-    auto ctrl{dij::discover_vertex(this->m_vis, g, v)};
+    auto ctrl{vis::discover_vertex(this->m_vis, g, v)};
     contract_assert(
         ctrl == visit::proceed
      || ctrl == visit::stop);
@@ -280,20 +298,20 @@ public:
   constexpr
   visit
   examine_vertex(G const &g, vertex_type<G> v)
-  { return dij::examine_vertex(this->m_vis, g, v); }
+  { return vis::examine_vertex(this->m_vis, g, v); }
 
   template<typename G>
   constexpr
   visit
   finish_vertex(G const &g, vertex_type<G> v)
-  { return dij::finish_vertex(this->m_vis, g, v); }
+  { return vis::finish_vertex(this->m_vis, g, v); }
 
   template<typename G>
   constexpr
   visit
   examine_edge(G const &g, edge_type<G> e)
   {
-    auto ctrl{dij::examine_edge(this->m_vis, g, e)};
+    auto ctrl{vis::examine_edge(this->m_vis, g, e)};
     contract_assert(
         ctrl == visit::proceed
      || ctrl == visit::stop
@@ -314,7 +332,7 @@ public:
     {
       properties::set(this->m_dm, v, dist);
 
-      ctrl = dij::relaxed_edge(this->m_vis, g, e);
+      ctrl = vis::relaxed_edge(this->m_vis, g, e);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop);
@@ -323,7 +341,7 @@ public:
     }
     else
     {
-      ctrl = dij::non_relaxed_edge(this->m_vis, g, e);
+      ctrl = vis::non_relaxed_edge(this->m_vis, g, e);
       contract_assert(
           ctrl == visit::proceed
        || ctrl == visit::stop);
@@ -351,29 +369,13 @@ template<
     typename Cmp,
     typename Cmb,
     typename Heap>
-bf_visitor(WMap, Vis &&, DMap, Inf &&, Zero &&, Cmp &, Cmb &&, Heap &)
--> bf_visitor<WMap, Vis, DMap, Inf, Zero, Cmp, Cmb, Heap>;
-
-
-template<
-    typename G,
-    typename WMap>
-using weight_t
-= std::remove_cvref_t<properties::readable_map_result_t<WMap &, edge_t<std::remove_cvref_t<G>> &>>;
-
-template<
-    typename G,
-    typename WMap,
-    typename DMap>
-using dist_t
-= std::remove_cvref_t<properties::readable_map_result_t<
-    typename deduced_storage_t<vertex_t<std::remove_cvref_t<G>>, weight_t<G, WMap>, DMap>::property_map_type,
-    vertex_t<std::remove_cvref_t<G>>>>;
+bfs_visitor(WMap, Vis &&, DMap, Inf &&, Zero &&, Cmp &, Cmb &&, Heap &)
+-> bfs_visitor<WMap, Vis, DMap, Inf, Zero, Cmp, Cmb, Heap>;
 
 
 namespace fn
 {
-struct visit
+struct algo
 {
   template<
       typename G,
@@ -416,16 +418,16 @@ struct visit
     auto                                                    rdm       {d_rstorage.property_map()};
 
     indirect_d_ary_heap heap{
-        dijkstra_heap_arity{},
-        std::forward<Cont>(cnt),
-        rdm,
-        std::move(im),
-        cmp};
+      dijkstra_heap_arity{},
+      std::forward<Cont>(cnt),
+      rdm,
+      std::move(im),
+      cmp};
 
     return breadth_first_visit(
         g,
         std::forward<VRange>(rs),
-        bf_visitor{
+        bfs_visitor{
             std::move(wm),
             std::forward<Vis>(vis),
             rdm,
@@ -483,11 +485,12 @@ struct visit
 };
 
 } // namespace fn
+} // namespace vis
 } // namespace detail::dij
 
 
 inline constexpr
-detail::dij::fn::visit
+detail::dij::vis::fn::algo
 dijkstra_visit{};
 
 } // namespace heim::graphs

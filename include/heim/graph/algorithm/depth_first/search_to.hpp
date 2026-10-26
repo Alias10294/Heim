@@ -16,16 +16,20 @@
 
 namespace heim::graphs
 {
-namespace detail
+namespace detail::dfs::to
 {
-struct dfs_to_fn;
+namespace fn
+{
+struct algo;
+
+} // namespace fn
 
 
 template<
     typename G,
     typename PMap,
     typename DMap>
-struct df_to_visitor
+struct visitor
 {
 private:
   using vertex_type
@@ -39,7 +43,7 @@ private:
 
 public:
   constexpr
-  df_to_visitor(
+  visitor(
       std::in_place_type_t<G>,
       vertex_type tgt,
       PMap        pm,
@@ -85,7 +89,7 @@ template<
     typename DMap = default_property_map_t>
 class depth_first_search_to_result
 {
-  friend struct detail::dfs_to_fn;
+  friend struct detail::dfs::to::fn::algo;
 
 private:
   using vertex_type
@@ -163,9 +167,9 @@ using dfs_to_result
 = depth_first_search_to_result<G, PMap, DMap>;
 
 
-namespace detail
+namespace detail::dfs::to::fn
 {
-struct dfs_to_fn
+struct algo
 {
   template<
       typename G,
@@ -189,7 +193,7 @@ struct dfs_to_fn
     depth_first_visit(
         g,
         std::forward<VRange>(rs),
-        df_to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target            (),
             res.m_predecessor_map   (),
@@ -245,7 +249,7 @@ struct dfs_to_fn
     depth_first_visit(
         g,
         std::move(r),
-        df_to_visitor{
+        visitor{
             std::in_place_type<G>,
             res.m_target            (),
             res.m_predecessor_map   (),
@@ -281,8 +285,8 @@ struct dfs_to_fn
 
 } // namespace detail
 
-inline constexpr detail::dfs_to_fn depth_first_search_to{};
-inline constexpr detail::dfs_to_fn dfs_to               {};
+inline constexpr detail::dfs::to::fn::algo depth_first_search_to{};
+inline constexpr detail::dfs::to::fn::algo dfs_to               {};
 
 } // namespace heim::graphs
 
