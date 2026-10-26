@@ -6,33 +6,26 @@
 #include <ranges>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
+#include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/graph/interface/primitives.hpp"
 #include "heim/graph/interface/traits.hpp"
-#include "color.hpp"
-#include "common.hpp"
-#include "depth_first_search.hpp"
+#include "depth_first/depth_first.hpp"
 
 namespace heim::graphs
 {
-namespace detail
+namespace detail::topo
 {
 template<typename OutputIt>
-class reverse_topological_sort_visitor
-  : public basic_depth_first_search_visitor
+class visitor
 {
 private:
   OutputIt m_it;
 
 public:
   constexpr
-  reverse_topological_sort_visitor()
-  = default;
-
-  constexpr
-  reverse_topological_sort_visitor(OutputIt it)
+  visitor(OutputIt it)
     : m_it{std::move(it)}
   { }
 
@@ -47,100 +40,83 @@ public:
   static constexpr
   void
   back_edge(Graph const &, edge_t<std::remove_cvref_t<Graph>>)
-  { throw std::logic_error{"reverse_topological_sort_visitor::back_edge"}; }
+  { throw std::logic_error{"heim::graphs::reverse_topological_sort: detected cycle"}; }
 
 
   constexpr
   auto
-  extract() &&
+  get() &&
   { return std::move(this->m_it); }
 };
 
-
-struct reverse_topological_sort_fn
+namespace fn
+{
+struct reverse_sort
 {
   template<
-      typename Graph,
-      typename OutputIt,
-      typename ColorMap>
+      typename G,
+      typename OutIt,
+      typename CMap  = default_property_map_t>
   constexpr
-  OutputIt
+  OutIt
   operator()(
-      Graph const &g,
-      OutputIt     it,
-      ColorMap     c) const
+      G const &g,
+      OutIt    it,
+      CMap     cm = {}) const
   requires
-      directed<std::remove_cvref_t<Graph>>
-   && std::output_iterator<OutputIt, vertex_t<std::remove_cvref_t<Graph>>>
+      directed<std::remove_cvref_t<G>>
+   && std::output_iterator<OutIt, vertex_t<std::remove_cvref_t<G>>>
   {
-    using vertex_type
-    = vertex_t<std::remove_cvref_t<Graph>>;
+    visitor vis{std::move(it)};
 
-    auto c_storage{resolve_storage<ColorMap, std::unordered_map<vertex_type, color>>()};
-    auto c_map    {resolve_property_map(std::move(c), c_storage)};
-
-    using color_type
-    = std::remove_cvref_t<properties::readable_map_result_t<decltype(c_map), vertex_type &>>;
-
-    for (vertex_type v : vertices(g))
-      properties::set(c_map, v, colors::white_v<color_type>);
-
-    reverse_topological_sort_visitor vis{std::move(it)};
-
-    for (vertex_type v : vertices(g))
-    {
-      if (properties::get(c_map, v) != colors::white_v<color_type>)
-        continue;
-
-      depth_first_visit(
-          g,
-          v,
-          vis,
-          c_map);
-    }
-
-    return std::move(vis).extract();
+    depth_first_visit(g, vertices(g), vis, std::move(cm));
+    return std::move(vis).get();
   }
 };
 
-} // namespace detail
+} // namespace fn
+} // namespace detail::topo
 
-inline constexpr detail::reverse_topological_sort_fn reverse_topological_sort{};
+inline constexpr
+detail::topo::fn::reverse_sort
+reverse_topological_sort{};
 
 
-namespace detail
+namespace detail::topo::fn
 {
-struct topological_sort_fn
+struct sort
 {
   template<
-      typename Graph,
-      typename Container = std::vector<vertex_t<std::remove_cvref_t<Graph>>>,
-      typename ColorMap  = default_property_map_t>
+      typename G,
+      typename Cont = std::vector<vertex_t<std::remove_cvref_t<G>>>,
+      typename CMap = default_property_map_t>
   constexpr
   auto
   operator()(
-      Graph const &g,
-      Container  &&cont = {},
-      ColorMap     c    = {}) const
-  requires directed<std::remove_cvref_t<Graph>>
+      G const &g,
+      Cont   &&cnt = {},
+      CMap     cm  = {}) const
+  requires directed<std::remove_cvref_t<G>>
   {
-    contract_assert(std::ranges::empty(cont));
+    contract_assert(std::ranges::empty(cnt));
 
-    if constexpr (requires (vertex_t<std::remove_cvref_t<Graph>> &v) { cont.push_front(v); })
-      reverse_topological_sort(g, std::front_inserter(cont), std::move(c));
+    if constexpr (requires (vertex_t<std::remove_cvref_t<G>> &v) { cnt.push_front(v); })
+      reverse_topological_sort(g, std::front_inserter(cnt), std::move(cm));
     else
     {
-      reverse_topological_sort(g, std::back_inserter(cont), std::move(c));
-      std::ranges::reverse(cont);
+      reverse_topological_sort(g, std::back_inserter(cnt), std::move(cm));
+      std::ranges::reverse(cnt);
     }
 
-    return std::views::all(std::forward<Container>(cont));
+    return std::views::all(std::forward<Cont>(cnt));
   }
 };
 
-} // namespace detail
+} // namespace detail::topo::fn
 
-inline constexpr detail::topological_sort_fn topological_sort{};
+inline constexpr
+detail::topo::fn::sort
+topological_sort{};
 
 } // namespace heim::graphs
 

@@ -76,38 +76,38 @@ static void test_001()
     std::print(" {}", v);
   std::println();
 
-  // // dijkstra
-  // auto const dij_res {heim::graphs::dijkstra(g, v0, heim::make_readable_property_map(w))};
-  // bool const dij_ok  {dij_res.reached(v3)};
-  // auto const dij_path{dij_res.path_from(v3)};
-  //
-  // std::println("dijkstra");
-  //
-  // std::println("  v3 reached ? {}", dij_ok);
-  // std::print  ("  path from v3:");
-  // for (vertex_type v : dij_path)
-  //   std::print(" {}", v);
-  // std::println();
-  //
-  // std::println("  distances:");
-  // for (vertex_type v : heim::graphs::vertices(g))
-  //   std::println("    distance to v{} = {}", v, dij_res.distance_to(v));
-  //
-  // // dijkstra_to
-  // auto const dij_to_res {heim::graphs::dijkstra_to(g, v0, v3, heim::make_readable_property_map(w))};
-  // bool const dij_to_ok  {dij_to_res.reached()};
-  // auto const dij_to_path{dij_to_res.path()};
-  //
-  // std::println("dijkstra_to");
-  //
-  // std::println("  v3 reached ? {}", dij_to_ok);
-  // std::print  ("  path from v3:");
-  // for (vertex_type v : dij_to_path)
-  //   std::print(" {}", v);
-  // std::println();
-  // std::println("  distance to v3 = {}", dij_to_res.distance());
-  //
-  //
+  // dijkstra
+  auto const dij_res {heim::graphs::dijkstra(g, v0, heim::make_readable_property_map(w))};
+  bool const dij_ok  {dij_res.reached(v3)};
+  auto const dij_path{dij_res.path_from(v3)};
+
+  std::println("dijkstra");
+
+  std::println("  v3 reached ? {}", dij_ok);
+  std::print  ("  path from v3:");
+  for (vertex_type v : dij_path)
+    std::print(" {}", v);
+  std::println();
+
+  std::println("  distances:");
+  for (vertex_type v : heim::graphs::vertices(g))
+    std::println("    distance to v{} = {}", v, dij_res.distance_to(v));
+
+  // dijkstra_to
+  auto const dij_to_res {heim::graphs::dijkstra_to(g, v0, v3, heim::make_readable_property_map(w))};
+  bool const dij_to_ok  {dij_to_res.reached()};
+  auto const dij_to_path{dij_to_res.path()};
+
+  std::println("dijkstra_to");
+
+  std::println("  v3 reached ? {}", dij_to_ok);
+  std::print  ("  path from v3:");
+  for (vertex_type v : dij_to_path)
+    std::print(" {}", v);
+  std::println();
+  std::println("  distance to v3 = {}", dij_to_res.distance());
+
+
   // // connected_components
   // auto const cc_res{heim::graphs::connected_components(g)};
   //
@@ -141,25 +141,33 @@ static void test_graph()
   // auto const [e2, _     ]{heim::graphs::place_edge(g, v1, v2)};
   // auto const [e3, _     ]{heim::graphs::place_edge(g, v2, v3)};
 
-  heim::adjacency_list g{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
+  heim::adjacency_list       ug{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
+  heim::adjacency_list<true> dg{{0, 1}, {0, 2}, {1, 2}, {2, 3}};
 
-  auto bfs{heim::graphs::bfs(g, 0)};
+  auto bfs{heim::graphs::bfs(ug, 0)};
   std::println("{}", bfs.path_from(3));
 
-  auto bfs_to{heim::graphs::bfs_to(g, 0, 3)};
+  auto bfs_to{heim::graphs::bfs_to(ug, 0, 3)};
   std::println("{}", bfs_to.path());
 
-  auto dfs{heim::graphs::dfs(g, 0)};
+  auto dfs{heim::graphs::dfs(ug, 0)};
   std::println("{}", dfs.path_from(3));
 
-  auto dfs_to{heim::graphs::dfs_to(g, 0, 3)};
+  auto dfs_to{heim::graphs::dfs_to(ug, 0, 3)};
   std::println("{}", dfs_to.path());
 
-  auto dij{heim::graphs::dijkstra(g, 0, heim::make_property_map(heim::constant_arg, 2))};
+  auto dij{heim::graphs::dijkstra(ug, 0, heim::make_property_map(heim::constant_arg, 2))};
   std::println("{} {}", dij.path_from(3), dij.distance_of(3));
 
-  auto dij_to{heim::graphs::dijkstra_to(g, 0, 3, heim::make_property_map(heim::constant_arg, 2))};
+  auto dij_to{heim::graphs::dijkstra_to(ug, 0, 3, heim::make_property_map(heim::constant_arg, 2))};
   std::println("{} {}", dij_to.path(), dij_to.distance());
+
+  std::vector<heim::graphs::vertex_t<heim::adjacency_list<true>>> rtopo{};
+  heim::graphs::reverse_topological_sort(dg, std::back_inserter(rtopo));
+  std::println("{}", rtopo);
+
+  auto topo{heim::graphs::topological_sort(dg)};
+  std::println("{}", topo);
 }
 
 

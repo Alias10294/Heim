@@ -9,6 +9,6 @@
 #include "indirect_d_ary_heap.hpp"
 #include "predecessor_view.hpp"
 #include "result_storage.hpp"
-// #include "topological_sort.hpp"
+#include "topological_sort.hpp"
 
 #endif // HEIM_GRAPH_ALGORITHM_ALGORITHM_HPP
