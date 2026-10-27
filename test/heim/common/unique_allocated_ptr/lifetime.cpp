@@ -29,7 +29,7 @@ TEST_CASE("allocate_unique owns and destroys one allocated object", "[common][al
   REQUIRE(tracked::alive == 0);
 }
 
-TEST_CASE("allocate_unique allocates and destroys an array", "[.known-bug][common][allocator]")
+TEST_CASE("allocate_unique allocates and destroys an array", "[common][unique_allocated_ptr][array][regression]")
 {
   tracked::alive = 0;
   {

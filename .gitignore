@@ -1,10 +1,9 @@
-build/
-
 .idea/
 
-docs_html/
+build/
+
 docs_md/
 
-/subprojects/catch2/
-/subprojects/packagecache/
-/subprojects/.wraplock
+subprojects/catch2/
+subprojects/packagecache/
+subprojects/.wraplock
