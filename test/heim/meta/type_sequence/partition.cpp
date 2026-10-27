@@ -1,13 +1,16 @@
 #include "support.hpp"
+
 using namespace heim_meta_test;
 
 using partition_source = seq<a, separator, b, c, separator, d>;
 static_assert(same<heim::type_sequence_split_t<empty, separator>, seq<empty>>);
 static_assert(same<heim::type_sequence_split_t<triple, separator>, seq<triple>>);
-static_assert(same<heim::type_sequence_split_t<partition_source, separator>, seq<seq<a>, seq<b, c>, seq<d>>>);
+static_assert(same<heim::type_sequence_split_t<partition_source, separator>, seq<seq<a>, seq<b, c>,
+    seq<d>>>);
 static_assert(same<heim::type_sequence_split_t<seq<separator, a>, separator>, seq<empty, seq<a>>>);
 static_assert(same<heim::type_sequence_split_t<seq<a, separator>, separator>, seq<seq<a>, empty>>);
-static_assert(same<heim::type_sequence_split_t<seq<a, separator, separator, b>, separator>, seq<seq<a>, empty, seq<b>>>);
+static_assert(same<heim::type_sequence_split_t<seq<a, separator, separator, b>, separator>, seq<seq<a>,
+    empty, seq<b>>>);
 static_assert(same<triple::split<a>, seq<empty, seq<b, c>>>);
 
 static_assert(same<heim::type_sequence_chunk_t<empty, 1>, empty>);

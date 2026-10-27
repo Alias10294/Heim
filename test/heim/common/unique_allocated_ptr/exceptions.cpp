@@ -24,7 +24,9 @@ TEST_CASE("a failed single allocation does not leak", "[common][unique_allocated
   REQUIRE(log->outstanding.empty());
 }
 
-TEST_CASE("a failed overwrite single allocation does not leak", "[common][unique_allocated_ptr][exception][overwrite]")
+TEST_CASE(
+    "a failed overwrite single allocation does not leak",
+    "[common][unique_allocated_ptr][exception][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   log->fail_allocation_on = 1;
@@ -46,7 +48,9 @@ TEST_CASE("a failed array allocation does not leak", "[common][unique_allocated_
   REQUIRE(log->outstanding.empty());
 }
 
-TEST_CASE("a failed overwrite array allocation does not leak", "[common][unique_allocated_ptr][exception][array][overwrite]")
+TEST_CASE(
+    "a failed overwrite array allocation does not leak",
+    "[common][unique_allocated_ptr][exception][array][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   log->fail_allocation_on = 1;
@@ -57,7 +61,9 @@ TEST_CASE("a failed overwrite array allocation does not leak", "[common][unique_
   REQUIRE(log->outstanding.empty());
 }
 
-TEST_CASE("a failing allocator construct releases single storage", "[common][unique_allocated_ptr][exception]")
+TEST_CASE(
+    "a failing allocator construct releases single storage",
+    "[common][unique_allocated_ptr][exception]")
 {
   auto log = std::make_shared<ledger>();
   log->fail_construct_on = 1;
@@ -88,7 +94,9 @@ TEST_CASE("a failing single constructor releases its storage", "[common][unique_
   REQUIRE(log->outstanding.empty());
 }
 
-TEST_CASE("a failing overwrite single constructor releases its storage", "[common][unique_allocated_ptr][exception][overwrite]")
+TEST_CASE(
+    "a failing overwrite single constructor releases its storage",
+    "[common][unique_allocated_ptr][exception][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   throwing_value::reset(1);
@@ -103,7 +111,9 @@ TEST_CASE("a failing overwrite single constructor releases its storage", "[commo
   REQUIRE(log->outstanding.empty());
 }
 
-TEST_CASE("array rollback destroys only fully constructed elements in reverse order", "[common][unique_allocated_ptr][exception][array]")
+TEST_CASE(
+    "array rollback destroys only fully constructed elements in reverse order",
+    "[common][unique_allocated_ptr][exception][array]")
 {
   for (int failing_element = 1; failing_element <= 8; ++failing_element)
   {
@@ -128,7 +138,9 @@ TEST_CASE("array rollback destroys only fully constructed elements in reverse or
   }
 }
 
-TEST_CASE("overwrite array rollback destroys only fully constructed elements", "[common][unique_allocated_ptr][exception][array][overwrite]")
+TEST_CASE(
+    "overwrite array rollback destroys only fully constructed elements",
+    "[common][unique_allocated_ptr][exception][array][overwrite]")
 {
   for (int failing_element = 1; failing_element <= 8; ++failing_element)
   {
@@ -155,7 +167,9 @@ TEST_CASE("overwrite array rollback destroys only fully constructed elements", "
   }
 }
 
-TEST_CASE("allocator hook failures roll back ordinary arrays completely", "[common][unique_allocated_ptr][exception][array]")
+TEST_CASE(
+    "allocator hook failures roll back ordinary arrays completely",
+    "[common][unique_allocated_ptr][exception][array]")
 {
   for (int failing_element = 1; failing_element <= 8; ++failing_element)
   {
@@ -179,7 +193,9 @@ TEST_CASE("allocator hook failures roll back ordinary arrays completely", "[comm
   }
 }
 
-TEST_CASE("successful construction after a previous injected failure does not poison allocator", "[common][unique_allocated_ptr][exception]")
+TEST_CASE(
+    "successful construction after a previous injected failure does not poison allocator",
+    "[common][unique_allocated_ptr][exception]")
 {
   auto log = std::make_shared<ledger>();
   log->fail_construct_on = 1;

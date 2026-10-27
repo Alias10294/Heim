@@ -23,7 +23,9 @@ static_assert(constexpr_single_works());
 static_assert(constexpr_array_works());
 }
 
-TEST_CASE("ordinary allocator-aware allocations are usable in constant evaluation", "[common][unique_allocated_ptr][constexpr]")
+TEST_CASE(
+    "ordinary allocator-aware allocations are usable in constant evaluation",
+    "[common][unique_allocated_ptr][constexpr]")
 {
   REQUIRE(constexpr_single_works());
   REQUIRE(constexpr_array_works());

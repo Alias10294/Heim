@@ -72,7 +72,10 @@ struct tracking_allocator
   {
     ++log->deallocations;
     auto const it = std::find_if(log->outstanding.begin(), log->outstanding.end(),
-        [ptr](block const &b) { return b.address == ptr; });
+        [ptr](block const &b)
+        {
+          return b.address == ptr;
+        });
     if (it == log->outstanding.end())
       ++log->wrong_deallocations;
     else
@@ -85,7 +88,7 @@ struct tracking_allocator
   }
 
   template<typename U, typename ...Args>
-  void construct(U *ptr, Args &&...args)
+  void construct(U *ptr, Args && ...args)
   {
     ++log->construct_attempts;
     if (log->fail_construct_on == log->construct_attempts)
@@ -105,7 +108,7 @@ struct tracking_allocator
   friend struct tracking_allocator;
 
   template<typename U>
-  bool operator==(tracking_allocator<U> const &other) const noexcept
+  bool operator== (tracking_allocator<U> const &other) const noexcept
   { return log == other.log && owner == other.owner; }
 };
 
@@ -130,15 +133,18 @@ struct live_value
 
   explicit live_value(int p = 0)
     : id{next_id++}, payload{p}
-  { ++alive; ++constructed; }
+  { ++alive;
+  ++constructed; }
 
   live_value(live_value const &other)
     : id{next_id++}, payload{other.payload}
-  { ++alive; ++constructed; }
+  { ++alive;
+  ++constructed; }
 
-  live_value(live_value &&other) noexcept
+  live_value(live_value && other) noexcept
     : id{next_id++}, payload{other.payload}
-  { ++alive; ++constructed; }
+  { ++alive;
+  ++constructed; }
 
   ~live_value()
   {
@@ -198,7 +204,7 @@ struct immovable_value
   int value;
   explicit immovable_value(int v) : value{v} { }
   immovable_value(immovable_value const &) = delete;
-  immovable_value(immovable_value &&) = delete;
+  immovable_value(immovable_value && ) = delete;
 };
 
 // An allocator with no default constructor exercises the deleter constraints.

@@ -1,4 +1,5 @@
 #include "support.hpp"
+
 using namespace heim_meta_test;
 
 static_assert(same<heim::type_sequence_concat_t<empty>, empty>);

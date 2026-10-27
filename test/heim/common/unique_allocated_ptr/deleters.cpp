@@ -25,7 +25,9 @@ TEST_CASE("normal single deleter destroys and deallocates", "[common][unique_all
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("normal array deleter destroys all elements and deallocates exact extent", "[common][unique_allocated_ptr][deleter][array]")
+TEST_CASE(
+    "normal array deleter destroys all elements and deallocates exact extent",
+    "[common][unique_allocated_ptr][deleter][array]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -41,7 +43,9 @@ TEST_CASE("normal array deleter destroys all elements and deallocates exact exte
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("overwrite single deleter bypasses allocator destroy hook", "[common][unique_allocated_ptr][deleter][overwrite]")
+TEST_CASE(
+    "overwrite single deleter bypasses allocator destroy hook",
+    "[common][unique_allocated_ptr][deleter][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -55,7 +59,9 @@ TEST_CASE("overwrite single deleter bypasses allocator destroy hook", "[common][
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("overwrite array deleter destroys all elements but bypasses allocator hook", "[common][unique_allocated_ptr][deleter][array][overwrite]")
+TEST_CASE(
+    "overwrite array deleter destroys all elements but bypasses allocator hook",
+    "[common][unique_allocated_ptr][deleter][array][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -83,7 +89,9 @@ TEST_CASE("null normal deleters never deallocate or destroy", "[common][unique_a
   REQUIRE(log->destroys == 0);
 }
 
-TEST_CASE("null overwrite deleters never deallocate or destroy", "[common][unique_allocated_ptr][deleter][overwrite]")
+TEST_CASE(
+    "null overwrite deleters never deallocate or destroy",
+    "[common][unique_allocated_ptr][deleter][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   auto alloc = tracking_allocator<int>{log};
@@ -95,7 +103,9 @@ TEST_CASE("null overwrite deleters never deallocate or destroy", "[common][uniqu
   REQUIRE(log->destroys == 0);
 }
 
-TEST_CASE("copying a deleter retains its allocator and its array size", "[common][unique_allocated_ptr][deleter][array]")
+TEST_CASE(
+    "copying a deleter retains its allocator and its array size",
+    "[common][unique_allocated_ptr][deleter][array]")
 {
   auto log = std::make_shared<ledger>();
   auto alloc = tracking_allocator<int>{log, 17};
@@ -109,7 +119,9 @@ TEST_CASE("copying a deleter retains its allocator and its array size", "[common
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("moving a deleter retains its array size and allocator ownership", "[common][unique_allocated_ptr][deleter][array]")
+TEST_CASE(
+    "moving a deleter retains its array size and allocator ownership",
+    "[common][unique_allocated_ptr][deleter][array]")
 {
   auto log = std::make_shared<ledger>();
   auto alloc = tracking_allocator<int>{log, 19};

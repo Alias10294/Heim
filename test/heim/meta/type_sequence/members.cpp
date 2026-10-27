@@ -1,4 +1,5 @@
 #include "support.hpp"
+
 using namespace heim_meta_test;
 
 // These verify member aliases themselves, not merely the free *_t metafunctions.
@@ -58,7 +59,7 @@ static_assert(same<single::transform<add_pointer>, seq<a*>>);
 static_assert(same<single::fill<b>, seq<b>>);
 static_assert(same<single::split<a>, seq<empty, empty>>);
 static_assert(same<single::zip<seq<b>>, seq<seq<a, b>>>);
-static_assert(same<single::cartesian_product<seq<b,c>>, seq<seq<a,b>, seq<a,c>>>);
+static_assert(same<single::cartesian_product<seq<b, c>>, seq<seq<a, b>, seq<a, c>>>);
 static_assert(same<single::fold_left_first<make_pair_sequence>, a>);
 static_assert(same<single::fold_right_last<make_pair_sequence>, a>);
 static_assert(single::index<a> == 0);
@@ -77,7 +78,7 @@ static_assert(same<triple::pop_back, seq<a, b>>);
 static_assert(same<triple::tuple, std::tuple<a, b, c>>);
 static_assert(same<triple::take<2>, seq<a, b>>);
 static_assert(same<triple::drop<2>, seq<c>>);
-static_assert(same<triple::chunk<2>, seq<seq<a,b>, seq<c>>>);
+static_assert(same<triple::chunk<2>, seq<seq<a, b>, seq<c>>>);
 static_assert(same<triple::stride<2>, seq<a, c>>);
 static_assert(same<triple::select<2, 0, 2>, seq<c, a, c>>);
 static_assert(same<triple::erase<1>, seq<a, c>>);
@@ -85,18 +86,18 @@ static_assert(same<triple::slice<1, 3>, seq<b, c>>);
 static_assert(same<triple::swap<0, 2>, seq<c, b, a>>);
 static_assert(same<triple::insert<1, d, e>, seq<a, d, e, b, c>>);
 static_assert(same<triple::replace<1, d, e>, seq<a, d, e, c>>);
-static_assert(same<triple::concat<seq<d>>, seq<a,b,c,d>>);
-static_assert(same<triple::append<d>, seq<a,b,c,d>>);
-static_assert(same<triple::prepend<d>, seq<d,a,b,c>>);
+static_assert(same<triple::concat<seq<d>>, seq<a, b, c, d>>);
+static_assert(same<triple::append<d>, seq<a, b, c, d>>);
+static_assert(same<triple::prepend<d>, seq<d, a, b, c>>);
 static_assert(same<triple::remove<b>, seq<a, c>>);
 static_assert(same<triple::filter<always_true>, triple>);
 static_assert(same<triple::remove_if<always_true>, empty>);
 static_assert(same<triple::fill<d>, seq<d, d, d>>);
-static_assert(same<triple::transform<add_pointer>, seq<a*,b*,c*>>);
+static_assert(same<triple::transform<add_pointer>, seq<a*, b*, c*>>);
 static_assert(same<triple::split<b>, seq<seq<a>, seq<c>>>);
-static_assert(same<triple::zip<seq<d,e>>, seq<seq<a,d>,seq<b,e>>>);
-static_assert(same<triple::fold_left_first<make_pair_sequence>, seq<seq<a,b>,c>>);
-static_assert(same<triple::fold_right_last<make_pair_sequence>, seq<a,seq<b,c>>>);
+static_assert(same<triple::zip<seq<d, e>>, seq<seq<a, d>, seq<b, e>>>);
+static_assert(same<triple::fold_left_first<make_pair_sequence>, seq<seq<a, b>, c>>);
+static_assert(same<triple::fold_right_last<make_pair_sequence>, seq<a, seq<b, c>>>);
 static_assert(triple::count<b> == 1);
 static_assert(triple::contains<c>);
 static_assert(triple::index<e> == 3);

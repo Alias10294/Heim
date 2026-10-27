@@ -50,7 +50,9 @@ TEST_CASE("allocate_unique accepts std::pmr::polymorphic_allocator", "[common][u
   REQUIRE(resource.mismatches == 0);
 }
 
-TEST_CASE("allocate_unique arrays request the expected PMR allocation size", "[common][unique_allocated_ptr][pmr][array]")
+TEST_CASE(
+    "allocate_unique arrays request the expected PMR allocation size",
+    "[common][unique_allocated_ptr][pmr][array]")
 {
   recording_resource resource;
   {
@@ -63,7 +65,9 @@ TEST_CASE("allocate_unique arrays request the expected PMR allocation size", "[c
   REQUIRE(resource.mismatches == 0);
 }
 
-TEST_CASE("overwrite allocations use PMR resource and matching deallocation", "[common][unique_allocated_ptr][pmr][overwrite]")
+TEST_CASE(
+    "overwrite allocations use PMR resource and matching deallocation",
+    "[common][unique_allocated_ptr][pmr][overwrite]")
 {
   recording_resource resource;
   {
@@ -76,7 +80,9 @@ TEST_CASE("overwrite allocations use PMR resource and matching deallocation", "[
   REQUIRE(resource.mismatches == 0);
 }
 
-TEST_CASE("overwrite arrays use PMR resource and correct byte count", "[common][unique_allocated_ptr][pmr][array][overwrite]")
+TEST_CASE(
+    "overwrite arrays use PMR resource and correct byte count",
+    "[common][unique_allocated_ptr][pmr][array][overwrite]")
 {
   recording_resource resource;
   {
@@ -89,7 +95,9 @@ TEST_CASE("overwrite arrays use PMR resource and correct byte count", "[common][
   REQUIRE(resource.mismatches == 0);
 }
 
-TEST_CASE("zero-length PMR arrays do not call the memory resource", "[common][unique_allocated_ptr][pmr][array]")
+TEST_CASE(
+    "zero-length PMR arrays do not call the memory resource",
+    "[common][unique_allocated_ptr][pmr][array]")
 {
   recording_resource resource;
   auto p = heim::allocate_unique<int[]>(std::pmr::polymorphic_allocator<int>{&resource}, 0);

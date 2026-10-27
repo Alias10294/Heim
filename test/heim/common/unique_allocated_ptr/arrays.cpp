@@ -32,7 +32,9 @@ TEST_CASE("ordinary arrays value-initialize scalar elements", "[common][unique_a
   }
 }
 
-TEST_CASE("zero-length ordinary arrays do not allocate or construct", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "zero-length ordinary arrays do not allocate or construct",
+    "[common][unique_allocated_ptr][array]")
 {
   auto log = std::make_shared<ledger>();
   auto p = heim::allocate_unique<live_value[]>(tracking_allocator<live_value>{log}, 0);
@@ -43,7 +45,9 @@ TEST_CASE("zero-length ordinary arrays do not allocate or construct", "[common][
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("zero-length overwrite arrays do not allocate or construct", "[common][unique_allocated_ptr][array][overwrite]")
+TEST_CASE(
+    "zero-length overwrite arrays do not allocate or construct",
+    "[common][unique_allocated_ptr][array][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   auto p = heim::allocate_unique_for_overwrite<live_value[]>(tracking_allocator<live_value>{log}, 0);
@@ -54,7 +58,9 @@ TEST_CASE("zero-length overwrite arrays do not allocate or construct", "[common]
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("ordinary arrays construct and destroy exactly N objects", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "ordinary arrays construct and destroy exactly N objects",
+    "[common][unique_allocated_ptr][array]")
 {
   for (std::size_t n : {1u, 2u, 3u, 8u, 33u})
   {
@@ -76,7 +82,9 @@ TEST_CASE("ordinary arrays construct and destroy exactly N objects", "[common][u
   }
 }
 
-TEST_CASE("ordinary arrays destroy class elements in reverse order", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "ordinary arrays destroy class elements in reverse order",
+    "[common][unique_allocated_ptr][array]")
 {
   live_value::reset();
   {
@@ -86,7 +94,9 @@ TEST_CASE("ordinary arrays destroy class elements in reverse order", "[common][u
   REQUIRE(live_value::destruction_order == std::vector<int>{3, 2, 1, 0});
 }
 
-TEST_CASE("overwrite arrays construct and destroy class elements", "[common][unique_allocated_ptr][array][overwrite]")
+TEST_CASE(
+    "overwrite arrays construct and destroy class elements",
+    "[common][unique_allocated_ptr][array][overwrite]")
 {
   for (std::size_t n : {1u, 2u, 5u, 32u})
   {
@@ -107,7 +117,9 @@ TEST_CASE("overwrite arrays construct and destroy class elements", "[common][uni
   }
 }
 
-TEST_CASE("overwrite arrays destroy class elements in reverse order", "[common][unique_allocated_ptr][array][overwrite]")
+TEST_CASE(
+    "overwrite arrays destroy class elements in reverse order",
+    "[common][unique_allocated_ptr][array][overwrite]")
 {
   live_value::reset();
   {
@@ -117,7 +129,9 @@ TEST_CASE("overwrite arrays destroy class elements in reverse order", "[common][
   REQUIRE(live_value::destruction_order == std::vector<int>{3, 2, 1, 0});
 }
 
-TEST_CASE("overwrite arrays allow scalar assignment without reading indeterminate values", "[common][unique_allocated_ptr][array][overwrite]")
+TEST_CASE(
+    "overwrite arrays allow scalar assignment without reading indeterminate values",
+    "[common][unique_allocated_ptr][array][overwrite]")
 {
   auto p = heim::allocate_unique_for_overwrite<int[]>(std::allocator<int>{}, 128);
   for (int i = 0; i != 128; ++i)
@@ -142,7 +156,9 @@ TEST_CASE("moving an array leaves exactly one owner", "[common][unique_allocated
   REQUIRE(live_value::destroyed == 5);
 }
 
-TEST_CASE("moving onto an existing array destroys its old elements", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "moving onto an existing array destroys its old elements",
+    "[common][unique_allocated_ptr][array]")
 {
   live_value::reset();
   {
@@ -187,7 +203,9 @@ TEST_CASE("array release preserves array extent in copied deleter", "[common][un
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("array swap exchanges ownership and keeps correct array extents", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "array swap exchanges ownership and keeps correct array extents",
+    "[common][unique_allocated_ptr][array]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -204,7 +222,9 @@ TEST_CASE("array swap exchanges ownership and keeps correct array extents", "[co
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("an array allocation works with a non-default-constructible allocator", "[common][unique_allocated_ptr][array]")
+TEST_CASE(
+    "an array allocation works with a non-default-constructible allocator",
+    "[common][unique_allocated_ptr][array]")
 {
   auto p = heim::allocate_unique<int[]>(heim_test::allocation::explicit_allocator<int>{8}, 3);
   for (int i = 0; i != 3; ++i)

@@ -35,7 +35,9 @@ TEST_CASE("single allocation owns exactly one object", "[common][unique_allocate
   REQUIRE(live_value::destroyed == 1);
 }
 
-TEST_CASE("moving a single allocation transfers ownership without constructing another object", "[common][unique_allocated_ptr][single]")
+TEST_CASE(
+    "moving a single allocation transfers ownership without constructing another object",
+    "[common][unique_allocated_ptr][single]")
 {
   live_value::reset();
   {
@@ -79,7 +81,9 @@ TEST_CASE("reset destroys the current single pointee once", "[common][unique_all
   REQUIRE(live_value::destroyed == 1);
 }
 
-TEST_CASE("release transfers cleanup responsibility to the caller", "[common][unique_allocated_ptr][single]")
+TEST_CASE(
+    "release transfers cleanup responsibility to the caller",
+    "[common][unique_allocated_ptr][single]")
 {
   live_value::reset();
   auto p = heim::allocate_unique<live_value>(std::allocator<live_value>{});
@@ -92,7 +96,9 @@ TEST_CASE("release transfers cleanup responsibility to the caller", "[common][un
   REQUIRE(live_value::destroyed == 1);
 }
 
-TEST_CASE("swapping single allocations preserves both pointers and values", "[common][unique_allocated_ptr][single]")
+TEST_CASE(
+    "swapping single allocations preserves both pointers and values",
+    "[common][unique_allocated_ptr][single]")
 {
   live_value::reset();
   {
@@ -109,7 +115,9 @@ TEST_CASE("swapping single allocations preserves both pointers and values", "[co
   REQUIRE(live_value::destroyed == 2);
 }
 
-TEST_CASE("overwrite single allocation constructs and destroys class types", "[common][unique_allocated_ptr][single][overwrite]")
+TEST_CASE(
+    "overwrite single allocation constructs and destroys class types",
+    "[common][unique_allocated_ptr][single][overwrite]")
 {
   live_value::reset();
   {
@@ -123,7 +131,9 @@ TEST_CASE("overwrite single allocation constructs and destroys class types", "[c
   REQUIRE(live_value::destroyed == 1);
 }
 
-TEST_CASE("overwrite single scalar is writable before it is read", "[common][unique_allocated_ptr][single][overwrite]")
+TEST_CASE(
+    "overwrite single scalar is writable before it is read",
+    "[common][unique_allocated_ptr][single][overwrite]")
 {
   auto p = heim::allocate_unique_for_overwrite<int>(std::allocator<int>{});
   REQUIRE(p != nullptr);
@@ -137,7 +147,9 @@ TEST_CASE("normal single scalar allocation value-initializes", "[common][unique_
   REQUIRE(*p == 0);
 }
 
-TEST_CASE("single allocation forwards move-only constructor arguments", "[common][unique_allocated_ptr][single]")
+TEST_CASE(
+    "single allocation forwards move-only constructor arguments",
+    "[common][unique_allocated_ptr][single]")
 {
   struct holder {
     std::unique_ptr<int> value;
@@ -147,7 +159,9 @@ TEST_CASE("single allocation forwards move-only constructor arguments", "[common
   REQUIRE(*p->value == 55);
 }
 
-TEST_CASE("single allocation accepts an explicit non-default-constructible allocator", "[common][unique_allocated_ptr][single]")
+TEST_CASE(
+    "single allocation accepts an explicit non-default-constructible allocator",
+    "[common][unique_allocated_ptr][single]")
 {
   auto p = heim::allocate_unique<int>(heim_test::allocation::explicit_allocator<int>{11}, 47);
   REQUIRE(*p == 47);

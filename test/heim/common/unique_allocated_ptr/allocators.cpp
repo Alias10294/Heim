@@ -10,7 +10,9 @@ using heim_test::allocation::ledger;
 using heim_test::allocation::live_value;
 using heim_test::allocation::tracking_allocator;
 
-TEST_CASE("a stateful allocator deallocates the same single block it allocated", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "a stateful allocator deallocates the same single block it allocated",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -25,7 +27,9 @@ TEST_CASE("a stateful allocator deallocates the same single block it allocated",
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("a stateful allocator deallocates the same array block and count", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "a stateful allocator deallocates the same array block and count",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -38,7 +42,9 @@ TEST_CASE("a stateful allocator deallocates the same array block and count", "[c
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("overwrite allocations preserve allocator state", "[common][unique_allocated_ptr][allocator][overwrite]")
+TEST_CASE(
+    "overwrite allocations preserve allocator state",
+    "[common][unique_allocated_ptr][allocator][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -55,7 +61,9 @@ TEST_CASE("overwrite allocations preserve allocator state", "[common][unique_all
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("normal single-object allocation uses allocator_traits construct and destroy", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "normal single-object allocation uses allocator_traits construct and destroy",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -71,7 +79,9 @@ TEST_CASE("normal single-object allocation uses allocator_traits construct and d
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("normal array allocation uses allocator_traits hooks once per element", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "normal array allocation uses allocator_traits hooks once per element",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -86,7 +96,9 @@ TEST_CASE("normal array allocation uses allocator_traits hooks once per element"
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("overwrite single-object allocation bypasses allocator_traits construction hooks", "[common][unique_allocated_ptr][allocator][overwrite]")
+TEST_CASE(
+    "overwrite single-object allocation bypasses allocator_traits construction hooks",
+    "[common][unique_allocated_ptr][allocator][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -101,7 +113,9 @@ TEST_CASE("overwrite single-object allocation bypasses allocator_traits construc
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("overwrite array allocation bypasses allocator_traits construction hooks", "[common][unique_allocated_ptr][allocator][overwrite]")
+TEST_CASE(
+    "overwrite array allocation bypasses allocator_traits construction hooks",
+    "[common][unique_allocated_ptr][allocator][overwrite]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();
@@ -116,7 +130,9 @@ TEST_CASE("overwrite array allocation bypasses allocator_traits construction hoo
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("two independent allocators keep their allocation ownership separate", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "two independent allocators keep their allocation ownership separate",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -131,7 +147,9 @@ TEST_CASE("two independent allocators keep their allocation ownership separate",
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("move assignment preserves the correct allocator for each deallocation", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "move assignment preserves the correct allocator for each deallocation",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -146,7 +164,9 @@ TEST_CASE("move assignment preserves the correct allocator for each deallocation
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("array move assignment preserves the correct allocator and length", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "array move assignment preserves the correct allocator and length",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -162,7 +182,9 @@ TEST_CASE("array move assignment preserves the correct allocator and length", "[
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("cross-allocator swap preserves the allocator bound to its pointer", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "cross-allocator swap preserves the allocator bound to its pointer",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {
@@ -177,7 +199,9 @@ TEST_CASE("cross-allocator swap preserves the allocator bound to its pointer", "
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("reset and release preserve stateful allocator accounting", "[common][unique_allocated_ptr][allocator]")
+TEST_CASE(
+    "reset and release preserve stateful allocator accounting",
+    "[common][unique_allocated_ptr][allocator]")
 {
   auto log = std::make_shared<ledger>();
   {

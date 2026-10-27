@@ -23,7 +23,7 @@ struct fancy_pointer
   [[nodiscard]] constexpr T *operator->() const noexcept { return raw; }
   [[nodiscard]] constexpr T &operator*() const noexcept { return *raw; }
   [[nodiscard]] constexpr T &operator[](std::size_t i) const noexcept { return raw[i]; }
-  [[nodiscard]] friend constexpr bool operator==(fancy_pointer, fancy_pointer) noexcept = default;
+  [[nodiscard]] friend constexpr bool operator== (fancy_pointer, fancy_pointer) noexcept = default;
 };
 
 template<typename T>
@@ -54,7 +54,10 @@ struct fancy_allocator
     ++log->deallocations;
     auto *raw = std::to_address(ptr);
     auto const it = std::find_if(log->outstanding.begin(), log->outstanding.end(),
-        [raw](heim_test::allocation::block const &b){return b.address == raw;});
+        [raw](heim_test::allocation::block const &b)
+        {
+          return b.address == raw;
+        });
     if (it == log->outstanding.end())
       ++log->wrong_deallocations;
     else
@@ -70,12 +73,14 @@ struct fancy_allocator
   friend struct fancy_allocator;
 
   template<typename U>
-  bool operator==(fancy_allocator<U> const &other) const noexcept
+  bool operator== (fancy_allocator<U> const &other) const noexcept
   { return log == other.log && owner == other.owner; }
 };
 }
 
-TEST_CASE("single allocation supports allocator fancy pointers", "[common][unique_allocated_ptr][fancy_pointer]")
+TEST_CASE(
+    "single allocation supports allocator fancy pointers",
+    "[common][unique_allocated_ptr][fancy_pointer]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -88,7 +93,9 @@ TEST_CASE("single allocation supports allocator fancy pointers", "[common][uniqu
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("array allocation supports allocator fancy pointers", "[common][unique_allocated_ptr][fancy_pointer][array]")
+TEST_CASE(
+    "array allocation supports allocator fancy pointers",
+    "[common][unique_allocated_ptr][fancy_pointer][array]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -103,7 +110,9 @@ TEST_CASE("array allocation supports allocator fancy pointers", "[common][unique
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("overwrite single allocation supports allocator fancy pointers", "[common][unique_allocated_ptr][fancy_pointer][overwrite]")
+TEST_CASE(
+    "overwrite single allocation supports allocator fancy pointers",
+    "[common][unique_allocated_ptr][fancy_pointer][overwrite]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -114,7 +123,9 @@ TEST_CASE("overwrite single allocation supports allocator fancy pointers", "[com
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("overwrite array allocation supports allocator fancy pointers", "[common][unique_allocated_ptr][fancy_pointer][array][overwrite]")
+TEST_CASE(
+    "overwrite array allocation supports allocator fancy pointers",
+    "[common][unique_allocated_ptr][fancy_pointer][array][overwrite]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -127,7 +138,9 @@ TEST_CASE("overwrite array allocation supports allocator fancy pointers", "[comm
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("fancy-pointer release preserves pointer and deleter ownership", "[common][unique_allocated_ptr][fancy_pointer]")
+TEST_CASE(
+    "fancy-pointer release preserves pointer and deleter ownership",
+    "[common][unique_allocated_ptr][fancy_pointer]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -141,7 +154,9 @@ TEST_CASE("fancy-pointer release preserves pointer and deleter ownership", "[com
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("fancy-pointer array move and reset preserve allocation extent", "[common][unique_allocated_ptr][fancy_pointer][array]")
+TEST_CASE(
+    "fancy-pointer array move and reset preserve allocation extent",
+    "[common][unique_allocated_ptr][fancy_pointer][array]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   {
@@ -156,7 +171,9 @@ TEST_CASE("fancy-pointer array move and reset preserve allocation extent", "[com
   REQUIRE(heim_test::allocation::balanced(*log));
 }
 
-TEST_CASE("zero-length fancy-pointer arrays stay null and do not allocate", "[common][unique_allocated_ptr][fancy_pointer][array]")
+TEST_CASE(
+    "zero-length fancy-pointer arrays stay null and do not allocate",
+    "[common][unique_allocated_ptr][fancy_pointer][array]")
 {
   auto log = std::make_shared<heim_test::allocation::ledger>();
   auto p = heim::allocate_unique<int[]>(fancy_allocator<int>{log, 4}, 0);

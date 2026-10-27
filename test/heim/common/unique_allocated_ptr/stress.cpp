@@ -13,7 +13,9 @@ using heim_test::allocation::ledger;
 using heim_test::allocation::live_value;
 using heim_test::allocation::tracking_allocator;
 
-TEST_CASE("deterministic ownership operations never duplicate or leak single objects", "[common][unique_allocated_ptr][stress]")
+TEST_CASE(
+    "deterministic ownership operations never duplicate or leak single objects",
+    "[common][unique_allocated_ptr][stress]")
 {
   using pointer = heim::unique_allocated_ptr<live_value, tracking_allocator<live_value>, false>;
   auto log = std::make_shared<ledger>();
@@ -34,7 +36,8 @@ TEST_CASE("deterministic ownership operations never duplicate or leak single obj
           slots[i].reset();
           break;
         case 2:
-          if (i != j) slots[i] = std::move(slots[j]);
+          if (i != j)
+            slots[i] = std::move(slots[j]);
           break;
         case 3:
           slots[i].swap(slots[j]);
@@ -42,7 +45,8 @@ TEST_CASE("deterministic ownership operations never duplicate or leak single obj
       }
       int expected_live{};
       for (auto const &p : slots)
-        if (p) ++expected_live;
+        if (p)
+          ++expected_live;
       REQUIRE(live_value::alive == expected_live);
       REQUIRE(log->outstanding.size() == static_cast<std::size_t>(expected_live));
       REQUIRE(log->wrong_deallocations == 0);
@@ -53,7 +57,9 @@ TEST_CASE("deterministic ownership operations never duplicate or leak single obj
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("deterministic array ownership operations preserve all extents", "[common][unique_allocated_ptr][stress][array]")
+TEST_CASE(
+    "deterministic array ownership operations preserve all extents",
+    "[common][unique_allocated_ptr][stress][array]")
 {
   using pointer = heim::unique_allocated_ptr<live_value[], tracking_allocator<live_value>, false>;
   auto log = std::make_shared<ledger>();
@@ -97,7 +103,8 @@ TEST_CASE("deterministic array ownership operations preserve all extents", "[com
       {
         REQUIRE(static_cast<bool>(slots[index]) == (lengths[index] != 0));
         expected_live += lengths[index];
-        if (slots[index]) ++expected_blocks;
+        if (slots[index])
+          ++expected_blocks;
       }
       REQUIRE(live_value::alive == static_cast<int>(expected_live));
       REQUIRE(log->outstanding.size() == expected_blocks);
@@ -109,7 +116,9 @@ TEST_CASE("deterministic array ownership operations preserve all extents", "[com
   REQUIRE(balanced(*log));
 }
 
-TEST_CASE("a sequence of allocation, release and manual deletion stays balanced", "[common][unique_allocated_ptr][stress]")
+TEST_CASE(
+    "a sequence of allocation, release and manual deletion stays balanced",
+    "[common][unique_allocated_ptr][stress]")
 {
   auto log = std::make_shared<ledger>();
   live_value::reset();

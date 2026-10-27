@@ -1,4 +1,5 @@
 #include "support.hpp"
+
 using namespace heim_meta_test;
 
 static_assert(heim::type_sequence_size_v<empty> == 0);
@@ -12,7 +13,7 @@ static_assert(heim::type_sequence_is_unique_v<empty>);
 static_assert(heim::type_sequence_is_unique_v<single>);
 static_assert(heim::type_sequence_is_unique_v<triple>);
 static_assert(!heim::type_sequence_is_unique_v<repeated>);
-static_assert(heim::type_sequence_is_unique_v<seq<a, const a, a&, a&&>>);
+static_assert(heim::type_sequence_is_unique_v<seq<a, const a, a&, a && >>);
 static_assert(!heim::type_sequence_is_unique_v<seq<a, a>>);
 
 static_assert(heim::type_sequence_index_v<empty, a> == 0);
@@ -33,7 +34,7 @@ static_assert(heim::type_sequence_count_v<repeated, a> == 3);
 static_assert(heim::type_sequence_count_v<repeated, b> == 2);
 static_assert(heim::type_sequence_count_v<repeated, c> == 1);
 static_assert(heim::type_sequence_count_v<repeated, d> == 0);
-static_assert(heim::type_sequence_count_v<seq<a, const a, a&, a&&>, a> == 1);
+static_assert(heim::type_sequence_count_v<seq<a, const a, a&, a && >, a> == 1);
 static_assert(heim::type_sequence_contains_v<repeated, a>);
 static_assert(heim::type_sequence_contains_v<repeated, c>);
 static_assert(!heim::type_sequence_contains_v<repeated, d>);
