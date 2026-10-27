@@ -35,11 +35,11 @@ void run_model(std::uint32_t seed, unsigned steps, unsigned universe)
     }
     if (step % 89 == 0)
     {
-      hs::verify(actual, oracle);
+      hs::verify(actual, oracle, universe);
       hs::verify_dense_iterators(actual);
     }
   }
-  hs::verify(actual, oracle);
+  hs::verify(actual, oracle, universe);
 }
 
 template<std::size_t Page>
@@ -54,14 +54,10 @@ void run_replace_model(std::uint32_t seed)
     std::vector<unsigned> input;
     for (unsigned k = 0; k < 30; ++k)
       input.push_back(random.bounded(201));
-    actual.replace(std::move(input));
     oracle.clear();
-    // Regenerate the same source deterministically for the independent oracle.
-    hs::rng replay{seed};
-    for (unsigned previous = 0; previous < round; ++previous)
-      for (unsigned k = 0; k < 30; ++k) (void)replay.next();
-    for (unsigned k = 0; k < 30; ++k)
-      oracle.insert(replay.bounded(201));
+    // Observe the exact source values before transferring ownership.
+    oracle.insert(input.begin(), input.end());
+    actual.replace(std::move(input));
     hs::verify(actual, oracle);
   }
 }

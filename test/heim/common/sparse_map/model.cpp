@@ -12,7 +12,10 @@ void run_model(std::uint32_t seed, unsigned steps, unsigned domain)
   {
     auto key=static_cast<typename Map::key_type>(random.bounded(domain));
     int value=static_cast<int>(random.next()%200001u)-100000;
-    switch(random.bounded(9))
+    unsigned const op = random.bounded(9);
+    INFO("seed=" << seed << " step=" << step << " op=" << op
+         << " key=" << static_cast<std::uint64_t>(key) << " domain=" << domain);
+    switch(op)
     {
       case 0: case 1:
       {
@@ -69,14 +72,17 @@ void run_model(std::uint32_t seed, unsigned steps, unsigned domain)
         else
         {
           auto c=actual;
-          verify(c,expected);
+          verify(c, expected, domain);
         }
         break;
       }
     }
-    if(step%113==0) verify(actual,expected);
+    // Check the mutated or queried key immediately on every step.
+    REQUIRE(actual.contains(key) == expected.contains(key));
+    if (expected.contains(key)) REQUIRE(actual.at(key) == expected.at(key));
+    if(step%113==0) verify(actual, expected, domain);
   }
-  verify(actual,expected);
+  verify(actual, expected, domain);
 }
 }
 

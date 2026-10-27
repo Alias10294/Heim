@@ -59,7 +59,12 @@ struct tracking_allocator
       throw std::bad_alloc{};
 
     auto *ptr = std::allocator<T>{}.allocate(n);
-    log->outstanding.push_back({ptr, n, owner});
+    try { log->outstanding.push_back({ptr, n, owner}); }
+    catch (...)
+    {
+      std::allocator<T>{}.deallocate(ptr, n);
+      throw;
+    }
     return ptr;
   }
 

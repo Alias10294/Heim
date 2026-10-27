@@ -2,6 +2,7 @@
 # Catch2 provides an executable entry point and runtime smoke checks.
 type_sequence_sources = files(
   'type_sequence/traits.cpp',
+  'type_sequence/members.cpp',
   'type_sequence/access.cpp',
   'type_sequence/composition.cpp',
   'type_sequence/transformation.cpp',

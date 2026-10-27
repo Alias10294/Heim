@@ -11,7 +11,7 @@ TEST_CASE("sparse_set initializer list eliminates duplicates", "[common][sparse_
 
 TEST_CASE("sparse_set empty initializer list creates empty set", "[common][sparse_set][construction]")
 {
-  hs::set<> s{};
+  hs::set<> s{std::initializer_list<unsigned>{}};
   hs::verify(s, {});
 }
 

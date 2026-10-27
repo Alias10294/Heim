@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <memory>
@@ -32,7 +33,10 @@ template<typename Set>
 using key_type = typename Set::key_type;
 
 template<typename Set>
-void verify(Set const &actual, std::unordered_set<key_type<Set>> const &expected)
+void verify(Set const &actual,
+            std::unordered_set<key_type<Set>> const &expected,
+            std::size_t probe_limit = 256,
+            std::initializer_list<key_type<Set>> extra_probes = {})
 {
   REQUIRE(actual.size() == expected.size());
   REQUIRE(actual.empty() == expected.empty());
@@ -60,11 +64,20 @@ void verify(Set const &actual, std::unordered_set<key_type<Set>> const &expected
 
   // Iterate a fixed domain to catch stale sparse indices that are not present
   // in the dense sequence (e.g. after erase, move, or a failed insertion).
-  for (unsigned raw = 0; raw != 256; ++raw)
+  const auto maximum_probe = std::min<std::size_t>(
+      probe_limit, static_cast<std::size_t>(std::numeric_limits<key_type<Set>>::max()));
+  for (std::size_t raw = 0; raw <= maximum_probe && raw < probe_limit; ++raw)
   {
     auto key = static_cast<key_type<Set>>(raw);
     bool present = expected.contains(key);
     INFO("probe=" << raw);
+    REQUIRE(actual.contains(key) == present);
+    REQUIRE((actual.find(key) != actual.end()) == present);
+  }
+  for (auto key : extra_probes)
+  {
+    INFO("explicitly probed key=" << static_cast<std::uint64_t>(key));
+    bool const present = expected.contains(key);
     REQUIRE(actual.contains(key) == present);
     REQUIRE((actual.find(key) != actual.end()) == present);
   }

@@ -14,7 +14,7 @@ struct tracked {
 };
 }
 
-TEST_CASE("allocate_unique owns and destroys one allocated object", "[common][allocator]")
+TEST_CASE("allocate_unique owns and destroys one allocated object", "[common][unique_allocated_ptr][allocator]")
 {
   tracked::alive = 0;
   {
@@ -40,13 +40,13 @@ TEST_CASE("allocate_unique allocates and destroys an array", "[common][unique_al
   REQUIRE(tracked::alive == 0);
 }
 
-TEST_CASE("zero-length allocated array is safe", "[common][allocator]")
+TEST_CASE("zero-length allocated array is safe", "[common][unique_allocated_ptr][allocator]")
 {
   auto p = heim::allocate_unique<int[]>(std::allocator<int>{}, 0);
   REQUIRE(p == nullptr);
 }
 
-TEST_CASE("overwrite allocation correctly manages object lifetime", "[common][allocator]")
+TEST_CASE("overwrite allocation correctly manages object lifetime", "[common][unique_allocated_ptr][allocator]")
 {
   tracked::alive = 0;
   {

@@ -6154,7 +6154,6 @@ topological_sort{};
 #include <algorithm>
 #include <array>
 #include <concepts>
-#include <contracts>
 #include <cstddef>
 #include <initializer_list>
 #include <iterator>
@@ -8069,7 +8068,7 @@ public:
     : m_conts{
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc})},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc})}}
-    , m_index{this->m_conts.keys, key_allocator{alloc}}
+    , m_index{key_allocator{alloc}}
   { }
 
   constexpr
@@ -8077,7 +8076,7 @@ public:
     : m_conts{
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, other.m_conts.keys)},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, other.m_conts.values)}}
-    , m_index{this->m_conts.keys, key_allocator{alloc}}
+    , m_index{other.m_index, key_allocator{alloc}}
   { }
 
   constexpr
@@ -8085,7 +8084,7 @@ public:
     : m_conts{
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, std::move(other.m_conts.keys))},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, std::move(other.m_conts.values))}}
-    , m_index{this->m_conts.keys, key_allocator{alloc}}
+    , m_index{std::move(other.m_index), key_allocator{alloc}}
   { }
 
   constexpr

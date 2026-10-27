@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <memory>
@@ -46,7 +47,10 @@ std::unordered_map<key_type<Map>, mapped_type<Map>> snapshot(Map const &actual)
 // Checks both directions, immutable/mutable lookups through the public API,
 // key/value alignment, uniqueness and stale entries absent from dense storage.
 template<typename Map>
-void verify(Map const &actual, std::unordered_map<key_type<Map>, mapped_type<Map>> const &expected)
+void verify(Map const &actual,
+            std::unordered_map<key_type<Map>, mapped_type<Map>> const &expected,
+            std::size_t probe_limit = 256,
+            std::initializer_list<key_type<Map>> extra_probes = {})
 {
   REQUIRE(actual.size() == expected.size());
   REQUIRE(actual.empty() == expected.empty());
@@ -79,11 +83,21 @@ void verify(Map const &actual, std::unordered_map<key_type<Map>, mapped_type<Map
     REQUIRE(it->second == value);
   }
 
-  for (unsigned raw = 0; raw != 128; ++raw)
+  // Avoid narrowing wraparound for small unsigned key types.
+  const auto maximum_probe = std::min<std::size_t>(
+      probe_limit, static_cast<std::size_t>(std::numeric_limits<key_type<Map>>::max()));
+  for (std::size_t raw = 0; raw <= maximum_probe && raw < probe_limit; ++raw)
   {
     auto key = static_cast<key_type<Map>>(raw);
     bool present = expected.contains(key);
     INFO("probe=" << raw);
+    REQUIRE(actual.contains(key) == present);
+    REQUIRE((actual.find(key) != actual.end()) == present);
+  }
+  for (auto key : extra_probes)
+  {
+    INFO("explicitly probed key=" << static_cast<std::uint64_t>(key));
+    bool const present = expected.contains(key);
     REQUIRE(actual.contains(key) == present);
     REQUIRE((actual.find(key) != actual.end()) == present);
   }
@@ -106,7 +120,10 @@ struct rng
 
 struct allocation_log
 {
-  struct block { std::size_t count; int owner; };
+  enum class region { keys, values, pages, page_table };
+  struct block { std::size_t count; int owner; region kind; };
+  std::array<std::size_t, 4> allocated_by_region{};
+  std::array<std::size_t, 4> deallocated_by_region{};
   std::map<void *, block> outstanding;
   std::size_t allocations{};
   std::size_t deallocations{};
@@ -139,6 +156,14 @@ struct tracked_allocator
   tracked_allocator(tracked_allocator<U, Propagate> const &other) noexcept
     : state(other.state), id(other.id) { }
 
+  static constexpr allocation_log::region region_of() noexcept
+  {
+    if constexpr (std::is_same_v<T, unsigned>) return allocation_log::region::keys;
+    else if constexpr (std::is_same_v<T, int>) return allocation_log::region::values;
+    else if constexpr (requires { std::tuple_size<T>::value; }) return allocation_log::region::pages;
+    else return allocation_log::region::page_table;
+  }
+
   T *allocate(std::size_t n)
   {
     if (state && (state->reject || state->remaining == 0))
@@ -147,7 +172,17 @@ struct tracked_allocator
     if (state)
     {
       if (state->remaining != std::numeric_limits<std::size_t>::max()) --state->remaining;
-      state->outstanding.emplace(static_cast<void *>(p), allocation_log::block{n,id});
+      // Logging is allowed to throw. If it does, release the actual allocation.
+      try
+      {
+        state->outstanding.emplace(static_cast<void *>(p), allocation_log::block{n,id,region_of()});
+      }
+      catch (...)
+      {
+        std::allocator<T>{}.deallocate(p, n);
+        throw;
+      }
+      ++state->allocated_by_region[static_cast<std::size_t>(region_of())];
       ++state->allocations;
     }
     return p;
@@ -160,7 +195,11 @@ struct tracked_allocator
       if (it == state->outstanding.end() || it->second.owner != id || it->second.count != n)
         ++state->wrong_deallocations;
       else
+      {
+        if (it->second.kind != region_of()) ++state->wrong_deallocations;
+        ++state->deallocated_by_region[static_cast<std::size_t>(region_of())];
         state->outstanding.erase(it);
+      }
       ++state->deallocations;
     }
     std::allocator<T>{}.deallocate(p,n);

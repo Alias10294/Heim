@@ -1,63 +1,43 @@
-# Heim test layout
+# Heim tests
 
-`test/` is rebuilt incrementally. **Only the tests under `test/heim/common/`
-are registered at present.** No old tests for `meta`, `property`, `graph`,
-or `ecs` are expected to exist.
+The functional suites compile the **regular** public headers under `include/heim/`.
+They do not depend on `single_include` artifacts. The release/distribution suite
+is independent and can be added separately.
 
-## Organization
+## Layout
 
-```text
-test/
-├── meson.build              # Catch2 dependency and entry points
-├── heim/
-│   ├── meson.build          # Library-level dispatcher
-│   └── common/
-│       ├── meson.build      # One Catch2 executable per feature
-│       ├── sparse_index/storage.cpp
-│       ├── sparse_set/operations.cpp
-│       ├── sparse_map/operations.cpp
-│       └── unique_allocated_ptr/lifetime.cpp
-└── distribution/
-    └── meson.build          # Empty for now; future packaging checks
-```
+- `test/heim/common/`: `unique_allocated_ptr`, `sparse_index`, `sparse_set`, `sparse_map`.
+- `test/heim/meta/type_sequence/`: compile-time type/value assertions and runtime smoke checks.
+- `test/distribution/`: a separate Meson entry point (currently empty).
 
-Functional tests include the **regular library headers** (`<heim/...>`)
-through `heim_dep`. They do not include files from `single_include/`.
-The `distribution` directory intentionally has **no tests** yet.
-
-Each feature is registered separately through `test/heim/common/meson.build`,
-under the `heim-common` (and `unit`) Meson suites. The feature test code has
-not been changed by this Meson-only correction.
-
-## Commands
-
-If the build directory was already configured with `-Dheim_tests=true`:
+Each feature has one Catch2 executable, selected by its own Meson test name.
 
 ```sh
-meson setup build --reconfigure
+meson setup build --reconfigure -Dheim_tests=true
 meson compile -C build
-meson test -C build --suite heim-common --print-errorlogs
 meson test -C build --print-errorlogs
+meson test -C build --suite heim-common --print-errorlogs
+meson test -C build --suite heim-meta --print-errorlogs
 ```
 
-If `heim_tests` is now **off** in the existing build configuration, enable it:
+Most meta checks are `static_assert`s; they run **at compilation**, not as
+separately enumerated Catch2 test cases.
+
+An older GCC 16 Contracts constant-evaluation issue may prevent some mutation
+`constexpr` assertions from compiling. Those assertions remain conditional,
+with equivalent runtime tests. See the per-feature README and GCC PR125459.
+
+## Maintenance
+
+The old `test/heim/common/sparse_set/operations.cpp` and
+`test/heim/common/sparse_map/operations.cpp` are historical leftovers and are
+**not registered in Meson**. Remove them explicitly from Git; extracting a ZIP
+cannot delete existing files:
 
 ```sh
-meson configure build -Dheim_tests=true
-meson compile -C build
-meson test -C build --suite heim-common --print-errorlogs
+git rm -- test/heim/common/sparse_set/operations.cpp test/heim/common/sparse_map/operations.cpp
 ```
 
-The `subprojects/catch2.wrap` dependency and the top-level `heim_tests`
-option are unchanged. When tests are off, Catch2 is not requested.
-
-## Planned workflow
-
-Expand a single feature's test suite, run it and the whole suite, then commit
-that feature's passing tests. Add the next library to `test/heim/meson.build`
-**only once its test sources exist**. Distribution tests will be introduced
-separately, rather than being required for these initial unit-test commits.
-
-The previously identified array-deletion regression in
-`unique_allocated_ptr/lifetime.cpp` is intentionally hidden pending an
-implementation fix; passing the enabled tests does not resolve that issue.
+For statistical coverage, build with `-Db_coverage=true` and inspect a coverage
+report. Test counts alone are not a coverage percentage. Keep randomized models
+reproducible and include seed, step, operation and key in diagnostics.

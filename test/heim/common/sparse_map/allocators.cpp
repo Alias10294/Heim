@@ -8,8 +8,13 @@ TEST_CASE("sparse_map allocator reaches key, value and index storage", "[common]
     tracked_map<> m(typename tracked_map<>::allocator_type{state,1});
     REQUIRE(m.get_allocator().id==1);
     for(unsigned i=0;i<60;++i) m.try_emplace(i*8u,int(i));
-    REQUIRE(state->allocations>0);
+    REQUIRE(state->allocations > 0);
     REQUIRE_FALSE(state->outstanding.empty());
+    // Distinguish all four rebound allocator instantiations.
+    REQUIRE(state->allocated_by_region[static_cast<std::size_t>(allocation_log::region::keys)] > 0);
+    REQUIRE(state->allocated_by_region[static_cast<std::size_t>(allocation_log::region::values)] > 0);
+    REQUIRE(state->allocated_by_region[static_cast<std::size_t>(allocation_log::region::pages)] > 0);
+    REQUIRE(state->allocated_by_region[static_cast<std::size_t>(allocation_log::region::page_table)] > 0);
     m.clear();
     REQUIRE(m.empty());
   }

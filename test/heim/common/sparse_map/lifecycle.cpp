@@ -51,11 +51,11 @@ TEST_CASE("sparse_map self-move assignment retains a valid index", "[common][spa
   m=std::move(m);
   // Self-move need not preserve values, but must retain invariants.
   auto expected=snapshot(m);
-  verify(m,expected);
+  verify(m, expected, 300, {0u, 1u, 7u, 255u});
   REQUIRE(m.try_emplace(100u,123).second);
   REQUIRE(m.at(100u)==123);
   REQUIRE(m.try_erase(100u));
-  verify(m,expected);
+  verify(m, expected, 300, {0u, 1u, 7u, 255u});
 }
 
 TEST_CASE("sparse_map member and ADL swap preserve all associations", "[common][sparse_map][lifecycle]")
