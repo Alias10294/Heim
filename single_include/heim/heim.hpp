@@ -1185,7 +1185,14 @@ public:
   constexpr
   sparse_set &
   operator=(sparse_set &&other)
-  = default;
+  {
+    if (this == std::addressof(other))
+      return *this;
+
+    this->m_cont  = std::move(other.m_cont);
+    this->m_index = std::move(other.m_index);
+    return *this;
+  }
 
   constexpr
   sparse_set &
@@ -2058,8 +2065,15 @@ public:
 
   constexpr
   sparse_map &
-  operator=(sparse_map &&)
-  = default;
+  operator=(sparse_map &&other)
+  {
+    if (this == std::addressof(other))
+      return *this;
+
+    this->m_conts = std::move(other.m_conts);
+    this->m_index = std::move(other.m_index);
+    return *this;
+  }
 
   constexpr
   sparse_map &
