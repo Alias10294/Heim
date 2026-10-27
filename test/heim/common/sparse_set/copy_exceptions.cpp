@@ -2,7 +2,7 @@
 
 namespace hs = heim_test::sparse_set;
 
-TEST_CASE("sparse_set failed first copy-assignment allocation leaves source and destination usable", "[common][sparse_set][exception][copy]")
+TEST_CASE("sparse_set failed copy assignment clears destination and preserves source", "[common][sparse_set][exception][copy]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -13,7 +13,7 @@ TEST_CASE("sparse_set failed first copy-assignment allocation leaves source and 
     log->remaining = 0;
     REQUIRE_THROWS_AS(destination = source, std::bad_alloc);
     log->remaining = std::numeric_limits<std::size_t>::max();
-    hs::verify(destination, {7000u}, 7001);
+    hs::verify(destination, {}, 7001);
     REQUIRE(source.size() == 48);
     REQUIRE(source.contains(0u));
     REQUIRE(source.contains(376u));

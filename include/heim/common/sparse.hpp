@@ -433,6 +433,27 @@ public:
 };
 
 
+template<typename Sparse>
+struct clear_guard
+{
+  Sparse *cont;
+
+
+  constexpr
+  ~clear_guard()
+  {
+    if (this->cont)
+      this->cont->clear();
+  }
+
+
+  constexpr
+  void
+  disable()
+  { this->cont = nullptr; }
+};
+
+
 template<typename, typename Container, bool = requires { typename Container::allocator_type; }>
 struct sparse_set_default_allocator
 { };
@@ -642,13 +663,13 @@ public:
 
   constexpr
   sparse_set(sparse_set const &other, allocator_type const &alloc)
-    : m_cont {other.m_cont , alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc, other.m_cont)}
     , m_index{other.m_index, alloc}
   { }
 
   constexpr
   sparse_set(sparse_set &&other, allocator_type const &alloc)
-    : m_cont {std::move(other.m_cont ), alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc, std::move(other.m_cont))}
     , m_index{std::move(other.m_index), alloc}
   { }
 
@@ -659,26 +680,26 @@ public:
 
   constexpr
   sparse_set(container_type &&cont, allocator_type const &alloc)
-    : m_cont {std::move(cont), alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc, std::move(cont))}
     , m_index{alloc}
   { this->m_unique(); }
 
   constexpr
   sparse_set(unique_t, container_type const &cont, allocator_type const &alloc)
-    : m_cont {cont        , alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc, cont)}
     , m_index{this->m_cont, alloc}
   { }
 
   constexpr
   sparse_set(unique_t, container_type &&cont, allocator_type const &alloc)
-    : m_cont {std::move(cont), alloc}
-    , m_index{this->m_cont   , alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc, std::move(cont))}
+    , m_index{this->m_cont, alloc}
   { }
 
   explicit constexpr
   sparse_set(allocator_type const &alloc)
   noexcept
-    : m_cont {alloc}
+    : m_cont {std::make_obj_using_allocator<container_type>(alloc)}
     , m_index{alloc}
   { }
 
@@ -747,7 +768,18 @@ public:
   constexpr
   sparse_set &
   operator=(sparse_set const &other)
-  = default;
+  {
+    if (this == std::addressof(other))
+      return *this;
+
+    detail::clear_guard guard{this};
+
+    this->m_cont  = other.m_cont;
+    this->m_index = other.m_index;
+
+    guard.disable();
+    return *this;
+  }
 
   constexpr
   sparse_set &
@@ -756,8 +788,13 @@ public:
     if (this == std::addressof(other))
       return *this;
 
+    detail::clear_guard guard      {this};
+    detail::clear_guard other_guard{std::addressof(other)};
+
     this->m_cont  = std::move(other.m_cont);
     this->m_index = std::move(other.m_index);
+
+    guard.disable();
     return *this;
   }
 
@@ -929,7 +966,11 @@ public:
   container_type
   extract() &&
   noexcept
-  { return std::move(this->m_cont); }
+  {
+    detail::clear_guard guard{this};
+
+    return std::move(this->m_cont);
+  }
 
 
   template<typename ...Args>
@@ -1080,16 +1121,24 @@ public:
   void
   replace(container_type &&cont)
   {
+    detail::clear_guard guard{this};
+
     sparse_set other{std::move(cont), this->get_allocator()};
     this->swap(other);
+
+    guard.disable();
   }
 
   constexpr
   void
   replace(unique_t, container_type &&cont)
   {
+    detail::clear_guard guard{this};
+
     sparse_set other{unique, std::move(cont), this->get_allocator()};
     this->swap(other);
+
+    guard.disable();
   }
 };
 
@@ -1627,8 +1676,19 @@ public:
 
   constexpr
   sparse_map &
-  operator=(sparse_map const &)
-  = default;
+  operator=(sparse_map const &other)
+  {
+    if (this == std::addressof(other))
+      return *this;
+
+    detail::clear_guard guard{this};
+
+    this->m_conts = other.m_conts;
+    this->m_index = other.m_index;
+
+    guard.disable();
+    return *this;
+  }
 
   constexpr
   sparse_map &
@@ -1637,8 +1697,13 @@ public:
     if (this == std::addressof(other))
       return *this;
 
+    detail::clear_guard guard      {this};
+    detail::clear_guard other_guard{std::addressof(other)};
+
     this->m_conts = std::move(other.m_conts);
     this->m_index = std::move(other.m_index);
+
+    guard.disable();
     return *this;
   }
 
@@ -1860,7 +1925,11 @@ public:
   containers
   extract() &&
   noexcept
-  { return std::move(m_conts); }
+  {
+    detail::clear_guard guard{this};
+
+    return std::move(m_conts);
+  }
 
 
   template<typename ...Args>
@@ -2122,16 +2191,24 @@ public:
   void
   replace(key_container_type &&keys, mapped_container_type &&values)
   {
+    detail::clear_guard guard{this};
+
     sparse_map other{std::move(keys), std::move(values), this->get_allocator()};
     this->swap(other);
+
+    guard.disable();
   }
 
   constexpr
   void
   replace(unique_t, key_container_type &&keys, mapped_container_type &&values)
   {
+    detail::clear_guard guard{this};
+
     sparse_map other{unique, std::move(keys), std::move(values), this->get_allocator()};
     this->swap(other);
+
+    guard.disable();
   }
 };
 

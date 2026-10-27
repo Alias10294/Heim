@@ -101,6 +101,7 @@ struct allocation_log
   std::size_t invalid_deallocations{};
   bool fail_page_allocation{};
   bool fail_all_allocation{};
+  std::size_t remaining = std::numeric_limits<std::size_t>::max();
 
   std::size_t live_pages() const
   {
@@ -139,7 +140,8 @@ public:
 
   T *allocate(std::size_t count)
   {
-    if (log->fail_all_allocation || (log->fail_page_allocation && is_page<T>::value))
+    if (log->fail_all_allocation || (log->fail_page_allocation && is_page<T>::value)
+        || log->remaining == 0)
       throw std::bad_alloc{};
 
     auto *p = std::allocator<T>{}.allocate(count);
@@ -152,6 +154,8 @@ public:
       std::allocator<T>{}.deallocate(p, count);
       throw;
     }
+    if (log->remaining != std::numeric_limits<std::size_t>::max())
+      --log->remaining;
     ++log->allocations;
     if constexpr (is_page<T>::value)
       ++log->page_allocations;

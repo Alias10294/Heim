@@ -2,7 +2,7 @@
 
 namespace hs = heim_test::sparse_set;
 
-TEST_CASE("sparse_set paged index allocation failure preserves existing keys", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set paged index allocation failure preserves existing keys", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -18,7 +18,7 @@ TEST_CASE("sparse_set paged index allocation failure preserves existing keys", "
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set dense container allocation failure leaves key missing", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set dense container allocation failure leaves key missing", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -34,7 +34,7 @@ TEST_CASE("sparse_set dense container allocation failure leaves key missing", "[
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set contiguous growth failure preserves previous membership", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set contiguous growth failure preserves previous membership", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -50,7 +50,7 @@ TEST_CASE("sparse_set contiguous growth failure preserves previous membership", 
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set can recover from index allocation failure on an empty set", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set can recover from index allocation failure on an empty set", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -65,7 +65,7 @@ TEST_CASE("sparse_set can recover from index allocation failure on an empty set"
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set replacement construction failure preserves the original", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set failed replace restores invariant and remains reusable", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -76,13 +76,16 @@ TEST_CASE("sparse_set replacement construction failure preserves the original", 
     log->reject_pages = true;
     REQUIRE_THROWS_AS(s.replace(std::move(incoming)), std::bad_alloc);
     log->reject_pages = false;
-    hs::verify(s, {1u});
+    std::unordered_set<unsigned> observed{s.begin(), s.end()};
+    hs::verify(s, observed, 256, {1u, 2u, 3u, 17u});
+    s.clear();
     REQUIRE(s.insert(17u).second);
+    hs::verify(s, {17u}, 256, {1u, 2u, 3u});
   }
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set unique-tag replacement failure preserves the original", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set failed unique replacement restores invariant and remains reusable", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -93,12 +96,16 @@ TEST_CASE("sparse_set unique-tag replacement failure preserves the original", "[
     log->reject_pages = true;
     REQUIRE_THROWS_AS(s.replace(heim::unique, std::move(incoming)), std::bad_alloc);
     log->reject_pages = false;
-    hs::verify(s, {1u});
+    std::unordered_set<unsigned> observed{s.begin(), s.end()};
+    hs::verify(s, observed, 256, {1u, 2u, 3u, 17u});
+    s.clear();
+    REQUIRE(s.insert(17u).second);
+    hs::verify(s, {17u}, 256, {1u, 2u, 3u});
   }
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set construction failure releases all intermediate allocations", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set construction failure releases all intermediate allocations", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {
@@ -112,7 +119,7 @@ TEST_CASE("sparse_set construction failure releases all intermediate allocations
   REQUIRE(log->balanced());
 }
 
-TEST_CASE("sparse_set failed page allocation does not leak empty page slots", "[common][sparse_set][exceptions]")
+TEST_CASE("sparse_set failed page allocation does not leak empty page slots", "[common][sparse_set][exception]")
 {
   auto log = std::make_shared<hs::allocation_log>();
   {

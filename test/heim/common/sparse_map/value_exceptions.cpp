@@ -74,7 +74,7 @@ TEST_CASE("sparse_map insert_or_assign handles throwing mapped copy assignment",
   REQUIRE(map.at(1u).value == 99);
 }
 
-TEST_CASE("sparse_map failed first copy-assignment allocation preserves both operands", "[common][sparse_map][exception][copy]")
+TEST_CASE("sparse_map failed copy assignment clears destination and preserves source", "[common][sparse_map][exception][copy]")
 {
   using M = tracked_map<>;
   auto state = std::make_shared<allocation_log>();
@@ -87,7 +87,7 @@ TEST_CASE("sparse_map failed first copy-assignment allocation preserves both ope
     state->remaining = 0;
     REQUIRE_THROWS_AS(destination = source, std::bad_alloc);
     state->remaining = std::numeric_limits<std::size_t>::max();
-    verify(destination, {{7000u, 70}}, 7001);
+    verify(destination, {}, 7001);
     REQUIRE(source.size() == 40);
     REQUIRE(source.at(8u) == 1);
     REQUIRE(destination.try_emplace(8000u, 80).second);

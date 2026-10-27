@@ -1,5 +1,4 @@
-# One Catch2 executable per cohesive feature. Additional files can be added to
-# a feature's source list without changing how its test target is registered.
+# One Catch2 executable per feature. Audit regressions share their feature binary.
 common_test_features = {
   'sparse-index': [
     'sparse_index/traits.cpp',
@@ -10,6 +9,7 @@ common_test_features = {
     'sparse_index/copy_move.cpp',
     'sparse_index/allocators.cpp',
     'sparse_index/exceptions.cpp',
+    'sparse_index/advanced_regressions.cpp',
     'sparse_index/limits.cpp',
     'sparse_index/stress.cpp',
   ],
@@ -23,6 +23,8 @@ common_test_features = {
     'sparse_set/lifecycle.cpp',
     'sparse_set/moved_source.cpp',
     'sparse_set/copy_exceptions.cpp',
+    'sparse_set/advanced_regressions.cpp',
+    'sparse_set/allocator_modes.cpp',
     'sparse_set/allocators.cpp',
     'sparse_set/pmr.cpp',
     'sparse_set/exceptions.cpp',
@@ -42,6 +44,7 @@ common_test_features = {
     'sparse_map/value_exceptions.cpp',
     'sparse_map/forward_ranges.cpp',
     'sparse_map/iterator_concepts.cpp',
+    'sparse_map/advanced_regressions.cpp',
     'sparse_map/mapped_values.cpp',
     'sparse_map/allocators.cpp',
     'sparse_map/pmr.cpp',

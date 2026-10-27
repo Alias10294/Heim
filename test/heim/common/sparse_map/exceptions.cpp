@@ -182,7 +182,7 @@ TEST_CASE("sparse_map every allocation in fresh insertion rolls back", "[common]
   REQUIRE_FALSE(failed);
 }
 
-TEST_CASE("sparse_map failed replace keeps existing association", "[common][sparse_map][exception][replace]")
+TEST_CASE("sparse_map failed replace restores invariants and remains reusable", "[common][sparse_map][exception][replace]")
 {
   using M = tracked_map<>;
   for (bool unique : {false, true})
@@ -212,8 +212,12 @@ TEST_CASE("sparse_map failed replace keeps existing association", "[common][spar
       else
         REQUIRE_THROWS_AS(m.replace(std::move(keys), std::move(values)), std::bad_alloc);
       state->reject = false;
-      verify(m, {{1u, 10}}, 32);
+      // Following flat_map's exception policy, preserving the old association
+      // is not required; the result must nonetheless be fully coherent.
+      verify(m, snapshot(m), 256, {1u, 9u, 17u});
+      m.clear();
       REQUIRE(m.try_emplace(25u, 250).second);
+      verify(m, {{25u, 250}}, 256, {1u, 9u, 17u});
     }
     REQUIRE(state->balanced());
   }
