@@ -4,3 +4,7 @@ build/
 
 docs_html/
 docs_md/
+
+/subprojects/catch2/
+/subprojects/packagecache/
+/subprojects/.wraplock

@@ -217,10 +217,8 @@ public:
 
     while (first != last)
     {
-      --last;
-
       if constexpr (is_for_overwrite)
-        std::destroy_at(last);
+        std::destroy_at(--last);
       else
         std::allocator_traits<allocator_type>::destroy(this->m_allocator, --last);
     }

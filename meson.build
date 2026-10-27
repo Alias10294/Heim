@@ -1,6 +1,7 @@
 project(
     'heim',
-    'cpp' ,
+    'cpp',
+    meson_version: '>=1.1',
     default_options: ['cpp_std=c++26'])
 
 
@@ -44,10 +45,6 @@ pkgconfig.generate(
     extra_cflags: cpp_compiler_args)
 
 
-heim_test_files = files(
-    'test/test.cpp')
-
-heim_test_exe   = executable(
-    'heim_test',
-    heim_test_files,
-    dependencies: heim_dep)
+if get_option('heim_tests') and not meson.is_subproject()
+  subdir('test')
+endif

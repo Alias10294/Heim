@@ -1,0 +1,2 @@
+option('heim_tests', type: 'boolean', value: true,
+       description: 'Build tests when Heim is the top-level project')
