@@ -2,6 +2,7 @@
 #define HEIM_GRAPH_ALGORITHM_BREADTH_FIRST_VISIT_HPP
 
 #include <concepts>
+#include <queue>
 #include <ranges>
 #include <type_traits>
 #include <unordered_map>
