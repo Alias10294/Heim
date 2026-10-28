@@ -38,6 +38,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <utility>
 // >>> BEGIN heim/property/primitives.hpp
@@ -377,6 +378,7 @@ public:
 
 #include <concepts>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <type_traits>
 // >>> BEGIN heim/property/property_map.hpp
@@ -5874,7 +5876,7 @@ public:
   static constexpr
   void
   back_edge(Graph const &, edge_t<std::remove_cvref_t<Graph>>)
-  { throw std::logic_error{"heim::graphs::reverse_topological_sort: detected cycle"}; }
+  { throw std::domain_error{"heim::graphs::reverse_topological_sort: detected cycle"}; }
 
 
   constexpr

@@ -1,0 +1,84 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux / GCC ${{ matrix.gcc }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc: ['15', '16']
+    env:
+      CC: gcc-${{ matrix.gcc }}
+      CXX: g++-${{ matrix.gcc }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install compiler and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }} meson ninja-build git
+
+      - name: Configure
+        run: |
+          $CXX --version
+          meson setup build -Dheim_tests=true -Dcpp_std=c++23 -Dbuildtype=debugoptimized
+
+      - name: Build
+        run: meson compile -C build -j 2
+
+      - name: Run tests
+        run: meson test -C build --print-errorlogs --num-processes 2
+
+  windows:
+    name: Windows / MSYS2 UCRT64
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up MSYS2 UCRT64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-python
+
+      - name: Configure
+        run: |
+          g++ --version
+          meson setup build -Dheim_tests=true -Dcpp_std=c++23 -Dbuildtype=debugoptimized
+
+      - name: Build
+        run: meson compile -C build -j 2
+
+      - name: Run tests
+        run: meson test -C build --print-errorlogs --num-processes 2

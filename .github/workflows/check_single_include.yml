@@ -1,0 +1,48 @@
+name: Check single include
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Verify and compile amalgamated headers
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Verify generated headers are up to date
+        run: python scripts/generate_single_include.py --check
+
+      - name: Install GCC 15
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y g++-15
+
+      - name: Compile each amalgamated header independently
+        run: |
+          set -euo pipefail
+          g++-15 --version
+          for header in property graph heim; do
+            echo "Checking single_include/heim/${header}.hpp"
+            printf '#include <heim/%s.hpp>\nint main() { return 0; }\n' "$header" |
+              g++-15 -std=c++23 -Wall -Wextra -pedantic-errors \
+                -Isingle_include -x c++ -fsyntax-only -
+          done
