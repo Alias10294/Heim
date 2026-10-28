@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include "heim/graph/algorithm/predecessor_view.hpp"
 #include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/graph/interface/primitives.hpp"
 #include "heim/graph/interface/traits.hpp"
