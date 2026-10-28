@@ -168,6 +168,7 @@ TEST_CASE(
 }
 
 #if defined(__cpp_lib_inplace_vector) && __cpp_lib_inplace_vector >= 202406L
+
 TEST_CASE("sparse_map supports an allocator-free key container", "[common][sparse_map][generic][inplace]")
 {
   using M = heim::sparse_map<unsigned, int, 8,

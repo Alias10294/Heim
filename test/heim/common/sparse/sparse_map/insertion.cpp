@@ -133,7 +133,7 @@ TEST_CASE(
       if (v < 0)
         throw std::runtime_error("constructed");
     }
-    bool operator== (value const&) const = default;
+    bool operator == (value const&) const = default;
   };
   map<unsigned, value> m;
   REQUIRE(m.try_emplace(1u, 2).second);

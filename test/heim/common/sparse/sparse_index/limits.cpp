@@ -18,16 +18,29 @@ void integral_limits()
 }
 
 TEST_CASE("uint8_t contiguous index handles maximum key", "[common][sparse_index][limits]")
-{ integral_limits<std::uint8_t, 0>(); }
+{
+  integral_limits<std::uint8_t, 0>();
+}
+
 TEST_CASE("uint8_t paged index handles maximum key", "[common][sparse_index][limits]")
-{ integral_limits<std::uint8_t, 8>(); }
+{
+  integral_limits<std::uint8_t, 8>();
+}
+
 TEST_CASE("uint8_t page-size-one index handles maximum key", "[common][sparse_index][limits]")
-{ integral_limits<std::uint8_t, 1>(); }
+{
+  integral_limits<std::uint8_t, 1>();
+}
 
 TEST_CASE("uint16_t paged index handles maximum key and page boundary", "[common][sparse_index][limits]")
-{ integral_limits<std::uint16_t, 8>(); }
+{
+  integral_limits<std::uint16_t, 8>();
+}
+
 TEST_CASE("uint16_t contiguous index handles maximum key", "[common][sparse_index][limits]")
-{ integral_limits<std::uint16_t, 0>(); }
+{
+  integral_limits<std::uint16_t, 0>();
+}
 
 TEST_CASE(
     "uint64_t paged index supports sparse high keys without dense allocation",

@@ -1,15 +1,12 @@
 #ifndef HEIM_TEST_COMMON_SPARSE_SET_SUPPORT_HPP
 #define HEIM_TEST_COMMON_SPARSE_SET_SUPPORT_HPP
 
-#include <heim/common/sparse.hpp>
-#include <catch2/catch_test_macros.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <initializer_list>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>
@@ -22,6 +19,10 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/sparse.hpp>
 
 namespace heim_test::sparse_set
 {
@@ -117,7 +118,9 @@ struct rng
     x ^= x << 5;
     return state = x;
   }
-  std::uint32_t bounded(std::uint32_t n) noexcept { return next() % n; }
+  std::uint32_t
+  bounded(std::uint32_t n) noexcept
+  { return next() % n; }
 };
 
 template<typename T>
@@ -125,9 +128,12 @@ struct is_page : std::false_type { };
 template<typename UInt, std::size_t N>
 struct is_page<std::array<UInt, N>> : std::true_type { };
 
-struct block { std::size_t count;
-int owner;
-bool page; };
+struct block
+{
+  std::size_t count;
+  int         owner;
+  bool        page;
+};
 struct allocation_log
 {
   std::map<void *, block> outstanding;
@@ -162,7 +168,9 @@ struct tracked_allocator
   using propagate_on_container_move_assignment = std::bool_constant<Propagate>;
   using propagate_on_container_swap = std::bool_constant<Propagate>;
   using is_always_equal = std::false_type;
-  template<typename U> struct rebind { using other = tracked_allocator<U, Propagate>; };
+  template<typename U>
+  struct rebind
+  { using other = tracked_allocator<U, Propagate>; };
 
   std::shared_ptr<allocation_log> log;
   int owner{};
@@ -178,11 +186,15 @@ struct tracked_allocator
       throw std::bad_alloc{};
     --log->remaining;
     T *p = std::allocator<T>{}.allocate(count);
-    try { log->outstanding.emplace(static_cast<void *>(p), block{count, owner, is_page<T>::value}); }
+    try
+    {
+      log->outstanding.emplace(static_cast<void *>(p), block{count, owner, is_page<T>::value});
+    }
     catch (...) { std::allocator<T>{}.deallocate(p, count);
     throw; }
     ++log->allocations;
-    if constexpr (is_page<T>::value) ++log->page_allocations;
+    if constexpr (is_page<T>::value)
+  ++log->page_allocations;
     return p;
   }
   void deallocate(T *p, std::size_t count) noexcept
@@ -202,12 +214,12 @@ struct tracked_allocator
   }
   template<typename U, bool P> friend struct tracked_allocator;
   template<typename U>
-  bool operator== (tracked_allocator<U, Propagate> const &o) const noexcept
+  bool operator == (tracked_allocator<U, Propagate> const &o) const noexcept
   { return log == o.log && owner == o.owner; }
 };
 
 template<std::size_t Page = 8, bool Propagate = false>
 using tracked_set = set<unsigned, Page, tracked_allocator<unsigned, Propagate>>;
 
-} // namespace heim_test::sparse_set
+}
 #endif

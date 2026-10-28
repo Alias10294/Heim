@@ -1,7 +1,8 @@
-#include "support.hpp"
 #include <concepts>
 #include <iterator>
 #include <type_traits>
+
+#include "support.hpp"
 
 namespace hs = heim_test::sparse_set;
 using S = hs::set<>;

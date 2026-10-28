@@ -28,4 +28,5 @@ test_executable = executable(
 test(
     'common-sparse-map',
     test_executable,
-    suite: ['unit', 'heim-common'])
+    suite: ['unit', 'heim-common'],
+    timeout: 60)

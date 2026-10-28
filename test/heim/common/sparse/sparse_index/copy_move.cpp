@@ -26,11 +26,19 @@ void deep_copy()
 }
 
 TEST_CASE("paged copy constructs independent pages", "[common][sparse_index][copy]")
-{ deep_copy<index<unsigned, 8>>(); }
+{
+  deep_copy<index<unsigned, 8>>();
+}
+
 TEST_CASE("contiguous copy constructs independent contents", "[common][sparse_index][copy]")
-{ deep_copy<index<unsigned, 0>>(); }
+{
+  deep_copy<index<unsigned, 0>>();
+}
+
 TEST_CASE("one-element pages copy independently", "[common][sparse_index][copy]")
-{ deep_copy<index<unsigned, 1>>(); }
+{
+  deep_copy<index<unsigned, 1>>();
+}
 
 template<typename I>
 void copy_assignment()
@@ -54,14 +62,20 @@ void copy_assignment()
   source.clear();
   check(dest, 1u, 35u);
 }
+
 TEST_CASE(
     "paged copy assignment replaces old pages and handles self assignment",
     "[common][sparse_index][copy]")
-{ copy_assignment<index<unsigned, 8>>(); }
+{
+  copy_assignment<index<unsigned, 8>>();
+}
+
 TEST_CASE(
     "contiguous copy assignment replaces old contents and handles self assignment",
     "[common][sparse_index][copy]")
-{ copy_assignment<index<unsigned, 0>>(); }
+{
+  copy_assignment<index<unsigned, 0>>();
+}
 
 TEST_CASE("paged copying an empty index releases the old destination pages", "[common][sparse_index][copy]")
 {
@@ -121,10 +135,16 @@ void move_tests()
   check(dest, 5u, 50u);
   check(dest, 99u, 90u);
 }
+
 TEST_CASE("paged index supports move construction and move assignment", "[common][sparse_index][move]")
-{ move_tests<index<unsigned, 8>>(); }
+{
+  move_tests<index<unsigned, 8>>();
+}
+
 TEST_CASE("contiguous index supports move construction and move assignment", "[common][sparse_index][move]")
-{ move_tests<index<unsigned, 0>>(); }
+{
+  move_tests<index<unsigned, 0>>();
+}
 
 TEST_CASE(
     "moving a paged index transfers page ownership without page allocation",
@@ -165,10 +185,16 @@ void swap_tests()
   lhs.swap(lhs);
   check(lhs, 1u, 10u);
 }
+
 TEST_CASE("paged index member and free swap exchange mappings", "[common][sparse_index][swap]")
-{ swap_tests<index<unsigned, 8>>(); }
+{
+  swap_tests<index<unsigned, 8>>();
+}
+
 TEST_CASE("contiguous index member and free swap exchange mappings", "[common][sparse_index][swap]")
-{ swap_tests<index<unsigned, 0>>(); }
+{
+  swap_tests<index<unsigned, 0>>();
+}
 
 TEST_CASE("copying and swapping preserve independent pages", "[common][sparse_index][copy][swap]")
 {

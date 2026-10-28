@@ -110,7 +110,7 @@ TEST_CASE("sparse_set alternating erase-by-iterator visits every survivor", "[co
   hs::set<> s;
   for (unsigned k = 0; k < 120; ++k)
     s.insert(k);
-  for (auto it = s.begin(); it != s.end();)
+  for (auto it = s.begin(); it != s.end(); )
   {
     if (*it % 2 == 0)
       it = s.erase(it);

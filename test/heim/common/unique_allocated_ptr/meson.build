@@ -10,7 +10,8 @@ test_sources = files(
     'memory_resource.cpp',
     'single.cpp',
     'stress.cpp',
-    'traits.cpp')
+    'traits.cpp'
+)
 
 test_executable = executable(
     'heim-test-common-unique-allocated-ptr',

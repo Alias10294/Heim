@@ -118,6 +118,7 @@ TEST_CASE(
 }
 
 #if defined(__cpp_lib_inplace_vector) && __cpp_lib_inplace_vector >= 202406L
+
 TEST_CASE("sparse_set supports containers without allocator_type", "[common][sparse_set][generic][inplace]")
 {
   using S = heim::sparse_set<unsigned, 8, std::inplace_vector<unsigned, 64>>;

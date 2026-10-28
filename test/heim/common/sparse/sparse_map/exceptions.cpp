@@ -40,7 +40,7 @@ TEST_CASE(
     "sparse_map failure at several allocation points leaves original elements",
     "[common][sparse_map][exception]")
 {
-  for (std::size_t allowance = 0;allowance != 5;++allowance)
+  for (std::size_t allowance = 0; allowance != 5; ++allowance)
   {
     auto state = std::make_shared<allocation_log>();
     {
@@ -73,7 +73,7 @@ TEST_CASE("sparse_map emplace rollback on mapped constructor exception", "[commo
   {
     int value;
     explicit throwing(int n) : value(n)
-    { if (n<0) throw std::runtime_error("mapped construction"); }
+    { if (n < 0) throw std::runtime_error("mapped construction"); }
     throwing(throwing const&) = default;
     throwing(throwing && ) = default;
     throwing& operator= (throwing const&) = default;
@@ -98,7 +98,7 @@ TEST_CASE(
   {
     int value;
     explicit throwing(int n) : value(n)
-    { if (n<0) throw std::runtime_error("mapped construction"); }
+    { if (n < 0) throw std::runtime_error("mapped construction"); }
   };
   map<unsigned, throwing> m;
   REQUIRE(m.try_emplace(16u, 16).second);
@@ -116,7 +116,7 @@ TEST_CASE(
   {
     int value;
     explicit counted(int n) : value(n)
-    { if (n<0) throw std::runtime_error("bad constructor"); }
+    { if (n < 0) throw std::runtime_error("bad constructor"); }
     counted &operator= (int n)
     {
       value = n;
@@ -151,7 +151,7 @@ TEST_CASE(
     "[common][sparse_map][exception]")
 {
   using M = tracked_map<>;
-  for (std::size_t allowance = 0;allowance<5;++allowance)
+  for (std::size_t allowance = 0; allowance < 5; ++allowance)
   {
     auto state = std::make_shared<allocation_log>();
     state->remaining = allowance;

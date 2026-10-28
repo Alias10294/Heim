@@ -59,7 +59,10 @@ struct tracking_allocator
       throw std::bad_alloc{};
 
     auto *ptr = std::allocator<T>{}.allocate(n);
-    try { log->outstanding.push_back({ptr, n, owner}); }
+    try
+    {
+      log->outstanding.push_back({ptr, n, owner});
+    }
     catch (...)
     {
       std::allocator<T>{}.deallocate(ptr, n);
@@ -108,7 +111,7 @@ struct tracking_allocator
   friend struct tracking_allocator;
 
   template<typename U>
-  bool operator== (tracking_allocator<U> const &other) const noexcept
+  bool operator == (tracking_allocator<U> const &other) const noexcept
   { return log == other.log && owner == other.owner; }
 };
 
@@ -218,6 +221,5 @@ struct explicit_allocator
   void deallocate(T *p, std::size_t n) noexcept { std::allocator<T>{}.deallocate(p, n); }
 };
 
-} // namespace heim_test::allocation
-
-#endif // HEIM_TEST_UNIQUE_ALLOCATED_PTR_SUPPORT_HPP
+}
+#endif

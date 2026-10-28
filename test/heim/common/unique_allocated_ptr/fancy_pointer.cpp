@@ -1,13 +1,16 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-#include "support.hpp"
-
 #include <cstddef>
 #include <memory>
 #include <type_traits>
 #include <utility>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+#include "support.hpp"
+
+namespace
+{
 template<typename T>
 struct fancy_pointer
 {
@@ -23,7 +26,7 @@ struct fancy_pointer
   [[nodiscard]] constexpr T *operator->() const noexcept { return raw; }
   [[nodiscard]] constexpr T &operator*() const noexcept { return *raw; }
   [[nodiscard]] constexpr T &operator[](std::size_t i) const noexcept { return raw[i]; }
-  [[nodiscard]] friend constexpr bool operator== (fancy_pointer, fancy_pointer) noexcept = default;
+  [[nodiscard]] friend constexpr bool operator == (fancy_pointer, fancy_pointer) noexcept = default;
 };
 
 template<typename T>
@@ -73,7 +76,7 @@ struct fancy_allocator
   friend struct fancy_allocator;
 
   template<typename U>
-  bool operator== (fancy_allocator<U> const &other) const noexcept
+  bool operator == (fancy_allocator<U> const &other) const noexcept
   { return log == other.log && owner == other.owner; }
 };
 }

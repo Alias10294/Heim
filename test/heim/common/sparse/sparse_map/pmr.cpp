@@ -2,7 +2,8 @@
 
 using namespace heim_test::sparse_map;
 
-namespace {
+namespace
+{
 using pmr_map = heim::sparse_map<unsigned, int, 8,
   std::pmr::vector<unsigned>, std::pmr::vector<int>,
   std::pmr::polymorphic_allocator<std::pair<unsigned, int>>>;
@@ -40,8 +41,8 @@ TEST_CASE("sparse_map PMR uses supplied memory resource", "[common][sparse_map][
   counting_resource res;
   {
     pmr_map m{pmr_map::allocator_type{&res}};
-    for (unsigned i = 0;i<80;++i)
-      m.try_emplace(i*17u, int(i));
+    for (unsigned i = 0; i < 80; ++i)
+      m.try_emplace(i * 17u, int(i));
     REQUIRE(m.get_allocator().resource() == &res);
     REQUIRE(res.allocate_calls>0);
     REQUIRE(res.active_bytes>0);

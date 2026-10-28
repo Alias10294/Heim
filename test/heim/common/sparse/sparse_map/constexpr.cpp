@@ -2,7 +2,8 @@
 
 using namespace heim_test::sparse_map;
 
-namespace {
+namespace
+{
 constexpr bool empty_map_is_empty()
 {
   map<> m;
@@ -50,10 +51,16 @@ static_assert(assignments_in_constexpr());
 #endif
 
 TEST_CASE("sparse_map empty constexpr construction", "[common][sparse_map][constexpr]")
-{ REQUIRE(empty_map_is_empty()); }
+{
+  REQUIRE(empty_map_is_empty());
+}
 
 TEST_CASE("sparse_map constexpr insertion erasure and clear at runtime", "[common][sparse_map][constexpr]")
-{ REQUIRE(mutate_map()); }
+{
+  REQUIRE(mutate_map());
+}
 
 TEST_CASE("sparse_map constexpr insertion and assignment at runtime", "[common][sparse_map][constexpr]")
-{ REQUIRE(assignments_in_constexpr()); }
+{
+  REQUIRE(assignments_in_constexpr());
+}

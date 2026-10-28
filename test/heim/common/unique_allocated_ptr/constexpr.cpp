@@ -1,9 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-
 #include <memory>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+namespace
+{
 constexpr bool constexpr_single_works()
 {
   auto p = heim::allocate_unique<int>(std::allocator<int>{}, 3);

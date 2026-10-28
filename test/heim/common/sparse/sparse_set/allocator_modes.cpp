@@ -1,5 +1,6 @@
-#include "support.hpp"
 #include <heim/common/sparse.hpp>
+
+#include "support.hpp"
 
 namespace hs = heim_test::sparse_set;
 
@@ -31,7 +32,7 @@ struct mode_allocator
   { return mode_allocator{log, owner + 100}; }
 
   template<class, bool, bool, bool> friend struct mode_allocator;
-  template<class U> bool operator== (mode_allocator<U, Copy, Move, Swap> const &rhs) const noexcept
+  template<class U> bool operator == (mode_allocator<U, Copy, Move, Swap> const &rhs) const noexcept
   { return owner == rhs.owner && log == rhs.log; }
 };
 

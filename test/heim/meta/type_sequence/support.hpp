@@ -1,14 +1,14 @@
 #ifndef HEIM_TEST_META_TYPE_SEQUENCE_SUPPORT_HPP
 #define HEIM_TEST_META_TYPE_SEQUENCE_SUPPORT_HPP
 
-#include <heim/meta/type_sequence.hpp>
-
 #include <array>
 #include <concepts>
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include <heim/meta/type_sequence.hpp>
 
 namespace heim_meta_test
 {
@@ -83,4 +83,4 @@ template<class S, std::size_t N>
 concept has_drop = requires { typename heim::type_sequence_drop<S, N>::type; };
 }
 
-#endif // HEIM_TEST_META_TYPE_SEQUENCE_SUPPORT_HPP
+#endif

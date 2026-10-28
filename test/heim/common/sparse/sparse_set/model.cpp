@@ -2,7 +2,8 @@
 
 namespace hs = heim_test::sparse_set;
 
-namespace {
+namespace
+{
 template<std::size_t Page>
 void run_model(std::uint32_t seed, unsigned steps, unsigned universe)
 {
@@ -63,29 +64,43 @@ void run_replace_model(std::uint32_t seed)
 }
 
 TEST_CASE("sparse_set paged model regression with page size 1", "[common][sparse_set][model]")
-{ run_model<1>(0x11223344u, 9000, 1200); }
+{
+  run_model<1>(0x11223344u, 9000, 1200);
+}
 
 TEST_CASE("sparse_set paged model regression with page size 7", "[common][sparse_set][model]")
-{ run_model<7>(0x5E7A42u, 11000, 1200); }
+{
+  run_model<7>(0x5E7A42u, 11000, 1200);
+}
 
 TEST_CASE("sparse_set paged model regression with page size 8", "[common][sparse_set][model]")
-{ run_model<8>(0xABCD1234u, 11000, 1200); }
+{
+  run_model<8>(0xABCD1234u, 11000, 1200);
+}
 
 TEST_CASE("sparse_set paged model regression with page size 64", "[common][sparse_set][model]")
-{ run_model<64>(0x12345678u, 10000, 1200); }
+{
+  run_model<64>(0x12345678u, 10000, 1200);
+}
 
 TEST_CASE("sparse_set contiguous model regression", "[common][sparse_set][model]")
-{ run_model<0>(0xDEADBEEFu, 11000, 1200); }
+{
+  run_model<0>(0xDEADBEEFu, 11000, 1200);
+}
 
 TEST_CASE(
     "sparse_set page size 8 random replacement deduplicates every round",
     "[common][sparse_set][model]")
-{ run_replace_model<8>(0x5AFEFEE1u); }
+{
+  run_replace_model<8>(0x5AFEFEE1u);
+}
 
 TEST_CASE(
     "sparse_set contiguous random replacement deduplicates every round",
     "[common][sparse_set][model]")
-{ run_replace_model<0>(0x99881122u); }
+{
+  run_replace_model<0>(0x99881122u);
+}
 
 TEST_CASE("sparse_set destructive churn preserves exact membership", "[common][sparse_set][model]")
 {
@@ -112,11 +127,11 @@ TEST_CASE(
   for (unsigned round = 0; round < 10; ++round)
   {
     for (std::size_t i = ids.size(); i > 1; --i)
-      std::swap(ids[i-1], ids[rng.bounded(static_cast<std::uint32_t>(i))]);
+      std::swap(ids[i - 1], ids[rng.bounded(static_cast<std::uint32_t>(i))]);
     for (auto key : ids)
       REQUIRE(s.insert(key).second);
     for (std::size_t i = ids.size(); i > 1; --i)
-      std::swap(ids[i-1], ids[rng.bounded(static_cast<std::uint32_t>(i))]);
+      std::swap(ids[i - 1], ids[rng.bounded(static_cast<std::uint32_t>(i))]);
     for (auto key : ids)
       REQUIRE(s.try_erase(key));
     REQUIRE(s.empty());

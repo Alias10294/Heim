@@ -71,13 +71,13 @@ TEST_CASE("sparse_map clear is idempotent and supports reuse", "[common][sparse_
 TEST_CASE("sparse_map const lookup is independent of dense order", "[common][sparse_map][basic]")
 {
   map<> m;
-  for (unsigned i = 0;i<80;++i)
-    REQUIRE(m.try_emplace(79u-i, int(i*11)).second);
+  for (unsigned i = 0; i < 80; ++i)
+    REQUIRE(m.try_emplace(79u - i, int(i * 11)).second);
   auto const &cm = m;
-  for (unsigned i = 0;i<80;++i)
+  for (unsigned i = 0; i < 80; ++i)
   {
-    REQUIRE(cm.contains(79u-i));
-    REQUIRE(cm.at(79u-i) == int(i*11));
+    REQUIRE(cm.contains(79u - i));
+    REQUIRE(cm.at(79u - i) == int(i * 11));
   }
   REQUIRE(cm.size() == 80);
 }

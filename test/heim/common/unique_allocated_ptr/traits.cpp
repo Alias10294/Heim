@@ -1,13 +1,16 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-#include "support.hpp"
-
 #include <concepts>
 #include <memory>
 #include <type_traits>
 #include <utility>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+#include "support.hpp"
+
+namespace
+{
 using heim_test::allocation::explicit_allocator;
 using single_deleter = heim::allocator_aware_deleter<int, std::allocator<int>, false>;
 using array_deleter = heim::allocator_aware_deleter<int[], std::allocator<int>, false>;

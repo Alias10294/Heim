@@ -1,15 +1,12 @@
 #ifndef HEIM_TEST_COMMON_SPARSE_MAP_SUPPORT_HPP
 #define HEIM_TEST_COMMON_SPARSE_MAP_SUPPORT_HPP
 
-#include <heim/common/sparse.hpp>
-#include <catch2/catch_test_macros.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <initializer_list>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>
@@ -23,6 +20,10 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/sparse.hpp>
 
 namespace heim_test::sparse_map
 {
@@ -116,15 +117,26 @@ struct rng
     x ^= x << 5;
     return state = x;
   }
-  std::uint32_t bounded(std::uint32_t n) noexcept { return next() % n; }
+  std::uint32_t
+  bounded(std::uint32_t n) noexcept
+  { return next() % n; }
 };
 
 struct allocation_log
 {
-  enum class region { keys, values, pages, page_table };
-  struct block { std::size_t count;
-  int owner;
-  region kind; };
+  enum class region
+  {
+    keys,
+    values,
+    pages,
+    page_table
+  };
+  struct block
+  {
+    std::size_t count;
+    int         owner;
+    region      kind;
+  };
   std::array<std::size_t, 4> allocated_by_region{};
   std::array<std::size_t, 4> deallocated_by_region{};
   std::map<void *, block> outstanding;
@@ -148,7 +160,9 @@ struct tracked_allocator
   using propagate_on_container_move_assignment = std::bool_constant<Propagate>;
   using propagate_on_container_swap = std::bool_constant<Propagate>;
   using is_always_equal = std::false_type;
-  template<typename U> struct rebind { using other = tracked_allocator<U, Propagate>; };
+  template<typename U>
+  struct rebind
+  { using other = tracked_allocator<U, Propagate>; };
 
   std::shared_ptr<allocation_log> state{};
   int id{};
@@ -161,9 +175,12 @@ struct tracked_allocator
 
   static constexpr allocation_log::region region_of() noexcept
   {
-    if constexpr (std::is_same_v<T, unsigned>) return allocation_log::region::keys;
-    else if constexpr (std::is_same_v<T, int>) return allocation_log::region::values;
-    else if constexpr (requires { std::tuple_size<T>::value; }) return allocation_log::region::pages;
+    if constexpr (std::is_same_v<T, unsigned>)
+  return allocation_log::region::keys;
+    else if constexpr (std::is_same_v<T, int>)
+  return allocation_log::region::values;
+    else if constexpr (requires { std::tuple_size<T>::value; })
+  return allocation_log::region::pages;
     else return allocation_log::region::page_table;
   }
 
@@ -212,7 +229,7 @@ struct tracked_allocator
   template<typename, bool>
   friend struct tracked_allocator;
   template<typename U>
-  friend bool operator== (tracked_allocator const &a, tracked_allocator<U, Propagate> const &b) noexcept
+  friend bool operator == (tracked_allocator const &a, tracked_allocator<U, Propagate> const &b) noexcept
   { return a.id == b.id && a.state == b.state; }
 };
 
@@ -223,6 +240,5 @@ using tracked_map = heim::sparse_map<
   std::vector<int, tracked_allocator<int, Propagate>>,
   tracked_allocator<std::pair<unsigned, int>, Propagate>>;
 
-} // namespace heim_test::sparse_map
-
+}
 #endif

@@ -1,5 +1,6 @@
-#include "support.hpp"
 #include <sstream>
+
+#include "support.hpp"
 
 namespace hs = heim_test::sparse_set;
 

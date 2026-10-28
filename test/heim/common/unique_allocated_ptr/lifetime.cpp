@@ -1,9 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
 #include <memory>
 #include <utility>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+namespace
+{
 struct tracked {
   inline static int alive = 0;
   int value;

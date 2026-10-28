@@ -1,11 +1,14 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-#include "support.hpp"
-
 #include <cstddef>
 #include <memory_resource>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+#include "support.hpp"
+
+namespace
+{
 class recording_resource final : public std::pmr::memory_resource
 {
 public:

@@ -1,9 +1,11 @@
-#include "support.hpp"
 #include <memory_resource>
+
+#include "support.hpp"
 
 namespace hs = heim_test::sparse_set;
 
-namespace {
+namespace
+{
 using pmr_set = heim::sparse_set<
     unsigned, 8,
     std::pmr::vector<unsigned>,

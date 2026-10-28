@@ -90,12 +90,12 @@ TEST_CASE(
 TEST_CASE("sparse_map large mapped strings survive swap-pop", "[common][sparse_map][mapped]")
 {
   map<unsigned, std::string> m;
-  for (unsigned i = 0;i<70;++i)
-    m.try_emplace(i*17u, std::string(200, static_cast<char>('a'+i%26)));
-  for (unsigned i = 0;i<70;i += 2)
-    REQUIRE(m.try_erase(i*17u));
-  for (unsigned i = 1;i<70;i += 2) REQUIRE(m.at(i*17u)
-    == std::string(200, static_cast<char>('a'+i%26)));
+  for (unsigned i = 0; i < 70; ++i)
+    m.try_emplace(i * 17u, std::string(200, static_cast<char>('a'+i % 26)));
+  for (unsigned i = 0; i < 70; i += 2)
+    REQUIRE(m.try_erase(i * 17u));
+  for (unsigned i = 1; i < 70; i += 2) REQUIRE(m.at(i * 17u)
+    == std::string(200, static_cast<char>('a'+i % 26)));
 }
 
 TEST_CASE("sparse_map move-only mapped values survive map movement", "[common][sparse_map][mapped]")

@@ -1,9 +1,6 @@
 #ifndef HEIM_TEST_COMMON_SPARSE_INDEX_SUPPORT_HPP
 #define HEIM_TEST_COMMON_SPARSE_INDEX_SUPPORT_HPP
 
-#include <heim/common/sparse.hpp>
-#include <catch2/catch_test_macros.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -19,9 +16,12 @@
 #include <utility>
 #include <vector>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/sparse.hpp>
+
 namespace heim_test::sparse_index
 {
-
 template<typename UInt = unsigned, std::size_t PageSize = 8, typename Alloc = std::allocator<UInt>>
 using index = heim::detail::sparse_index<UInt, PageSize, Alloc>;
 
@@ -41,14 +41,16 @@ void check(I const &idx, key_type<I> key, key_type<I> expected)
 
 template<typename I>
 void check_missing(I const &idx, key_type<I> key)
-{ REQUIRE(idx.get(key) == nullptr); }
+{
+  REQUIRE(idx.get(key) == nullptr);
+}
 
 template<typename I>
 void verify_against(I const &idx,
                     std::unordered_map<key_type<I>, key_type<I>> const &reference,
                     key_type<I> limit)
 {
-  for (std::size_t k = 0; k < static_cast<std::size_t>(limit); ++k)
+  for (std::size_t k = 0; k < static_cast < std::size_t > (limit); ++k)
   {
     auto const key = static_cast<key_type<I>>(k);
     auto const it = reference.find(key);
@@ -77,7 +79,9 @@ public:
     x ^= x << 5;
     return state_ = x;
   }
-  std::uint32_t bounded(std::uint32_t bound) noexcept { return next() % bound; }
+  std::uint32_t
+  bounded(std::uint32_t bound) noexcept
+  { return next() % bound; }
 };
 
 template<typename T>
@@ -125,7 +129,9 @@ class tracked_allocator
 {
 public:
   using value_type = T;
-  template<typename U> struct rebind { using other = tracked_allocator<U, Propagate>; };
+  template<typename U>
+  struct rebind
+  { using other = tracked_allocator<U, Propagate>; };
   using propagate_on_container_copy_assignment = std::bool_constant<Propagate>;
   using propagate_on_container_move_assignment = std::bool_constant<Propagate>;
   using propagate_on_container_swap = std::bool_constant<Propagate>;
@@ -162,7 +168,7 @@ public:
       --log->remaining;
     ++log->allocations;
     if constexpr (is_page<T>::value)
-      ++log->page_allocations;
+  ++log->page_allocations;
     return p;
   }
 
@@ -180,7 +186,7 @@ public:
     }
     ++log->deallocations;
     if constexpr (is_page<T>::value)
-      ++log->page_deallocations;
+  ++log->page_deallocations;
     std::allocator<T>{}.deallocate(p, count);
   }
 
@@ -188,7 +194,7 @@ public:
   friend class tracked_allocator;
 
   template<typename U>
-  bool operator== (tracked_allocator<U, Propagate> const &other) const noexcept
+  bool operator == (tracked_allocator<U, Propagate> const &other) const noexcept
   { return log == other.log && owner == other.owner; }
 };
 
@@ -205,5 +211,5 @@ void set_and_model(I &idx,
   model[key] = value;
 }
 
-} // namespace heim_test::sparse_index
-#endif // HEIM_TEST_COMMON_SPARSE_INDEX_SUPPORT_HPP
+}
+#endif

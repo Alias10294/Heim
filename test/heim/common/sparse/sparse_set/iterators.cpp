@@ -1,5 +1,6 @@
-#include "support.hpp"
 #include <iterator>
+
+#include "support.hpp"
 
 namespace hs = heim_test::sparse_set;
 
@@ -45,8 +46,7 @@ TEST_CASE("sparse_set find returns an iterator into the same range", "[common][s
 TEST_CASE("sparse_set every iterator position can be found by its key", "[common][sparse_set][iterators]")
 {
   hs::set<> s;
-  for (unsigned i = 0; i < 100; ++i) s.insert((i * 19u)
-    % 127u);
+  for (unsigned i = 0; i < 100; ++i) s.insert((i * 19u) % 127u);
   for (auto it = s.begin(); it != s.end(); ++it) REQUIRE(s.find(*it)
     == it);
   hs::verify_dense_iterators(s);

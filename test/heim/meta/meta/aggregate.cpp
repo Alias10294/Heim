@@ -1,8 +1,9 @@
-#include <heim/meta.hpp>
-#include <heim/meta/meta.hpp>
+#include <type_traits>
 
 #include <catch2/catch_test_macros.hpp>
-#include <type_traits>
+
+#include <heim/meta.hpp>
+#include <heim/meta/meta.hpp>
 
 TEST_CASE("meta aggregate headers expose the type sequence interface", "[meta][header]")
 {

@@ -102,17 +102,17 @@ TEST_CASE("sparse_map repeated alternating front/back removal", "[common][sparse
 {
   map<> m;
   std::unordered_map<unsigned, int> oracle;
-  for (unsigned k = 0;k<96;++k)
+  for (unsigned k = 0; k < 96; ++k)
   {
-    REQUIRE(m.try_emplace(k*7u, int(k)).second);
-    oracle.emplace(k*7u, int(k));
+    REQUIRE(m.try_emplace(k * 7u, int(k)).second);
+    oracle.emplace(k * 7u, int(k));
   }
-  for (unsigned i = 0;i<96;++i)
+  for (unsigned i = 0; i < 96; ++i)
   {
-    auto key = (i%2 == 0 ? i/2 : 95u-i/2)*7u;
+    auto key = (i % 2 == 0 ? i/2 : 95u - i/2)*7u;
     REQUIRE(m.try_erase(key));
     REQUIRE(oracle.erase(key) == 1);
-    if (i%11 == 0)
+    if (i % 11 == 0)
       verify(m, oracle);
   }
   verify(m, {});

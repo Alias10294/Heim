@@ -1,11 +1,13 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-#include "support.hpp"
-
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+#include "support.hpp"
 
 using heim_test::allocation::immovable_value;
 using heim_test::allocation::live_value;

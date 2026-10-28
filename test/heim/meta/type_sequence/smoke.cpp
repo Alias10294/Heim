@@ -1,6 +1,8 @@
-#include <heim/meta.hpp>
-#include "support.hpp"
 #include <catch2/catch_test_macros.hpp>
+
+#include <heim/meta.hpp>
+
+#include "support.hpp"
 
 TEST_CASE("type_sequence public traits match corresponding metafunctions", "[meta][type_sequence]")
 {

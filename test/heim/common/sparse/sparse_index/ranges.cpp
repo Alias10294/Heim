@@ -1,7 +1,8 @@
-#include "support.hpp"
 #include <array>
 #include <forward_list>
 #include <sstream>
+
+#include "support.hpp"
 
 using namespace heim_test::sparse_index;
 
@@ -22,15 +23,21 @@ void indexed_construction()
 TEST_CASE(
     "paged range constructor indexes positions with last occurrence winning",
     "[common][sparse_index][range]")
-{ indexed_construction<index<unsigned, 8>>(); }
+{
+  indexed_construction<index<unsigned, 8>>();
+}
 
 TEST_CASE(
     "contiguous range constructor indexes positions with last occurrence winning",
     "[common][sparse_index][range]")
-{ indexed_construction<index<unsigned, 0>>(); }
+{
+  indexed_construction<index<unsigned, 0>>();
+}
 
 TEST_CASE("page-size-one range constructor handles duplicates", "[common][sparse_index][range]")
-{ indexed_construction<index<unsigned, 1>>(); }
+{
+  indexed_construction<index<unsigned, 1>>();
+}
 
 TEST_CASE("paged index accepts an empty range", "[common][sparse_index][range]")
 {
@@ -113,9 +120,14 @@ void resetting_range()
 }
 
 TEST_CASE("paged reset reindexes its input and drops old keys", "[common][sparse_index][range]")
-{ resetting_range<index<unsigned, 8>>(); }
+{
+  resetting_range<index<unsigned, 8>>();
+}
+
 TEST_CASE("contiguous reset reindexes its input and drops old keys", "[common][sparse_index][range]")
-{ resetting_range<index<unsigned, 0>>(); }
+{
+  resetting_range<index<unsigned, 0>>();
+}
 
 TEST_CASE(
     "range constructor with an explicit allocator preserves allocator identity",

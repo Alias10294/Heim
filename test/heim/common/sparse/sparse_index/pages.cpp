@@ -31,21 +31,44 @@ void boundaries()
 }
 
 TEST_CASE("one-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<1>(); }
+{
+  boundaries<1>();
+}
+
 TEST_CASE("two-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<2>(); }
+{
+  boundaries<2>();
+}
+
 TEST_CASE("three-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<3>(); }
+{
+  boundaries<3>();
+}
+
 TEST_CASE("seven-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<7>(); }
+{
+  boundaries<7>();
+}
+
 TEST_CASE("eight-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<8>(); }
+{
+  boundaries<8>();
+}
+
 TEST_CASE("sixteen-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<16>(); }
+{
+  boundaries<16>();
+}
+
 TEST_CASE("31-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<31>(); }
+{
+  boundaries<31>();
+}
+
 TEST_CASE("64-element pages handle every page boundary", "[common][sparse_index][pages]")
-{ boundaries<64>(); }
+{
+  boundaries<64>();
+}
 
 TEST_CASE("default page size supports distant sparse entries", "[common][sparse_index][pages]")
 {

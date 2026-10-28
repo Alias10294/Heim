@@ -33,16 +33,24 @@ void basic_semantics()
 }
 
 TEST_CASE("paged index basic lookup and overwrite", "[common][sparse_index][basic]")
-{ basic_semantics<index<unsigned, 8>>(); }
+{
+  basic_semantics<index<unsigned, 8>>();
+}
 
 TEST_CASE("contiguous index basic lookup and overwrite", "[common][sparse_index][basic]")
-{ basic_semantics<index<unsigned, 0>>(); }
+{
+  basic_semantics<index<unsigned, 0>>();
+}
 
 TEST_CASE("page-size-one index basic lookup and overwrite", "[common][sparse_index][basic]")
-{ basic_semantics<index<unsigned, 1>>(); }
+{
+  basic_semantics<index<unsigned, 1>>();
+}
 
 TEST_CASE("odd-page index basic lookup and overwrite", "[common][sparse_index][basic]")
-{ basic_semantics<index<unsigned, 7>>(); }
+{
+  basic_semantics<index<unsigned, 7>>();
+}
 
 TEST_CASE(
     "sparse_index reserves the maximum unsigned value as a missing sentinel",

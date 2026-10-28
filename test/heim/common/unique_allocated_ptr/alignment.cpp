@@ -1,12 +1,15 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/common/unique_allocated_ptr.hpp>
-#include "support.hpp"
-
 #include <cstdint>
 #include <memory>
 #include <type_traits>
 
-namespace {
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/common/unique_allocated_ptr.hpp>
+
+#include "support.hpp"
+
+namespace
+{
 struct alignas(128) over_aligned
 {
   int value{};
