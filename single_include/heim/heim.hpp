@@ -2860,9 +2860,13 @@ using readable_map_result_t
 
 template<typename M, typename K>
 struct is_reflective_map_for
-  : std::bool_constant<
-        is_readable_map_for_v<M, K>
-     && is_writable_map_for_v<M, K, readable_map_result_t<M, K>>>
+  : std::bool_constant<[]
+    {
+      if constexpr (is_readable_map_for_v<M, K>)
+        return is_writable_map_for_v<M, K, readable_map_result_t<M, K>>;
+      else
+        return false;
+    }()>
 { };
 
 template<typename M, typename K>
