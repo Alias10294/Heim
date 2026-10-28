@@ -40,7 +40,7 @@ public:
   static constexpr
   void
   back_edge(Graph const &, edge_t<std::remove_cvref_t<Graph>>)
-  { throw std::logic_error{"heim::graphs::reverse_topological_sort: detected cycle"}; }
+  { throw std::domain_error{"heim::graphs::reverse_topological_sort: detected cycle"}; }
 
 
   constexpr

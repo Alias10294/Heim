@@ -1,8 +1,5 @@
 #include <memory>
-
 #include <catch2/catch_test_macros.hpp>
-
-#include <heim/common.hpp>
 #include <heim/common/common.hpp>
 
 TEST_CASE("common aggregate headers expose sparse containers and allocated pointers", "[common][header]")

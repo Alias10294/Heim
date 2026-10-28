@@ -14,14 +14,11 @@
 #include <random>
 #include <ranges>
 #include <set>
-#include <stdexcept>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
 #include <catch2/catch_test_macros.hpp>
-
 #include <heim/common/sparse.hpp>
 
 namespace heim_test::sparse_set

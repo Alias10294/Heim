@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <utility>
 #include "heim/property/primitives.hpp"

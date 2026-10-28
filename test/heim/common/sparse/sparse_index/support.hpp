@@ -9,15 +9,10 @@
 #include <map>
 #include <memory>
 #include <new>
-#include <ranges>
-#include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <vector>
-
 #include <catch2/catch_test_macros.hpp>
-
 #include <heim/common/sparse.hpp>
 
 namespace heim_test::sparse_index

@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <type_traits>
 #include "heim/property/property_map.hpp"

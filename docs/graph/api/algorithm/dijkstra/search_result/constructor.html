@@ -85,8 +85,10 @@
                     class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
                     class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span></code></pre>
         <h2 id="overview">Overview</h2>
-        <p>Constructs a new <code><span class="heim-cpp-type">dijkstra_search_result</span></code> using the given property maps.</p>
-        <p>When property maps are left by default, this object allocates a container for the related properties and automatically generates a property map for it.</p>
+        <p>Constructs a new <code><span class="heim-cpp-type">dijkstra_search_result</span></code> using the given
+            property maps.</p>
+        <p>When property maps are left by default, this object allocates a container for the related properties and
+            automatically generates a property map for it.</p>
         <h2 id="parameters">Parameters</h2>
         <table>
             <thead>
@@ -118,51 +120,218 @@
         <h2 id="complexity">Complexity</h2>
         <p><code>O(1)</code></p>
         <h2 id="code-example">Code Example</h2>
-        <pre><code><span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;functional&gt;</span>
+        <pre><code><span class="heim-cpp-preprocessor">#include</span> <span
+                class="heim-cpp-string">&lt;functional&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;limits&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;print&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;unordered_map&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;utility&gt;</span>
 <span class="heim-cpp-preprocessor">#include</span> <span class="heim-cpp-string">&lt;heim/graph.hpp&gt;</span>
 
-<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">graph_type</span>  <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
-<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">vertex_type</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">vertex_t</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
-<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">edge_type</span>   <span class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">edge_t</span>  <span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">graph_type</span>  <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">adjacency_list</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-punctuation">&gt;</span><span
+                    class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">vertex_type</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">vertex_t</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
+<span class="heim-cpp-special-keyword">using</span> <span class="heim-cpp-type">edge_type</span>   <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">edge_t</span>  <span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">;</span>
 
-<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
+<span class="heim-cpp-builtin-type">int</span> <span class="heim-cpp-function">main</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span>
 <span class="heim-cpp-punctuation">{</span>
-  <span class="heim-cpp-type">graph_type</span>                                   <span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">edge_type</span>  <span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-builtin-type">unsigned</span>   <span class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">vertex_type</span><span class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">p</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-builtin-type">unsigned</span>   <span class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">d</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-type">graph_type</span>                                   <span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">edge_type</span>  <span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-builtin-type">unsigned</span>   <span
+                    class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">w</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-type">vertex_type</span><span
+                    class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">p</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">unordered_map</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">vertex_type</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-builtin-type">unsigned</span>   <span
+                    class="heim-cpp-punctuation">&gt;</span> <span class="heim-cpp-variable">d</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">p</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">dm</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">d</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">wm</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">w</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">pm</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">p</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-variable">dm</span><span
+                    class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-function">make_property_map</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">d</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_vertex</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed</span><span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e0</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-special-keyword">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e1</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-number">10</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-special-keyword">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e2</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-number">2</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e3</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-special-keyword">_</span>     <span class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e3</span><span class="heim-cpp-punctuation">]</span> <span class="heim-cpp-operator">=</span> <span class="heim-cpp-number">1</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed0</span><span
+                    class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span
+                    class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span
+                    class="heim-cpp-variable">e0</span><span class="heim-cpp-punctuation">]</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-number">1</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e1</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed1</span><span
+                    class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v0</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span
+                    class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span
+                    class="heim-cpp-variable">e1</span><span class="heim-cpp-punctuation">]</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-number">10</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e2</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed2</span><span
+                    class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v1</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span
+                    class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span
+                    class="heim-cpp-variable">e2</span><span class="heim-cpp-punctuation">]</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-number">2</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-keyword">auto</span> <span class="heim-cpp-keyword">const</span> <span
+                    class="heim-cpp-punctuation">[</span><span class="heim-cpp-variable">e3</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">placed3</span><span
+                    class="heim-cpp-punctuation">]</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">place_edge</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v2</span><span class="heim-cpp-punctuation">,</span> <span
+                    class="heim-cpp-variable">v3</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span> <span
+                    class="heim-cpp-variable">w</span><span class="heim-cpp-punctuation">[</span><span
+                    class="heim-cpp-variable">e3</span><span class="heim-cpp-punctuation">]</span> <span
+                    class="heim-cpp-operator">=</span> <span class="heim-cpp-number">1</span><span
+                    class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">dijkstra_result</span> <span class="heim-cpp-variable">simple</span> <span class="heim-cpp-punctuation">{</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">decltype</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">dijkstra_result</span> <span class="heim-cpp-variable">complex</span><span class="heim-cpp-punctuation">{</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-keyword">decltype</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">dijkstra_result</span> <span
+                    class="heim-cpp-variable">simple</span> <span class="heim-cpp-punctuation">{</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span
+                    class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-keyword">decltype</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-type">dijkstra_result</span> <span
+                    class="heim-cpp-variable">complex</span><span class="heim-cpp-punctuation">{</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-type">graph_type</span><span class="heim-cpp-punctuation">&gt;</span><span
+                    class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-constant">in_place_type</span><span class="heim-cpp-punctuation">&lt;</span><span
+                    class="heim-cpp-keyword">decltype</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">,</span>
       <span class="heim-cpp-variable">pm</span><span class="heim-cpp-punctuation">,</span>
       <span class="heim-cpp-variable">dm</span><span class="heim-cpp-punctuation">,</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">numeric_limits</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-builtin-type">unsigned</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-method">max</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">,</span>
-      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">less</span><span class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-builtin-type">unsigned</span><span class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">{</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">;</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">numeric_limits</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-builtin-type">unsigned</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-operator">::</span><span
+                    class="heim-cpp-method">max</span><span class="heim-cpp-punctuation">(</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">,</span>
+      <span class="heim-cpp-namespace">std</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-type">less</span><span
+                    class="heim-cpp-punctuation">&lt;</span><span class="heim-cpp-builtin-type">unsigned</span><span
+                    class="heim-cpp-punctuation">&gt;</span><span class="heim-cpp-punctuation">{</span><span
+                    class="heim-cpp-punctuation">}</span><span class="heim-cpp-punctuation">}</span><span
+                    class="heim-cpp-punctuation">;</span>
 
-  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dijkstra</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">simple</span> <span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
-  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dijkstra</span><span class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">complex</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">wm</span><span class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dijkstra</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">simple</span> <span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">wm</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
+  <span class="heim-cpp-namespace">heim</span><span class="heim-cpp-operator">::</span><span class="heim-cpp-namespace">graphs</span><span
+                    class="heim-cpp-operator">::</span><span class="heim-cpp-constant">dijkstra</span><span
+                    class="heim-cpp-punctuation">(</span><span class="heim-cpp-variable">g</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">complex</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-number">0</span><span
+                    class="heim-cpp-punctuation">,</span> <span class="heim-cpp-variable">wm</span><span
+                    class="heim-cpp-punctuation">)</span><span class="heim-cpp-punctuation">;</span>
 <span class="heim-cpp-punctuation">}</span></code></pre>
     </article>
 </main>

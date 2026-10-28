@@ -13,7 +13,7 @@ function objects, and can be composed to express richer mappings.
 #include <vector>
 #include <heim/property.hpp>
 
-struct entity { int hp; }
+struct entity { int hp; };
 
 int main()
 {
@@ -59,10 +59,10 @@ int main()
   vertex_type v2{heim::graphs::place_vertex(g)};
   vertex_type v3{heim::graphs::place_vertex(g)};
   
-  auto [e0, placed]{heim::graphs::place_edge(g, v0, v1)};
-  auto [e1, _     ]{heim::graphs::place_edge(g, v1, v2)};
-  auto [e2, _     ]{heim::graphs::place_edge(g, v0, v2)};
-  auto [e3, _     ]{heim::graphs::place_edge(g, v2, v3)};
+  auto [e0, placed0]{heim::graphs::place_edge(g, v0, v1)};
+  auto [e1, placed1]{heim::graphs::place_edge(g, v1, v2)};
+  auto [e2, placed2]{heim::graphs::place_edge(g, v0, v2)};
+  auto [e3, placed3]{heim::graphs::place_edge(g, v2, v3)};
   
   auto res{heim::graphs::breadth_first_search(g, v0)};
   if (res.reached(v3))

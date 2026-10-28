@@ -1,10 +1,7 @@
 #include <memory>
 #include <utility>
-
 #include <catch2/catch_test_macros.hpp>
-
 #include <heim/common/unique_allocated_ptr.hpp>
-
 #include "support.hpp"
 
 using heim_test::allocation::balanced;
