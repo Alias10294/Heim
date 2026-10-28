@@ -13,7 +13,7 @@ function objects, and can be composed to express richer mappings.
 #include <vector>
 #include <heim/property.hpp>
 
-struct entity { int hp; };
+namespace { struct entity { int hp; }; }
 
 int main()
 {
