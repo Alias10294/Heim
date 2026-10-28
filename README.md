@@ -1,5 +1,5 @@
 # Heim
-Heim is a C++26 collection of header-only libraries that provide useful and generic abstractions for 
+Heim is a C++23 collection of header-only libraries that provide useful and generic abstractions for 
 *data-oriented design* (*DOD*).
 
 ## Libraries
@@ -99,10 +99,7 @@ Sitting on top of the best modern C++ has to offer, Heim makes the most of recen
 features such as *concepts*, *ranges* and *customization point objects*.
 
 ## Requirements
-To be used, Heim requires a C++26 compiler with Contracts support.
-
-Currently, only GCC 16 and later meets these requirements. Check out
-[this page](https://en.cppreference.com/cpp/compiler_support/26) to stay informed about compiler support for C++26.
+To be used, Heim only requires a C++23 compiler.
 
 ## Installation
 ### Single-header distribution
