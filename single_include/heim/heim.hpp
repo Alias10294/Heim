@@ -4203,17 +4203,17 @@ private:
 
   template<typename G>
   static constexpr bool s_undirected_out
-  =  !directed<G>
+  =  !directed<std::remove_cvref_t<G>>
    && requires { out_edge_count(std::declval<G &&>(), std::declval<vertex_t<std::remove_cvref_t<G>> &>()); };
 
   template<typename G>
   static constexpr bool s_undirected_in
-  =  !directed<G>
+  =  !directed<std::remove_cvref_t<G>>
    && requires { in_edge_count (std::declval<G &&>(), std::declval<vertex_t<std::remove_cvref_t<G>> &>()); };
 
   template<typename G>
   static constexpr bool s_directed_in_out
-  =   directed<G>
+  =   directed<std::remove_cvref_t<G>>
    && requires { out_edge_count(std::declval<G &>(), std::declval<vertex_t<std::remove_cvref_t<G>> &>()); }
    && requires { in_edge_count (std::declval<G &>(), std::declval<vertex_t<std::remove_cvref_t<G>> &>()); };
 
