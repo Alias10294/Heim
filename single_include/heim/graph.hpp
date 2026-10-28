@@ -390,6 +390,7 @@ public:
 #include <functional>
 #include <iterator>
 #include <map>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <unordered_map>

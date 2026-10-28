@@ -4,6 +4,7 @@
 #include <array>
 #include <concepts>
 #include <deque>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <utility>
@@ -12,6 +13,26 @@
 namespace
 {
 namespace prop = heim::properties;
+
+struct custom_random_access_range
+{
+  std::array<int, 4> values{};
+
+  constexpr int *begin() noexcept
+  { return values.data(); }
+
+  constexpr int *end() noexcept
+  { return values.data() + values.size(); }
+
+  constexpr int const *begin() const noexcept
+  { return values.data(); }
+
+  constexpr int const *end() const noexcept
+  { return values.data() + values.size(); }
+};
+
+static_assert(std::ranges::random_access_range<custom_random_access_range>);
+static_assert(std::ranges::random_access_range<custom_random_access_range const>);
 
 template<typename Range>
 void verify_mutable_range(Range &range)
@@ -172,4 +193,30 @@ TEST_CASE("indexed random-access ranges preserve const access", "[property][prop
   REQUIRE(prop::get(am, 1) == 33);
   REQUIRE(prop::get(cm, 1) == 33);
   REQUIRE(prop::get(sm, 1) == 33);
+}
+
+TEST_CASE("random-access range adapter works with a user-defined range", "[property][property_map][random_access]")
+{
+  custom_random_access_range range{{10, 20, 30, 40}};
+  auto map = heim::make_property_map(heim::random_access_range_arg, range);
+  static_assert(prop::map_for<decltype(map) &, int, int>);
+  REQUIRE(&prop::get(map, 1) == &range.values[1]);
+  prop::set(map, 1, 21);
+  REQUIRE(range.values[1] == 21);
+
+  auto index = heim::make_property_map(heim::invocable_arg, [](int k) noexcept { return k + 1; });
+  auto indexed = heim::make_property_map(heim::random_access_range_arg, range, index);
+  REQUIRE(&prop::get(indexed, 1) == &range.values[2]);
+  prop::set(indexed, 0, 22);
+  REQUIRE(range.values[1] == 22);
+
+  custom_random_access_range const &read_only_range = range;
+  auto read_only = heim::make_property_map(heim::random_access_range_arg, read_only_range);
+  auto indexed_read_only = heim::make_property_map(heim::random_access_range_arg, read_only_range, index);
+  static_assert(prop::readable_map_for<decltype(read_only) &, int>);
+  static_assert(!prop::writable_map_for<decltype(read_only) &, int, int>);
+  static_assert(!prop::writable_map_for<decltype(indexed_read_only) &, int, int>);
+  static_assert(std::same_as<decltype(prop::get(read_only, 0)), int const &>);
+  REQUIRE(&prop::get(read_only, 1) == &range.values[1]);
+  REQUIRE(&prop::get(indexed_read_only, 1) == &range.values[2]);
 }

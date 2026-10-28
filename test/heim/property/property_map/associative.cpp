@@ -4,6 +4,7 @@
 #include <concepts>
 #include <flat_map>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -13,6 +14,28 @@
 namespace
 {
 namespace prop = heim::properties;
+
+struct custom_associative_container
+{
+  std::map<int, std::unique_ptr<int>> values;
+  int reads{};
+  int writes{};
+
+  std::unique_ptr<int> &at(int key)
+  {
+    ++reads;
+    return values.at(key);
+  }
+
+  std::unique_ptr<int> const &at(int key) const
+  { return values.at(key); }
+
+  void insert_or_assign(int key, std::unique_ptr<int> value)
+  {
+    ++writes;
+    values.insert_or_assign(key, std::move(value));
+  }
+};
 
 template<typename Container>
 void verify_mutable_associative_container()
@@ -87,4 +110,29 @@ TEST_CASE("associative adapter propagates container exceptions", "[property][pro
   REQUIRE_THROWS_AS(prop::get(map, -1), std::out_of_range);
   prop::set(map, -1, 5);
   REQUIRE(prop::get(map, -1) == 5);
+}
+
+TEST_CASE("associative adapter works with a user-defined container", "[property][property_map][associative]")
+{
+  custom_associative_container container;
+  auto map = heim::make_property_map(heim::associative_container_arg, container);
+
+  static_assert(prop::map_for<decltype(map) &, int, std::unique_ptr<int>>);
+  prop::set(map, 4, std::make_unique<int>(41));
+  REQUIRE(container.writes == 1);
+  REQUIRE(*prop::get(map, 4) == 41);
+  REQUIRE(&prop::get(map, 4) == &container.values.at(4));
+  REQUIRE(container.reads == 2);
+
+  prop::set(map, 4, std::make_unique<int>(73));
+  REQUIRE(container.writes == 2);
+  REQUIRE(*container.values.at(4) == 73);
+  REQUIRE_THROWS_AS(prop::get(map, 99), std::out_of_range);
+
+  auto const &read_only_container = container;
+  auto read_only = heim::make_property_map(heim::associative_container_arg, read_only_container);
+  static_assert(prop::readable_map_for<decltype(read_only) &, int>);
+  static_assert(!prop::writable_map_for<decltype(read_only) &, int, std::unique_ptr<int>>);
+  static_assert(std::same_as<decltype(prop::get(read_only, 4)), std::unique_ptr<int> const &>);
+  REQUIRE(&prop::get(read_only, 4) == &container.values.at(4));
 }
