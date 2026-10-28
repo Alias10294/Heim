@@ -212,11 +212,6 @@ private:
     properties::set(cm, r, colors::gray_v<color_type>);
 
     ctrl = vis::discover_vertex(vis, g, r);
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::prune);
-
     if      (ctrl == visit::stop)
       return false;
     else if (ctrl != visit::prune)
@@ -224,11 +219,6 @@ private:
       for (edge_type e : out_edges(g, r))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop
-         || ctrl == visit::skip);
-
         if      (ctrl == visit::stop)
           return false;
         else if (ctrl == visit::skip)
@@ -240,10 +230,6 @@ private:
         if (clr == colors::white_v<color_type>)
         {
           ctrl = vis::tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::stop);
-
           if (ctrl == visit::stop)
             return false;
 
@@ -255,30 +241,18 @@ private:
           if (clr == colors::gray_v<color_type>)
           {
             ctrl = vis::back_edge(vis, g, e);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
           else
           {
             ctrl = vis::forward_or_cross_edge(vis, g, e);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
         }
 
         ctrl = vis::finish_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
       }
@@ -287,10 +261,6 @@ private:
     properties::set(cm, r, colors::black_v<color_type>);
 
     ctrl = vis::finish_vertex(vis, g, r);
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop);
-
     if (ctrl == visit::stop)
       return false;
 
@@ -332,10 +302,6 @@ public:
       properties::set(rcm, v, colors::white_v<color_type>);
 
       ctrl = vis::initialize_vertex(vis, g, v);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
@@ -346,11 +312,6 @@ public:
         continue;
 
       ctrl = vis::start_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop
-       || ctrl == visit::skip);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::skip)

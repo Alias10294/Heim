@@ -883,8 +883,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     return this->m_vertices[v_id].out_edges()
          | std::views::transform(
                [v_id]
@@ -900,8 +898,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     return this->m_vertices[v_id].in_edges()
          | std::views::transform(
                [v_id]
@@ -914,71 +910,41 @@ public:
   out_edge_count(vertex_type v) const
   noexcept
   requires is_out_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].out_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].out_edge_count()); }
 
   [[nodiscard]] constexpr
   size_type
   in_edge_count(vertex_type v) const
   noexcept
   requires is_in_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].in_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].in_edge_count()); }
 
   [[nodiscard]] constexpr
   size_type
   total_edge_count(vertex_type v) const
   noexcept
   requires is_in_incident && is_out_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].total_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].total_edge_count()); }
 
 
   [[nodiscard]] constexpr
   vertex_type
   source(edge_type e) const
   noexcept
-  {
-    contract_assert(this->m_edges.contains(e.id()));
-
-    return vertex_type{e.source_id()};
-  }
+  { return vertex_type{e.source_id()}; }
 
   [[nodiscard]] constexpr
   vertex_type
   target(edge_type e) const
   noexcept
-  {
-    contract_assert(this->m_edges.contains(e.id()));
-
-    return vertex_type{e.target_id()};
-  }
+  { return vertex_type{e.target_id()}; }
 
   [[nodiscard]] constexpr
   std::pair<vertex_type, vertex_type>
   endpoints(edge_type e) const
   noexcept
   {
-    id_type e_id{e.id()};
-
-    contract_assert(this->m_edges.contains(e_id));
-
-    auto const [u_id, v_id]{this->m_edges[e_id]};
+    auto const [u_id, v_id]{this->m_edges[e.id()]};
 
     return std::pair{vertex_type{u_id}, vertex_type{v_id}};
   }
@@ -1000,9 +966,6 @@ public:
     id_type const e_id{this->m_next_edge};
     id_type const u_id{u.id()};
     id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(u_id));
-    contract_assert(this->m_vertices.contains(v_id));
 
     if constexpr (!is_multigraph)
     {
@@ -1044,8 +1007,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     this->m_clear_vertex(v_id);
     this->m_vertices.erase(v_id);
   }
@@ -1054,13 +1015,7 @@ public:
   void
   remove_edge(edge_type e)
   noexcept
-  {
-    id_type e_id{e.id()};
-
-    contract_assert(this->m_edges.contains(e_id));
-
-    this->m_remove_edge(e_id);
-  }
+  { this->m_remove_edge(e.id()); }
 
   constexpr
   void
@@ -1068,9 +1023,6 @@ public:
   {
     id_type const u_id{u.id()};
     id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(u_id));
-    contract_assert(this->m_vertices.contains(v_id));
 
     if constexpr (is_directed)
     {
@@ -1099,13 +1051,7 @@ public:
   constexpr
   void
   clear_vertex(vertex_type v)
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    this->m_clear_vertex(v.id());
-  }
+  { this->m_clear_vertex(v.id()); }
 
   constexpr
   void

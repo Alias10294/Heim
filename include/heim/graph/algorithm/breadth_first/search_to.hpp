@@ -163,10 +163,7 @@ public:
   [[nodiscard]] constexpr
   auto
   level() const
-  {
-    contract_assert(this->reached());
-    return properties::get(this->m_level_map(), this->m_tgt);
-  }
+  { return properties::get(this->m_level_map(), this->m_tgt); }
 
   [[nodiscard]] constexpr
   auto
@@ -176,10 +173,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path() const &
-  {
-    contract_assert(this->reached());
-    return predecessor_view{this->m_predecessor_map(), this->m_tgt};
-  }
+  { return predecessor_view{this->m_predecessor_map(), this->m_tgt}; }
 
   [[nodiscard]] constexpr
   auto

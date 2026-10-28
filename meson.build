@@ -2,23 +2,12 @@ project(
     'heim',
     'cpp',
     meson_version:   '>=1.1',
-    default_options: ['cpp_std=c++26'])
+    default_options: ['cpp_std=c++23'])
 
 
 cpp_compiler      = meson.get_compiler('cpp')
 cpp_compiler_args = []
 cpp_dependencies  = []
-
-if cpp_compiler.get_id() == 'gcc'
-  if not cpp_compiler.version().version_compare('>=16')
-    error('GCC 16 or later is required for Heim to compile.')
-  endif
-
-  cpp_compiler_args += ['-fcontracts']
-  cpp_dependencies  += cpp_compiler.find_library('stdc++exp', required: true)
-else
-  error('A C++26 compiler with Contracts support is required for Heim to compile.')
-endif
 
 
 heim_inc = include_directories('include')
@@ -38,7 +27,7 @@ pkgconfig = import('pkgconfig')
 pkgconfig.generate(
     name:         'heim',
     filebase:     'heim',
-    description:  'C++26 collection of header-only generic libraries',
+    description:  'C++23 collection of header-only generic libraries',
     version:      meson.project_version(),
     subdirs:      '.',
     libraries:    cpp_dependencies,

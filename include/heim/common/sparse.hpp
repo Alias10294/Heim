@@ -602,9 +602,6 @@ private:
   iterator
   m_unchecked_insert(value_type value)
   {
-    contract_assert(!this->m_index.get(value));
-    contract_assert(this->size() < this->max_size());
-
     auto &idx{this->m_index.assure(value)};
     this->m_cont.emplace_back(value);
 
@@ -617,9 +614,6 @@ private:
   iterator
   m_unchecked_insert(const_iterator pos, value_type value)
   {
-    contract_assert(!this->m_index.get(value));
-    contract_assert(this->size() < this->max_size());
-
     auto &idx {this->m_index.assure(value)};
     auto first{this->m_cont .emplace(pos.base(), value)};
 
@@ -1047,8 +1041,6 @@ public:
   erase(key_type key)
   noexcept
   {
-    contract_assert(this->m_index.get(key));
-
     auto &idx{this->m_index[key]};
 
     if (idx != this->m_cont.size() - 1)
@@ -1417,8 +1409,6 @@ private:
   void
   m_unique()
   {
-    contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values));
-
     auto const original_size{static_cast<size_type>(std::ranges::size(this->m_conts.keys))};
     auto const index_limit  {static_cast<size_type>(this->m_index.max_size())};
     size_type  out          {};
@@ -1540,7 +1530,7 @@ public:
           .keys  {std::move(keys)},
           .values{std::move(values)}}
     , m_index{this->m_conts.keys, this->m_choose_index_allocator()}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   explicit constexpr
   sparse_map(allocator_type const &alloc)
@@ -1589,7 +1579,7 @@ public:
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, keys)},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, values)}}
     , m_index{this->m_conts.keys, key_allocator{alloc}}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   constexpr
   sparse_map(unique_t, key_container_type &&keys, mapped_container_type &&values, allocator_type const &alloc)
@@ -1597,7 +1587,7 @@ public:
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, std::move(keys))},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, std::move(values))}}
     , m_index{this->m_conts.keys, key_allocator{alloc}}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   template<typename ForwardIt>
   constexpr
@@ -1885,21 +1875,13 @@ public:
   mapped_type &
   operator[](key_type key)
   noexcept
-  {
-    contract_assert(this->m_index.get(key));
-
-    return this->m_conts.values[this->m_index[key]];
-  }
+  { return this->m_conts.values[this->m_index[key]]; }
 
   constexpr
   mapped_type const &
   operator[](key_type key) const
   noexcept
-  {
-    contract_assert(this->m_index.get(key));
-
-    return this->m_conts.values[this->m_index[key]];
-  }
+  { return this->m_conts.values[this->m_index[key]]; }
 
   constexpr
   mapped_type &
@@ -1937,8 +1919,6 @@ public:
   std::pair<iterator, bool>
   emplace(key_type key, Args &&...args)
   {
-    contract_assert(!this->m_index.get(key));
-
     auto &idx{this->m_index.assure(key)};
 
     this->m_conts.keys.emplace_back(key);
@@ -2113,8 +2093,6 @@ public:
   void
   erase(key_type key)
   {
-    contract_assert(this->m_index.get(key));
-
     auto &idx{this->m_index[key]};
 
     if (idx != std::ranges::size(this->m_conts.keys) - 1)

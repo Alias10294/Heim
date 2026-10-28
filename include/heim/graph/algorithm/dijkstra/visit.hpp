@@ -267,11 +267,6 @@ public:
   source_vertex(G const &g, vertex_type<G> v)
   {
     auto ctrl{vis::source_vertex(this->m_vis, g, v)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::skip);
-
     if (ctrl == visit::stop)
       return visit::stop;
     if (ctrl == visit::skip)
@@ -286,14 +281,7 @@ public:
   constexpr
   visit
   discover_vertex(G const &g, vertex_type<G> v)
-  {
-    auto ctrl{vis::discover_vertex(this->m_vis, g, v)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop);
-
-    return ctrl;
-  }
+  { return vis::discover_vertex(this->m_vis, g, v); }
 
   template<typename G>
   constexpr
@@ -313,11 +301,6 @@ public:
   examine_edge(G const &g, edge_type<G> e)
   {
     auto ctrl{vis::examine_edge(this->m_vis, g, e)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::skip);
-
     if (ctrl == visit::stop)
       return visit::stop;
     if (ctrl == visit::skip)
@@ -333,25 +316,14 @@ public:
     {
       properties::set(this->m_dm, v, dist);
 
-      ctrl = vis::relaxed_edge(this->m_vis, g, e);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
-      return ctrl;
+      return vis::relaxed_edge(this->m_vis, g, e);
     }
-    else
-    {
-      ctrl = vis::non_relaxed_edge(this->m_vis, g, e);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
 
-      if (ctrl == visit::stop)
-        return visit::stop;
+    ctrl = vis::non_relaxed_edge(this->m_vis, g, e);
+    if (ctrl == visit::stop)
+      return visit::stop;
 
-      return visit::skip;
-    }
+    return visit::skip;
   }
 
   template<typename G>

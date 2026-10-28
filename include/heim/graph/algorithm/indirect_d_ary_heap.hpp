@@ -123,10 +123,7 @@ public:
   [[nodiscard]] constexpr
   value_type const &
   front() const
-  {
-    contract_assert(!this->empty());
-    return this->m_cnt.front();
-  }
+  { return this->m_cnt.front(); }
 
 
   template<typename Vertex>
@@ -144,8 +141,6 @@ public:
   void
   pop()
   {
-    contract_assert(!this->empty());
-
     if (std::ranges::size(this->m_cnt) == size_type{1})
       this->m_cnt.pop_back();
     else

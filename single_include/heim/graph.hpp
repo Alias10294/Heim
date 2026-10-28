@@ -2430,8 +2430,6 @@ struct algo
           std::ranges::range_reference_t<VRange>,
           vertex_t<std::remove_cvref_t<G>>>
   {
-    contract_assert(q.empty());
-
     using vertex_type = vertex_t<std::remove_cvref_t<G>>;
     using edge_type   = edge_t  <std::remove_cvref_t<G>>;
 
@@ -2448,10 +2446,6 @@ struct algo
       properties::set(rcm, v, colors::white_v<color_type>);
 
       ctrl = vis::initialize_vertex(vis, g, std::move(v));
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
@@ -2462,11 +2456,6 @@ struct algo
         continue;
 
       ctrl = vis::source_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::skip
-       || ctrl == visit::stop);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::skip)
@@ -2475,11 +2464,6 @@ struct algo
       properties::set(rcm, r, colors::gray_v<color_type>);
 
       ctrl = vis::discover_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::prune
-       || ctrl == visit::stop);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::prune)
@@ -2487,10 +2471,6 @@ struct algo
         properties::set(rcm, r, colors::black_v<color_type>);
 
         ctrl = vis::finish_vertex(vis, g, r);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
 
@@ -2506,11 +2486,6 @@ struct algo
       q.pop();
 
       ctrl = vis::examine_vertex(vis, g, u);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::prune
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
 
@@ -2519,10 +2494,6 @@ struct algo
         properties::set(rcm, u, colors::black_v<color_type>);
 
         ctrl = vis::finish_vertex(vis, g, u);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
 
@@ -2532,11 +2503,6 @@ struct algo
       for (edge_type e : out_edges(g, u))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::skip
-         || ctrl == visit::stop);
-
         if      (ctrl == visit::stop)
           return false;
         else if (ctrl == visit::skip)
@@ -2548,21 +2514,12 @@ struct algo
         if (clr == colors::white_v<color_type>)
         {
           ctrl = vis::tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::stop);
-
           if (ctrl == visit::stop)
             return false;
 
           properties::set(rcm, v, colors::gray_v<color_type>);
 
           ctrl = vis::discover_vertex(vis, g, v);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::prune
-           || ctrl == visit::stop);
-
           if      (ctrl == visit::stop)
             return false;
           else if (ctrl == visit::prune)
@@ -2570,10 +2527,6 @@ struct algo
             properties::set(rcm, v, colors::black_v<color_type>);
 
             ctrl = vis::finish_vertex(vis, g, v);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
 
@@ -2585,11 +2538,6 @@ struct algo
         else
         {
           ctrl = vis::non_tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::skip
-           || ctrl == visit::stop);
-
           if      (ctrl == visit::stop)
             return false;
           else if (ctrl == visit::skip)
@@ -2598,20 +2546,12 @@ struct algo
           if (clr == colors::gray_v<color_type>)
           {
             ctrl = vis::gray_target(vis, g, std::move(e));
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
           else
           {
             ctrl = vis::black_target(vis, g, std::move(e));
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
@@ -2621,10 +2561,6 @@ struct algo
       properties::set(rcm, u, colors::black_v<color_type>);
 
       ctrl = vis::finish_vertex(vis, g, std::move(u));
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
@@ -2796,18 +2732,12 @@ public:
   [[nodiscard]] constexpr
   vertex_type
   predecessor_of(vertex_type v) const
-  {
-    contract_assert(this->reached(v));
-    return properties::get(this->m_predecessor_map(), std::move(v));
-  }
+  { return properties::get(this->m_predecessor_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
   level_of(vertex_type v) const
-  {
-    contract_assert(this->reached(v));
-    return properties::get(this->m_level_map(), std::move(v));
-  }
+  { return properties::get(this->m_level_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
@@ -2817,10 +2747,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path_from(vertex_type v) const &
-  {
-    contract_assert(this->reached(v));
-    return predecessor_view{this->m_predecessor_map(), std::move(v)};
-  }
+  { return predecessor_view{this->m_predecessor_map(), std::move(v)}; }
 
   [[nodiscard]] constexpr
   auto
@@ -3147,10 +3074,7 @@ public:
   [[nodiscard]] constexpr
   auto
   level() const
-  {
-    contract_assert(this->reached());
-    return properties::get(this->m_level_map(), this->m_tgt);
-  }
+  { return properties::get(this->m_level_map(), this->m_tgt); }
 
   [[nodiscard]] constexpr
   auto
@@ -3160,10 +3084,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path() const &
-  {
-    contract_assert(this->reached());
-    return predecessor_view{this->m_predecessor_map(), this->m_tgt};
-  }
+  { return predecessor_view{this->m_predecessor_map(), this->m_tgt}; }
 
   [[nodiscard]] constexpr
   auto
@@ -3565,11 +3486,6 @@ private:
     properties::set(cm, r, colors::gray_v<color_type>);
 
     ctrl = vis::discover_vertex(vis, g, r);
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::prune);
-
     if      (ctrl == visit::stop)
       return false;
     else if (ctrl != visit::prune)
@@ -3577,11 +3493,6 @@ private:
       for (edge_type e : out_edges(g, r))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop
-         || ctrl == visit::skip);
-
         if      (ctrl == visit::stop)
           return false;
         else if (ctrl == visit::skip)
@@ -3593,10 +3504,6 @@ private:
         if (clr == colors::white_v<color_type>)
         {
           ctrl = vis::tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::stop);
-
           if (ctrl == visit::stop)
             return false;
 
@@ -3608,30 +3515,18 @@ private:
           if (clr == colors::gray_v<color_type>)
           {
             ctrl = vis::back_edge(vis, g, e);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
           else
           {
             ctrl = vis::forward_or_cross_edge(vis, g, e);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
         }
 
         ctrl = vis::finish_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
       }
@@ -3640,10 +3535,6 @@ private:
     properties::set(cm, r, colors::black_v<color_type>);
 
     ctrl = vis::finish_vertex(vis, g, r);
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop);
-
     if (ctrl == visit::stop)
       return false;
 
@@ -3685,10 +3576,6 @@ public:
       properties::set(rcm, v, colors::white_v<color_type>);
 
       ctrl = vis::initialize_vertex(vis, g, v);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
@@ -3699,11 +3586,6 @@ public:
         continue;
 
       ctrl = vis::start_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop
-       || ctrl == visit::skip);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::skip)
@@ -3878,10 +3760,7 @@ public:
   [[nodiscard]] constexpr
   vertex_type
   predecessor_of(vertex_type v) const
-  {
-    contract_assert(this->reached(v));
-    return properties::get(this->m_predecessor_map(), std::move(v));
-  }
+  { return properties::get(this->m_predecessor_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
@@ -3896,10 +3775,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path_from(vertex_type v) const &
-  {
-    contract_assert(this->reached(v));
-    return predecessor_view{this->m_predecessor_map(), std::move(v)};
-  }
+  { return predecessor_view{this->m_predecessor_map(), std::move(v)}; }
 
   [[nodiscard]] constexpr
   auto
@@ -4188,10 +4064,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path() const &
-  {
-    contract_assert(this->reached());
-    return predecessor_view{this->m_predecessor_map(), this->m_tgt};
-  }
+  { return predecessor_view{this->m_predecessor_map(), this->m_tgt}; }
 
   [[nodiscard]] constexpr
   auto
@@ -4688,10 +4561,7 @@ public:
   [[nodiscard]] constexpr
   value_type const &
   front() const
-  {
-    contract_assert(!this->empty());
-    return this->m_cnt.front();
-  }
+  { return this->m_cnt.front(); }
 
 
   template<typename Vertex>
@@ -4709,8 +4579,6 @@ public:
   void
   pop()
   {
-    contract_assert(!this->empty());
-
     if (std::ranges::size(this->m_cnt) == size_type{1})
       this->m_cnt.pop_back();
     else
@@ -4992,11 +4860,6 @@ public:
   source_vertex(G const &g, vertex_type<G> v)
   {
     auto ctrl{vis::source_vertex(this->m_vis, g, v)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::skip);
-
     if (ctrl == visit::stop)
       return visit::stop;
     if (ctrl == visit::skip)
@@ -5011,14 +4874,7 @@ public:
   constexpr
   visit
   discover_vertex(G const &g, vertex_type<G> v)
-  {
-    auto ctrl{vis::discover_vertex(this->m_vis, g, v)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop);
-
-    return ctrl;
-  }
+  { return vis::discover_vertex(this->m_vis, g, v); }
 
   template<typename G>
   constexpr
@@ -5038,11 +4894,6 @@ public:
   examine_edge(G const &g, edge_type<G> e)
   {
     auto ctrl{vis::examine_edge(this->m_vis, g, e)};
-    contract_assert(
-        ctrl == visit::proceed
-     || ctrl == visit::stop
-     || ctrl == visit::skip);
-
     if (ctrl == visit::stop)
       return visit::stop;
     if (ctrl == visit::skip)
@@ -5058,25 +4909,14 @@ public:
     {
       properties::set(this->m_dm, v, dist);
 
-      ctrl = vis::relaxed_edge(this->m_vis, g, e);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
-      return ctrl;
+      return vis::relaxed_edge(this->m_vis, g, e);
     }
-    else
-    {
-      ctrl = vis::non_relaxed_edge(this->m_vis, g, e);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
 
-      if (ctrl == visit::stop)
-        return visit::stop;
+    ctrl = vis::non_relaxed_edge(this->m_vis, g, e);
+    if (ctrl == visit::stop)
+      return visit::stop;
 
-      return visit::skip;
-    }
+    return visit::skip;
   }
 
   template<typename G>
@@ -5331,10 +5171,7 @@ public:
   [[nodiscard]] constexpr
   vertex_type
   predecessor_of(vertex_type v) const
-  {
-    contract_assert(this->reached(v));
-    return properties::get(this->m_predecessor_map(), std::move(v));
-  }
+  { return properties::get(this->m_predecessor_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
@@ -5345,10 +5182,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path_from(vertex_type v) const &
-  {
-    contract_assert(this->reached(v));
-    return predecessor_view{this->m_predecessor_map(), std::move(v)};
-  }
+  { return predecessor_view{this->m_predecessor_map(), std::move(v)}; }
 
   [[nodiscard]] constexpr
   auto
@@ -5743,10 +5577,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path() const &
-  {
-    contract_assert(this->reached());
-    return predecessor_view{this->m_predecessor_map(), this->m_tgt};
-  }
+  { return predecessor_view{this->m_predecessor_map(), this->m_tgt}; }
 
   [[nodiscard]] constexpr
   auto
@@ -6101,8 +5932,6 @@ struct algo
       CMap     cm  = {}) const
   requires directed<std::remove_cvref_t<G>>
   {
-    contract_assert(std::ranges::empty(cnt));
-
     if constexpr (requires (vertex_t<std::remove_cvref_t<G>> &v) { cnt.push_front(v); })
       reverse_topological_sort(g, std::front_inserter(cnt), std::move(cm));
     else
@@ -7177,9 +7006,6 @@ private:
   iterator
   m_unchecked_insert(value_type value)
   {
-    contract_assert(!this->m_index.get(value));
-    contract_assert(this->size() < this->max_size());
-
     auto &idx{this->m_index.assure(value)};
     this->m_cont.emplace_back(value);
 
@@ -7192,9 +7018,6 @@ private:
   iterator
   m_unchecked_insert(const_iterator pos, value_type value)
   {
-    contract_assert(!this->m_index.get(value));
-    contract_assert(this->size() < this->max_size());
-
     auto &idx {this->m_index.assure(value)};
     auto first{this->m_cont .emplace(pos.base(), value)};
 
@@ -7622,8 +7445,6 @@ public:
   erase(key_type key)
   noexcept
   {
-    contract_assert(this->m_index.get(key));
-
     auto &idx{this->m_index[key]};
 
     if (idx != this->m_cont.size() - 1)
@@ -7992,8 +7813,6 @@ private:
   void
   m_unique()
   {
-    contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values));
-
     auto const original_size{static_cast<size_type>(std::ranges::size(this->m_conts.keys))};
     auto const index_limit  {static_cast<size_type>(this->m_index.max_size())};
     size_type  out          {};
@@ -8115,7 +7934,7 @@ public:
           .keys  {std::move(keys)},
           .values{std::move(values)}}
     , m_index{this->m_conts.keys, this->m_choose_index_allocator()}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   explicit constexpr
   sparse_map(allocator_type const &alloc)
@@ -8164,7 +7983,7 @@ public:
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, keys)},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, values)}}
     , m_index{this->m_conts.keys, key_allocator{alloc}}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   constexpr
   sparse_map(unique_t, key_container_type &&keys, mapped_container_type &&values, allocator_type const &alloc)
@@ -8172,7 +7991,7 @@ public:
           .keys  {std::make_obj_using_allocator<key_container_type   >(key_allocator  {alloc}, std::move(keys))},
           .values{std::make_obj_using_allocator<mapped_container_type>(value_allocator{alloc}, std::move(values))}}
     , m_index{this->m_conts.keys, key_allocator{alloc}}
-  { contract_assert(std::ranges::size(this->m_conts.keys) == std::ranges::size(this->m_conts.values)); }
+  { }
 
   template<typename ForwardIt>
   constexpr
@@ -8460,21 +8279,13 @@ public:
   mapped_type &
   operator[](key_type key)
   noexcept
-  {
-    contract_assert(this->m_index.get(key));
-
-    return this->m_conts.values[this->m_index[key]];
-  }
+  { return this->m_conts.values[this->m_index[key]]; }
 
   constexpr
   mapped_type const &
   operator[](key_type key) const
   noexcept
-  {
-    contract_assert(this->m_index.get(key));
-
-    return this->m_conts.values[this->m_index[key]];
-  }
+  { return this->m_conts.values[this->m_index[key]]; }
 
   constexpr
   mapped_type &
@@ -8512,8 +8323,6 @@ public:
   std::pair<iterator, bool>
   emplace(key_type key, Args &&...args)
   {
-    contract_assert(!this->m_index.get(key));
-
     auto &idx{this->m_index.assure(key)};
 
     this->m_conts.keys.emplace_back(key);
@@ -8688,8 +8497,6 @@ public:
   void
   erase(key_type key)
   {
-    contract_assert(this->m_index.get(key));
-
     auto &idx{this->m_index[key]};
 
     if (idx != std::ranges::size(this->m_conts.keys) - 1)
@@ -9659,8 +9466,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     return this->m_vertices[v_id].out_edges()
          | std::views::transform(
                [v_id]
@@ -9676,8 +9481,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     return this->m_vertices[v_id].in_edges()
          | std::views::transform(
                [v_id]
@@ -9690,71 +9493,41 @@ public:
   out_edge_count(vertex_type v) const
   noexcept
   requires is_out_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].out_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].out_edge_count()); }
 
   [[nodiscard]] constexpr
   size_type
   in_edge_count(vertex_type v) const
   noexcept
   requires is_in_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].in_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].in_edge_count()); }
 
   [[nodiscard]] constexpr
   size_type
   total_edge_count(vertex_type v) const
   noexcept
   requires is_in_incident && is_out_incident
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    return static_cast<size_type>(this->m_vertices[v_id].total_edge_count());
-  }
+  { return static_cast<size_type>(this->m_vertices[v.id()].total_edge_count()); }
 
 
   [[nodiscard]] constexpr
   vertex_type
   source(edge_type e) const
   noexcept
-  {
-    contract_assert(this->m_edges.contains(e.id()));
-
-    return vertex_type{e.source_id()};
-  }
+  { return vertex_type{e.source_id()}; }
 
   [[nodiscard]] constexpr
   vertex_type
   target(edge_type e) const
   noexcept
-  {
-    contract_assert(this->m_edges.contains(e.id()));
-
-    return vertex_type{e.target_id()};
-  }
+  { return vertex_type{e.target_id()}; }
 
   [[nodiscard]] constexpr
   std::pair<vertex_type, vertex_type>
   endpoints(edge_type e) const
   noexcept
   {
-    id_type e_id{e.id()};
-
-    contract_assert(this->m_edges.contains(e_id));
-
-    auto const [u_id, v_id]{this->m_edges[e_id]};
+    auto const [u_id, v_id]{this->m_edges[e.id()]};
 
     return std::pair{vertex_type{u_id}, vertex_type{v_id}};
   }
@@ -9776,9 +9549,6 @@ public:
     id_type const e_id{this->m_next_edge};
     id_type const u_id{u.id()};
     id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(u_id));
-    contract_assert(this->m_vertices.contains(v_id));
 
     if constexpr (!is_multigraph)
     {
@@ -9820,8 +9590,6 @@ public:
   {
     id_type const v_id{v.id()};
 
-    contract_assert(this->m_vertices.contains(v_id));
-
     this->m_clear_vertex(v_id);
     this->m_vertices.erase(v_id);
   }
@@ -9830,13 +9598,7 @@ public:
   void
   remove_edge(edge_type e)
   noexcept
-  {
-    id_type e_id{e.id()};
-
-    contract_assert(this->m_edges.contains(e_id));
-
-    this->m_remove_edge(e_id);
-  }
+  { this->m_remove_edge(e.id()); }
 
   constexpr
   void
@@ -9844,9 +9606,6 @@ public:
   {
     id_type const u_id{u.id()};
     id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(u_id));
-    contract_assert(this->m_vertices.contains(v_id));
 
     if constexpr (is_directed)
     {
@@ -9875,13 +9634,7 @@ public:
   constexpr
   void
   clear_vertex(vertex_type v)
-  {
-    id_type const v_id{v.id()};
-
-    contract_assert(this->m_vertices.contains(v_id));
-
-    this->m_clear_vertex(v.id());
-  }
+  { this->m_clear_vertex(v.id()); }
 
   constexpr
   void

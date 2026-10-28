@@ -98,8 +98,6 @@ struct algo
       CMap     cm  = {}) const
   requires directed<std::remove_cvref_t<G>>
   {
-    contract_assert(std::ranges::empty(cnt));
-
     if constexpr (requires (vertex_t<std::remove_cvref_t<G>> &v) { cnt.push_front(v); })
       reverse_topological_sort(g, std::front_inserter(cnt), std::move(cm));
     else

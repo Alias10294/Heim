@@ -146,10 +146,7 @@ public:
   [[nodiscard]] constexpr
   vertex_type
   predecessor_of(vertex_type v) const
-  {
-    contract_assert(this->reached(v));
-    return properties::get(this->m_predecessor_map(), std::move(v));
-  }
+  { return properties::get(this->m_predecessor_map(), std::move(v)); }
 
   [[nodiscard]] constexpr
   auto
@@ -164,10 +161,7 @@ public:
   [[nodiscard]] constexpr
   auto
   path_from(vertex_type v) const &
-  {
-    contract_assert(this->reached(v));
-    return predecessor_view{this->m_predecessor_map(), std::move(v)};
-  }
+  { return predecessor_view{this->m_predecessor_map(), std::move(v)}; }
 
   [[nodiscard]] constexpr
   auto

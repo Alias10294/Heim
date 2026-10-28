@@ -237,8 +237,6 @@ struct algo
           std::ranges::range_reference_t<VRange>,
           vertex_t<std::remove_cvref_t<G>>>
   {
-    contract_assert(q.empty());
-
     using vertex_type = vertex_t<std::remove_cvref_t<G>>;
     using edge_type   = edge_t  <std::remove_cvref_t<G>>;
 
@@ -255,10 +253,6 @@ struct algo
       properties::set(rcm, v, colors::white_v<color_type>);
 
       ctrl = vis::initialize_vertex(vis, g, std::move(v));
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
@@ -269,11 +263,6 @@ struct algo
         continue;
 
       ctrl = vis::source_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::skip
-       || ctrl == visit::stop);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::skip)
@@ -282,11 +271,6 @@ struct algo
       properties::set(rcm, r, colors::gray_v<color_type>);
 
       ctrl = vis::discover_vertex(vis, g, r);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::prune
-       || ctrl == visit::stop);
-
       if      (ctrl == visit::stop)
         return false;
       else if (ctrl == visit::prune)
@@ -294,10 +278,6 @@ struct algo
         properties::set(rcm, r, colors::black_v<color_type>);
 
         ctrl = vis::finish_vertex(vis, g, r);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
 
@@ -313,11 +293,6 @@ struct algo
       q.pop();
 
       ctrl = vis::examine_vertex(vis, g, u);
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::prune
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
 
@@ -326,10 +301,6 @@ struct algo
         properties::set(rcm, u, colors::black_v<color_type>);
 
         ctrl = vis::finish_vertex(vis, g, u);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::stop);
-
         if (ctrl == visit::stop)
           return false;
 
@@ -339,11 +310,6 @@ struct algo
       for (edge_type e : out_edges(g, u))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        contract_assert(
-            ctrl == visit::proceed
-         || ctrl == visit::skip
-         || ctrl == visit::stop);
-
         if      (ctrl == visit::stop)
           return false;
         else if (ctrl == visit::skip)
@@ -355,21 +321,12 @@ struct algo
         if (clr == colors::white_v<color_type>)
         {
           ctrl = vis::tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::stop);
-
           if (ctrl == visit::stop)
             return false;
 
           properties::set(rcm, v, colors::gray_v<color_type>);
 
           ctrl = vis::discover_vertex(vis, g, v);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::prune
-           || ctrl == visit::stop);
-
           if      (ctrl == visit::stop)
             return false;
           else if (ctrl == visit::prune)
@@ -377,10 +334,6 @@ struct algo
             properties::set(rcm, v, colors::black_v<color_type>);
 
             ctrl = vis::finish_vertex(vis, g, v);
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
 
@@ -392,11 +345,6 @@ struct algo
         else
         {
           ctrl = vis::non_tree_edge(vis, g, e);
-          contract_assert(
-              ctrl == visit::proceed
-           || ctrl == visit::skip
-           || ctrl == visit::stop);
-
           if      (ctrl == visit::stop)
             return false;
           else if (ctrl == visit::skip)
@@ -405,20 +353,12 @@ struct algo
           if (clr == colors::gray_v<color_type>)
           {
             ctrl = vis::gray_target(vis, g, std::move(e));
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
           else
           {
             ctrl = vis::black_target(vis, g, std::move(e));
-            contract_assert(
-                ctrl == visit::proceed
-             || ctrl == visit::stop);
-
             if (ctrl == visit::stop)
               return false;
           }
@@ -428,10 +368,6 @@ struct algo
       properties::set(rcm, u, colors::black_v<color_type>);
 
       ctrl = vis::finish_vertex(vis, g, std::move(u));
-      contract_assert(
-          ctrl == visit::proceed
-       || ctrl == visit::stop);
-
       if (ctrl == visit::stop)
         return false;
     }
