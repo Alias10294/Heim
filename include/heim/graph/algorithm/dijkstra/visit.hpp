@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "heim/graph/algorithm/breadth_first/visit.hpp"
 #include "heim/graph/algorithm/indirect_d_ary_heap.hpp"
 #include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/graph/algorithm/visit.hpp"
