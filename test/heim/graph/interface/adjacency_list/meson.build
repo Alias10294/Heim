@@ -1,10 +1,12 @@
 test_sources = files(
     'allocators.cpp',
+    'allocator_selection.cpp',
     'assignment.cpp',
     'basic.cpp',
     'configurations.cpp',
     'constexpr.cpp',
     'construction.cpp',
+    'construction_reference.cpp',
     'descriptors.cpp',
     'direct_include.cpp',
     'edges.cpp',
