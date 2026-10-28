@@ -86,49 +86,49 @@ void run_model(std::uint32_t seed, unsigned steps, unsigned domain)
 
 TEST_CASE("paged index matches a reference model across 4000 operations", "[common][sparse_index][stress]")
 {
-  run_model<index<unsigned, 8>>(0x12345678, 4000, 192);
+  run_model<index_type<unsigned, 8>>(0x12345678, 4000, 192);
 }
 
 TEST_CASE(
     "contiguous index matches a reference model across 4000 operations",
     "[common][sparse_index][stress]")
 {
-  run_model<index<unsigned, 0>>(0x12345678, 4000, 192);
+  run_model<index_type<unsigned, 0>>(0x12345678, 4000, 192);
 }
 
 TEST_CASE("one-element paged index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<unsigned, 1>>(0x31415926, 2000, 190);
+  run_model<index_type<unsigned, 1>>(0x31415926, 2000, 190);
 }
 
 TEST_CASE("odd-sized paged index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<unsigned, 7>>(0x27182818, 2500, 190);
+  run_model<index_type<unsigned, 7>>(0x27182818, 2500, 190);
 }
 
 TEST_CASE("wide paged index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<unsigned, 64>>(0xabcdef01, 2500, 190);
+  run_model<index_type<unsigned, 64>>(0xabcdef01, 2500, 190);
 }
 
 TEST_CASE("uint8_t paged index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<std::uint8_t, 8>>(0xdeadbeef, 2000, 200);
+  run_model<index_type<std::uint8_t, 8>>(0xdeadbeef, 2000, 200);
 }
 
 TEST_CASE("uint8_t contiguous index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<std::uint8_t, 0>>(0xdeadbeef, 2000, 200);
+  run_model<index_type<std::uint8_t, 0>>(0xdeadbeef, 2000, 200);
 }
 
 TEST_CASE("uint16_t paged index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<std::uint16_t, 8>>(0x99887766, 3000, 250);
+  run_model<index_type<std::uint16_t, 8>>(0x99887766, 3000, 250);
 }
 
 TEST_CASE("uint16_t contiguous index matches a reference model", "[common][sparse_index][stress]")
 {
-  run_model<index<std::uint16_t, 0>>(0x99887766, 3000, 250);
+  run_model<index_type<std::uint16_t, 0>>(0x99887766, 3000, 250);
 }
 
 TEST_CASE(
@@ -160,12 +160,12 @@ TEST_CASE(
 
 TEST_CASE("repeated deep copies do not share page storage", "[common][sparse_index][stress][copy]")
 {
-  index<unsigned, 8> src{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> src{std::allocator<unsigned>{}};
   for (unsigned k = 0; k < 128; k += 4)
     src.assure(k) = k + 1;
   for (unsigned iteration = 0; iteration < 100; ++iteration)
   {
-    index<unsigned, 8> copy{src};
+    index_type<unsigned, 8> copy{src};
     for (unsigned k = 0; k < 128; k += 4)
     {
       check(copy, k, k + 1);

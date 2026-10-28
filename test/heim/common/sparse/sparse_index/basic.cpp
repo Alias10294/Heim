@@ -34,30 +34,30 @@ void basic_semantics()
 
 TEST_CASE("paged index basic lookup and overwrite", "[common][sparse_index][basic]")
 {
-  basic_semantics<index<unsigned, 8>>();
+  basic_semantics<index_type<unsigned, 8>>();
 }
 
 TEST_CASE("contiguous index basic lookup and overwrite", "[common][sparse_index][basic]")
 {
-  basic_semantics<index<unsigned, 0>>();
+  basic_semantics<index_type<unsigned, 0>>();
 }
 
 TEST_CASE("page-size-one index basic lookup and overwrite", "[common][sparse_index][basic]")
 {
-  basic_semantics<index<unsigned, 1>>();
+  basic_semantics<index_type<unsigned, 1>>();
 }
 
 TEST_CASE("odd-page index basic lookup and overwrite", "[common][sparse_index][basic]")
 {
-  basic_semantics<index<unsigned, 7>>();
+  basic_semantics<index_type<unsigned, 7>>();
 }
 
 TEST_CASE(
     "sparse_index reserves the maximum unsigned value as a missing sentinel",
     "[common][sparse_index][basic]")
 {
-  index<unsigned, 8> paged{std::allocator<unsigned>{}};
-  index<unsigned, 0> contiguous{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> paged{std::allocator<unsigned>{}};
+  index_type<unsigned, 0> contiguous{std::allocator<unsigned>{}};
   paged.assure(3u) = null_value<decltype(paged)>;
   contiguous.assure(3u) = null_value<decltype(contiguous)>;
   check_missing(paged, 3u);
@@ -72,7 +72,7 @@ TEST_CASE(
 
 TEST_CASE("sparse_index distinguishes zero from the missing sentinel", "[common][sparse_index][basic]")
 {
-  index<unsigned, 8> paged{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> paged{std::allocator<unsigned>{}};
   paged.assure(2u) = 0u;
   REQUIRE(paged.get(2u) != nullptr);
   REQUIRE(*paged.get(2u) == 0u);
@@ -83,7 +83,7 @@ TEST_CASE(
     "sparse_index assure preserves values until explicitly overwritten",
     "[common][sparse_index][basic]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   idx.assure(1u) = 12u;
   auto *const ptr = idx.get(1u);
   for (int n = 0; n < 50; ++n)
@@ -99,7 +99,7 @@ TEST_CASE(
     "sparse_index separates data from missing entries across repeated clears",
     "[common][sparse_index][basic]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   for (unsigned iteration = 0; iteration < 20; ++iteration)
   {
     check_missing(idx, 33u);

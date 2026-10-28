@@ -5,7 +5,7 @@ using namespace heim_test::sparse_index;
 template<typename UInt, std::size_t PageSize>
 void integral_limits()
 {
-  index<UInt, PageSize> idx{std::allocator<UInt>{}};
+  index_type<UInt, PageSize> idx{std::allocator<UInt>{}};
   auto const hi = std::numeric_limits<UInt>::max();
   auto const penultimate = static_cast<UInt>(hi - 1);
   idx.assure(UInt{0}) = static_cast<UInt>(1);
@@ -46,7 +46,7 @@ TEST_CASE(
     "uint64_t paged index supports sparse high keys without dense allocation",
     "[common][sparse_index][limits]")
 {
-  index<std::uint64_t, 8> idx{std::allocator<std::uint64_t>{}};
+  index_type<std::uint64_t, 8> idx{std::allocator<std::uint64_t>{}};
   constexpr std::uint64_t high = 100000;
   idx.assure(high) = 5;
   check(idx, high, std::uint64_t{5});
@@ -58,7 +58,7 @@ TEST_CASE(
     "uint8_t reserved null marker can be overwritten by a valid value",
     "[common][sparse_index][limits]")
 {
-  index<std::uint8_t, 8> idx{std::allocator<std::uint8_t>{}};
+  index_type<std::uint8_t, 8> idx{std::allocator<std::uint8_t>{}};
   auto const null = std::numeric_limits<std::uint8_t>::max();
   idx.assure(std::uint8_t{8}) = null;
   check_missing(idx, std::uint8_t{8});

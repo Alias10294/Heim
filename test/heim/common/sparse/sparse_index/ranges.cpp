@@ -24,25 +24,25 @@ TEST_CASE(
     "paged range constructor indexes positions with last occurrence winning",
     "[common][sparse_index][range]")
 {
-  indexed_construction<index<unsigned, 8>>();
+  indexed_construction<index_type<unsigned, 8>>();
 }
 
 TEST_CASE(
     "contiguous range constructor indexes positions with last occurrence winning",
     "[common][sparse_index][range]")
 {
-  indexed_construction<index<unsigned, 0>>();
+  indexed_construction<index_type<unsigned, 0>>();
 }
 
 TEST_CASE("page-size-one range constructor handles duplicates", "[common][sparse_index][range]")
 {
-  indexed_construction<index<unsigned, 1>>();
+  indexed_construction<index_type<unsigned, 1>>();
 }
 
 TEST_CASE("paged index accepts an empty range", "[common][sparse_index][range]")
 {
   std::vector<unsigned> none;
-  index<unsigned, 8> idx{none};
+  index_type<unsigned, 8> idx{none};
   check_missing(idx, 0u);
   check_missing(idx, 123u);
 }
@@ -50,7 +50,7 @@ TEST_CASE("paged index accepts an empty range", "[common][sparse_index][range]")
 TEST_CASE("contiguous index accepts an empty range", "[common][sparse_index][range]")
 {
   std::vector<unsigned> none;
-  index<unsigned, 0> idx{none};
+  index_type<unsigned, 0> idx{none};
   check_missing(idx, 0u);
   check_missing(idx, 123u);
 }
@@ -58,7 +58,7 @@ TEST_CASE("contiguous index accepts an empty range", "[common][sparse_index][ran
 TEST_CASE("paged index accepts a non-random-access forward range", "[common][sparse_index][range]")
 {
   std::forward_list<unsigned> keys{9, 4, 12, 9};
-  index<unsigned, 8> idx{keys};
+  index_type<unsigned, 8> idx{keys};
   check(idx, 9u, 3u);
   check(idx, 4u, 1u);
   check(idx, 12u, 2u);
@@ -67,7 +67,7 @@ TEST_CASE("paged index accepts a non-random-access forward range", "[common][spa
 TEST_CASE("contiguous index accepts a non-random-access forward range", "[common][sparse_index][range]")
 {
   std::forward_list<unsigned> keys{9, 4, 12, 9};
-  index<unsigned, 0> idx{keys};
+  index_type<unsigned, 0> idx{keys};
   check(idx, 9u, 3u);
   check(idx, 4u, 1u);
   check(idx, 12u, 2u);
@@ -77,7 +77,7 @@ TEST_CASE("paged index accepts a genuine single-pass input range", "[common][spa
 {
   std::istringstream input{"12 3 12 0 7"};
   auto keys = std::ranges::istream_view<unsigned>(input);
-  index<unsigned, 8> idx{keys};
+  index_type<unsigned, 8> idx{keys};
   check(idx, 12u, 2u);
   check(idx, 3u, 1u);
   check(idx, 0u, 3u);
@@ -88,7 +88,7 @@ TEST_CASE("contiguous index accepts a genuine single-pass input range", "[common
 {
   std::istringstream input{"12 3 12 0 7"};
   auto keys = std::ranges::istream_view<unsigned>(input);
-  index<unsigned, 0> idx{keys};
+  index_type<unsigned, 0> idx{keys};
   check(idx, 12u, 2u);
   check(idx, 3u, 1u);
   check(idx, 0u, 3u);
@@ -121,12 +121,12 @@ void resetting_range()
 
 TEST_CASE("paged reset reindexes its input and drops old keys", "[common][sparse_index][range]")
 {
-  resetting_range<index<unsigned, 8>>();
+  resetting_range<index_type<unsigned, 8>>();
 }
 
 TEST_CASE("contiguous reset reindexes its input and drops old keys", "[common][sparse_index][range]")
 {
-  resetting_range<index<unsigned, 0>>();
+  resetting_range<index_type<unsigned, 0>>();
 }
 
 TEST_CASE(
@@ -146,7 +146,7 @@ TEST_CASE(
 
 TEST_CASE("reset works repeatedly with a single-pass input range", "[common][sparse_index][range]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   for (unsigned round = 0; round < 8; ++round)
   {
     std::istringstream input{round % 2 ? "3 4 3 10" : "1 2 1 8"};

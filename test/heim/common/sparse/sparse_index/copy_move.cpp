@@ -27,17 +27,17 @@ void deep_copy()
 
 TEST_CASE("paged copy constructs independent pages", "[common][sparse_index][copy]")
 {
-  deep_copy<index<unsigned, 8>>();
+  deep_copy<index_type<unsigned, 8>>();
 }
 
 TEST_CASE("contiguous copy constructs independent contents", "[common][sparse_index][copy]")
 {
-  deep_copy<index<unsigned, 0>>();
+  deep_copy<index_type<unsigned, 0>>();
 }
 
 TEST_CASE("one-element pages copy independently", "[common][sparse_index][copy]")
 {
-  deep_copy<index<unsigned, 1>>();
+  deep_copy<index_type<unsigned, 1>>();
 }
 
 template<typename I>
@@ -67,14 +67,14 @@ TEST_CASE(
     "paged copy assignment replaces old pages and handles self assignment",
     "[common][sparse_index][copy]")
 {
-  copy_assignment<index<unsigned, 8>>();
+  copy_assignment<index_type<unsigned, 8>>();
 }
 
 TEST_CASE(
     "contiguous copy assignment replaces old contents and handles self assignment",
     "[common][sparse_index][copy]")
 {
-  copy_assignment<index<unsigned, 0>>();
+  copy_assignment<index_type<unsigned, 0>>();
 }
 
 TEST_CASE("paged copying an empty index releases the old destination pages", "[common][sparse_index][copy]")
@@ -93,10 +93,10 @@ TEST_CASE("paged copying an empty index releases the old destination pages", "[c
 
 TEST_CASE("paged copy constructor retains all holes", "[common][sparse_index][copy]")
 {
-  index<unsigned, 8> src{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> src{std::allocator<unsigned>{}};
   src.assure(1u) = 2u;
   src.assure(80u) = 3u;
-  index<unsigned, 8> dst{src};
+  index_type<unsigned, 8> dst{src};
   check_missing(dst, 24u);
   check_missing(dst, 73u);
   check(dst, 80u, 3u);
@@ -138,12 +138,12 @@ void move_tests()
 
 TEST_CASE("paged index supports move construction and move assignment", "[common][sparse_index][move]")
 {
-  move_tests<index<unsigned, 8>>();
+  move_tests<index_type<unsigned, 8>>();
 }
 
 TEST_CASE("contiguous index supports move construction and move assignment", "[common][sparse_index][move]")
 {
-  move_tests<index<unsigned, 0>>();
+  move_tests<index_type<unsigned, 0>>();
 }
 
 TEST_CASE(
@@ -188,20 +188,20 @@ void swap_tests()
 
 TEST_CASE("paged index member and free swap exchange mappings", "[common][sparse_index][swap]")
 {
-  swap_tests<index<unsigned, 8>>();
+  swap_tests<index_type<unsigned, 8>>();
 }
 
 TEST_CASE("contiguous index member and free swap exchange mappings", "[common][sparse_index][swap]")
 {
-  swap_tests<index<unsigned, 0>>();
+  swap_tests<index_type<unsigned, 0>>();
 }
 
 TEST_CASE("copying and swapping preserve independent pages", "[common][sparse_index][copy][swap]")
 {
-  index<unsigned, 8> first{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> first{std::allocator<unsigned>{}};
   first.assure(1u) = 10u;
-  index<unsigned, 8> second{first};
-  index<unsigned, 8> third{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> second{first};
+  index_type<unsigned, 8> third{std::allocator<unsigned>{}};
   third.assure(17u) = 20u;
   first.swap(third);
   check(second, 1u, 10u);

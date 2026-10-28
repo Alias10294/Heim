@@ -6,7 +6,7 @@ template<std::size_t N>
 void boundaries()
 {
   static_assert(N >= 1);
-  index<unsigned, N> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, N> idx{std::allocator<unsigned>{}};
   std::unordered_map<unsigned, unsigned> written;
   auto put = [&](unsigned key, unsigned value)
   {
@@ -72,7 +72,7 @@ TEST_CASE("64-element pages handle every page boundary", "[common][sparse_index]
 
 TEST_CASE("default page size supports distant sparse entries", "[common][sparse_index][pages]")
 {
-  index<unsigned, heim::default_page_size_v> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, heim::default_page_size_v> idx{std::allocator<unsigned>{}};
   auto const n = static_cast<unsigned>(heim::default_page_size_v);
   idx.assure(0u) = 4u;
   idx.assure(n) = 9u;
@@ -85,7 +85,7 @@ TEST_CASE("default page size supports distant sparse entries", "[common][sparse_
 
 TEST_CASE("paged storage never aliases entries in distinct pages", "[common][sparse_index][pages]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   idx.assure(0u) = 10u;
   idx.assure(8u) = 20u;
   idx.assure(16u) = 30u;
@@ -96,7 +96,7 @@ TEST_CASE("paged storage never aliases entries in distinct pages", "[common][spa
 
 TEST_CASE("paged storage preserves addresses when the page table grows", "[common][sparse_index][pages]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   idx.assure(1u) = 123u;
   idx.assure(9u) = 456u;
   unsigned *original = idx.get(1u);
@@ -115,7 +115,7 @@ TEST_CASE("paged storage preserves addresses when the page table grows", "[commo
 
 TEST_CASE("page allocation initializes all other entries as missing", "[common][sparse_index][pages]")
 {
-  index<unsigned, 31> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 31> idx{std::allocator<unsigned>{}};
   idx.assure(3u) = 19u;
   for (unsigned key = 0; key < 31u; ++key)
     if (key == 3u)
@@ -183,7 +183,7 @@ TEST_CASE("clearing paged storage releases its pages", "[common][sparse_index][p
 
 TEST_CASE("large sparse gaps preserve existing values and missing markers", "[common][sparse_index][pages]")
 {
-  index<unsigned, 8> idx{std::allocator<unsigned>{}};
+  index_type<unsigned, 8> idx{std::allocator<unsigned>{}};
   idx.assure(1u) = 11u;
   idx.assure(200000u) = 22u;
   check(idx, 1u, 11u);

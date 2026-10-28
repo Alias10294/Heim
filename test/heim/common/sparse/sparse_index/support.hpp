@@ -23,7 +23,7 @@
 namespace heim_test::sparse_index
 {
 template<typename UInt = unsigned, std::size_t PageSize = 8, typename Alloc = std::allocator<UInt>>
-using index = heim::detail::sparse_index<UInt, PageSize, Alloc>;
+using index_type = heim::detail::sparse_index<UInt, PageSize, Alloc>;
 
 template<typename I>
 using key_type = typename I::value_type;
@@ -199,7 +199,7 @@ public:
 };
 
 template<std::size_t PageSize = 8, bool Propagate = false>
-using observed_index = index<unsigned, PageSize, tracked_allocator<unsigned, Propagate>>;
+using observed_index = index_type<unsigned, PageSize, tracked_allocator<unsigned, Propagate>>;
 
 // The implementation's get() deliberately treats UINT_MAX as the absent marker.
 template<typename I>
