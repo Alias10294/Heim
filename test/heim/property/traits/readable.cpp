@@ -1,8 +1,9 @@
 #include "support.hpp"
 
-#include <catch2/catch_test_macros.hpp>
 #include <concepts>
 #include <type_traits>
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace heim_test::property_traits;
 namespace prop = heim::properties;

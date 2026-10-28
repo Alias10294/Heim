@@ -1,5 +1,4 @@
 #include "support.hpp"
-#include <catch2/catch_test_macros.hpp>
 
 #include <array>
 #include <concepts>
@@ -7,6 +6,8 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
 
 namespace
 {
@@ -19,10 +20,15 @@ struct preferred_member
   static constexpr bool is_directed = false;
   static constexpr bool is_multigraph = false;
   constexpr int vertex_count() const { return 4; }
-  constexpr void remove_vertex(int) { }
+  constexpr void remove_vertex(int) {}
 };
-constexpr int vertex_count(preferred_member const &) noexcept { return 99; }
-constexpr void remove_vertex(preferred_member &, int) noexcept { }
+constexpr int vertex_count(preferred_member const &) noexcept
+{
+  return 99;
+}
+constexpr void remove_vertex(preferred_member &, int) noexcept
+{
+}
 
 namespace adl_throw
 {
@@ -33,8 +39,14 @@ struct graph
   static constexpr bool is_directed = false;
   static constexpr bool is_multigraph = false;
 };
-inline int vertex_count(graph const &) { throw std::runtime_error{"adl"}; }
-inline void remove_edge(graph &, int) { throw std::runtime_error{"adl edge"}; }
+inline int vertex_count(graph const &)
+{
+  throw std::runtime_error{"adl"};
+}
+inline void remove_edge(graph &, int)
+{
+  throw std::runtime_error{"adl edge"};
+}
 }
 
 struct private_member
@@ -43,8 +55,10 @@ struct private_member
   using edge_type = int;
   static constexpr bool is_directed = false;
   static constexpr bool is_multigraph = false;
+
 private:
   constexpr int vertex_count() const noexcept { return 99; }
+
 public:
   friend constexpr int vertex_count(private_member const &) noexcept { return 5; }
 };
@@ -80,14 +94,17 @@ static_assert(!std::invocable<decltype(graphs::place_vertex), qualified_graph co
 static_assert(!std::invocable<decltype(graphs::vertices), invalid_range_graph const &>);
 static_assert(!std::invocable<decltype(graphs::edges), invalid_range_graph const &>);
 static_assert(!std::invocable<decltype(graphs::place_edge), invalid_range_graph const &, int, int>);
-static_assert([]
-{
-  qualified_graph g;
-  return graphs::place_vertex(g) == 1 && graphs::place_vertex(std::move(g)) == 2;
-}());
+static_assert(
+    []
+    {
+      qualified_graph g;
+      return graphs::place_vertex(g) == 1 && graphs::place_vertex(std::move(g)) == 2;
+    }());
 }
 
-TEST_CASE("graph CPO does not substitute a noexcept ADL overload for a viable throwing member", "[graph][interface][primitives][dispatch]")
+TEST_CASE(
+    "graph CPO does not substitute a noexcept ADL overload for a viable throwing member",
+    "[graph][interface][primitives][dispatch]")
 {
   preferred_member g;
   REQUIRE(graphs::vertex_count(g) == 4);
@@ -107,7 +124,9 @@ TEST_CASE("graph CPO propagates ADL exceptions", "[graph][interface][primitives]
   REQUIRE_THROWS_AS(graphs::remove_edge(g, 0), std::runtime_error);
 }
 
-TEST_CASE("graph mutating CPOs preserve lvalue and rvalue categories", "[graph][interface][primitives][dispatch]")
+TEST_CASE(
+    "graph mutating CPOs preserve lvalue and rvalue categories",
+    "[graph][interface][primitives][dispatch]")
 {
   qualified_graph g;
   REQUIRE(graphs::place_vertex(g) == 1);

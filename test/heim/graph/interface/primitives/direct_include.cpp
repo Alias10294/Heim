@@ -1,9 +1,10 @@
-#include <heim/graph/interface/primitives.hpp>
-#include <catch2/catch_test_macros.hpp>
-
 #include <array>
 #include <concepts>
 #include <type_traits>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/graph/interface/primitives.hpp>
 
 namespace
 {
@@ -18,6 +19,7 @@ struct graph
 static_assert(std::invocable<decltype(heim::graphs::vertices), graph const &>);
 static_assert(std::same_as<heim::graphs::vertex_t<graph>, unsigned>);
 }
+
 TEST_CASE("graph primitives header is independently includable", "[graph][interface][headers]")
 {
   graph g;

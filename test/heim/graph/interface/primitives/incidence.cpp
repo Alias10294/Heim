@@ -1,12 +1,13 @@
 #include "support.hpp"
-#include <catch2/catch_test_macros.hpp>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <concepts>
 #include <ranges>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace heim_test::graph_interface;
 
@@ -31,7 +32,9 @@ static_assert(!std::invocable<decltype(graphs::in_edges), empty_graph const &, i
 static_assert(!std::invocable<decltype(graphs::out_edge_count), empty_graph const &, int>);
 static_assert(!std::invocable<decltype(graphs::in_edge_count), empty_graph const &, int>);
 
-TEST_CASE("incident edge ranges prefer members and preserve graph IDs", "[graph][interface][primitives][incidence]")
+TEST_CASE(
+    "incident edge ranges prefer members and preserve graph IDs",
+    "[graph][interface][primitives][incidence]")
 {
   member_graph g;
   REQUIRE((std::ranges::equal(graphs::out_edges(g, 0), std::array{10, 11})));
@@ -71,7 +74,9 @@ TEST_CASE("total degree prefers explicit graph customization", "[graph][interfac
   REQUIRE(graphs::degree(m, 0) == 3);
 }
 
-TEST_CASE("directed total degree falls back to incoming plus outgoing degree", "[graph][interface][primitives][incidence]")
+TEST_CASE(
+    "directed total degree falls back to incoming plus outgoing degree",
+    "[graph][interface][primitives][incidence]")
 {
   fallback_graph<true> g;
   REQUIRE(graphs::total_edge_count(g, 0) == 3);
@@ -79,21 +84,27 @@ TEST_CASE("directed total degree falls back to incoming plus outgoing degree", "
   static_assert(noexcept(graphs::total_edge_count(g, 0)));
 }
 
-TEST_CASE("undirected total degree prefers outgoing count fallback", "[graph][interface][primitives][incidence]")
+TEST_CASE(
+    "undirected total degree prefers outgoing count fallback",
+    "[graph][interface][primitives][incidence]")
 {
   fallback_graph<false> g;
   REQUIRE(graphs::total_edge_count(g, 0) == 2);
   REQUIRE(graphs::degree(g, 0) == 2);
 }
 
-TEST_CASE("undirected total degree can fall back to incoming count alone", "[graph][interface][primitives][incidence]")
+TEST_CASE(
+    "undirected total degree can fall back to incoming count alone",
+    "[graph][interface][primitives][incidence]")
 {
   incoming_only_graph g;
   REQUIRE(graphs::total_edge_count(g, 0) == 2);
   REQUIRE(graphs::degree(g, 0) == 2);
 }
 
-TEST_CASE("directed total degree is unavailable without both directions", "[graph][interface][primitives][incidence]")
+TEST_CASE(
+    "directed total degree is unavailable without both directions",
+    "[graph][interface][primitives][incidence]")
 {
   static_assert(!std::invocable<decltype(graphs::total_edge_count), empty_graph &, int>);
 }

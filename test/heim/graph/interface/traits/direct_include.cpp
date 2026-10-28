@@ -1,7 +1,8 @@
-#include <heim/graph/interface/traits.hpp>
+#include <concepts>
+
 #include <catch2/catch_test_macros.hpp>
 
-#include <concepts>
+#include <heim/graph/interface/traits.hpp>
 
 namespace
 {
@@ -15,6 +16,7 @@ struct graph
 static_assert(std::same_as<heim::graphs::vertex_t<graph>, char>);
 static_assert(std::same_as<heim::graphs::edge_t<graph>, long>);
 }
+
 TEST_CASE("graph traits header is independently includable", "[graph][interface][headers]")
 {
   REQUIRE_FALSE(heim::graphs::directed<graph>);

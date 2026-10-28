@@ -1,9 +1,10 @@
 #include "support.hpp"
-#include <catch2/catch_test_macros.hpp>
 
 #include <concepts>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace heim_test::graph_interface;
 

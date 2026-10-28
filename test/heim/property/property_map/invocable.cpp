@@ -1,17 +1,21 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <functional>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
+
 namespace
 {
 namespace prop = heim::properties;
 
-int double_value(int x) noexcept { return x * 2; }
+int double_value(int x) noexcept
+{
+  return x * 2;
+}
 
 struct ref_getter
 {
@@ -22,7 +26,11 @@ struct ref_getter
 struct counter_getter
 {
   int *calls;
-  int operator()(int v) const { ++*calls; return v + 1; }
+  int operator()(int v) const
+  {
+    ++*calls;
+    return v + 1;
+  }
 };
 
 struct throwing_getter
@@ -40,7 +48,9 @@ TEST_CASE("invocable_arg creates a map from a callable", "[property][property_ma
   static_assert(noexcept(prop::get(map, 3)));
 }
 
-TEST_CASE("invocable_arg can create writable maps from reference-returning callables", "[property][property_map][invocable]")
+TEST_CASE(
+    "invocable_arg can create writable maps from reference-returning callables",
+    "[property][property_map][invocable]")
 {
   int storage{11};
   auto map = heim::make_property_map(heim::invocable_arg, ref_getter{&storage});
@@ -58,7 +68,9 @@ TEST_CASE("invocable_arg accepts std::identity", "[property][property_map][invoc
   REQUIRE(key == 55);
 }
 
-TEST_CASE("callable adapters copy and invoke their captured function object", "[property][property_map][invocable]")
+TEST_CASE(
+    "callable adapters copy and invoke their captured function object",
+    "[property][property_map][invocable]")
 {
   int calls{};
   counter_getter fn{&calls};
@@ -68,7 +80,9 @@ TEST_CASE("callable adapters copy and invoke their captured function object", "[
   REQUIRE(calls == 2);
 }
 
-TEST_CASE("function pointers have an automatic make_property_map overload", "[property][property_map][invocable]")
+TEST_CASE(
+    "function pointers have an automatic make_property_map overload",
+    "[property][property_map][invocable]")
 {
   auto tagged = heim::make_property_map(heim::invocable_arg, &double_value);
   auto automatic = heim::make_property_map(double_value);

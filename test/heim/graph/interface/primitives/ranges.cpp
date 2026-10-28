@@ -1,28 +1,33 @@
 #include "support.hpp"
-#include <catch2/catch_test_macros.hpp>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <concepts>
 #include <ranges>
 #include <type_traits>
 #include <utility>
 
+#include <catch2/catch_test_macros.hpp>
+
 using namespace heim_test::graph_interface;
 
 static_assert(std::ranges::sized_range<decltype(graphs::vertices(std::declval<member_graph const &>()))>);
-static_assert(std::same_as<std::ranges::range_value_t<decltype(graphs::vertices(std::declval<member_graph const &>()))>, int>);
-static_assert(std::same_as<std::ranges::range_value_t<decltype(graphs::edges(std::declval<member_graph const &>()))>, int>);
+static_assert(
+    std::same_as<std::ranges::range_value_t<decltype(graphs::vertices(std::declval<member_graph const &>()))>,
+                 int>);
+static_assert(
+    std::same_as<std::ranges::range_value_t<decltype(graphs::edges(std::declval<member_graph const &>()))>,
+                 int>);
 static_assert(noexcept(graphs::vertices(std::declval<member_graph const &>())));
 static_assert(noexcept(graphs::edges(std::declval<adl::graph const &>())));
 static_assert(!std::invocable<decltype(graphs::vertices), empty_graph const &>);
 static_assert(!std::invocable<decltype(graphs::edges), empty_graph const &>);
-static_assert([]
-{
-  member_graph g;
-  return std::ranges::size(graphs::vertices(g)) == 3
-      && std::ranges::size(graphs::edges(g)) == 2;
-}());
+static_assert(
+    []
+    {
+      member_graph g;
+      return std::ranges::size(graphs::vertices(g)) == 3 && std::ranges::size(graphs::edges(g)) == 2;
+    }());
 
 TEST_CASE("graph vertices and edges prefer members to ADL", "[graph][interface][primitives][ranges]")
 {

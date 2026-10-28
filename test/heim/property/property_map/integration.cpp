@@ -1,6 +1,3 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <functional>
 #include <map>
@@ -10,10 +7,17 @@
 #include <utility>
 #include <vector>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
+
 namespace
 {
 namespace prop = heim::properties;
-struct entity { int hp; };
+struct entity
+{
+  int hp;
+};
 
 namespace external
 {
@@ -34,10 +38,9 @@ TEST_CASE("documentation-style vector and member composition", "[property][prope
   std::unordered_map<int, int> map{{0, 100}, {1, 80}, {2, 60}};
   std::vector<entity> entities{{100}, {80}, {60}};
   auto map_pm = heim::make_property_map(map);
-  auto vec_pm = heim::make_property_map(
-      heim::composable_arg,
-      heim::make_property_map(heim::member_arg, &entity::hp),
-      heim::make_property_map(entities));
+  auto vec_pm = heim::make_property_map(heim::composable_arg,
+                                        heim::make_property_map(heim::member_arg, &entity::hp),
+                                        heim::make_property_map(entities));
   REQUIRE(prop::get(map_pm, 1) == 80);
   REQUIRE(prop::get(vec_pm, 1) == 80);
   prop::set(map_pm, 1, 20);
@@ -46,22 +49,23 @@ TEST_CASE("documentation-style vector and member composition", "[property][prope
   REQUIRE(entities[1].hp == 20);
 }
 
-TEST_CASE("external custom map participates in generic property algorithms", "[property][property_map][integration]")
+TEST_CASE(
+    "external custom map participates in generic property algorithms",
+    "[property][property_map][integration]")
 {
   std::vector<int> values{3, 6, 9};
   external::custom_map map{&values};
   auto increment = []<typename M>(M &m, int key)
-    requires prop::map_for<M &, int, int>
-  {
-    prop::set(m, key, prop::get(m, key) + 1);
-  };
+    requires prop::map_for<M &, int, int> { prop::set(m, key, prop::get(m, key) + 1); };
   increment(map, 1);
   auto adapted = heim::make_property_map(values);
   increment(adapted, 2);
   REQUIRE((values == std::vector<int>{3, 7, 10}));
 }
 
-TEST_CASE("adapters continue referring to their original resources after copying", "[property][property_map][integration]")
+TEST_CASE(
+    "adapters continue referring to their original resources after copying",
+    "[property][property_map][integration]")
 {
   std::map<int, int> values{{1, 2}};
   auto original = heim::make_property_map(values);
@@ -72,17 +76,16 @@ TEST_CASE("adapters continue referring to their original resources after copying
   REQUIRE(prop::get(copied, 2) == 200);
 }
 
-TEST_CASE("read-only and write-only access supports external generic algorithms", "[property][property_map][integration]")
+TEST_CASE(
+    "read-only and write-only access supports external generic algorithms",
+    "[property][property_map][integration]")
 {
   std::vector<int> values{10, 20};
   auto read = heim::make_readable_property_map(values);
   auto write = heim::make_writable_property_map(values);
   auto copy_value = []<typename R, typename W>(R &src, W &dst)
-    requires prop::readable_map_for<R &, int>
-          && prop::writable_map_for<W &, int, int>
-  {
-    prop::set(dst, 1, prop::get(src, 0));
-  };
+    requires prop::readable_map_for<R &, int> && prop::writable_map_for<W &, int, int>
+  { prop::set(dst, 1, prop::get(src, 0)); };
   copy_value(read, write);
   REQUIRE((values == std::vector<int>{10, 10}));
 }

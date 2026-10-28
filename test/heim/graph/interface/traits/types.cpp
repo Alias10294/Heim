@@ -1,8 +1,9 @@
-#include <heim/graph/interface/traits.hpp>
-#include <catch2/catch_test_macros.hpp>
-
 #include <concepts>
 #include <type_traits>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/graph/interface/traits.hpp>
 
 namespace
 {
@@ -14,19 +15,29 @@ struct normal_graph
   static constexpr bool is_multigraph = false;
 };
 
-struct external_graph { };
+struct external_graph
+{
+};
 }
 
 namespace heim::graphs
 {
-template<>
-struct vertex<external_graph> : std::type_identity<long> { };
-template<>
-struct edge<external_graph> : std::type_identity<short> { };
-template<>
-struct is_directed<external_graph> : std::true_type { };
-template<>
-struct is_multigraph<external_graph> : std::true_type { };
+template <>
+struct vertex<external_graph> : std::type_identity<long>
+{
+};
+template <>
+struct edge<external_graph> : std::type_identity<short>
+{
+};
+template <>
+struct is_directed<external_graph> : std::true_type
+{
+};
+template <>
+struct is_multigraph<external_graph> : std::true_type
+{
+};
 }
 
 static_assert(std::same_as<heim::graphs::vertex_t<normal_graph>, int>);

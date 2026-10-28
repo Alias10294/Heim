@@ -1,11 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <functional>
 #include <memory>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -22,13 +23,16 @@ struct entity
 };
 
 using member_map = decltype(heim::make_property_map(heim::member_arg, &entity::hp));
-using function_map = decltype(heim::make_property_map(heim::member_arg, static_cast<int &(entity::*)()>(&entity::health)));
+using function_map =
+    decltype(heim::make_property_map(heim::member_arg, static_cast<int &(entity::*)()>(&entity::health)));
 static_assert(prop::map_for<member_map &, entity &, int>);
 static_assert(prop::readable_map_for<member_map &, entity const &>);
 static_assert(!prop::writable_map_for<member_map &, entity const &, int>);
 static_assert(prop::map_for<function_map &, entity &, int>);
-static_assert(std::same_as<decltype(prop::get(std::declval<member_map &>(), std::declval<entity &>())), int &>);
-static_assert(std::same_as<decltype(prop::get(std::declval<member_map &>(), std::declval<entity const &>())), int const &>);
+static_assert(
+    std::same_as<decltype(prop::get(std::declval<member_map &>(), std::declval<entity &>())), int &>);
+static_assert(std::same_as<decltype(prop::get(std::declval<member_map &>(), std::declval<entity const &>())),
+                           int const &>);
 }
 
 TEST_CASE("member_arg maps objects to their data members", "[property][property_map][member]")

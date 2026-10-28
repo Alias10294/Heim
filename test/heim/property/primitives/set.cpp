@@ -1,11 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -62,7 +63,9 @@ struct throwing_setter
   void set(int, int) { throw std::runtime_error("set failure"); }
 };
 
-struct non_map { };
+struct non_map
+{
+};
 
 static_assert(std::same_as<decltype(heim::properties::set(std::declval<member_map &>(), 0, 1)), void>);
 static_assert(noexcept(heim::properties::set(std::declval<member_map &>(), 0, 1)));
@@ -72,7 +75,13 @@ static_assert(!std::invocable<decltype(heim::properties::set), non_map &, int, i
 static_assert(!std::invocable<decltype(heim::properties::set), member_map const &, int, int>);
 static_assert(!std::invocable<decltype(heim::properties::set), member_map &, int, non_map>);
 static_assert(std::invocable<decltype(heim::properties::set), const_setter const &, int, int>);
-static_assert([] { member_map m; heim::properties::set(m, 0, 8); return m.value == 8; }());
+static_assert(
+    []
+    {
+      member_map m;
+      heim::properties::set(m, 0, 8);
+      return m.value == 8;
+    }());
 }
 
 TEST_CASE("properties::set dispatches to member functions", "[property][primitives][set]")

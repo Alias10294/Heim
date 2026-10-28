@@ -1,10 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -51,21 +52,41 @@ struct throwing_map
   int get(int) const { throw std::runtime_error("get failure"); }
 };
 
-struct non_map { };
+struct non_map
+{
+};
 
 static_assert(std::same_as<decltype(heim::properties::get(std::declval<member_map &>(), 0)), int &>);
-static_assert(std::same_as<decltype(heim::properties::get(std::declval<member_map const &>(), 0)), int const &>);
+static_assert(
+    std::same_as<decltype(heim::properties::get(std::declval<member_map const &>(), 0)), int const &>);
 static_assert(std::same_as<decltype(heim::properties::get(std::declval<custom::adl_map &>(), 0)), int &>);
-static_assert(std::same_as<decltype(heim::properties::get(std::declval<custom::adl_map const &>(), 0)), int const &>);
+static_assert(
+    std::same_as<decltype(heim::properties::get(std::declval<custom::adl_map const &>(), 0)), int const &>);
 static_assert(noexcept(heim::properties::get(std::declval<member_map &>(), 0)));
 static_assert(noexcept(heim::properties::get(std::declval<custom::adl_map &>(), 0)));
 static_assert(!noexcept(heim::properties::get(std::declval<throwing_map &>(), 0)));
 static_assert(!std::invocable<decltype(heim::properties::get), non_map &, int>);
 static_assert(!std::invocable<decltype(heim::properties::get), member_map &, non_map>);
 static_assert(heim::properties::get(qualified_map{}, 0) == 3);
-static_assert([] { qualified_map m; return heim::properties::get(m, 0) == 1; }());
-static_assert([] { qualified_map const m; return heim::properties::get(m, 0) == 2; }());
-static_assert([] { key_qualified_map m; int k{}; return heim::properties::get(m, k) == 1 && heim::properties::get(m, std::move(k)) == 3; }());
+static_assert(
+    []
+    {
+      qualified_map m;
+      return heim::properties::get(m, 0) == 1;
+    }());
+static_assert(
+    []
+    {
+      qualified_map const m;
+      return heim::properties::get(m, 0) == 2;
+    }());
+static_assert(
+    []
+    {
+      key_qualified_map m;
+      int k{};
+      return heim::properties::get(m, k) == 1 && heim::properties::get(m, std::move(k)) == 3;
+    }());
 }
 
 TEST_CASE("properties::get dispatches to member functions", "[property][primitives][get]")

@@ -1,14 +1,14 @@
 #ifndef HEIM_TEST_GRAPH_INTERFACE_PRIMITIVES_SUPPORT_HPP
 #define HEIM_TEST_GRAPH_INTERFACE_PRIMITIVES_SUPPORT_HPP
 
-#include <heim/graph/interface/primitives.hpp>
-
 #include <array>
 #include <cstddef>
 #include <span>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+
+#include <heim/graph/interface/primitives.hpp>
 
 namespace heim_test::graph_interface
 {
@@ -43,8 +43,16 @@ struct member_graph
   constexpr int target(int) const noexcept { return 1; }
   constexpr auto endpoints(int) const noexcept { return std::pair{0, 1}; }
 
-  constexpr int place_vertex() noexcept { action = 1; return next_vertex++; }
-  constexpr auto place_edge(int, int) noexcept { action = 2; return std::pair{next_edge++, true}; }
+  constexpr int place_vertex() noexcept
+  {
+    action = 1;
+    return next_vertex++;
+  }
+  constexpr auto place_edge(int, int) noexcept
+  {
+    action = 2;
+    return std::pair{next_edge++, true};
+  }
   constexpr void remove_vertex(int) noexcept { action = 3; }
   constexpr void remove_edge(int) noexcept { action = 4; }
   constexpr void remove_edges(int, int) noexcept { action = 5; }
@@ -52,24 +60,78 @@ struct member_graph
 };
 
 // Competing ADL overloads must not supersede viable member functions.
-constexpr auto vertices(member_graph const &) noexcept { return std::array{99}; }
-constexpr auto edges(member_graph const &) noexcept { return std::array{99}; }
-constexpr int vertex_count(member_graph const &) noexcept { return 99; }
-constexpr int edge_count(member_graph const &) noexcept { return 99; }
-constexpr int out_edge_count(member_graph const &, int) noexcept { return 99; }
-constexpr int in_edge_count(member_graph const &, int) noexcept { return 99; }
-constexpr int total_edge_count(member_graph const &, int) noexcept { return 99; }
-constexpr int source(member_graph const &, int) noexcept { return 99; }
-constexpr int target(member_graph const &, int) noexcept { return 99; }
-constexpr auto endpoints(member_graph const &, int) noexcept { return std::pair{99, 99}; }
-constexpr int place_vertex(member_graph &) noexcept { return 99; }
-constexpr auto place_edge(member_graph &, int, int) noexcept { return std::pair{99, false}; }
-constexpr void remove_vertex(member_graph &g, int) noexcept { g.action = 99; }
-constexpr void remove_edge(member_graph &g, int) noexcept { g.action = 99; }
-constexpr void remove_edges(member_graph &g, int, int) noexcept { g.action = 99; }
-constexpr void clear_vertex(member_graph &g, int) noexcept { g.action = 99; }
-constexpr auto out_edges(member_graph const &, int) noexcept { return std::array{99}; }
-constexpr auto in_edges(member_graph const &, int) noexcept { return std::array{99}; }
+constexpr auto vertices(member_graph const &) noexcept
+{
+  return std::array{99};
+}
+constexpr auto edges(member_graph const &) noexcept
+{
+  return std::array{99};
+}
+constexpr int vertex_count(member_graph const &) noexcept
+{
+  return 99;
+}
+constexpr int edge_count(member_graph const &) noexcept
+{
+  return 99;
+}
+constexpr int out_edge_count(member_graph const &, int) noexcept
+{
+  return 99;
+}
+constexpr int in_edge_count(member_graph const &, int) noexcept
+{
+  return 99;
+}
+constexpr int total_edge_count(member_graph const &, int) noexcept
+{
+  return 99;
+}
+constexpr int source(member_graph const &, int) noexcept
+{
+  return 99;
+}
+constexpr int target(member_graph const &, int) noexcept
+{
+  return 99;
+}
+constexpr auto endpoints(member_graph const &, int) noexcept
+{
+  return std::pair{99, 99};
+}
+constexpr int place_vertex(member_graph &) noexcept
+{
+  return 99;
+}
+constexpr auto place_edge(member_graph &, int, int) noexcept
+{
+  return std::pair{99, false};
+}
+constexpr void remove_vertex(member_graph &g, int) noexcept
+{
+  g.action = 99;
+}
+constexpr void remove_edge(member_graph &g, int) noexcept
+{
+  g.action = 99;
+}
+constexpr void remove_edges(member_graph &g, int, int) noexcept
+{
+  g.action = 99;
+}
+constexpr void clear_vertex(member_graph &g, int) noexcept
+{
+  g.action = 99;
+}
+constexpr auto out_edges(member_graph const &, int) noexcept
+{
+  return std::array{99};
+}
+constexpr auto in_edges(member_graph const &, int) noexcept
+{
+  return std::array{99};
+}
 
 namespace adl
 {
@@ -85,28 +147,84 @@ struct graph
   std::array<int, 1> ins{13};
   int action{};
 };
-constexpr auto vertices(graph const &g) noexcept { return std::span{g.vs}; }
-constexpr auto edges(graph const &g) noexcept { return std::span{g.es}; }
-constexpr auto out_edges(graph const &g, int) noexcept { return std::span{g.outs}; }
-constexpr auto in_edges(graph const &g, int) noexcept { return std::span{g.ins}; }
-constexpr int vertex_count(graph const &) noexcept { return 3; }
-constexpr int edge_count(graph const &) noexcept { return 2; }
-constexpr int out_edge_count(graph const &, int) noexcept { return 1; }
-constexpr int in_edge_count(graph const &, int) noexcept { return 1; }
-constexpr int total_edge_count(graph const &, int) noexcept { return 2; }
-constexpr int source(graph const &, int) noexcept { return 0; }
-constexpr int target(graph const &, int) noexcept { return 1; }
-constexpr auto endpoints(graph const &, int) noexcept { return std::pair{0, 1}; }
-constexpr int place_vertex(graph &g) noexcept { g.action = 1; return 3; }
-constexpr auto place_edge(graph &g, int, int) noexcept { g.action = 2; return std::pair{14, true}; }
-constexpr void remove_vertex(graph &g, int) noexcept { g.action = 3; }
-constexpr void remove_edge(graph &g, int) noexcept { g.action = 4; }
-constexpr void remove_edges(graph &g, int, int) noexcept { g.action = 5; }
-constexpr void clear_vertex(graph &g, int) noexcept { g.action = 6; }
+constexpr auto vertices(graph const &g) noexcept
+{
+  return std::span{g.vs};
+}
+constexpr auto edges(graph const &g) noexcept
+{
+  return std::span{g.es};
+}
+constexpr auto out_edges(graph const &g, int) noexcept
+{
+  return std::span{g.outs};
+}
+constexpr auto in_edges(graph const &g, int) noexcept
+{
+  return std::span{g.ins};
+}
+constexpr int vertex_count(graph const &) noexcept
+{
+  return 3;
+}
+constexpr int edge_count(graph const &) noexcept
+{
+  return 2;
+}
+constexpr int out_edge_count(graph const &, int) noexcept
+{
+  return 1;
+}
+constexpr int in_edge_count(graph const &, int) noexcept
+{
+  return 1;
+}
+constexpr int total_edge_count(graph const &, int) noexcept
+{
+  return 2;
+}
+constexpr int source(graph const &, int) noexcept
+{
+  return 0;
+}
+constexpr int target(graph const &, int) noexcept
+{
+  return 1;
+}
+constexpr auto endpoints(graph const &, int) noexcept
+{
+  return std::pair{0, 1};
+}
+constexpr int place_vertex(graph &g) noexcept
+{
+  g.action = 1;
+  return 3;
+}
+constexpr auto place_edge(graph &g, int, int) noexcept
+{
+  g.action = 2;
+  return std::pair{14, true};
+}
+constexpr void remove_vertex(graph &g, int) noexcept
+{
+  g.action = 3;
+}
+constexpr void remove_edge(graph &g, int) noexcept
+{
+  g.action = 4;
+}
+constexpr void remove_edges(graph &g, int, int) noexcept
+{
+  g.action = 5;
+}
+constexpr void clear_vertex(graph &g, int) noexcept
+{
+  g.action = 6;
+}
 }
 
 // No member count or endpoint operations: exercise the documented fallbacks.
-template<bool Directed>
+template <bool Directed>
 struct fallback_graph
 {
   using vertex_type = int;
@@ -148,8 +266,14 @@ struct graph
   int vertices() const noexcept { return 0; }
   int source(int) const noexcept = delete;
 };
-constexpr auto vertices(graph const &) noexcept { return std::array{4, 5}; }
-constexpr int source(graph const &, int) noexcept { return 4; }
+constexpr auto vertices(graph const &) noexcept
+{
+  return std::array{4, 5};
+}
+constexpr int source(graph const &, int) noexcept
+{
+  return 4;
+}
 }
 
 struct empty_graph
@@ -183,4 +307,4 @@ struct ref_qualified_graph
 };
 }
 
-#endif
+#endif // HEIM_TEST_GRAPH_INTERFACE_PRIMITIVES_SUPPORT_HPP

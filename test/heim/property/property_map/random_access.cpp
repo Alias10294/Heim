@@ -1,6 +1,3 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <array>
 #include <concepts>
 #include <deque>
@@ -10,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
+
 namespace
 {
 namespace prop = heim::properties;
@@ -18,23 +19,19 @@ struct custom_random_access_range
 {
   std::array<int, 4> values{};
 
-  constexpr int *begin() noexcept
-  { return values.data(); }
+  constexpr int *begin() noexcept { return values.data(); }
 
-  constexpr int *end() noexcept
-  { return values.data() + values.size(); }
+  constexpr int *end() noexcept { return values.data() + values.size(); }
 
-  constexpr int const *begin() const noexcept
-  { return values.data(); }
+  constexpr int const *begin() const noexcept { return values.data(); }
 
-  constexpr int const *end() const noexcept
-  { return values.data() + values.size(); }
+  constexpr int const *end() const noexcept { return values.data() + values.size(); }
 };
 
 static_assert(std::ranges::random_access_range<custom_random_access_range>);
 static_assert(std::ranges::random_access_range<custom_random_access_range const>);
 
-template<typename Range>
+template <typename Range>
 void verify_mutable_range(Range &range)
 {
   auto tagged = heim::make_property_map(heim::random_access_range_arg, range);
@@ -49,7 +46,7 @@ void verify_mutable_range(Range &range)
   REQUIRE(range[2] == 42);
 }
 
-template<typename Range>
+template <typename Range>
 void verify_const_range(Range const &range)
 {
   auto tagged = heim::make_property_map(heim::random_access_range_arg, range);
@@ -73,7 +70,9 @@ TEST_CASE("random-access range adapters support arrays", "[property][property_ma
   verify_const_range(c_array);
 }
 
-TEST_CASE("random-access range adapters support vectors and deques", "[property][property_map][random_access]")
+TEST_CASE(
+    "random-access range adapters support vectors and deques",
+    "[property][property_map][random_access]")
 {
   std::vector<int> vector{0, 10, 20, 30};
   std::deque<int> deque{0, 10, 20, 30};
@@ -83,7 +82,9 @@ TEST_CASE("random-access range adapters support vectors and deques", "[property]
   verify_const_range(deque);
 }
 
-TEST_CASE("span adapter reads and writes elements without owning them", "[property][property_map][random_access]")
+TEST_CASE(
+    "span adapter reads and writes elements without owning them",
+    "[property][property_map][random_access]")
 {
   int values[]{2, 4, 6};
   auto dynamic = heim::make_property_map(std::span<int>{values});
@@ -96,7 +97,9 @@ TEST_CASE("span adapter reads and writes elements without owning them", "[proper
   REQUIRE(prop::get(read_only, 2) == 6);
 }
 
-TEST_CASE("random-access iterator adapter works with iterators and pointers", "[property][property_map][random_access]")
+TEST_CASE(
+    "random-access iterator adapter works with iterators and pointers",
+    "[property][property_map][random_access]")
 {
   std::vector<int> values{2, 4, 6, 8};
   auto tagged = heim::make_property_map(heim::random_access_iterator_arg, values.begin());
@@ -149,7 +152,9 @@ TEST_CASE("span and array adapters support external index maps", "[property][pro
   REQUIRE(c_values[1] == 92);
 }
 
-TEST_CASE("random-access adapter supports vector<bool> proxy references", "[property][property_map][random_access]")
+TEST_CASE(
+    "random-access adapter supports vector<bool> proxy references",
+    "[property][property_map][random_access]")
 {
   std::vector<bool> bits{false, true, false};
   auto map = heim::make_property_map(bits);
@@ -159,7 +164,9 @@ TEST_CASE("random-access adapter supports vector<bool> proxy references", "[prop
   REQUIRE(bits[0]);
 }
 
-TEST_CASE("random-access iterator adapter supports const iterators", "[property][property_map][random_access]")
+TEST_CASE(
+    "random-access iterator adapter supports const iterators",
+    "[property][property_map][random_access]")
 {
   std::vector<int> values{10, 20, 30};
   auto map = heim::make_property_map(heim::random_access_iterator_arg, values.cbegin());
@@ -195,7 +202,9 @@ TEST_CASE("indexed random-access ranges preserve const access", "[property][prop
   REQUIRE(prop::get(sm, 1) == 33);
 }
 
-TEST_CASE("random-access range adapter works with a user-defined range", "[property][property_map][random_access]")
+TEST_CASE(
+    "random-access range adapter works with a user-defined range",
+    "[property][property_map][random_access]")
 {
   custom_random_access_range range{{10, 20, 30, 40}};
   auto map = heim::make_property_map(heim::random_access_range_arg, range);

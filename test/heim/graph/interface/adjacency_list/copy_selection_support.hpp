@@ -1,19 +1,19 @@
 #ifndef HEIM_TEST_GRAPH_ADJACENCY_COPY_SELECTION_SUPPORT_HPP
 #define HEIM_TEST_GRAPH_ADJACENCY_COPY_SELECTION_SUPPORT_HPP
 
-#include "allocator_support.hpp"
-
 #include <cstddef>
 #include <memory>
 #include <set>
 #include <type_traits>
+
+#include "allocator_support.hpp"
 
 namespace heim_test::adjacency
 {
 // A deliberately non-trivial SOCCC policy: copy construction must select a
 // different allocator identity. All rebound allocators share the same ledger.
 // Normal allocator copies and explicit allocator construction do not select.
-template<typename T>
+template <typename T>
 class copy_select_allocator
 {
 public:
@@ -23,8 +23,11 @@ public:
   using propagate_on_container_swap = std::false_type;
   using is_always_equal = std::false_type;
 
-  template<typename U>
-  struct rebind { using other = copy_select_allocator<U>; };
+  template <typename U>
+  struct rebind
+  {
+    using other = copy_select_allocator<U>;
+  };
 
   std::shared_ptr<allocation_state> state{};
   int id{};
@@ -32,38 +35,39 @@ public:
   copy_select_allocator() = default;
 
   copy_select_allocator(std::shared_ptr<allocation_state> ledger, int identity) noexcept
-    : state{std::move(ledger)}, id{identity}
-  { }
+      : state{std::move(ledger)}, id{identity}
+  {
+  }
 
-  template<typename U>
-  copy_select_allocator(copy_select_allocator<U> const &other) noexcept
-    : state{other.state}, id{other.id}
-  { }
+  template <typename U>
+  copy_select_allocator(copy_select_allocator<U> const &other) noexcept : state{other.state}, id{other.id}
+  {
+  }
 
-  [[nodiscard]] copy_select_allocator
-  select_on_container_copy_construction() const noexcept
-  { return {state, id + 100}; }
+  [[nodiscard]] copy_select_allocator select_on_container_copy_construction() const noexcept
+  {
+    return {state, id + 100};
+  }
 
-  [[nodiscard]] T *allocate(std::size_t n)
-  { return tracked_allocator<T, false>{state, id}.allocate(n); }
+  [[nodiscard]] T *allocate(std::size_t n) { return tracked_allocator<T, false>{state, id}.allocate(n); }
 
   void deallocate(T *ptr, std::size_t n) noexcept
-  { tracked_allocator<T, false>{state, id}.deallocate(ptr, n); }
+  {
+    tracked_allocator<T, false>{state, id}.deallocate(ptr, n);
+  }
 
-  template<typename>
+  template <typename>
   friend class copy_select_allocator;
 };
 
-template<typename A, typename B>
-constexpr bool
-operator==(copy_select_allocator<A> const &a,
-           copy_select_allocator<B> const &b) noexcept
-{ return a.id == b.id && a.state == b.state; }
+template <typename A, typename B>
+constexpr bool operator==(copy_select_allocator<A> const &a, copy_select_allocator<B> const &b) noexcept
+{
+  return a.id == b.id && a.state == b.state;
+}
 
-template<bool Directed = false, bool Multi = false,
-         bool In = true, bool Out = true, std::size_t Page = 8>
-using copy_select_graph = graph<Directed, Multi, In, Out, unsigned, Page,
-                                copy_select_allocator<unsigned>>;
+template <bool Directed = false, bool Multi = false, bool In = true, bool Out = true, std::size_t Page = 8>
+using copy_select_graph = graph<Directed, Multi, In, Out, unsigned, Page, copy_select_allocator<unsigned>>;
 
 inline std::size_t allocations_owned_by(allocation_state const &ledger, int owner)
 {
@@ -99,8 +103,8 @@ inline std::set<void *> allocated_addresses(allocation_state const &ledger)
 }
 
 // The source graph remains alive: every new allocation belongs to the copy.
-inline void require_new_allocations_owned_by(
-    allocation_state const &ledger, std::set<void *> const &before, int owner)
+inline void
+require_new_allocations_owned_by(allocation_state const &ledger, std::set<void *> const &before, int owner)
 {
   std::size_t observed{};
   for (auto const &[ptr, info] : ledger.outstanding)

@@ -1,10 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <memory>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -24,7 +25,7 @@ struct throwing_move
 {
   throwing_move() = default;
   throwing_move(throwing_move const &) = default;
-  throwing_move(throwing_move &&) noexcept(false) { }
+  throwing_move(throwing_move &&) noexcept(false) {}
   int operator()(int) const noexcept { return 1; }
 };
 
@@ -58,7 +59,7 @@ TEST_CASE("property_map stores getter and setter function objects", "[property][
 TEST_CASE("property_map can own move-only function objects", "[property][property_map][construction]")
 {
   auto getter_fn = [value = std::make_unique<int>(37)](int) { return *value; };
-  auto setter_fn = [](int, int) { };
+  auto setter_fn = [](int, int) {};
   heim::property_map map{std::move(getter_fn), setter_fn};
   REQUIRE(map.get(0) == 37);
   static_assert(!std::copy_constructible<decltype(map)>);

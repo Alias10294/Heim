@@ -1,6 +1,6 @@
 test_sources = files(
-    'allocators.cpp',
     'allocator_selection.cpp',
+    'allocators.cpp',
     'assignment.cpp',
     'basic.cpp',
     'configurations.cpp',

@@ -1,6 +1,3 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <flat_map>
 #include <map>
@@ -10,6 +7,10 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -27,8 +28,7 @@ struct custom_associative_container
     return values.at(key);
   }
 
-  std::unique_ptr<int> const &at(int key) const
-  { return values.at(key); }
+  std::unique_ptr<int> const &at(int key) const { return values.at(key); }
 
   void insert_or_assign(int key, std::unique_ptr<int> value)
   {
@@ -37,7 +37,7 @@ struct custom_associative_container
   }
 };
 
-template<typename Container>
+template <typename Container>
 void verify_mutable_associative_container()
 {
   Container container;
@@ -57,7 +57,7 @@ void verify_mutable_associative_container()
   REQUIRE_THROWS_AS(prop::get(automatic, 99), std::out_of_range);
 }
 
-template<typename Container>
+template <typename Container>
 void verify_const_associative_container()
 {
   Container mutable_container;
@@ -93,7 +93,9 @@ TEST_CASE("flat_map adapter reads, inserts, and replaces", "[property][property_
   verify_const_associative_container<std::flat_map<int, int>>();
 }
 
-TEST_CASE("associative adapter forwards mapped values without copying", "[property][property_map][associative]")
+TEST_CASE(
+    "associative adapter forwards mapped values without copying",
+    "[property][property_map][associative]")
 {
   std::map<int, std::string> container{{1, "before"}};
   auto map = heim::make_property_map(container);

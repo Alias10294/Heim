@@ -1,6 +1,6 @@
-#include <heim/property/property_map.hpp>
-
 #include <catch2/catch_test_macros.hpp>
+
+#include <heim/property/property_map.hpp>
 
 TEST_CASE("property_map.hpp can be included independently", "[property][headers]")
 {

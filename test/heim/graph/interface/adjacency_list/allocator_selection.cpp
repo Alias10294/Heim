@@ -6,14 +6,13 @@
 
 using namespace heim_test::adjacency;
 
-static_assert(std::same_as<
-    std::allocator_traits<copy_select_allocator<unsigned>>::value_type,
-    unsigned>);
-static_assert(!std::allocator_traits<copy_select_allocator<unsigned>>::
-    propagate_on_container_copy_assignment::value);
+static_assert(std::same_as<std::allocator_traits<copy_select_allocator<unsigned>>::value_type, unsigned>);
+static_assert(
+    !std::allocator_traits<copy_select_allocator<unsigned>>::propagate_on_container_copy_assignment::value);
 
-TEST_CASE("adjacency_list SOCCC selects a different allocator during implicit copy construction",
-          "[graph][adjacency_list][allocator][soccc]")
+TEST_CASE(
+    "adjacency_list SOCCC selects a different allocator during implicit copy construction",
+    "[graph][adjacency_list][allocator][soccc]")
 {
   using G = copy_select_graph<>;
   auto ledger = std::make_shared<allocation_state>();
@@ -46,8 +45,9 @@ TEST_CASE("adjacency_list SOCCC selects a different allocator during implicit co
   REQUIRE(ledger->balanced());
 }
 
-TEST_CASE("adjacency_list SOCCC propagates through nested directed incidence storage",
-          "[graph][adjacency_list][allocator][soccc]")
+TEST_CASE(
+    "adjacency_list SOCCC propagates through nested directed incidence storage",
+    "[graph][adjacency_list][allocator][soccc]")
 {
   using G = copy_select_graph<true, true, true, true, 2>;
   auto ledger = std::make_shared<allocation_state>();
@@ -88,8 +88,9 @@ TEST_CASE("adjacency_list SOCCC propagates through nested directed incidence sto
   REQUIRE(ledger->balanced());
 }
 
-TEST_CASE("adjacency_list explicit copy allocator overrides SOCCC selection",
-          "[graph][adjacency_list][allocator][soccc]")
+TEST_CASE(
+    "adjacency_list explicit copy allocator overrides SOCCC selection",
+    "[graph][adjacency_list][allocator][soccc]")
 {
   using G = copy_select_graph<true, false, false, true, 2>;
   auto ledger = std::make_shared<allocation_state>();
@@ -113,8 +114,9 @@ TEST_CASE("adjacency_list explicit copy allocator overrides SOCCC selection",
   REQUIRE(ledger->balanced());
 }
 
-TEST_CASE("adjacency_list move construction does not invoke SOCCC",
-          "[graph][adjacency_list][allocator][soccc]")
+TEST_CASE(
+    "adjacency_list move construction does not invoke SOCCC",
+    "[graph][adjacency_list][allocator][soccc]")
 {
   using G = copy_select_graph<false, true>;
   auto ledger = std::make_shared<allocation_state>();
@@ -134,8 +136,9 @@ TEST_CASE("adjacency_list move construction does not invoke SOCCC",
   REQUIRE(ledger->balanced());
 }
 
-TEST_CASE("adjacency_list copy assignment does not apply the SOCCC policy",
-          "[graph][adjacency_list][allocator][soccc]")
+TEST_CASE(
+    "adjacency_list copy assignment does not apply the SOCCC policy",
+    "[graph][adjacency_list][allocator][soccc]")
 {
   using G = copy_select_graph<true, true>;
   auto ledger = std::make_shared<allocation_state>();

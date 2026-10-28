@@ -1,10 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <functional>
 #include <type_traits>
 #include <utility>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
 
 namespace
 {
@@ -60,7 +61,9 @@ TEST_CASE("readable and writable factories work with adapted ranges", "[property
   REQUIRE_FALSE((prop::readable_map_for<decltype(write) &, int>));
 }
 
-TEST_CASE("const property_map object can still write through a mutable referenced resource", "[property][property_map][factories]")
+TEST_CASE(
+    "const property_map object can still write through a mutable referenced resource",
+    "[property][property_map][factories]")
 {
   int values[]{3, 4};
   auto const map = heim::make_property_map(values);

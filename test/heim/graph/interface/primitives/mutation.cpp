@@ -1,15 +1,17 @@
 #include "support.hpp"
-#include <catch2/catch_test_macros.hpp>
 
 #include <concepts>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
+#include <catch2/catch_test_macros.hpp>
+
 using namespace heim_test::graph_interface;
 
 static_assert(std::same_as<decltype(graphs::place_vertex(std::declval<member_graph &>())), int>);
-static_assert(std::same_as<decltype(graphs::place_edge(std::declval<member_graph &>(), 0, 1)), std::pair<int, bool>>);
+static_assert(
+    std::same_as<decltype(graphs::place_edge(std::declval<member_graph &>(), 0, 1)), std::pair<int, bool>>);
 static_assert(std::same_as<decltype(graphs::remove_vertex(std::declval<member_graph &>(), 0)), void>);
 static_assert(std::same_as<decltype(graphs::remove_edge(std::declval<member_graph &>(), 10)), void>);
 static_assert(std::same_as<decltype(graphs::remove_edges(std::declval<member_graph &>(), 0, 1)), void>);

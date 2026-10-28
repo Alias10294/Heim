@@ -1,6 +1,3 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <map>
 #include <memory>
@@ -10,13 +7,23 @@
 #include <utility>
 #include <vector>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
+
 namespace
 {
 namespace prop = heim::properties;
 
-struct index_failure { };
-struct read_failure { };
-struct write_failure { };
+struct index_failure
+{
+};
+struct read_failure
+{
+};
+struct write_failure
+{
+};
 
 struct entity
 {
@@ -28,8 +35,7 @@ namespace external
 {
 struct index_map
 {
-  friend constexpr std::size_t get(index_map, int key) noexcept
-  { return static_cast<std::size_t>(key + 1); }
+  friend constexpr std::size_t get(index_map, int key) noexcept { return static_cast<std::size_t>(key + 1); }
 };
 }
 }
@@ -47,7 +53,9 @@ TEST_CASE("composable_arg composes range and member property maps", "[property][
   static_assert(prop::map_for<decltype(composed) &, int, int>);
 }
 
-TEST_CASE("composable_arg composes associative maps and pointer maps", "[property][property_map][composition]")
+TEST_CASE(
+    "composable_arg composes associative maps and pointer maps",
+    "[property][property_map][composition]")
 {
   std::map<int, std::unique_ptr<std::string>> objects;
   objects.emplace(1, std::make_unique<std::string>("first"));
@@ -59,7 +67,9 @@ TEST_CASE("composable_arg composes associative maps and pointer maps", "[propert
   REQUIRE(*objects.at(1) == "second");
 }
 
-TEST_CASE("nested composition evaluates maps in the documented order", "[property][property_map][composition]")
+TEST_CASE(
+    "nested composition evaluates maps in the documented order",
+    "[property][property_map][composition]")
 {
   std::vector<entity> entities{{10, 1}, {20, 2}, {30, 3}};
   std::unordered_map<int, int> indices{{9, 1}, {7, 2}};
@@ -100,12 +110,13 @@ TEST_CASE("composition propagates failures from the index map", "[property][prop
 {
   int reads{};
   int writes{};
-  auto outer = heim::property_map{
-      [&](int) { ++reads; return 0; },
-      [&](int, int) { ++writes; }};
-  auto inner = heim::property_map{
-      [](int) -> int { throw index_failure{}; },
-      heim::no_property_setter};
+  auto outer = heim::property_map{[&](int)
+                                  {
+                                    ++reads;
+                                    return 0;
+                                  },
+                                  [&](int, int) { ++writes; }};
+  auto inner = heim::property_map{[](int) -> int { throw index_failure{}; }, heim::no_property_setter};
   auto composed = heim::make_property_map(heim::composable_arg, outer, inner);
 
   REQUIRE_THROWS_AS(prop::get(composed, 3), index_failure);
@@ -118,9 +129,16 @@ TEST_CASE("composition propagates failures from the outer map", "[property][prop
 {
   int reads{};
   int writes{};
-  auto outer = heim::property_map{
-      [&](int) -> int { ++reads; throw read_failure{}; },
-      [&](int, int) { ++writes; throw write_failure{}; }};
+  auto outer = heim::property_map{[&](int) -> int
+                                  {
+                                    ++reads;
+                                    throw read_failure{};
+                                  },
+                                  [&](int, int)
+                                  {
+                                    ++writes;
+                                    throw write_failure{};
+                                  }};
   auto inner = heim::make_property_map(heim::invocable_arg, [](int k) noexcept { return k + 1; });
   auto composed = heim::make_property_map(heim::composable_arg, outer, inner);
 
@@ -134,15 +152,13 @@ TEST_CASE("composition propagates noexcept from both maps", "[property][property
 {
   int received_key{-1};
   int received_value{-1};
-  auto inner = heim::make_property_map(heim::invocable_arg,
-      [](int key) noexcept { return key + 1; });
-  auto outer = heim::property_map{
-      [](int key) noexcept { return key * 2; },
-      [&](int key, int value) noexcept
-      {
-        received_key = key;
-        received_value = value;
-      }};
+  auto inner = heim::make_property_map(heim::invocable_arg, [](int key) noexcept { return key + 1; });
+  auto outer = heim::property_map{[](int key) noexcept { return key * 2; },
+                                  [&](int key, int value) noexcept
+                                  {
+                                    received_key = key;
+                                    received_value = value;
+                                  }};
   auto composed = heim::make_property_map(heim::composable_arg, outer, inner);
   static_assert(noexcept(prop::get(composed, 3)));
   static_assert(noexcept(prop::set(composed, 3, 10)));
@@ -151,22 +167,17 @@ TEST_CASE("composition propagates noexcept from both maps", "[property][property
   REQUIRE(received_key == 4);
   REQUIRE(received_value == 10);
 
-  auto may_throw_on_read = heim::property_map{
-      [](int key) { return key; },
-      [](int, int) noexcept { }};
+  auto may_throw_on_read = heim::property_map{[](int key) { return key; }, [](int, int) noexcept {}};
   auto read_composed = heim::make_property_map(heim::composable_arg, may_throw_on_read, inner);
   static_assert(!noexcept(prop::get(read_composed, 3)));
   static_assert(noexcept(prop::set(read_composed, 3, 10)));
 
-  auto may_throw_on_write = heim::property_map{
-      [](int key) noexcept { return key; },
-      [](int, int) { }};
+  auto may_throw_on_write = heim::property_map{[](int key) noexcept { return key; }, [](int, int) {}};
   auto write_composed = heim::make_property_map(heim::composable_arg, may_throw_on_write, inner);
   static_assert(noexcept(prop::get(write_composed, 3)));
   static_assert(!noexcept(prop::set(write_composed, 3, 10)));
 
-  auto may_throw_on_index = heim::make_property_map(heim::invocable_arg,
-      [](int key) { return key + 1; });
+  auto may_throw_on_index = heim::make_property_map(heim::invocable_arg, [](int key) { return key + 1; });
   auto index_composed = heim::make_property_map(heim::composable_arg, outer, may_throw_on_index);
   static_assert(!noexcept(prop::get(index_composed, 3)));
   static_assert(!noexcept(prop::set(index_composed, 3, 10)));

@@ -1,8 +1,9 @@
-#include <heim/property/primitives.hpp>
-
-#include <catch2/catch_test_macros.hpp>
 #include <concepts>
 #include <type_traits>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property/primitives.hpp>
 
 namespace
 {

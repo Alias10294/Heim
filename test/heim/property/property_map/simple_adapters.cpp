@@ -1,20 +1,24 @@
-#include <catch2/catch_test_macros.hpp>
-#include <heim/property.hpp>
-
 #include <concepts>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include <catch2/catch_test_macros.hpp>
+
+#include <heim/property.hpp>
+
 namespace
 {
 namespace prop = heim::properties;
 using identity_map = decltype(heim::make_property_map(heim::identity_arg));
 using pointer_map = decltype(heim::make_property_map(heim::pointer_arg));
-static_assert(std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int &>())), int &>);
-static_assert(std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int const &>())), int const &>);
-static_assert(std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int &&>())), int &&>);
+static_assert(
+    std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int &>())), int &>);
+static_assert(std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int const &>())),
+                           int const &>);
+static_assert(
+    std::same_as<decltype(prop::get(std::declval<identity_map &>(), std::declval<int &&>())), int &&>);
 static_assert(!prop::writable_map_for<identity_map &, int &, int>);
 static_assert(noexcept(prop::get(std::declval<identity_map &>(), std::declval<int &>())));
 static_assert(prop::map_for<pointer_map &, int *, int>);

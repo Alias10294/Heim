@@ -1,7 +1,8 @@
-#include <heim/property/traits.hpp>
+#include <type_traits>
 
 #include <catch2/catch_test_macros.hpp>
-#include <type_traits>
+
+#include <heim/property/traits.hpp>
 
 namespace
 {
