@@ -81,7 +81,7 @@ TEST_CASE("DFS_to handles a target in an undirected multigraph", "[graph][dfs][s
   REQUIRE((path_ids<G>(runtime_target_path(result)) == std::vector<unsigned>{2, 1, 0}));
 }
 
-TEST_CASE("DFS_to can be reused through its explicit result overload", "[graph][dfs][search_to]")
+TEST_CASE("DFS_to fills an explicitly supplied result once", "[graph][dfs][search_to]")
 {
   using G = graph<>;
   G g;

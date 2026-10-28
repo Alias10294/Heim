@@ -1,4 +1,5 @@
 test_sources = files(
+    'audit_regressions.cpp',
     'custom_graph.cpp',
     'direct_include_search.cpp',
     'direct_include_search_to.cpp',

@@ -82,7 +82,7 @@ TEST_CASE("BFS search supports non-default level value types", "[graph][bfs][pro
   REQUIRE(levels.at(at<G>(2)) == 2);
 }
 
-TEST_CASE("BFS search can reuse external maps for a new root", "[graph][bfs][property]")
+TEST_CASE("BFS searches share external map storage using fresh results", "[graph][bfs][property]")
 {
   using G = graph<>;
   using V = vertex<G>;
@@ -97,13 +97,18 @@ TEST_CASE("BFS search can reuse external maps for a new root", "[graph][bfs][pro
   auto lm = external_map<V, std::size_t>{&levels};
   auto tm = external_map<V, std::size_t>{&times};
 
-  auto first = hg::bfs(g, at<G>(0), pm, lm, tm);
-  REQUIRE(first.reached(at<G>(1)));
-  auto second = hg::bfs(g, at<G>(3), pm, lm, tm);
-  REQUIRE_FALSE(second.reached(at<G>(1)));
-  REQUIRE(second.reached(at<G>(2)));
-  REQUIRE(second.level_of(at<G>(2)) == 1);
-  REQUIRE(times.at(at<G>(1)) == std::numeric_limits<std::size_t>::max());
+  {
+    auto first = hg::bfs(g, at<G>(0), pm, lm, tm);
+    REQUIRE(first.reached(at<G>(1)));
+  }
+
+  {
+    auto second = hg::bfs(g, at<G>(3), pm, lm, tm);
+    REQUIRE_FALSE(second.reached(at<G>(1)));
+    REQUIRE(second.reached(at<G>(2)));
+    REQUIRE(second.level_of(at<G>(2)) == 1);
+    REQUIRE(times.at(at<G>(1)) == std::numeric_limits<std::size_t>::max());
+  }
 }
 
 TEST_CASE("BFS_to supports externally supplied result maps", "[graph][bfs][property]")

@@ -197,7 +197,7 @@ TEST_CASE("Dijkstra works with outgoing-only adjacency storage", "[graph][dijkst
   verify_search<G>(result, f.reference, {0});
 }
 
-TEST_CASE("Dijkstra accepts a single-pass root range", "[graph][dijkstra][basic]")
+TEST_CASE("Dijkstra accepts a filtered forward root range", "[graph][dijkstra][basic]")
 {
   using G = graph<>;
   weighted_graph<G> f{4};
