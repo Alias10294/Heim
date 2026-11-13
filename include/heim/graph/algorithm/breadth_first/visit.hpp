@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <utility>
 #include "heim/graph/algorithm/color.hpp"
+#include "heim/graph/algorithm/result_storage.hpp"
 #include "heim/graph/algorithm/visit.hpp"
 #include "heim/graph/interface/primitives.hpp"
 #include "heim/graph/interface/traits.hpp"
