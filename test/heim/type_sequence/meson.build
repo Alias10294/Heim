@@ -16,11 +16,11 @@ test_sources = files(
 )
 
 test_executable = executable(
-    'heim-test-meta-type-sequence',
+    'heim-test-type-sequence',
     test_sources,
     dependencies: [heim_dep, catch2_main_dep])
 
 test(
-    'meta-type-sequence',
+    'type-sequence',
     test_executable,
-    suite: ['unit', 'heim-meta'])
+    suite: ['unit', 'heim-type-sequence'])

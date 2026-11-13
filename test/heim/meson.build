@@ -1,4 +1,4 @@
 subdir('common')
-subdir('meta')
+subdir('type_sequence')
 subdir('property')
 subdir('graph')

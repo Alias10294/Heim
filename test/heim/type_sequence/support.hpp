@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include <heim/meta/type_sequence.hpp>
+#include <../../../../include/heim/type_sequence.hpp>
 
 namespace heim_meta_test
 {

@@ -26,6 +26,7 @@ ENTRYPOINTS = (
     'heim/graph.hpp',
     'heim/heim.hpp',
     'heim/property.hpp',
+    'heim/type_sequence.hpp'
 )
 
 # Only literal includes are accepted: macro-generated includes would require
