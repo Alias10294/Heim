@@ -7,14 +7,13 @@
 #include <format>
 #include <functional>
 #include <memory>
-#include <ostream>
 #include <ranges>
 #include <scoped_allocator>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "heim/common/sparse.hpp"
+#include "heim/sparse_map.hpp"
 
 namespace heim
 {

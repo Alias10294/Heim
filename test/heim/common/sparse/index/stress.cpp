@@ -1,5 +1,4 @@
 #include <array>
-
 #include "support.hpp"
 
 using namespace heim_test::sparse_index;

@@ -1,5 +1,4 @@
-#include <heim/common/sparse.hpp>
-
+#include "heim/sparse_map.hpp"
 #include "support.hpp"
 
 namespace hs = heim_test::sparse_set;

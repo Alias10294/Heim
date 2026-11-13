@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
-#include <heim/common/sparse.hpp>
+#include <heim/common/sparse/map.hpp>
 
 namespace heim_test::sparse_map
 {

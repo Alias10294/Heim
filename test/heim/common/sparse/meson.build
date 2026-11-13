@@ -1,3 +1,3 @@
-subdir('sparse_index')
-subdir('sparse_set')
-subdir('sparse_map')
+subdir('index')
+subdir('set')
+subdir('map')

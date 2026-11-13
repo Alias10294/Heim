@@ -1,7 +1,6 @@
 #include <array>
 #include <forward_list>
 #include <sstream>
-
 #include "support.hpp"
 
 using namespace heim_test::sparse_index;

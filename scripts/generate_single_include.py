@@ -21,9 +21,11 @@ ROOT = Path(__file__).resolve().parents[1]
 INCLUDE_ROOT = ROOT / 'include'
 OUTPUT_ROOT = ROOT / 'single_include'
 ENTRYPOINTS = (
+    'heim/sparse_set.hpp',
+    'heim/sparse_map.hpp',
     'heim/graph.hpp',
     'heim/heim.hpp',
-    'heim/property.hpp'
+    'heim/property.hpp',
 )
 
 # Only literal includes are accepted: macro-generated includes would require
