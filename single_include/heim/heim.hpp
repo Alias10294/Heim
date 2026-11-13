@@ -2441,7 +2441,7 @@ struct algo
     using color_type
     = std::remove_cvref_t<properties::readable_map_result_t<decltype(rcm) &, vertex_type &>>;
 
-    auto ctrl{visit::proceed};
+    visit ctrl;
 
     for (vertex_type v : vertices(g))
     {
@@ -2458,17 +2458,17 @@ struct algo
         continue;
 
       ctrl = vis::source_vertex(vis, g, r);
-      if      (ctrl == visit::stop)
+      if (ctrl == visit::stop)
         return false;
-      else if (ctrl == visit::skip)
+      if (ctrl == visit::skip)
         continue;
 
       properties::set(rcm, r, colors::gray_v<color_type>);
 
       ctrl = vis::discover_vertex(vis, g, r);
-      if      (ctrl == visit::stop)
+      if (ctrl == visit::stop)
         return false;
-      else if (ctrl == visit::prune)
+      if (ctrl == visit::prune)
       {
         properties::set(rcm, r, colors::black_v<color_type>);
 
@@ -2505,9 +2505,9 @@ struct algo
       for (edge_type e : out_edges(g, u))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        if      (ctrl == visit::stop)
+        if (ctrl == visit::stop)
           return false;
-        else if (ctrl == visit::skip)
+        if (ctrl == visit::skip)
           continue;
 
         vertex_type v  {target(g, e)};
@@ -2522,9 +2522,9 @@ struct algo
           properties::set(rcm, v, colors::gray_v<color_type>);
 
           ctrl = vis::discover_vertex(vis, g, v);
-          if      (ctrl == visit::stop)
+          if (ctrl == visit::stop)
             return false;
-          else if (ctrl == visit::prune)
+          if (ctrl == visit::prune)
           {
             properties::set(rcm, v, colors::black_v<color_type>);
 
@@ -2540,9 +2540,9 @@ struct algo
         else
         {
           ctrl = vis::non_tree_edge(vis, g, e);
-          if      (ctrl == visit::stop)
+          if (ctrl == visit::stop)
             return false;
-          else if (ctrl == visit::skip)
+          if (ctrl == visit::skip)
             continue;
 
           if (clr == colors::gray_v<color_type>)
@@ -3483,21 +3483,19 @@ private:
     using edge_type   = edge_t  <std::remove_cvref_t<G>>;
     using color_type  = std::remove_cvref_t<properties::readable_map_result_t<CMap &, vertex_type &>>;
 
-    auto ctrl{visit::proceed};
-
     properties::set(cm, r, colors::gray_v<color_type>);
 
-    ctrl = vis::discover_vertex(vis, g, r);
-    if      (ctrl == visit::stop)
+    visit ctrl{vis::discover_vertex(vis, g, r)};
+    if (ctrl == visit::stop)
       return false;
-    else if (ctrl != visit::prune)
+    if (ctrl != visit::prune)
     {
       for (edge_type e : out_edges(g, r))
       {
         ctrl = vis::examine_edge(vis, g, e);
-        if      (ctrl == visit::stop)
+        if (ctrl == visit::stop)
           return false;
-        else if (ctrl == visit::skip)
+        if (ctrl == visit::skip)
           continue;
 
         vertex_type v  {target(g, e)};
@@ -3571,7 +3569,7 @@ public:
     using color_type
     = std::remove_cvref_t<properties::readable_map_result_t<decltype(rcm) &, vertex_type &>>;
 
-    auto ctrl{visit::proceed};
+    visit ctrl;
 
     for (vertex_type v : vertices(g))
     {
@@ -3588,9 +3586,9 @@ public:
         continue;
 
       ctrl = vis::start_vertex(vis, g, r);
-      if      (ctrl == visit::stop)
+      if (ctrl == visit::stop)
         return false;
-      else if (ctrl == visit::skip)
+      if (ctrl == visit::skip)
         continue;
 
       if (!this->m_core(g, std::move(r), vis, rcm))
